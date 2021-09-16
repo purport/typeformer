@@ -16,7 +16,7 @@
   "license": "MIT",
   "dependencies": {
     "merge-dirs": "^0.2.1",
-    "typescript": "next"
+    "typescript": "latest"
   },
   "devDependencies": {
     "@types/microsoft__typescript-etw": "^0.1.0",
