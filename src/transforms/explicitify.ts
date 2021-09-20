@@ -38,7 +38,7 @@ function getExplicitifyTransformFactory(checker: TypeChecker) {
         }
 
         function isSomeDeclarationInLexicalScope(sym: Symbol, location: Node) {
-            return sym.declarations.every(d => { // if _any_ declaration isn't in scope, pessimistically make explicit
+            return sym.declarations?.every(d => { // if _any_ declaration isn't in scope, pessimistically make explicit
                 // VariableDeclaration -> VariableDeclarationList -> VariableStatement -> containing declaration
                 const container = isVariableDeclaration(d) ? d.parent.parent.parent : d.parent;
                 let loc: Node | undefined = location;

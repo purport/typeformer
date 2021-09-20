@@ -66,7 +66,7 @@ function getInlineImportsTransformFactory(rawChecker: TypeChecker) {
                         }
                         if (!matchingImport && s.flags & SymbolFlags.Alias) {
                             const aliasTarget = checker.getAliasedSymbol(s);
-                            const otherFile = aliasTarget.declarations.find(d => isSourceFile(d) && !d.isDeclarationFile) as SourceFile | undefined;
+                            const otherFile = aliasTarget.declarations?.find(d => isSourceFile(d) && !d.isDeclarationFile) as SourceFile | undefined;
                             if (otherFile && addSyntheticImport(getTSStyleRelativePath(file.fileName, otherFile.fileName).replace(/(\.d)?\.ts$/, ""), rhsName)) {
                                 return possibleSubstitute;
                             }

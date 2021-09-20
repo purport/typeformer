@@ -100,9 +100,12 @@ export function getStripNamespacesTransformFactoryFactory(config: ProjectTransfo
                 }
             });
             const newSource = createNode(SyntaxKind.SourceFile, -1, -1) as SourceFile; // There's no SourceFile factory, so this is what we get
+            //@ts-ignore
             newSource.flags |= NodeFlags.Synthesized;
             newSource.fileName = filename;
+            //@ts-ignore
             newSource.statements = createNodeArray(reexportStatements);
+            //@ts-ignore
             newSource.endOfFileToken = createToken(SyntaxKind.EndOfFileToken);
             results.push(newSource);
         });
@@ -117,6 +120,7 @@ export function getStripNamespacesTransformFactoryFactory(config: ProjectTransfo
             const result = visitEachChild(file, visitElement, context);
             // TODO: Fix TS itself so a json source file doesn't present an invalid AST that can't rountdrip thru the factory system without getting extraneous parenthesis added
             if (result && isExpressionStatement(result.statements[0]) && isParenthesizedExpression((result.statements[0] as ExpressionStatement).expression)) {
+                //@ts-ignore
                 (result.statements[0] as ExpressionStatement).expression = ((result.statements[0] as ExpressionStatement).expression as ParenthesizedExpression).expression;
             }
             return result;
@@ -315,8 +319,9 @@ export function getStripNamespacesTransformFactoryFactory(config: ProjectTransfo
                 // rewrite it into a module augmentation so that augmentation actually takes place
                 if (isInterfaceDeclaration(statement)) {
                     const sym = checker.getSymbolAtLocation(getNameOfDeclaration(statement) || statement)!;
-                    if (sym.declarations.length > 1 &&
-                        !sym.declarations.every(d => d.getSourceFile() === sym.declarations[0].getSourceFile()) &&
+                    if (sym.declarations &&
+                        sym.declarations.length > 1 &&
+                        !sym.declarations.every(d => d.getSourceFile() === sym.declarations?.[0].getSourceFile()) &&
                         statement !== sym.declarations[0]) {
                         const sourceMappedOriginalLocation = getSourceMapper().tryGetSourcePosition({
                             fileName: sym.declarations[0].getSourceFile().fileName,
@@ -347,7 +352,8 @@ export function getStripNamespacesTransformFactoryFactory(config: ProjectTransfo
                 statement = visitIdentifiers(statement);
                 if (isInterfaceDeclaration(statement) || isVariableStatement(statement)) {
                     const sym = checker.getSymbolAtLocation(getNameOfDeclaration(isVariableStatement(statement) ? statement.declarationList.declarations[0] : statement) || statement)!;
-                    const isMerged = sym.declarations.length > 1 && !sym.declarations.every(d => d.getSourceFile() === sym.declarations[0].getSourceFile());
+                    const isMerged = sym.declarations && sym.declarations.length > 1
+                        && !sym.declarations.every(d => d.getSourceFile() === sym.declarations?.[0].getSourceFile());
                     const isAmbient = statement.modifiers && statement.modifiers.some(m => m.kind === SyntaxKind.DeclareKeyword);
                     if (isMerged || isAmbient) {
                         // Global interface/declaration - preserve globality
@@ -377,7 +383,7 @@ export function getStripNamespacesTransformFactoryFactory(config: ProjectTransfo
 
             function stripDeclare<T extends Node>(statement: T): T {
                 if (statement.modifiers && statement.modifiers.some(m => m.kind === SyntaxKind.DeclareKeyword)) {
-                    const clone = (ts as any).getSynthesizedClone(statement);
+                    const clone = (ts as any).factory.cloneNode(statement);
                     clone.modifiers = clone.modifiers.filter((m: Node) => m.kind !== SyntaxKind.DeclareKeyword);
                     return setTextRange(clone, statement);
                 }
