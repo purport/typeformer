@@ -6,7 +6,8 @@ import { getTSStyleRelativePath } from "./pathUtil";
 import * as ts from "typescript";
 
 function normalizePath(p: string) {
-    return sys.useCaseSensitiveFileNames ? path.normalize(p).toLowerCase() : path.normalize(p);
+    const normal = path.normalize(p);
+    return sys.useCaseSensitiveFileNames ? normal : normal.toLowerCase();
 }
 
 class NormalizedPathMap<T> extends Map<string, T> {
