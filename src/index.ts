@@ -196,11 +196,15 @@ export function transformProjectFromNamespacesToModules(rootConfig: string, outD
 
 export function transformProjectInPlace(config: string) {
     const tmpdir = path.dirname(config)+"tmp";
+    console.log("ExplicitifyTransform...");
     transformProject(config, tmpdir, getExplicitifyTransformFactoryFactory);
     mergeDirs(tmpdir, path.dirname(config), "overwrite");
+    console.log("StripNamespacesTransform");
     transformProject(config, tmpdir, getStripNamespacesTransformFactoryFactory);
     mergeDirs(tmpdir, path.dirname(config), "overwrite");
+    console.log("InlineImportsTransform");
     transformProject(config, tmpdir, getInlineImportsTransformFactoryFactory);
     mergeDirs(tmpdir, path.dirname(config), "overwrite");
+    console.log("Removing %j", tmpdir);
     fs.rmdirSync(tmpdir, {recursive: true});
 }

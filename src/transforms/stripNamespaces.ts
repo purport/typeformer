@@ -384,7 +384,7 @@ export function getStripNamespacesTransformFactoryFactory(config: ProjectTransfo
 
             function stripDeclare<T extends Node>(statement: T): T {
                 if (statement.modifiers && statement.modifiers.some(m => m.kind === SyntaxKind.DeclareKeyword)) {
-                    const clone = (ts as any).factory.cloneNode(statement);
+                    const clone = (ts.factory as any).cloneNode(statement);
                     clone.modifiers = clone.modifiers.filter((m: Node) => m.kind !== SyntaxKind.DeclareKeyword);
                     return setTextRange(clone, statement);
                 }
