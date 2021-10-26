@@ -1,0 +1,46 @@
+#!/usr/bin/env bash
+
+here="$(dirname "$0")"
+tsroot="$PWD"
+
+failwith() { echo "error: $*" 1>&2; exit 1; }
+indent() {
+  local line last="x"
+  while IFS="" read -r line; do
+    if [[ -n "$line" ]]; then line="  $line"; fi
+    echo "$line"; last="$line"
+  done
+  if [[ -n "$last" ]]; then echo ""; fi
+}
+run() {
+  echo ">>>> ($PWD) $@"; "$@" 2>&1 | indent || failwith "run error"
+}
+run_in() {
+  local owd="$PWD" dir="$1"; shift; cd "$dir"; run "$@"; cd "$owd"
+}
+
+if [[ ! -r "Gulpfile.js" || ! -d ".git" ]]; then
+  failwith "Should run this from the root of the TS repo"
+fi
+
+if [[ ! -d "$here/node_modules" ]]; then
+  run_in "$here" npm install
+fi
+
+if [[ ! -r "$here/lib/cli.js" ]]; then
+  run_in "$here" npm run build
+fi
+
+if [[ -d "srctmp" ]]; then
+  run rm -rf "srctmp"
+fi
+
+# The generated diagnostics might have been transformed by a previous attempt,
+# and restoring all changes wouldn't restore it since it's not tracked
+gen_diag="src/compiler/diagnosticInformationMap.generated.ts"
+if [[ ! -r "$gen_diag" || "$(head -1 "$gen_diag")" = "import { "* ]]; then
+  rm -f "$gen_diag" # in the above case, ensure it's re-generated
+  run gulp generate-diagnostics
+fi
+
+run_in "src" node "$here/lib/cli.js" "tsconfig.json"

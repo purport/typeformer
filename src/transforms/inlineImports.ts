@@ -24,7 +24,7 @@ function getInlineImportsTransformFactory(rawChecker: TypeChecker) {
                 newImportStatements.push(createImportDeclaration(
                     /*decorators*/ undefined,
                     /*modifiers*/ undefined,
-                    createImportClause(/*defaultName*/ undefined, createNamedImports(Array.from(importNames.values()).map(s => createImportSpecifier(/*propertyName*/ undefined, createIdentifier(s))))),
+                    createImportClause(/*defaultName*/ undefined, createNamedImports(Array.from(importNames.values()).map(s => createImportSpecifier(/*isTypeOnly*/ false, /*propertyName*/ undefined, createIdentifier(s))))),
                     createLiteral(specifier)
                 ));
             });

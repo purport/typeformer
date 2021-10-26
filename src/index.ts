@@ -2,6 +2,7 @@ import * as fs from "fs";
 import * as path from "path";
 import {
     createPrinter,
+    NewLineKind,
     createSolutionBuilder,
     createSolutionBuilderHost,
     Diagnostic,
@@ -47,6 +48,7 @@ export function transformProject(rootConfig: string, outDir: string, getTransfor
         buildDiags.push(diag);
     });
     const allConfigFiles = new Set<string>([rootConfig]);
+    const printerOptions = { removeComments: false, newLine: NewLineKind.CarriageReturnLineFeed };
     // we just want to (ab)use the builder API to traverse the project reference graph
     // and find all source files we need to transform, so we override the `createProgram`
     // hook to get a type checker and run our transform on each invocation
@@ -55,7 +57,10 @@ export function transformProject(rootConfig: string, outDir: string, getTransfor
     const getTransformFactory = getTransformerFactoryFactory(transformConfig);
     host.createProgram = (names, opts, host, oldProgram, configDiag, refs) => {
         const result = createProgram(names, opts, host, oldProgram, configDiag, refs);
-        [(opts as {configFilePath?: string}).configFilePath!, ...(opts as {configFile?: { extendedSourceFiles?: string[] }}).configFile!.extendedSourceFiles!].forEach(f => f && allConfigFiles.add(f));
+        [(opts as {configFilePath?: string}).configFilePath!,
+         ...(opts as {configFile?: { extendedSourceFiles?: string[] }})
+                .configFile!.extendedSourceFiles!]
+            .forEach(f => f && allConfigFiles.add(f));
         // Transform all actual input source files
         const candidateFiles = result.getSourceFiles().slice().filter(f =>
             !f.isDeclarationFile &&
@@ -66,7 +71,7 @@ export function transformProject(rootConfig: string, outDir: string, getTransfor
         const program = result.getProgram();
         const checker = program.getTypeChecker();
         const newSources = transform(candidateFiles, [getTransformFactory(checker, program)]);
-        const printer = createPrinter({}, {
+        const printer = createPrinter(printerOptions, {
             onEmitNode: newSources.emitNodeWithNotification,
             substituteNode: newSources.substituteNode
         });
@@ -109,7 +114,7 @@ export function transformProject(rootConfig: string, outDir: string, getTransfor
         let content = fs.readFileSync(f).toString();
         if (transformConfig.onTransformConfigFile) {
             const result = ts.transform(ts.parseJsonText(f, content), [transformConfig.onTransformConfigFile]);
-            const printer = createPrinter({}, {
+            const printer = createPrinter(printerOptions, {
                 onEmitNode: result.emitNodeWithNotification,
                 substituteNode: result.substituteNode
             });
@@ -125,7 +130,7 @@ export function transformProject(rootConfig: string, outDir: string, getTransfor
     if (transformConfig.onTransformComplete) {
         const result = transformConfig.onTransformComplete();
         if (result.additionalOutputFiles && result.additionalOutputFiles.length) {
-            const printer = createPrinter();
+            const printer = createPrinter(printerOptions);
             for (const file of result.additionalOutputFiles) {
                 writeFileRelativeToOutput(file.fileName, printer.printFile(file));
             }

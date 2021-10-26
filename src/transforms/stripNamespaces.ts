@@ -95,7 +95,7 @@ export function getStripNamespacesTransformFactoryFactory(config: ProjectTransfo
                         reexportStatements.push(createExportDeclaration(
                             /*decorators*/ undefined,
                             /*modifiers*/ undefined,
-                            createNamedExports([createExportSpecifier(/*propertyName*/ undefined, partsOther[partsOther.length - 1])])
+                            createNamedExports([createExportSpecifier(/*isTypeOnly*/ false, /*propertyName*/ undefined, partsOther[partsOther.length - 1])])
                         ));
                     }
                 }
