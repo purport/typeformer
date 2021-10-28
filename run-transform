@@ -35,12 +35,59 @@ if [[ -d "srctmp" ]]; then
   run rm -rf "srctmp"
 fi
 
-# The generated diagnostics might have been transformed by a previous attempt,
-# and restoring all changes wouldn't restore it since it's not tracked
-gen_diag="src/compiler/diagnosticInformationMap.generated.ts"
-if [[ ! -r "$gen_diag" || "$(head -1 "$gen_diag")" = "import { "* ]]; then
-  rm -f "$gen_diag" # in the above case, ensure it's re-generated
-  run gulp generate-diagnostics
-fi
+tweak_and_commit() { # msg cmd arg ... [-- cmd arg ...]
+  local msg="$1" cmd=(); shift
+  if git log --oneline -30 --format="%s" | grep -q "^$msg\$"; then return; fi
+  if ! git diff --quiet || ! git diff --cached --quiet; then
+    failwith "directory is dirty"
+  fi
+  while [[ "$#" -gt 0 ]]; do
+    if [[ "x$1" != "x--" ]]; then cmd+=("$1")
+    else "${cmd[@]}"; cmd=(); fi
+    shift
+  done
+  "${cmd[@]}"
+  run git add "src"; run git commit -m "$msg"
+}
 
-run_in "src" node "$here/lib/cli.js" "tsconfig.json"
+gen_diag() {
+  # The generated diagnostics might have been transformed by a previous attempt,
+  # and restoring all changes wouldn't restore it since it's not tracked
+  local file="srfilec/compiler/diagnosticInformationMap.generated.ts"
+  if [[ ! -r "$file" || "$(head -1 "$file")" = "import { "* ]]; then
+    rm -f "$file" # in the above case, ensure it's re-generated
+    run gulp generate-diagnostics
+  fi
+}
+
+ensure_crlf_at_eof() {
+  echo ">>> adding CRLF at all EOFs"
+  # finds all files without a terminating newline
+  local file
+  for file in $(rgrep -rPlz '[^\r\n]$' "src"); do
+    if [[ "$file" = *."d.ts" ]]; then continue; fi
+    if [[ "$file" != *."ts" && "$file" != *."json" ]]; then continue; fi
+    echo "  $file"; printf '\r\n' >> "$file"
+  done
+  echo ""
+}
+
+undo_whitespaces() {
+  echo ">>> undoing whitespace changes"
+  echo "  creating a hacked diff"
+  git diff -w -U0 | node "$here/lib/filter-patch.js" > "/tmp/P$$"
+  echo "  cleaning"
+  git checkout -- .
+  echo "  applying diff"
+  git apply --whitespace=nowarn --ignore-whitespace --unidiff-zero "/tmp/P$$"
+  # rm -f "/tmp/P$$"
+}
+
+tweak_and_commit "UNINDENT BEFORE CONVERTING TO MODULES" \
+  -- ensure_crlf_at_eof \
+  -- run node "$here/lib/unindent.js"
+
+tweak_and_commit "CONVERTED TO MODULES" \
+  -- gen_diag \
+  -- run_in "src" node "$here/lib/cli.js" "tsconfig.json" \
+  -- undo_whitespaces
