@@ -1,0 +1,412 @@
+From 720cb980f87db9d30ef030b3f2f24bd611ac777e Mon Sep 17 00:00:00 2001
+From: Eli Barzilay <eli@barzilay.org>
+Date: Thu, 28 Oct 2021 13:26:41 -0400
+Subject: [PATCH 2/4] Post conversion fixes
+
+---
+ Gulpfile.js                                   |  9 +++----
+ src/harness/fourslashImpl.ts                  |  4 ++--
+ src/harness/harnessIO.ts                      | 24 +++++++++----------
+ src/harness/virtualFileSystemWithWatch.ts     | 20 ++++++++--------
+ src/server/session.ts                         |  4 +++-
+ src/testRunner/parallel/host.ts               |  6 ++---
+ .../unittests/tsbuild/moduleResolution.ts     |  4 +++-
+ .../unittests/tsbuildWatch/programUpdates.ts  |  4 ++--
+ .../unittests/tsserver/compileOnSave.ts       |  4 ++--
+ src/testRunner/unittests/tsserver/helpers.ts  | 15 +++++++-----
+ src/testRunner/unittests/tsserver/session.ts  |  4 ++--
+ .../unittests/tsserver/typingsInstaller.ts    |  3 +--
+ 12 files changed, 54 insertions(+), 47 deletions(-)
+
+diff --git a/Gulpfile.js b/Gulpfile.js
+index c9d3feff80..4708b4c9f1 100644
+--- a/Gulpfile.js
++++ b/Gulpfile.js
+@@ -18,6 +18,7 @@ const { buildProject, cleanProject, watchProject } = require("./scripts/build/pr
+ const cmdLineOptions = require("./scripts/build/options");
+ 
+ const copyright = "CopyrightNotice.txt";
++const testRoot = "built/local/testRunner/Harness.js"
+ const cleanTasks = [];
+ 
+ const buildScripts = () => buildProject("scripts");
+@@ -442,7 +443,7 @@ preTest.displayName = "preTest";
+ 
+ const postTest = (done) => cmdLineOptions.lint ? lint(done) : done();
+ 
+-const runTests = () => runConsoleTests("built/local/run.js", "mocha-fivemat-progress-reporter", /*runInParallel*/ false, /*watchMode*/ false);
++const runTests = () => runConsoleTests(testRoot, "mocha-fivemat-progress-reporter", /*runInParallel*/ false, /*watchMode*/ false);
+ task("runtests", series(preBuild, preTest, runTests, postTest));
+ task("runtests").description = "Runs the tests using the built run.js file.";
+ task("runtests").flags = {
+@@ -462,7 +463,7 @@ task("runtests").flags = {
+     "   --shardId": "1-based ID of this shard (default: 1)",
+ };
+ 
+-const runTestsParallel = () => runConsoleTests("built/local/run.js", "min", /*runInParallel*/ cmdLineOptions.workers > 1, /*watchMode*/ false);
++const runTestsParallel = () => runConsoleTests(testRoot, "min", /*runInParallel*/ cmdLineOptions.workers > 1, /*watchMode*/ false);
+ task("runtests-parallel", series(preBuild, preTest, runTestsParallel, postTest));
+ task("runtests-parallel").description = "Runs all the tests in parallel using the built run.js file.";
+ task("runtests-parallel").flags = {
+@@ -611,10 +612,10 @@ task("publish-nightly").description = "Runs `npm publish --tag next` to create a
+ // write some kind of trigger file that indicates build completion that we could listen for instead.
+ const watchRuntests = () => watch(["built/local/*.js", "tests/cases/**/*.ts", "tests/cases/**/tsconfig.json"], { delay: 5000 }, async () => {
+     if (cmdLineOptions.tests || cmdLineOptions.failed) {
+-        await runConsoleTests("built/local/run.js", "mocha-fivemat-progress-reporter", /*runInParallel*/ false, /*watchMode*/ true);
++        await runConsoleTests(testRoot, "mocha-fivemat-progress-reporter", /*runInParallel*/ false, /*watchMode*/ true);
+     }
+     else {
+-        await runConsoleTests("built/local/run.js", "min", /*runInParallel*/ true, /*watchMode*/ true);
++        await runConsoleTests(testRoot, "min", /*runInParallel*/ true, /*watchMode*/ true);
+     }
+ });
+ task("watch", series(preBuild, preTest, parallel(watchLib, watchDiagnostics, watchServices, watchLssl, watchTests, watchRuntests)));
+diff --git a/src/harness/fourslashImpl.ts b/src/harness/fourslashImpl.ts
+index 77cefd17e2..12c321b642 100644
+--- a/src/harness/fourslashImpl.ts
++++ b/src/harness/fourslashImpl.ts
+@@ -1,4 +1,3 @@
+-
+ import { TestCaseParser, Compiler, isDefaultLibraryFile, IO, getConfigNameFromFileName, Baseline, virtualFileSystemRoot } from "./Harness";
+ import { FileSet, File, FileSystem } from "./vfs";
+ import { ESMap, MultiMap, TextRange, ImplementationLocation, CompilerOptions, ScriptTarget, HostCancellationToken, Debug, OperationCanceledException, DiagnosticMessage, IScriptSnapshot, ScriptSnapshot, LanguageService, FormatCodeSettings, SymbolDisplayPart, forEach, parseConfigFileTextToJson, normalizePath, getDirectoryPath, convertCompilerOptionsFromJson, extend, ParsedCommandLine, parseJsonText, parseJsonSourceFileConfigFileContent, getNormalizedAbsolutePath, FileReference, flatten, getSupportedExtensions, contains, isDeclarationFileName, containsPath, some, testFormatSettings, getAllKeys, isString, forEachEntry, LineAndCharacter, normalizeSlashes, emptyOptions, Diagnostic, emptyArray, flatMap, isAnySupportedFileExtension, getBaseFileName, flattenDiagnosticMessageText, SourceFile, getLineAndCharacterOfPosition, forEachKey, getAllowJSCompilerOption, resolutionExtensionIsTSOrJson, extensionFromPath, DiagnosticCategory, createTextSpanFromRange, isNumber, textSpansEqual, DefinitionInfo, DefinitionInfoAndBoundSpan, isArray, hasProperty, zipWith, comparePaths, Comparison, deduplicate, equateValues, textSpanEnd, sys, OutputFile, InlayHintsOptions, InlayHint, CompletionEntry, Completions, displayPartsToString, Program, TypeChecker, Node, getTouchingPropertyName, Symbol, SymbolFlags, MapLike, getEntries, ReferenceEntry, map, find, ReferencedSymbol, group, sort, textSpanContainsPosition, UserPreferences, GetCompletionsAtPositionOptions, CompletionInfo, CompletionEntryData, CompletionEntryDetails, realizeDiagnostics, RealizedDiagnostic, JSDocTagInfo, RenameLocation, compareStringsCaseSensitive, textSpanIntersectsWithPosition, SignatureHelpTriggerReason, SignatureHelpParameter, RenameInfoOptions, CharacterCodes, computeLineStarts, computeLineAndCharacterOfPosition, padLeft, repeatString, getPreEmitDiagnostics, DiagnosticMessageChain, filter, endsWith, arrayFrom, SelectionRange, isLineBreak, isWhiteSpaceLike, findLastIndex, concatenate, Extension, SignatureHelpItems, createLanguageServiceSourceFile, TextChange, clone, FormatCodeOptions, toEditorSettings, documentSpansEqual, arrayIsEqualTo, createMultiMap, IndentStyle, classifier, ClassifiedSpan, ClassifiedSpan2020, SemanticClassificationFormat, createTextSpan, OutliningSpan, first, mapDefined, formatStringFromArgs, FileTextChanges, textChanges, getOwnKeys, CodeFixAction, equalOwnProperties, createTextRangeFromSpan, textRangeContainsPositionInclusive, firstOrUndefined, codefix, Diagnostics, TextInsertion, DocCommentTemplateOptions, JsxClosingTagInfo, NavigateToItem, ScriptElementKind, combinePaths, length, RefactorTriggerReason, firstDefined, CallHierarchyItem, mapOneOrMany, getPathUpdater, createGetCanonicalFileName, ApplicableRefactorInfo, transpileModule, changeExtension, isRootedDiskPath, append, regExpEscape } from "./ts";
+@@ -10,7 +9,8 @@ import { memoize, assertInvariants, assertDiagnosticsEquals, assertStructuralEqu
+ import { SessionClient, protocol } from "./ts.server";
+ import * as FourSlashInterface from "./FourSlashInterface";
+ import * as ts from "./ts";
+-import ArrayOrSingle = FourSlashInterface.ArrayOrSingle;
++
++type ArrayOrSingle<T> = FourSlashInterface.ArrayOrSingle<T>;
+ 
+ export const enum FourSlashTestType {
+     Native,
+diff --git a/src/harness/harnessIO.ts b/src/harness/harnessIO.ts
+index a575f61b46..3444aa843e 100644
+--- a/src/harness/harnessIO.ts
++++ b/src/harness/harnessIO.ts
+@@ -1,13 +1,13 @@
+ import { RunnerBase, TypeWriterWalker, TypeWriterResult } from "./Harness";
+-import { FileSystemEntries, sys, compareStringsCaseSensitive, compareStringsCaseInsensitive, combinePaths, ScriptTarget, createSourceFile, ESMap, SourceFile, getEntries, CompilerOptions, getEmitScriptTarget, CommandLineOption, Diagnostic, parseListTypeOption, parseCustomTypeOption, CommandLineOptionOfCustomType, cloneCompilerOptions, NewLineKind, map, getNormalizedAbsolutePath, fileExtensionIs, Extension, forEach, getAllowJSCompilerOption, removeFileExtension, getDeclarationEmitExtensionForPath, formatDiagnosticsWithColorAndContext, formatDiagnostics, getErrorSummaryText, getErrorCountForSummary, sort, compareDiagnostics, createGetCanonicalFileName, flattenDiagnosticMessageText, diagnosticCategoryName, formatLocation, identity, DiagnosticWithLocation, comparePaths, Comparison, computeLineStarts, TextSpan, textSpanEnd, countWhere, Program, endsWith, flatMap, getAreDeclarationMapsEnabled, contains, convertToBase64, getBaseFileName, CharacterCodes, ScriptKind, length, normalizeSlashes, toPath, startsWith, findIndex, arrayFrom, orderedRemoveItemAt, ReadonlyESMap, optionDeclarations, equateStringsCaseInsensitive, hasProperty, ParsedCommandLine, ParseConfigHost, parseJsonText, normalizePath, getDirectoryPath, parseJsonSourceFileConfigFileContent, ForegroundColorEscapeSequences, find } from "./ts";
++import { FileSystemEntries, sys, compareStringsCaseSensitive, compareStringsCaseInsensitive, combinePaths, ScriptTarget, createSourceFile, Map, ESMap, SourceFile, getEntries, CompilerOptions, getEmitScriptTarget, CommandLineOption, Diagnostic, parseListTypeOption, parseCustomTypeOption, CommandLineOptionOfCustomType, cloneCompilerOptions, NewLineKind, map, getNormalizedAbsolutePath, fileExtensionIs, Extension, forEach, getAllowJSCompilerOption, removeFileExtension, getDeclarationEmitExtensionForPath, formatDiagnosticsWithColorAndContext, formatDiagnostics, getErrorSummaryText, getErrorCountForSummary, sort, compareDiagnostics, createGetCanonicalFileName, flattenDiagnosticMessageText, diagnosticCategoryName, formatLocation, identity, DiagnosticWithLocation, comparePaths, Comparison, computeLineStarts, TextSpan, textSpanEnd, countWhere, Program, endsWith, flatMap, getAreDeclarationMapsEnabled, contains, convertToBase64, getBaseFileName, CharacterCodes, ScriptKind, length, normalizeSlashes, toPath, startsWith, findIndex, arrayFrom, orderedRemoveItemAt, ReadonlyESMap, optionDeclarations, equateStringsCaseInsensitive, hasProperty, ParsedCommandLine, ParseConfigHost, parseJsonText, normalizePath, getDirectoryPath, parseJsonSourceFileConfigFileContent, ForegroundColorEscapeSequences, find } from "./ts";
+ import { findUpRoot, assertInvariants, removeByteOrderMark, removeTestPathPrefixes, canonicalizeForHarness, splitContentByNewlines, encodeString } from "./Utils";
+ import { combine, dirname, isDeclaration, isJson, isTypeScript, isJavaScript, addTrailingSeparator } from "./vpath";
+ import { FileSet, srcFolder, builtFolder, testLibFolder, createFromFileSystem, Symlink } from "./vfs";
+ import { CompilationResult } from "./compiler";
+ import { TextDocument } from "./documents";
+ import { CompilerHost } from "./fakes";
+-import * as ts from "./ts";
+ import * as compiler from "./compiler";
++
+ export interface IO {
+     newLine(): string;
+     getCurrentDirectory(): string;
+@@ -264,7 +264,7 @@ export namespace Compiler {
+         }
+ 
+         if (!libFileNameSourceFileMap) {
+-            libFileNameSourceFileMap = new ts.Map(getEntries({
++            libFileNameSourceFileMap = new Map(getEntries({
+                 [defaultLibFileName]: createSourceFileAndAssertInvariants(defaultLibFileName, IO.readFile(libFolder + "lib.es5.d.ts")!, /*languageVersion*/ ScriptTarget.Latest)
+             }));
+         }
+@@ -307,7 +307,7 @@ export namespace Compiler {
+         noTypesAndSymbols?: boolean;
+     }
+ 
+-    // Additional options not already in ts.optionDeclarations
++    // Additional options not already in optionDeclarations
+     const harnessOptionDeclarations: CommandLineOption[] = [
+         { name: "allowNonTsExtensions", type: "boolean", defaultValueDescription: "false" },
+         { name: "useCaseSensitiveFileNames", type: "boolean", defaultValueDescription: "false" },
+@@ -329,9 +329,9 @@ export namespace Compiler {
+     let optionsIndex: ESMap<string, CommandLineOption>;
+     function getCommandLineOption(name: string): CommandLineOption | undefined {
+         if (!optionsIndex) {
+-            optionsIndex = new ts.Map<string, CommandLineOption>();
+-            const optionDeclarations = harnessOptionDeclarations.concat(ts.optionDeclarations);
+-            for (const option of optionDeclarations) {
++            optionsIndex = new Map<string, CommandLineOption>();
++            const optionDecls = harnessOptionDeclarations.concat(optionDeclarations);
++            for (const option of optionDecls) {
+                 optionsIndex.set(option.name.toLowerCase(), option);
+             }
+         }
+@@ -605,7 +605,7 @@ export namespace Compiler {
+         errorsReported = 0;
+ 
+         // 'merge' the lines of each input file with any errors associated with it
+-        const dupeCase = new ts.Map<string, number>();
++        const dupeCase = new Map<string, number>();
+         for (const inputFile of inputFiles.filter(f => f.content !== undefined)) {
+             // Filter down to the errors in the file
+             const fileErrors = diagnostics.filter((e): e is DiagnosticWithLocation => {
+@@ -790,7 +790,7 @@ export namespace Compiler {
+             if (skipBaseline) {
+                 return;
+             }
+-            const dupeCase = new ts.Map<string, number>();
++            const dupeCase = new Map<string, number>();
+ 
+             for (const file of allFiles) {
+                 const { unitName } = file;
+@@ -963,7 +963,7 @@ export namespace Compiler {
+         // Collect, test, and sort the fileNames
+         const files = Array.from(outputFiles);
+         files.slice().sort((a, b) => compareStringsCaseSensitive(cleanName(a.file), cleanName(b.file)));
+-        const dupeCase = new ts.Map<string, number>();
++        const dupeCase = new Map<string, number>();
+         // Yield them
+         for (const outputFile of files) {
+             yield [checkDuplicatedFileName(outputFile.file, dupeCase), "/*====== " + outputFile.file + " ======*/\r\n" + removeByteOrderMark(outputFile.text)];
+@@ -1099,7 +1099,7 @@ function getVaryByStarSettingValues(varyBy: string): ReadonlyESMap<string, strin
+             return option.type;
+         }
+         if (option.type === "boolean") {
+-            return booleanVaryByStarSettingValues || (booleanVaryByStarSettingValues = new ts.Map(getEntries({
++            return booleanVaryByStarSettingValues || (booleanVaryByStarSettingValues = new Map(getEntries({
+                 true: 1,
+                 false: 0
+             })));
+@@ -1449,7 +1449,7 @@ export namespace Baseline {
+         string
+     ]> | null, opts?: BaselineOptions, referencedExtensions?: string[]): void {
+         const gen = generateContent();
+-        const writtenFiles = new ts.Map<string, true>();
++        const writtenFiles = new Map<string, true>();
+         const errors: Error[] = [];
+ 
+         // eslint-disable-next-line no-null/no-null
+diff --git a/src/harness/virtualFileSystemWithWatch.ts b/src/harness/virtualFileSystemWithWatch.ts
+index 02edd3684f..abfd8c6aca 100644
+--- a/src/harness/virtualFileSystemWithWatch.ts
++++ b/src/harness/virtualFileSystemWithWatch.ts
+@@ -1,7 +1,7 @@
+-import { Path, combinePaths, getDirectoryPath, ESMap, patchWriteFileEnsuringDirectory, isString, SortedArray, isArray, MultiMap, FileWatcher, forEach, arrayFrom, ReadonlyESMap, arrayToMap, isNumber, identity, PollingInterval, WatchOptions, FileWatcherCallback, FsWatchCallback, FormatDiagnosticsHost, ModuleResolutionHost, createMultiMap, RequireResult, WatchFileKind, HostWatchFile, HostWatchDirectory, createGetCanonicalFileName, toPath, createSystemWatchFunctions, createSingleFileWatcherPerName, getNormalizedAbsolutePath, directorySeparator, Debug, clone, returnFalse, FileWatcherEventKind, getBaseFileName, insertSorted, compareStringsCaseSensitive, filterMutate, FileSystemEntryKind, createFileWatcherCallback, getRelativePathToDirectoryOrUrl, mapDefined, matchFiles, generateDjb2Hash, sys, clear, WatchDirectoryKind, PollingWatchKind } from "./ts";
++import { Path, combinePaths, getDirectoryPath, Set, Map, ESMap, patchWriteFileEnsuringDirectory, isString, SortedArray, isArray, MultiMap, FileWatcher, forEach, arrayFrom, ReadonlyESMap, arrayToMap, isNumber, identity, PollingInterval, WatchOptions, FileWatcherCallback, FsWatchCallback, FormatDiagnosticsHost, ModuleResolutionHost, createMultiMap, RequireResult, WatchFileKind, HostWatchFile, HostWatchDirectory, createGetCanonicalFileName, toPath, createSystemWatchFunctions, createSingleFileWatcherPerName, getNormalizedAbsolutePath, directorySeparator, Debug, clone, returnFalse, FileWatcherEventKind, getBaseFileName, insertSorted, compareStringsCaseSensitive, filterMutate, FileSystemEntryKind, createFileWatcherCallback, getRelativePathToDirectoryOrUrl, mapDefined, matchFiles, generateDjb2Hash, sys, clear, WatchDirectoryKind, PollingWatchKind } from "./ts";
+ import { ServerHost } from "./ts.server";
+ import { IO } from "./Harness";
+-import * as ts from "./ts";
++
+ export const libFile: File = {
+     path: "/a/lib/lib.d.ts",
+     content: `/// <reference no-default-lib="true"/>
+@@ -136,7 +136,7 @@ export function getDiffInKeys<T>(map: ESMap<string, T>, expectedKeys: readonly s
+     }
+     const notInActual: string[] = [];
+     const duplicates: string[] = [];
+-    const seen = new ts.Map<string, true>();
++    const seen = new Map<string, true>();
+     forEach(expectedKeys, expectedKey => {
+         if (seen.has(expectedKey)) {
+             duplicates.push(expectedKey);
+@@ -237,8 +237,8 @@ export function checkWatchedDirectoriesDetailed(host: TestServerHost, expectedDi
+ }
+ 
+ export function checkOutputContains(host: TestServerHost, expected: readonly string[]) {
+-    const mapExpected = new ts.Set(expected);
+-    const mapSeen = new ts.Set<string>();
++    const mapExpected = new Set(expected);
++    const mapSeen = new Set<string>();
+     for (const f of host.getOutput()) {
+         assert.isFalse(mapSeen.has(f), `Already found ${f} in ${JSON.stringify(host.getOutput())}`);
+         if (mapExpected.has(f)) {
+@@ -250,7 +250,7 @@ export function checkOutputContains(host: TestServerHost, expected: readonly str
+ }
+ 
+ export function checkOutputDoesNotContain(host: TestServerHost, expectedToBeAbsent: string[] | readonly string[]) {
+-    const mapExpectedToBeAbsent = new ts.Set(expectedToBeAbsent);
++    const mapExpectedToBeAbsent = new Set(expectedToBeAbsent);
+     for (const f of host.getOutput()) {
+         assert.isFalse(mapExpectedToBeAbsent.has(f), `Contains ${f} in ${JSON.stringify(host.getOutput())}`);
+     }
+@@ -353,7 +353,7 @@ export class TestServerHost implements ServerHost, FormatDiagnosticsHost, Module
+ 
+     private readonly output: string[] = [];
+ 
+-    private fs: ESMap<Path, FSEntry> = new ts.Map();
++    private fs: ESMap<Path, FSEntry> = new Map();
+     private time = timeIncrements;
+     getCanonicalFileName: (s: string) => string;
+     private toPath: (f: string) => Path;
+@@ -1003,7 +1003,7 @@ export class TestServerHost implements ServerHost, FormatDiagnosticsHost, Module
+     }
+ 
+     snap(): ESMap<Path, FSEntry> {
+-        const result = new ts.Map<Path, FSEntry>();
++        const result = new Map<Path, FSEntry>();
+         this.fs.forEach((value, key) => {
+             const cloneValue = clone(value);
+             if (isFsFolder(cloneValue)) {
+@@ -1016,7 +1016,7 @@ export class TestServerHost implements ServerHost, FormatDiagnosticsHost, Module
+     }
+ 
+     writtenFiles?: ESMap<Path, number>;
+-    diff(baseline: string[], base: ESMap<string, FSEntry> = new ts.Map()) {
++    diff(baseline: string[], base: ESMap<string, FSEntry> = new Map()) {
+         this.fs.forEach(newFsEntry => {
+             diffFsEntry(baseline, base.get(newFsEntry.path), newFsEntry, this.writtenFiles);
+         });
+@@ -1180,7 +1180,7 @@ export type TestServerHostTrackingWrittenFiles = TestServerHost & {
+ export function changeToHostTrackingWrittenFiles(inputHost: TestServerHost) {
+     const host = inputHost as TestServerHostTrackingWrittenFiles;
+     const originalWriteFile = host.writeFile;
+-    host.writtenFiles = new ts.Map<Path, number>();
++    host.writtenFiles = new Map<Path, number>();
+     host.writeFile = (fileName, content) => {
+         originalWriteFile.call(host, fileName, content);
+         const path = host.toFullPath(fileName);
+diff --git a/src/server/session.ts b/src/server/session.ts
+index 6efbc57e0b..3eecadeb17 100644
+--- a/src/server/session.ts
++++ b/src/server/session.ts
+@@ -1,7 +1,9 @@
+ import { HostCancellationToken, CompilerOptions, getEmitDeclarations, Diagnostic, flattenDiagnosticMessageText, diagnosticCategoryName, map, DiagnosticRelatedInformation, getLineAndCharacterOfPosition, LineAndCharacter, TextChange, textSpanEnd, Debug, tracing, OperationCanceledException, MultiMap, Path, flatMapToMutable, isArray, flatMap, deduplicate, equateValues, contains, filter, DocumentPosition, UserPreferences, RenameLocation, documentSpansEqual, firstOrUndefined, ReferencedSymbol, ReferencedSymbolDefinitionInfo, createTextSpan, find, ReferenceEntry, memoize, Push, tryAddToSet, DocumentSpan, TextSpan, LanguageServiceMode, PerformanceEvent, PossibleProgramFileInfo, getSnapshotText, perfLogger, WithMetadata, isString, arrayFrom, SemanticClassificationFormat, concatenate, DefinitionInfo, EmitOutput, JSDocTagInfo, SymbolDisplayPart, JSDocLinkDisplayPart, SignatureHelpItem, ImplementationLocation, TextInsertion, DocumentHighlights, RenameInfo, identity, displayPartsToString, ScriptKind, QuickInfo, createTextSpanFromBounds, formatting, CompletionTriggerKind, stableSort, mapDefined, startsWith, compareStringsCaseSensitiveUI, cast, fileExtensionIs, Extension, outFile, server, singleIterator, normalizePath, NavigationBarItem, NavigationTree, NavigateToItem, getSupportedCodeFixes, TextRange, RefactorEditInfo, FileTextChanges, decodedTextSpanIntersectsWith, CodeActionCommand, toArray, CodeAction, stringContains, SelectionRange, CallHierarchyItem, CallHierarchyIncomingCall, CallHierarchyOutgoingCall, mapOneOrMany, toFileNameLowerCase, getEntries, version, mapIterator, arrayIterator, mapDefinedIterator, arrayReverseIterator, FormatCodeSettings, first, computeLineAndCharacterOfPosition, computeLineStarts, CompletionEntryData } from "./ts";
+-import { Project, NormalizedPath, isInferredProject, isExternalProject, protocol, Logger, LogLevel, indent, ServerHost, ProjectService, emptyArray, toNormalizedPath, isConfiguredProject, ITypingsInstaller, ProjectServiceEventHandler, GcTimer, ProjectServiceOptions, ProjectServiceEvent, ProjectsUpdatedInBackgroundEvent, ProjectLoadingStartEvent, ProjectLoadingFinishEvent, LargeFileReferencedEvent, ConfigFileDiagEvent, ProjectLanguageServiceStateEvent, ProjectInfoTelemetryEvent, ProjectKind, Msg, updateProjectIfDirty, ScriptInfo, Errors, convertFormatOptions, convertUserPreferences, convertScriptKindName, stringifyIndented, ScriptInfoOrConfig, isConfigFile } from "./ts.server";
++import { Project, NormalizedPath, isInferredProject, isExternalProject, Logger, LogLevel, indent, ServerHost, ProjectService, emptyArray, toNormalizedPath, isConfiguredProject, ITypingsInstaller, ProjectServiceEventHandler, GcTimer, ProjectServiceOptions, ProjectServiceEvent, ProjectsUpdatedInBackgroundEvent, ProjectLoadingStartEvent, ProjectLoadingFinishEvent, LargeFileReferencedEvent, ConfigFileDiagEvent, ProjectLanguageServiceStateEvent, ProjectInfoTelemetryEvent, ProjectKind, Msg, updateProjectIfDirty, ScriptInfo, Errors, convertFormatOptions, convertUserPreferences, convertScriptKindName, stringifyIndented, ScriptInfoOrConfig, isConfigFile } from "./ts.server";
+ import { Location, DiagnosticWithFileName, CommandTypes, Message, PerformanceData, RequestCompletedEventBody, ProjectLoadingStartEventBody, ProjectLoadingFinishEventBody, LargeFileReferencedEventBody, ConfigFileDiagnosticEventBody, ProjectLanguageServiceStateEventName, ProjectLanguageServiceStateEventBody, TelemetryEventName, TelemetryEventBody, ProjectsUpdatedInBackgroundEventBody, FileRequestArgs, Response, DiagnosticEventKind, DiagnosticEventBody, EncodedSyntacticClassificationsRequestArgs, EncodedSemanticClassificationsRequestArgs, DiagnosticWithLinePosition, CompilerOptionsDiagnosticsRequestArgs, FileLocationRequestArgs, FileSpanWithContext, DefinitionInfoAndBoundSpan, EmitOutputRequestArgs, FileSpan, OccurrencesResponseItem, SyntacticDiagnosticsSyncRequestArgs, SemanticDiagnosticsSyncRequestArgs, SuggestionDiagnosticsSyncRequestArgs, JsxClosingTagRequestArgs, DocumentHighlightsRequestArgs, DocumentHighlightsItem, InlayHintsRequestArgs, InlayHintItem, SetCompilerOptionsForInferredProjectsArgs, ProjectInfoRequestArgs, ProjectInfo, RenameRequestArgs, RenameResponseBody, RenameInfoSuccess, SpanGroup, ReferencesResponseBody, ReferencesResponseItem, FileReferencesResponseBody, OutliningSpan, TodoCommentRequestArgs, SpanOfEnclosingCommentRequestArgs, IndentationRequestArgs, BraceCompletionRequestArgs, QuickInfoResponseBody, FormatRequestArgs, CodeEdit, FormatOnKeyRequestArgs, CompletionsRequestArgs, CompletionEntry, CompletionInfo, CompletionDetailsRequestArgs, CompletionEntryDetails, CompileOnSaveAffectedFileListSingleProject, CompileOnSaveEmitFileRequestArgs, EmitResult, SignatureHelpRequestArgs, SignatureHelpItems, ChangeRequestArgs, ReloadRequestArgs, NavtoRequestArgs, NavtoItem, FileLocationOrRangeRequestArgs, FileRangeRequestArgs, GetApplicableRefactorsRequestArgs, ApplicableRefactorInfo, GetEditsForRefactorRequestArgs, OrganizeImportsRequestArgs, FileCodeEdits, GetEditsForFileRenameRequestArgs, CodeFixRequestArgs, CodeFixAction, GetCombinedCodeFixRequestArgs, CombinedCodeActions, ApplyCodeActionCommandRequestArgs, ConfigurePluginRequestArguments, SelectionRangeRequestArgs, Request, StatusResponseBody, OpenExternalProjectRequest, OpenExternalProjectsRequest, CloseExternalProjectRequest, SynchronizeProjectListRequest, UpdateOpenRequest, ApplyChangedToOpenFilesRequest, DefinitionRequest, EmitOutputRequest, FileLocationRequest, RenameRequest, RenameFullRequest, OpenRequest, QuickInfoRequest, FileRequest, TodoCommentRequest, IndentationRequest, BraceCompletionRequest, DocCommentTemplateRequest, SpanOfEnclosingCommentRequest, FileReferencesRequest, FormatRequest, FormatOnKeyRequest, CompletionsRequest, CompletionDetailsRequest, CompileOnSaveAffectedFileListRequest, CompileOnSaveEmitFileRequest, SignatureHelpRequest, CompilerOptionsDiagnosticsRequest, EncodedSyntacticClassificationsRequest, EncodedSemanticClassificationsRequest, SemanticDiagnosticsSyncRequest, SyntacticDiagnosticsSyncRequest, SuggestionDiagnosticsSyncRequest, GeterrRequest, GeterrForProjectRequest, ChangeRequest, ConfigureRequest, ReloadRequest, SavetoRequestArgs, NavtoRequest, DocumentHighlightsRequest, SetCompilerOptionsForInferredProjectsRequest, ProjectInfoRequest, JsxClosingTagRequest, CodeFixRequest, GetCombinedCodeFixRequest, ApplyCodeActionCommandRequest, GetApplicableRefactorsRequest, GetEditsForRefactorRequest, OrganizeImportsRequest, GetEditsForFileRenameRequest, ConfigurePluginRequest, SelectionRangeRequest, PrepareCallHierarchyRequest, ProvideCallHierarchyIncomingCallsRequest, ProvideCallHierarchyOutgoingCallsRequest, ToggleLineCommentRequest, ToggleMultilineCommentRequest, CommentSelectionRequest, UncommentSelectionRequest, InlayHintsRequest, TextSpanWithContext } from "./ts.server.protocol";
+ import * as ts from "./ts";
++import * as protocol from "./ts.server.protocol";
++
+ interface StackTraceError extends Error {
+     stack?: string;
+ }
+diff --git a/src/testRunner/parallel/host.ts b/src/testRunner/parallel/host.ts
+index 0e6e938a35..7e7f478198 100644
+--- a/src/testRunner/parallel/host.ts
++++ b/src/testRunner/parallel/host.ts
+@@ -1,8 +1,8 @@
+ import { findUpFile } from "../Utils";
+ import { configOption, IO, TestRunnerKind, runners, workerCount, noColors, TestConfig, lightMode, runUnitTests, stackTraceLimit, globalTimeout, taskConfigsFolder, keepFailed } from "../Harness";
+ import { Task, ErrorInfo, TestInfo, TaskTimeout, ParallelClientMessage, ParallelHostMessage, shimNoopTestInterface } from "../Harness.Parallel";
+-import { combinePaths, Debug } from "../ts";
+-import * as ts from "../ts";
++import { Map, combinePaths, Debug } from "../ts";
++
+ export function start() {
+     const Mocha = require("mocha") as typeof import("mocha");
+     const Base = Mocha.reporters.Base;
+@@ -28,7 +28,7 @@ export function start() {
+     let totalCost = 0;
+ 
+     class RemoteSuite extends Mocha.Suite {
+-        suiteMap = new ts.Map<string, RemoteSuite>();
++        suiteMap = new Map<string, RemoteSuite>();
+         constructor(title: string) {
+             super(title);
+             this.pending = false;
+diff --git a/src/testRunner/unittests/tsbuild/moduleResolution.ts b/src/testRunner/unittests/tsbuild/moduleResolution.ts
+index cb3f2b6804..a02c9e738d 100644
+--- a/src/testRunner/unittests/tsbuild/moduleResolution.ts
++++ b/src/testRunner/unittests/tsbuild/moduleResolution.ts
+@@ -1,6 +1,8 @@
+-import { CompilerOptions, emptyArray, verifyTsc, loadProjectFromFiles } from "../../ts";
++import { CompilerOptions, emptyArray, loadProjectFromFiles } from "../../ts";
++import { verifyTsc } from "../tsc/helpers";
+ import { createWatchedSystem, projectRoot, libFile, verifyTscWatch, replaceFileText, runQueuedTimeoutCallbacks } from "../../ts.tscWatch";
+ import { dedent } from "../../Utils";
++
+ describe("unittests:: tsbuild:: moduleResolution:: handles the modules and options from referenced project correctly", () => {
+     function sys(optionsToExtend?: CompilerOptions) {
+         return createWatchedSystem([
+diff --git a/src/testRunner/unittests/tsbuildWatch/programUpdates.ts b/src/testRunner/unittests/tsbuildWatch/programUpdates.ts
+index e822ce838d..1a40215204 100644
+--- a/src/testRunner/unittests/tsbuildWatch/programUpdates.ts
++++ b/src/testRunner/unittests/tsbuildWatch/programUpdates.ts
+@@ -1,7 +1,7 @@
+ import { TestFSWithWatch, isString, emptyArray, createSolutionBuilderWithWatchHost, createSolutionBuilderWithWatch, noop } from "../../ts";
+ import { createWatchedSystem, File, TscWatchCompileChange, checkSingleTimeoutQueueLengthAndRun, libFile, verifyTscWatch, checkWatchedFiles, checkWatchedDirectories, checkOutputErrorsInitial, checkSingleTimeoutQueueLengthAndRunAndVerifyNoTimeout, WatchedSystem, projectRoot, runQueuedTimeoutCallbacks, noopChange, commonFile1, commonFile2 } from "../../ts.tscWatch";
+-import * as ts from "../../ts";
+-import projectsLocation = ts.TestFSWithWatch.tsbuildProjectsLocation;
++import projectsLocation = TestFSWithWatch.tsbuildProjectsLocation;
++
+ describe("unittests:: tsbuildWatch:: watchMode:: program updates", () => {
+     type TsBuildWatchSystem = TestFSWithWatch.TestServerHostTrackingWrittenFiles;
+ 
+diff --git a/src/testRunner/unittests/tsserver/compileOnSave.ts b/src/testRunner/unittests/tsserver/compileOnSave.ts
+index da9bad12ab..6c044db85a 100644
+--- a/src/testRunner/unittests/tsserver/compileOnSave.ts
++++ b/src/testRunner/unittests/tsserver/compileOnSave.ts
+@@ -2,8 +2,8 @@ import { ServerHost, Session, protocol } from "../../ts.server";
+ import { TestTypingsInstaller, File, makeSessionRequest, createServerHost, libFile, createSession, openFilesForSession, checkNumberOfProjects, checkProjectRootFiles, toExternalFiles, protocolTextSpanFromSubstring, TestSession, checkProjectActualFiles } from "../../ts.projectSystem";
+ import { compareStringsCaseSensitive, map, arrayIsEqualTo, CompilerOptions, projectSystem, Extension, stringContains, emptyArray, formatStringFromArgs, Diagnostics, diagnosticCategoryName, changeExtension } from "../../ts";
+ import { projectRoot } from "../../ts.tscWatch";
+-import * as ts from "../../ts";
+-import CommandNames = ts.server.CommandNames;
++import { CommandNames } from "../../ts.server";
++
+ function createTestTypingsInstaller(host: ServerHost) {
+     return new TestTypingsInstaller("/a/data/", /*throttleLimit*/5, host);
+ }
+diff --git a/src/testRunner/unittests/tsserver/helpers.ts b/src/testRunner/unittests/tsserver/helpers.ts
+index 933d4c15a3..f93d9e253d 100644
+--- a/src/testRunner/unittests/tsserver/helpers.ts
++++ b/src/testRunner/unittests/tsserver/helpers.ts
+@@ -1,11 +1,15 @@
+-import { TestFSWithWatch, convertToObject, parseJsonText, Path, server, noop, returnFalse, returnUndefined, Debug, returnTrue, version, MapLike, notImplemented, TypeAcquisition, SortedReadonlyArray, isString, ESMap, map, filterMutate, sys, clear, mapDefined, isArray, HostCancellationToken, arrayFrom, mapDefinedIterator, normalizePath, forEachAncestorDirectory, combinePaths, directorySeparator, computeLineStarts, computeLineAndCharacterOfPosition, textSpanEnd, TextSpan, createTextSpan } from "../../ts";
++import { TestFSWithWatch, convertToObject, parseJsonText, Path, noop, returnFalse, returnUndefined, Debug, returnTrue, version, MapLike, notImplemented, TypeAcquisition, SortedReadonlyArray, isString, ESMap, map, filterMutate, sys, clear, mapDefined, isArray, HostCancellationToken, arrayFrom, mapDefinedIterator, normalizePath, forEachAncestorDirectory, combinePaths, directorySeparator, computeLineStarts, computeLineAndCharacterOfPosition, textSpanEnd, TextSpan, createTextSpan } from "../../ts";
+ import { Baseline } from "../../Harness";
+ import { ProjectService, Project, ITypingsInstaller, ServerHost, SetTypings, InvalidateCachedTypings, createInstallTypingsRequest, FileStats, ProjectServiceEvent, ProjectInfoTelemetryEventData, ProjectInfoTelemetryEvent, OpenFileInfo, OpenFileInfoTelemetryEventData, OpenFileInfoTelemetryEvent, SessionOptions, Session, LogLevel, toEvent, nullCancellationToken, ProjectServiceOptions, nullTypingsInstaller, ProjectKind, ServerCancellationToken } from "../../ts.server";
+ import { byteLength } from "../../Utils";
+ import * as ts from "../../ts";
+-export import TI = ts.server.typingsInstaller;
+-export import protocol = ts.server.protocol;
+-export import CommandNames = ts.server.CommandNames;
++import { commonFile1, commonFile2 } from "../tscWatch/helpers";
++import * as TI from "../../../typingsInstallerCore/typingsInstaller";
++export { TI };
++import * as protocol from "../../../server/ts.server.protocol";
++export { protocol };
++import * as server from "../../../server/ts.server";
++export import CommandNames = server.CommandNames;
+ export import TestServerHost = ts.TestFSWithWatch.TestServerHost;
+ export type File = TestFSWithWatch.File;
+ export type SymLink = TestFSWithWatch.SymLink;
+@@ -17,8 +21,7 @@ export import checkWatchedFiles = ts.TestFSWithWatch.checkWatchedFiles;
+ export import checkWatchedFilesDetailed = ts.TestFSWithWatch.checkWatchedFilesDetailed;
+ export import checkWatchedDirectories = ts.TestFSWithWatch.checkWatchedDirectories;
+ export import checkWatchedDirectoriesDetailed = ts.TestFSWithWatch.checkWatchedDirectoriesDetailed;
+-export import commonFile1 = ts.tscWatch.commonFile1;
+-export import commonFile2 = ts.tscWatch.commonFile2;
++export { commonFile1, commonFile2 };
+ 
+ const outputEventRegex = /Content\-Length: [\d]+\r\n\r\n/;
+ export function mapOutputToJson(s: string) {
+diff --git a/src/testRunner/unittests/tsserver/session.ts b/src/testRunner/unittests/tsserver/session.ts
+index 12ea204fbd..19122af24c 100644
+--- a/src/testRunner/unittests/tsserver/session.ts
++++ b/src/testRunner/unittests/tsserver/session.ts
+@@ -4,8 +4,8 @@ import { mockHash } from "../../Harness";
+ import { byteLength } from "../../Utils";
+ import { nullLogger, createHasErrorMessageLogger } from "../../ts.projectSystem";
+ import * as ts from "../../ts";
+-const _chai: typeof import("chai") = require("chai");
+-const expect: typeof _chai.expect = _chai.expect;
++import { expect } from "chai";
++
+ let lastWrittenToHost: string;
+ const noopFileWatcher: FileWatcher = { close: noop };
+ const mockHost: ServerHost = {
+diff --git a/src/testRunner/unittests/tsserver/typingsInstaller.ts b/src/testRunner/unittests/tsserver/typingsInstaller.ts
+index bda60d1254..1dcd8c7b39 100644
+--- a/src/testRunner/unittests/tsserver/typingsInstaller.ts
++++ b/src/testRunner/unittests/tsserver/typingsInstaller.ts
+@@ -5,6 +5,7 @@ import { projects } from "../../ts.tscWatch";
+ import * as ts from "../../ts";
+ import validatePackageName = ts.JsTyping.validatePackageName;
+ import NameValidationResult = ts.JsTyping.NameValidationResult;
++import { typingsName } from "../../../typingsInstallerCore/typingsInstaller";
+ 
+ interface InstallerParams {
+     globalTypingsCacheLocation?: string;
+@@ -47,8 +48,6 @@ function trackingLogger(): {
+     };
+ }
+ 
+-import typingsName = ts.projectSystem.TI.typingsName;
+-
+ describe("unittests:: tsserver:: typingsInstaller:: local module", () => {
+     it("should not be picked up", () => {
+         const f1 = {
+-- 
+2.33.1
+
