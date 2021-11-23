@@ -1,7 +1,7 @@
-From 720cb980f87db9d30ef030b3f2f24bd611ac777e Mon Sep 17 00:00:00 2001
+From a89eb0673395bddb39baea5065520618234747a4 Mon Sep 17 00:00:00 2001
 From: Eli Barzilay <eli@barzilay.org>
 Date: Thu, 28 Oct 2021 13:26:41 -0400
-Subject: [PATCH 2/4] Post conversion fixes
+Subject: [PATCH 2/5] Post conversion fixes
 
 ---
  Gulpfile.js                                   |  9 +++----
@@ -19,14 +19,14 @@ Subject: [PATCH 2/4] Post conversion fixes
  12 files changed, 54 insertions(+), 47 deletions(-)
 
 diff --git a/Gulpfile.js b/Gulpfile.js
-index c9d3feff80..4708b4c9f1 100644
+index c9d3feff80..6dc97369b3 100644
 --- a/Gulpfile.js
 +++ b/Gulpfile.js
 @@ -18,6 +18,7 @@ const { buildProject, cleanProject, watchProject } = require("./scripts/build/pr
  const cmdLineOptions = require("./scripts/build/options");
  
  const copyright = "CopyrightNotice.txt";
-+const testRoot = "built/local/testRunner/Harness.js"
++const testRoot = "built/local/testRunner/Harness.js";
  const cleanTasks = [];
  
  const buildScripts = () => buildProject("scripts");
@@ -62,7 +62,7 @@ index c9d3feff80..4708b4c9f1 100644
  });
  task("watch", series(preBuild, preTest, parallel(watchLib, watchDiagnostics, watchServices, watchLssl, watchTests, watchRuntests)));
 diff --git a/src/harness/fourslashImpl.ts b/src/harness/fourslashImpl.ts
-index 77cefd17e2..12c321b642 100644
+index e63fea7ef1..b500753548 100644
 --- a/src/harness/fourslashImpl.ts
 +++ b/src/harness/fourslashImpl.ts
 @@ -1,4 +1,3 @@
@@ -81,7 +81,7 @@ index 77cefd17e2..12c321b642 100644
  export const enum FourSlashTestType {
      Native,
 diff --git a/src/harness/harnessIO.ts b/src/harness/harnessIO.ts
-index a575f61b46..3444aa843e 100644
+index 9e51906150..b821a35d8b 100644
 --- a/src/harness/harnessIO.ts
 +++ b/src/harness/harnessIO.ts
 @@ -1,13 +1,13 @@
@@ -116,8 +116,8 @@ index a575f61b46..3444aa843e 100644
 -    // Additional options not already in ts.optionDeclarations
 +    // Additional options not already in optionDeclarations
      const harnessOptionDeclarations: CommandLineOption[] = [
-         { name: "allowNonTsExtensions", type: "boolean", defaultValueDescription: "false" },
-         { name: "useCaseSensitiveFileNames", type: "boolean", defaultValueDescription: "false" },
+         { name: "allowNonTsExtensions", type: "boolean", defaultValueDescription: false },
+         { name: "useCaseSensitiveFileNames", type: "boolean", defaultValueDescription: false },
 @@ -329,9 +329,9 @@ export namespace Compiler {
      let optionsIndex: ESMap<string, CommandLineOption>;
      function getCommandLineOption(name: string): CommandLineOption | undefined {
@@ -177,7 +177,7 @@ index a575f61b46..3444aa843e 100644
  
          // eslint-disable-next-line no-null/no-null
 diff --git a/src/harness/virtualFileSystemWithWatch.ts b/src/harness/virtualFileSystemWithWatch.ts
-index 02edd3684f..abfd8c6aca 100644
+index d4a9287d7b..e384190a78 100644
 --- a/src/harness/virtualFileSystemWithWatch.ts
 +++ b/src/harness/virtualFileSystemWithWatch.ts
 @@ -1,7 +1,7 @@
@@ -256,7 +256,7 @@ index 02edd3684f..abfd8c6aca 100644
          originalWriteFile.call(host, fileName, content);
          const path = host.toFullPath(fileName);
 diff --git a/src/server/session.ts b/src/server/session.ts
-index 6efbc57e0b..3eecadeb17 100644
+index c8acfe96ff..c68646982f 100644
 --- a/src/server/session.ts
 +++ b/src/server/session.ts
 @@ -1,7 +1,9 @@

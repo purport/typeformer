@@ -84,6 +84,8 @@ undo_whitespaces() {
 
 patchdir="$here/patches"
 apply_patches() {
+  # To update patch files:
+  #   git format-patch -o ~/ts/typeformer/patches ":/CONVERTED TO MODULES"
   local msg="$(grep "^Subject" "$patchdir/$(ls "$patchdir" | tail -1)")"
   msg="${msg#"Subject: [PATCH "?/?"] "}"
   tweak_and_commit "$msg" \
