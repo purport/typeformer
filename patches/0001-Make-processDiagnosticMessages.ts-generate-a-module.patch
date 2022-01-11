@@ -1,4 +1,4 @@
-From 36aff12bfdb4778bbcdade4f910c304c3d923559 Mon Sep 17 00:00:00 2001
+From 7f1245c96e13f8da52483f9316c43d1a867089bd Mon Sep 17 00:00:00 2001
 From: Eli Barzilay <eli@barzilay.org>
 Date: Thu, 28 Oct 2021 13:26:40 -0400
 Subject: [PATCH 1/5] Make `processDiagnosticMessages.ts` generate a module
@@ -70,5 +70,5 @@ index 53d1ca75db..17bc4612c4 100644
  
  function buildDiagnosticMessageOutput(messageTable: InputDiagnosticMessageTable): string {
 -- 
-2.33.1
+2.34.1
 

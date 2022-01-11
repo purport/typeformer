@@ -1,4 +1,4 @@
-From 6245b00ffa8274655c7947842730b9fccd4eedea Mon Sep 17 00:00:00 2001
+From 177b4ebbdaa827a16570ae61f9098125a284f4f4 Mon Sep 17 00:00:00 2001
 From: Eli Barzilay <eli@barzilay.org>
 Date: Thu, 28 Oct 2021 15:21:05 -0400
 Subject: [PATCH 3/5] Some `require` -> `import` conversions
@@ -119,11 +119,11 @@ index 4d52a0faa5..1a84480b94 100644
      const files: {
          [index: string]: string;
 diff --git a/src/tsserver/nodeServer.ts b/src/tsserver/nodeServer.ts
-index a9e94d314d..e94f1b39f2 100644
+index 7cbd4ae0f1..8e7bc4f8c1 100644
 --- a/src/tsserver/nodeServer.ts
 +++ b/src/tsserver/nodeServer.ts
 @@ -1,6 +1,8 @@
- import { LogLevel, getLogLevel, findArgument, StartInput, ServerHost, BaseLogger, Msg, stringifyIndented, RequireResult, ServerCancellationToken, nullCancellationToken, StartSessionOptions, Logger, ITypingsInstaller, ProjectService, Event, InstallPackageOptionsWithProject, InstallPackageRequest, Arguments, Project, TypingInstallerRequestUnion, createInstallTypingsRequest, TypesRegistryResponse, PackageInstalledResponse, SetTypings, InvalidateCachedTypings, BeginInstallTypes, EndInstallTypes, InitializationFailedResponse, EventTypesRegistry, ActionPackageInstalled, EventInitializationFailed, protocol, EventBeginInstallTypes, EventEndInstallTypes, ActionInvalidate, ActionSet, Session, nullTypingsInstaller, formatMessage, toEvent, hasArgument } from "./ts.server";
+ import { LogLevel, getLogLevel, findArgument, StartInput, ServerHost, BaseLogger, Msg, stringifyIndented, RequireResult, ServerCancellationToken, nullCancellationToken, StartSessionOptions, Logger, ITypingsInstaller, ProjectService, Event, InstallPackageOptionsWithProject, InstallPackageRequest, Arguments, Project, TypingInstallerRequestUnion, createInstallTypingsRequest, TypesRegistryResponse, PackageInstalledResponse, SetTypings, InvalidateCachedTypings, BeginInstallTypes, EndInstallTypes, InitializationFailedResponse, EventTypesRegistry, ActionPackageInstalled, EventInitializationFailed, protocol, EventBeginInstallTypes, EventEndInstallTypes, ActionInvalidate, ActionSet, Session, nullTypingsInstaller, formatMessage, toEvent, indent, hasArgument } from "./ts.server";
  import { CharacterCodes, stripQuotes, LanguageServiceMode, Debug, MapLike, noop, getNodeMajorVersion, combinePaths, noopFileWatcher, WatchFileKind, resolveJSModule, validateLocaleAndSetLanguage, normalizeSlashes, directorySeparator, toFileNameLowerCase, getRootLength, DirectoryWatcherCallback, WatchOptions, FileWatcher, ESMap, ApplyCodeActionCommandResult, JsTyping, getDirectoryPath, TypeAcquisition, SortedReadonlyArray, getEntries, assertType, sys, tracing, startTracing, versionMajorMinor } from "./ts";
  import * as ts from "./ts";
 +import { execFileSync } from "child_process";
@@ -236,5 +236,5 @@ index 71d7ecb763..5cd6b2e24d 100644
  }
  catch { /*ignore*/ }
 -- 
-2.33.1
+2.34.1
 
