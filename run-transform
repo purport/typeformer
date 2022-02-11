@@ -63,7 +63,7 @@ ensure_crlf_at_eof() {
   echo ">>> adding CRLF at all EOFs"
   # finds all files without a terminating newline
   local file
-  for file in $(rgrep -rPlz '[^\r\n]$' "src"); do
+  for file in $(grep -rPlz '[^\r\n]$' "src"); do
     if [[ "$file" = *."d.ts" ]]; then continue; fi
     if [[ "$file" != *."ts" && "$file" != *."json" ]]; then continue; fi
     echo "  $file"; printf '\r\n' >> "$file"
