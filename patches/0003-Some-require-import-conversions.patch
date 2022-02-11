@@ -1,4 +1,4 @@
-From 177b4ebbdaa827a16570ae61f9098125a284f4f4 Mon Sep 17 00:00:00 2001
+From 967a298ef6f25a569c9f1d830ef8170b0c5eaebd Mon Sep 17 00:00:00 2001
 From: Eli Barzilay <eli@barzilay.org>
 Date: Thu, 28 Oct 2021 15:21:05 -0400
 Subject: [PATCH 3/5] Some `require` -> `import` conversions
@@ -53,12 +53,12 @@ index 497e04ce45..0571c237a6 100644
  
  // this will work in the browser via browserify
 -    var assert: typeof _chai.assert;
+-}
+-declare global {
+-    var expect: typeof _chai.expect;
 +    var assert: typeof chai.assert;
 +    var expect: typeof chai.expect;
  }
--declare global {
--    var expect: typeof _chai.expect;
--}
 -var _chai: typeof import("chai") = require("chai");
 -globalThis.assert = _chai.assert;
 +
@@ -236,5 +236,5 @@ index 71d7ecb763..5cd6b2e24d 100644
  }
  catch { /*ignore*/ }
 -- 
-2.34.1
+2.35.1
 

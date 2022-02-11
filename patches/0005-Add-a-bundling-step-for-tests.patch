@@ -1,4 +1,4 @@
-From 94b497f7f3af5e9223ff210595df7cfb6115c64c Mon Sep 17 00:00:00 2001
+From 155dddb69a5b99e4b3c1413822ac12479f66b741 Mon Sep 17 00:00:00 2001
 From: Eli Barzilay <eli@barzilay.org>
 Date: Fri, 3 Dec 2021 12:12:23 -0500
 Subject: [PATCH 5/5] Add a bundling step for tests
@@ -42,5 +42,5 @@ index edf1cebb00..79f4273715 100644
  task("tests").description = "Builds the test infrastructure";
  task("tests").flags = {
 -- 
-2.34.1
+2.35.1
 

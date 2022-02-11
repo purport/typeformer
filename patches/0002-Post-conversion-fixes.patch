@@ -1,4 +1,4 @@
-From e1fead8858d03ded4bf94bf5d7320035761d0a07 Mon Sep 17 00:00:00 2001
+From f43b343109d3e6be45f7d8960f29dfb25a890355 Mon Sep 17 00:00:00 2001
 From: Eli Barzilay <eli@barzilay.org>
 Date: Thu, 28 Oct 2021 13:26:41 -0400
 Subject: [PATCH 2/5] Post conversion fixes
@@ -62,7 +62,7 @@ index c9d3feff80..6dc97369b3 100644
  });
  task("watch", series(preBuild, preTest, parallel(watchLib, watchDiagnostics, watchServices, watchLssl, watchTests, watchRuntests)));
 diff --git a/src/harness/fourslashImpl.ts b/src/harness/fourslashImpl.ts
-index 6c3667fd85..59209f1717 100644
+index 0566a41a8d..8a49c5ce22 100644
 --- a/src/harness/fourslashImpl.ts
 +++ b/src/harness/fourslashImpl.ts
 @@ -1,4 +1,3 @@
@@ -177,7 +177,7 @@ index 41715a9fde..03eefe3a45 100644
  
          // eslint-disable-next-line no-null/no-null
 diff --git a/src/harness/virtualFileSystemWithWatch.ts b/src/harness/virtualFileSystemWithWatch.ts
-index d4a9287d7b..e384190a78 100644
+index d0250aa86a..d405ebf922 100644
 --- a/src/harness/virtualFileSystemWithWatch.ts
 +++ b/src/harness/virtualFileSystemWithWatch.ts
 @@ -1,7 +1,7 @@
@@ -228,7 +228,7 @@ index d4a9287d7b..e384190a78 100644
      private time = timeIncrements;
      getCanonicalFileName: (s: string) => string;
      private toPath: (f: string) => Path;
-@@ -1003,7 +1003,7 @@ export class TestServerHost implements ServerHost, FormatDiagnosticsHost, Module
+@@ -1002,7 +1002,7 @@ export class TestServerHost implements ServerHost, FormatDiagnosticsHost, Module
      }
  
      snap(): ESMap<Path, FSEntry> {
@@ -237,7 +237,7 @@ index d4a9287d7b..e384190a78 100644
          this.fs.forEach((value, key) => {
              const cloneValue = clone(value);
              if (isFsFolder(cloneValue)) {
-@@ -1016,7 +1016,7 @@ export class TestServerHost implements ServerHost, FormatDiagnosticsHost, Module
+@@ -1015,7 +1015,7 @@ export class TestServerHost implements ServerHost, FormatDiagnosticsHost, Module
      }
  
      writtenFiles?: ESMap<Path, number>;
@@ -246,7 +246,7 @@ index d4a9287d7b..e384190a78 100644
          this.fs.forEach(newFsEntry => {
              diffFsEntry(baseline, base.get(newFsEntry.path), newFsEntry, this.writtenFiles);
          });
-@@ -1180,7 +1180,7 @@ export type TestServerHostTrackingWrittenFiles = TestServerHost & {
+@@ -1179,7 +1179,7 @@ export type TestServerHostTrackingWrittenFiles = TestServerHost & {
  export function changeToHostTrackingWrittenFiles(inputHost: TestServerHost) {
      const host = inputHost as TestServerHostTrackingWrittenFiles;
      const originalWriteFile = host.writeFile;
@@ -256,7 +256,7 @@ index d4a9287d7b..e384190a78 100644
          originalWriteFile.call(host, fileName, content);
          const path = host.toFullPath(fileName);
 diff --git a/src/server/session.ts b/src/server/session.ts
-index f7caa0128a..adda09d237 100644
+index 6fa4726a41..e9f503b757 100644
 --- a/src/server/session.ts
 +++ b/src/server/session.ts
 @@ -1,7 +1,9 @@
@@ -408,5 +408,5 @@ index 4c1b20a58d..d8e17dd371 100644
      it("should not be picked up", () => {
          const f1 = {
 -- 
-2.34.1
+2.35.1
 

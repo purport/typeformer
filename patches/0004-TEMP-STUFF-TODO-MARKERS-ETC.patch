@@ -1,4 +1,4 @@
-From 230517e2bf3cb45067d3bbbad6b446644acaac08 Mon Sep 17 00:00:00 2001
+From f066e323686c29c8d93e14b45edfd7e1e43a641e Mon Sep 17 00:00:00 2001
 From: Eli Barzilay <eli@barzilay.org>
 Date: Thu, 28 Oct 2021 13:26:41 -0400
 Subject: [PATCH 4/5] TEMP STUFF - TODO MARKERS ETC
@@ -42,7 +42,7 @@ index 6dc97369b3..edf1cebb00 100644
      const buildServerLibraryOut = () => buildProject("src/tsserverlibrary/tsconfig.json", cmdLineOptions);
  
 diff --git a/package.json b/package.json
-index aafbd543bf..ab184263d6 100644
+index ffc56b0d24..8cb4989d0b 100644
 --- a/package.json
 +++ b/package.json
 @@ -66,6 +66,7 @@
@@ -64,10 +64,10 @@ index a3e48b29a8..52668a849a 100644
   * You should have ts-node installed globally before executing this, probably!
   * Otherwise you'll need to compile this script before you start bisecting!
 diff --git a/src/compiler/sys.ts b/src/compiler/sys.ts
-index 52c66627d9..c529aa0aa1 100644
+index d9cb5d7ff9..143cda7a59 100644
 --- a/src/compiler/sys.ts
 +++ b/src/compiler/sys.ts
-@@ -1248,7 +1248,7 @@ export let sys: System = (() => {
+@@ -1251,7 +1251,7 @@ export let sys: System = (() => {
                  }
              },
              getExecutingFilePath() {
@@ -77,7 +77,7 @@ index 52c66627d9..c529aa0aa1 100644
              getCurrentDirectory,
              getDirectories,
 diff --git a/src/harness/virtualFileSystemWithWatch.ts b/src/harness/virtualFileSystemWithWatch.ts
-index e384190a78..6fdd6e41a4 100644
+index d405ebf922..973e75e6dc 100644
 --- a/src/harness/virtualFileSystemWithWatch.ts
 +++ b/src/harness/virtualFileSystemWithWatch.ts
 @@ -29,7 +29,7 @@ export const safeList = {
@@ -90,10 +90,10 @@ index e384190a78..6fdd6e41a4 100644
  }
  
 diff --git a/src/server/project.ts b/src/server/project.ts
-index f8723c646a..b80f72fe09 100644
+index a7f6fdde6f..31b62bb931 100644
 --- a/src/server/project.ts
 +++ b/src/server/project.ts
-@@ -1493,8 +1493,8 @@ export abstract class Project implements LanguageServiceHost, ModuleResolutionHo
+@@ -1497,8 +1497,8 @@ export abstract class Project implements LanguageServiceHost, ModuleResolutionHo
          // Search any globally-specified probe paths, then our peer node_modules
          const searchPaths = [
            ...this.projectService.pluginProbeLocations,
@@ -104,7 +104,7 @@ index f8723c646a..b80f72fe09 100644
          ];
  
          if (this.projectService.globalPlugins) {
-@@ -2171,8 +2171,8 @@ export class ConfiguredProject extends Project {
+@@ -2220,8 +2220,8 @@ export class ConfiguredProject extends Project {
          }
  
          // Search our peer node_modules, then any globally-specified probe paths
@@ -129,5 +129,5 @@ index 4cb9c6cb75..1f0db4ff67 100644
  if (typeof ActiveXObject === "function") {
      eval(typescriptServiceFile);
 -- 
-2.34.1
+2.35.1
 
