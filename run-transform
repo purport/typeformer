@@ -56,7 +56,7 @@ gen_diag() {
   # and restoring all changes wouldn't restore it since it's not tracked; so
   # force a proper file is there.
   rm -f "src/compiler/diagnosticInformationMap.generated.ts"
-  run gulp generate-diagnostics
+  run npx gulp generate-diagnostics
 }
 
 ensure_crlf_at_eof() {
