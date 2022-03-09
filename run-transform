@@ -89,9 +89,12 @@ apply_patches() {
   local msg="$(grep "^Subject" "$patchdir/$(ls "$patchdir" | tail -1)")"
   msg="${msg#"Subject: [PATCH "?/?"] "}"
   tweak_and_commit "$msg" \
-    -- run git am --whitespace=nowarn --quoted-cr=nowarn --keep-cr \
+    -- run git am --3way --whitespace=nowarn --quoted-cr=nowarn --keep-cr \
        "$patchdir"/*.patch
 }
+
+tweak_and_commit "UNDO WEBWORKER CHANGE" \
+  -- run sh -c "git revert --no-edit 55e2e15aa37e685b7adcc61dd3091a2d9c7773a1 && git reset HEAD^"
 
 tweak_and_commit "UNINDENT BEFORE CONVERTING TO MODULES" \
   -- ensure_crlf_at_eof \
