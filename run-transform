@@ -1,5 +1,8 @@
 #!/usr/bin/env bash
 
+# Ensure "| indent" doesn't drop errors
+set -o pipefail
+
 here="$(dirname "$0")"
 tsroot="$PWD"
 
