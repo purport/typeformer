@@ -1,7 +1,7 @@
-From 967a298ef6f25a569c9f1d830ef8170b0c5eaebd Mon Sep 17 00:00:00 2001
+From 68566616f607e5fdbc77c507fb0e6dbc65110a09 Mon Sep 17 00:00:00 2001
 From: Eli Barzilay <eli@barzilay.org>
 Date: Thu, 28 Oct 2021 15:21:05 -0400
-Subject: [PATCH 3/5] Some `require` -> `import` conversions
+Subject: [PATCH 3/4] Some `require` -> `import` conversions
 
 ---
  src/cancellationToken/cancellationToken.ts    |  2 +-

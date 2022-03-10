@@ -1,7 +1,7 @@
-From f066e323686c29c8d93e14b45edfd7e1e43a641e Mon Sep 17 00:00:00 2001
+From ea62709a7a989a8bd042c1aff5f3f2c995f2b797 Mon Sep 17 00:00:00 2001
 From: Eli Barzilay <eli@barzilay.org>
 Date: Thu, 28 Oct 2021 13:26:41 -0400
-Subject: [PATCH 4/5] TEMP STUFF - TODO MARKERS ETC
+Subject: [PATCH 4/4] TEMP STUFF - TODO MARKERS ETC
 
 ---
  Gulpfile.js                                               | 3 +++
@@ -42,7 +42,7 @@ index 6dc97369b3..edf1cebb00 100644
      const buildServerLibraryOut = () => buildProject("src/tsserverlibrary/tsconfig.json", cmdLineOptions);
  
 diff --git a/package.json b/package.json
-index ffc56b0d24..8cb4989d0b 100644
+index 92afe19ddf..9b6e8c7343 100644
 --- a/package.json
 +++ b/package.json
 @@ -66,6 +66,7 @@
@@ -90,7 +90,7 @@ index d405ebf922..973e75e6dc 100644
  }
  
 diff --git a/src/server/project.ts b/src/server/project.ts
-index a7f6fdde6f..31b62bb931 100644
+index 54e520b6b7..d3ab080f53 100644
 --- a/src/server/project.ts
 +++ b/src/server/project.ts
 @@ -1497,8 +1497,8 @@ export abstract class Project implements LanguageServiceHost, ModuleResolutionHo
