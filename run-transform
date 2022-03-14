@@ -108,4 +108,20 @@ tweak_and_commit "CONVERTED TO MODULES" \
   -- run_in "src" node "$here/lib/cli.js" "tsconfig.json" \
   -- undo_whitespaces
 
+# gen_diag
+
+# tweak_and_commit "CONVERSION STEP - explicitify" \
+#   -- run_in "src" node "$here/lib/cli.js" "tsconfig.json" "explicitify" \
+#   -- undo_whitespaces
+
+# tweak_and_commit "CONVERSION STEP - stripNamespaces" \
+#   -- run_in "src" node "$here/lib/cli.js" "tsconfig.json" "stripNamespaces" \
+#   -- undo_whitespaces
+
+# tweak_and_commit "CONVERSION STEP - inlineImports" \
+#   -- run_in "src" node "$here/lib/cli.js" "tsconfig.json" "inlineImports" \
+#   -- undo_whitespaces
+
+# git commit -m "CONVERTED TO MODULES" --allow-empty
+
 apply_patches

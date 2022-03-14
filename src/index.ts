@@ -213,3 +213,11 @@ export function transformProjectInPlace(config: string) {
     console.log("Removing %j", tmpdir);
     fs.rmdirSync(tmpdir, {recursive: true});
 }
+
+export function transformAndMerge(rootConfig: string, getTransformerFactoryFactory: ProjectTransformerFactory) {
+    const tmpdir = path.dirname(rootConfig)+"tmp";
+    transformProject(rootConfig, tmpdir, getTransformerFactoryFactory);
+    mergeDirs(tmpdir, path.dirname(rootConfig), "overwrite");
+    console.log("Removing %j", tmpdir);
+    fs.rmdirSync(tmpdir, {recursive: true});
+}
