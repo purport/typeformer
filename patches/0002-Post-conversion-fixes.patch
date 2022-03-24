@@ -1,22 +1,22 @@
-From 7c9439d8d39d620708ea8c52b1f8fc75c74e523b Mon Sep 17 00:00:00 2001
+From 2d683322ee1121dca7768515bf559a34a95f4b8f Mon Sep 17 00:00:00 2001
 From: Eli Barzilay <eli@barzilay.org>
 Date: Thu, 28 Oct 2021 13:26:41 -0400
 Subject: [PATCH 2/5] Post conversion fixes
 
 ---
- Gulpfile.js                                   |  9 +++----
- src/harness/fourslashImpl.ts                  |  4 ++--
- src/harness/harnessIO.ts                      | 24 +++++++++----------
- src/harness/virtualFileSystemWithWatch.ts     | 20 ++++++++--------
- src/server/session.ts                         |  6 +++--
- src/testRunner/parallel/host.ts               |  6 ++---
- .../unittests/tsbuild/moduleResolution.ts     |  4 +++-
- .../unittests/tsbuildWatch/programUpdates.ts  |  4 ++--
- .../unittests/tsserver/compileOnSave.ts       |  4 ++--
- src/testRunner/unittests/tsserver/helpers.ts  | 15 +++++++-----
- src/testRunner/unittests/tsserver/session.ts  |  4 ++--
- .../unittests/tsserver/typingsInstaller.ts    |  3 +--
- 12 files changed, 55 insertions(+), 48 deletions(-)
+ Gulpfile.js                                   |  9 +++---
+ src/harness/fourslashImpl.ts                  |  4 +--
+ src/harness/harnessIO.ts                      | 24 +++++++-------
+ src/harness/virtualFileSystemWithWatch.ts     | 20 ++++++------
+ src/server/session.ts                         |  6 ++--
+ src/testRunner/parallel/host.ts               |  6 ++--
+ .../unittests/tsbuild/moduleResolution.ts     |  4 ++-
+ .../unittests/tsbuildWatch/programUpdates.ts  |  4 +--
+ .../unittests/tsserver/compileOnSave.ts       |  4 +--
+ src/testRunner/unittests/tsserver/helpers.ts  | 31 ++++++++++---------
+ src/testRunner/unittests/tsserver/session.ts  |  4 +--
+ .../unittests/tsserver/typingsInstaller.ts    |  7 ++---
+ 12 files changed, 65 insertions(+), 58 deletions(-)
 
 diff --git a/Gulpfile.js b/Gulpfile.js
 index c9d3feff80..6dc97369b3 100644
@@ -62,7 +62,7 @@ index c9d3feff80..6dc97369b3 100644
  });
  task("watch", series(preBuild, preTest, parallel(watchLib, watchDiagnostics, watchServices, watchLssl, watchTests, watchRuntests)));
 diff --git a/src/harness/fourslashImpl.ts b/src/harness/fourslashImpl.ts
-index 3edcf787f7..50bc3699a7 100644
+index 20756d6c00..00461af20b 100644
 --- a/src/harness/fourslashImpl.ts
 +++ b/src/harness/fourslashImpl.ts
 @@ -1,4 +1,3 @@
@@ -81,7 +81,7 @@ index 3edcf787f7..50bc3699a7 100644
  export const enum FourSlashTestType {
      Native,
 diff --git a/src/harness/harnessIO.ts b/src/harness/harnessIO.ts
-index 41715a9fde..03eefe3a45 100644
+index ac2b1d2617..d116317728 100644
 --- a/src/harness/harnessIO.ts
 +++ b/src/harness/harnessIO.ts
 @@ -1,13 +1,13 @@
@@ -149,7 +149,7 @@ index 41715a9fde..03eefe3a45 100644
  
              for (const file of allFiles) {
                  const { unitName } = file;
-@@ -963,7 +963,7 @@ export namespace Compiler {
+@@ -965,7 +965,7 @@ export namespace Compiler {
          // Collect, test, and sort the fileNames
          const files = Array.from(outputFiles);
          files.slice().sort((a, b) => compareStringsCaseSensitive(cleanName(a.file), cleanName(b.file)));
@@ -158,7 +158,7 @@ index 41715a9fde..03eefe3a45 100644
          // Yield them
          for (const outputFile of files) {
              yield [checkDuplicatedFileName(outputFile.file, dupeCase), "/*====== " + outputFile.file + " ======*/\r\n" + removeByteOrderMark(outputFile.text)];
-@@ -1099,7 +1099,7 @@ function getVaryByStarSettingValues(varyBy: string): ReadonlyESMap<string, strin
+@@ -1101,7 +1101,7 @@ function getVaryByStarSettingValues(varyBy: string): ReadonlyESMap<string, strin
              return option.type;
          }
          if (option.type === "boolean") {
@@ -167,9 +167,9 @@ index 41715a9fde..03eefe3a45 100644
                  true: 1,
                  false: 0
              })));
-@@ -1449,7 +1449,7 @@ export namespace Baseline {
-         string
-     ]> | null, opts?: BaselineOptions, referencedExtensions?: string[]): void {
+@@ -1451,7 +1451,7 @@ export namespace Baseline {
+             string
+         ]> | null, opts?: BaselineOptions, referencedExtensions?: string[]): void {
          const gen = generateContent();
 -        const writtenFiles = new ts.Map<string, true>();
 +        const writtenFiles = new Map<string, true>();
@@ -177,7 +177,7 @@ index 41715a9fde..03eefe3a45 100644
  
          // eslint-disable-next-line no-null/no-null
 diff --git a/src/harness/virtualFileSystemWithWatch.ts b/src/harness/virtualFileSystemWithWatch.ts
-index d0250aa86a..d405ebf922 100644
+index 0faddef01c..13bd7f6861 100644
 --- a/src/harness/virtualFileSystemWithWatch.ts
 +++ b/src/harness/virtualFileSystemWithWatch.ts
 @@ -1,7 +1,7 @@
@@ -194,32 +194,32 @@ index d0250aa86a..d405ebf922 100644
      }
      const notInActual: string[] = [];
      const duplicates: string[] = [];
--    const seen = new ts.Map<string, true>();
+-        const seen = new ts.Map<string, true>();
 +    const seen = new Map<string, true>();
      forEach(expectedKeys, expectedKey => {
          if (seen.has(expectedKey)) {
              duplicates.push(expectedKey);
-@@ -237,8 +237,8 @@ export function checkWatchedDirectoriesDetailed(host: TestServerHost, expectedDi
+@@ -235,8 +235,8 @@ export function checkWatchedDirectoriesDetailed(host: TestServerHost, expectedDi
  }
  
  export function checkOutputContains(host: TestServerHost, expected: readonly string[]) {
--    const mapExpected = new ts.Set(expected);
--    const mapSeen = new ts.Set<string>();
+-        const mapExpected = new ts.Set(expected);
+-        const mapSeen = new ts.Set<string>();
 +    const mapExpected = new Set(expected);
 +    const mapSeen = new Set<string>();
      for (const f of host.getOutput()) {
          assert.isFalse(mapSeen.has(f), `Already found ${f} in ${JSON.stringify(host.getOutput())}`);
          if (mapExpected.has(f)) {
-@@ -250,7 +250,7 @@ export function checkOutputContains(host: TestServerHost, expected: readonly str
+@@ -248,7 +248,7 @@ export function checkOutputContains(host: TestServerHost, expected: readonly str
  }
  
  export function checkOutputDoesNotContain(host: TestServerHost, expectedToBeAbsent: string[] | readonly string[]) {
--    const mapExpectedToBeAbsent = new ts.Set(expectedToBeAbsent);
+-        const mapExpectedToBeAbsent = new ts.Set(expectedToBeAbsent);
 +    const mapExpectedToBeAbsent = new Set(expectedToBeAbsent);
      for (const f of host.getOutput()) {
          assert.isFalse(mapExpectedToBeAbsent.has(f), `Contains ${f} in ${JSON.stringify(host.getOutput())}`);
      }
-@@ -353,7 +353,7 @@ export class TestServerHost implements ServerHost, FormatDiagnosticsHost, Module
+@@ -351,7 +351,7 @@ export class TestServerHost implements ServerHost, FormatDiagnosticsHost, Module
  
      private readonly output: string[] = [];
  
@@ -228,7 +228,7 @@ index d0250aa86a..d405ebf922 100644
      private time = timeIncrements;
      getCanonicalFileName: (s: string) => string;
      private toPath: (f: string) => Path;
-@@ -1002,7 +1002,7 @@ export class TestServerHost implements ServerHost, FormatDiagnosticsHost, Module
+@@ -996,7 +996,7 @@ export class TestServerHost implements ServerHost, FormatDiagnosticsHost, Module
      }
  
      snap(): ESMap<Path, FSEntry> {
@@ -237,7 +237,7 @@ index d0250aa86a..d405ebf922 100644
          this.fs.forEach((value, key) => {
              const cloneValue = clone(value);
              if (isFsFolder(cloneValue)) {
-@@ -1015,7 +1015,7 @@ export class TestServerHost implements ServerHost, FormatDiagnosticsHost, Module
+@@ -1009,7 +1009,7 @@ export class TestServerHost implements ServerHost, FormatDiagnosticsHost, Module
      }
  
      writtenFiles?: ESMap<Path, number>;
@@ -246,7 +246,7 @@ index d0250aa86a..d405ebf922 100644
          this.fs.forEach(newFsEntry => {
              diffFsEntry(baseline, base.get(newFsEntry.path), newFsEntry, this.writtenFiles);
          });
-@@ -1179,7 +1179,7 @@ export type TestServerHostTrackingWrittenFiles = TestServerHost & {
+@@ -1173,7 +1173,7 @@ function baselineOutputs(baseline: string[], output: readonly string[], start: n
  export function changeToHostTrackingWrittenFiles(inputHost: TestServerHost) {
      const host = inputHost as TestServerHostTrackingWrittenFiles;
      const originalWriteFile = host.writeFile;
@@ -256,7 +256,7 @@ index d0250aa86a..d405ebf922 100644
          originalWriteFile.call(host, fileName, content);
          const path = host.toFullPath(fileName);
 diff --git a/src/server/session.ts b/src/server/session.ts
-index 73cbfae236..30ce33b1a1 100644
+index c68d2b1370..e3b6bf1faf 100644
 --- a/src/server/session.ts
 +++ b/src/server/session.ts
 @@ -1,7 +1,9 @@
@@ -272,7 +272,7 @@ index 73cbfae236..30ce33b1a1 100644
      stack?: string;
  }
 diff --git a/src/testRunner/parallel/host.ts b/src/testRunner/parallel/host.ts
-index 0e6e938a35..7e7f478198 100644
+index 986c667edd..87148d8bd1 100644
 --- a/src/testRunner/parallel/host.ts
 +++ b/src/testRunner/parallel/host.ts
 @@ -1,8 +1,8 @@
@@ -310,21 +310,21 @@ index cb3f2b6804..a02c9e738d 100644
      function sys(optionsToExtend?: CompilerOptions) {
          return createWatchedSystem([
 diff --git a/src/testRunner/unittests/tsbuildWatch/programUpdates.ts b/src/testRunner/unittests/tsbuildWatch/programUpdates.ts
-index e822ce838d..1a40215204 100644
+index a298e3e261..349debfc0c 100644
 --- a/src/testRunner/unittests/tsbuildWatch/programUpdates.ts
 +++ b/src/testRunner/unittests/tsbuildWatch/programUpdates.ts
 @@ -1,7 +1,7 @@
  import { TestFSWithWatch, isString, emptyArray, createSolutionBuilderWithWatchHost, createSolutionBuilderWithWatch, noop } from "../../ts";
  import { createWatchedSystem, File, TscWatchCompileChange, checkSingleTimeoutQueueLengthAndRun, libFile, verifyTscWatch, checkWatchedFiles, checkWatchedDirectories, checkOutputErrorsInitial, checkSingleTimeoutQueueLengthAndRunAndVerifyNoTimeout, WatchedSystem, projectRoot, runQueuedTimeoutCallbacks, noopChange, commonFile1, commonFile2 } from "../../ts.tscWatch";
 -import * as ts from "../../ts";
--import projectsLocation = ts.TestFSWithWatch.tsbuildProjectsLocation;
+-    import projectsLocation = ts.TestFSWithWatch.tsbuildProjectsLocation;
 +import projectsLocation = TestFSWithWatch.tsbuildProjectsLocation;
 +
  describe("unittests:: tsbuildWatch:: watchMode:: program updates", () => {
      type TsBuildWatchSystem = TestFSWithWatch.TestServerHostTrackingWrittenFiles;
- 
+     function createTsBuildWatchSystem(fileOrFolderList: readonly TestFSWithWatch.FileOrFolderOrSymLink[], params?: TestFSWithWatch.TestServerHostCreationParameters) {
 diff --git a/src/testRunner/unittests/tsserver/compileOnSave.ts b/src/testRunner/unittests/tsserver/compileOnSave.ts
-index da9bad12ab..6c044db85a 100644
+index 69cc76e348..40ffe91e83 100644
 --- a/src/testRunner/unittests/tsserver/compileOnSave.ts
 +++ b/src/testRunner/unittests/tsserver/compileOnSave.ts
 @@ -2,8 +2,8 @@ import { ServerHost, Session, protocol } from "../../ts.server";
@@ -332,26 +332,27 @@ index da9bad12ab..6c044db85a 100644
  import { compareStringsCaseSensitive, map, arrayIsEqualTo, CompilerOptions, projectSystem, Extension, stringContains, emptyArray, formatStringFromArgs, Diagnostics, diagnosticCategoryName, changeExtension } from "../../ts";
  import { projectRoot } from "../../ts.tscWatch";
 -import * as ts from "../../ts";
--import CommandNames = ts.server.CommandNames;
+-    import CommandNames = ts.server.CommandNames;
 +import { CommandNames } from "../../ts.server";
 +
  function createTestTypingsInstaller(host: ServerHost) {
-     return new TestTypingsInstaller("/a/data/", /*throttleLimit*/5, host);
+     return new TestTypingsInstaller("/a/data/", /*throttleLimit*/ 5, host);
  }
 diff --git a/src/testRunner/unittests/tsserver/helpers.ts b/src/testRunner/unittests/tsserver/helpers.ts
-index 933d4c15a3..f93d9e253d 100644
+index f0f672acfa..6435a1d22a 100644
 --- a/src/testRunner/unittests/tsserver/helpers.ts
 +++ b/src/testRunner/unittests/tsserver/helpers.ts
-@@ -1,11 +1,15 @@
+@@ -1,24 +1,27 @@
 -import { TestFSWithWatch, convertToObject, parseJsonText, Path, server, noop, returnFalse, returnUndefined, Debug, returnTrue, version, MapLike, notImplemented, TypeAcquisition, SortedReadonlyArray, isString, ESMap, map, filterMutate, sys, clear, mapDefined, isArray, HostCancellationToken, arrayFrom, mapDefinedIterator, normalizePath, forEachAncestorDirectory, combinePaths, directorySeparator, computeLineStarts, computeLineAndCharacterOfPosition, textSpanEnd, TextSpan, createTextSpan } from "../../ts";
 +import { TestFSWithWatch, convertToObject, parseJsonText, Path, noop, returnFalse, returnUndefined, Debug, returnTrue, version, MapLike, notImplemented, TypeAcquisition, SortedReadonlyArray, isString, ESMap, map, filterMutate, sys, clear, mapDefined, isArray, HostCancellationToken, arrayFrom, mapDefinedIterator, normalizePath, forEachAncestorDirectory, combinePaths, directorySeparator, computeLineStarts, computeLineAndCharacterOfPosition, textSpanEnd, TextSpan, createTextSpan } from "../../ts";
  import { Baseline } from "../../Harness";
  import { ProjectService, Project, ITypingsInstaller, ServerHost, SetTypings, InvalidateCachedTypings, createInstallTypingsRequest, FileStats, ProjectServiceEvent, ProjectInfoTelemetryEventData, ProjectInfoTelemetryEvent, OpenFileInfo, OpenFileInfoTelemetryEventData, OpenFileInfoTelemetryEvent, SessionOptions, Session, LogLevel, toEvent, nullCancellationToken, ProjectServiceOptions, nullTypingsInstaller, ProjectKind, ServerCancellationToken } from "../../ts.server";
  import { byteLength } from "../../Utils";
  import * as ts from "../../ts";
--export import TI = ts.server.typingsInstaller;
--export import protocol = ts.server.protocol;
--export import CommandNames = ts.server.CommandNames;
+-    export import TI = ts.server.typingsInstaller;
+-    export import protocol = ts.server.protocol;
+-    export import CommandNames = ts.server.CommandNames;
+-    export import TestServerHost = ts.TestFSWithWatch.TestServerHost;
 +import { commonFile1, commonFile2 } from "../tscWatch/helpers";
 +import * as TI from "../../../typingsInstallerCore/typingsInstaller";
 +export { TI };
@@ -359,21 +360,32 @@ index 933d4c15a3..f93d9e253d 100644
 +export { protocol };
 +import * as server from "../../../server/ts.server";
 +export import CommandNames = server.CommandNames;
- export import TestServerHost = ts.TestFSWithWatch.TestServerHost;
++export import TestServerHost = ts.TestFSWithWatch.TestServerHost;
  export type File = TestFSWithWatch.File;
  export type SymLink = TestFSWithWatch.SymLink;
-@@ -17,8 +21,7 @@ export import checkWatchedFiles = ts.TestFSWithWatch.checkWatchedFiles;
- export import checkWatchedFilesDetailed = ts.TestFSWithWatch.checkWatchedFilesDetailed;
- export import checkWatchedDirectories = ts.TestFSWithWatch.checkWatchedDirectories;
- export import checkWatchedDirectoriesDetailed = ts.TestFSWithWatch.checkWatchedDirectoriesDetailed;
--export import commonFile1 = ts.tscWatch.commonFile1;
--export import commonFile2 = ts.tscWatch.commonFile2;
+ export type Folder = TestFSWithWatch.Folder;
+-    export import createServerHost = ts.TestFSWithWatch.createServerHost;
+-    export import checkArray = ts.TestFSWithWatch.checkArray;
+-    export import libFile = ts.TestFSWithWatch.libFile;
+-    export import checkWatchedFiles = ts.TestFSWithWatch.checkWatchedFiles;
+-    export import checkWatchedFilesDetailed = ts.TestFSWithWatch.checkWatchedFilesDetailed;
+-    export import checkWatchedDirectories = ts.TestFSWithWatch.checkWatchedDirectories;
+-    export import checkWatchedDirectoriesDetailed = ts.TestFSWithWatch.checkWatchedDirectoriesDetailed;
+-    export import commonFile1 = ts.tscWatch.commonFile1;
+-    export import commonFile2 = ts.tscWatch.commonFile2;
++export import createServerHost = ts.TestFSWithWatch.createServerHost;
++export import checkArray = ts.TestFSWithWatch.checkArray;
++export import libFile = ts.TestFSWithWatch.libFile;
++export import checkWatchedFiles = ts.TestFSWithWatch.checkWatchedFiles;
++export import checkWatchedFilesDetailed = ts.TestFSWithWatch.checkWatchedFilesDetailed;
++export import checkWatchedDirectories = ts.TestFSWithWatch.checkWatchedDirectories;
++export import checkWatchedDirectoriesDetailed = ts.TestFSWithWatch.checkWatchedDirectoriesDetailed;
 +export { commonFile1, commonFile2 };
  
  const outputEventRegex = /Content\-Length: [\d]+\r\n\r\n/;
  export function mapOutputToJson(s: string) {
 diff --git a/src/testRunner/unittests/tsserver/session.ts b/src/testRunner/unittests/tsserver/session.ts
-index 12ea204fbd..19122af24c 100644
+index 1b9668eb46..09d15990aa 100644
 --- a/src/testRunner/unittests/tsserver/session.ts
 +++ b/src/testRunner/unittests/tsserver/session.ts
 @@ -4,8 +4,8 @@ import { mockHash } from "../../Harness";
@@ -388,22 +400,26 @@ index 12ea204fbd..19122af24c 100644
  const noopFileWatcher: FileWatcher = { close: noop };
  const mockHost: ServerHost = {
 diff --git a/src/testRunner/unittests/tsserver/typingsInstaller.ts b/src/testRunner/unittests/tsserver/typingsInstaller.ts
-index 4c1b20a58d..d8e17dd371 100644
+index 428c8983f8..57528e5d48 100644
 --- a/src/testRunner/unittests/tsserver/typingsInstaller.ts
 +++ b/src/testRunner/unittests/tsserver/typingsInstaller.ts
-@@ -5,6 +5,7 @@ import { projects } from "../../ts.tscWatch";
+@@ -3,8 +3,9 @@ import { TestTypingsInstaller, TI, TestServerHost, File, createServerHost, creat
+ import { ServerHost, Project, protocol, SetTypings, InvalidateCachedTypings, BeginInstallTypes, EndInstallTypes, EventBeginInstallTypes, EventEndInstallTypes, updateProjectIfDirty } from "../../ts.server";
+ import { projects } from "../../ts.tscWatch";
  import * as ts from "../../ts";
- import validatePackageName = ts.JsTyping.validatePackageName;
- import NameValidationResult = ts.JsTyping.NameValidationResult;
+-    import validatePackageName = ts.JsTyping.validatePackageName;
+-    import NameValidationResult = ts.JsTyping.NameValidationResult;
++import validatePackageName = ts.JsTyping.validatePackageName;
++import NameValidationResult = ts.JsTyping.NameValidationResult;
 +import { typingsName } from "../../../typingsInstallerCore/typingsInstaller";
  
  interface InstallerParams {
      globalTypingsCacheLocation?: string;
-@@ -47,8 +48,6 @@ function trackingLogger(): {
+@@ -47,8 +48,6 @@ function executeCommand(self: Installer, host: TestServerHost, installedTypings:
      };
  }
  
--import typingsName = ts.projectSystem.TI.typingsName;
+-    import typingsName = ts.projectSystem.TI.typingsName;
 -
  describe("unittests:: tsserver:: typingsInstaller:: local module", () => {
      it("should not be picked up", () => {

@@ -1,4 +1,4 @@
-From bfd9264be5e3014c0a6d9a610b94c07fe4c6c832 Mon Sep 17 00:00:00 2001
+From 4d51e101efb0ddc2f579ac3b1a056d7a51b74322 Mon Sep 17 00:00:00 2001
 From: Eli Barzilay <eli@barzilay.org>
 Date: Thu, 28 Oct 2021 13:26:40 -0400
 Subject: [PATCH 1/5] Make `processDiagnosticMessages.ts` generate a module

@@ -3,3 +3,8 @@ node_modules
 lib/**/*.js
 test/fixtures/*/output
 test/baselines/local
+**/.vscode/*
+!**/.vscode/tasks.json
+!**/.vscode/settings.template.json
+!**/.vscode/launch.template.json
+!**/.vscode/extensions.json
