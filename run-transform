@@ -106,13 +106,15 @@ tweak_and_commit "UNDO WEBWORKER CHANGE" \
 
 gen_diag
 
-tweak_and_commit "UNINDENT" \
-  -- ensure_crlf_at_eof \
-  -- run node "$here/lib/unindent.js"
-
 tweak_and_commit "CONVERSION STEP - explicitify" \
   -- run_in "src" node "$here/lib/cli.js" "tsconfig.json" "explicitify" \
   -- undo_whitespaces
+
+# do this after explicitify, which avoids whitespace problems when explicitify
+# tries to restore the indention implied by the braces.
+tweak_and_commit "UNINDENT" \
+  -- ensure_crlf_at_eof \
+  -- run node "$here/lib/unindent.js"
 
 tweak_and_commit "CONVERSION STEP - stripNamespaces" \
   -- run_in "src" node "$here/lib/cli.js" "tsconfig.json" "stripNamespaces" \

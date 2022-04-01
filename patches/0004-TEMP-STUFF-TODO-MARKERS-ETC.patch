@@ -1,4 +1,4 @@
-From 026db3e3b16dbb2aede16b4b291616a2e008b3ae Mon Sep 17 00:00:00 2001
+From 469ad5f9ba73942923dfeaac5317054ea1067da2 Mon Sep 17 00:00:00 2001
 From: Eli Barzilay <eli@barzilay.org>
 Date: Thu, 28 Oct 2021 13:26:41 -0400
 Subject: [PATCH 4/5] TEMP STUFF - TODO MARKERS ETC
@@ -64,7 +64,7 @@ index a3e48b29a8..52668a849a 100644
   * You should have ts-node installed globally before executing this, probably!
   * Otherwise you'll need to compile this script before you start bisecting!
 diff --git a/src/compiler/sys.ts b/src/compiler/sys.ts
-index bd019aa483..f42f2c35a2 100644
+index cc61a2fa7d..58b1b5bd89 100644
 --- a/src/compiler/sys.ts
 +++ b/src/compiler/sys.ts
 @@ -1251,7 +1251,7 @@ export let sys: System = (() => {
@@ -77,7 +77,7 @@ index bd019aa483..f42f2c35a2 100644
              getCurrentDirectory,
              getDirectories,
 diff --git a/src/harness/virtualFileSystemWithWatch.ts b/src/harness/virtualFileSystemWithWatch.ts
-index 13bd7f6861..6ead0853f4 100644
+index 4b6cf548c8..864fb85670 100644
 --- a/src/harness/virtualFileSystemWithWatch.ts
 +++ b/src/harness/virtualFileSystemWithWatch.ts
 @@ -29,7 +29,7 @@ export const safeList = {
@@ -90,7 +90,7 @@ index 13bd7f6861..6ead0853f4 100644
  }
  
 diff --git a/src/server/project.ts b/src/server/project.ts
-index 754b7fd991..2256dcc1c3 100644
+index d0893f3a54..ff57748ea1 100644
 --- a/src/server/project.ts
 +++ b/src/server/project.ts
 @@ -1491,8 +1491,8 @@ export abstract class Project implements LanguageServiceHost, ModuleResolutionHo

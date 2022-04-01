@@ -1,4 +1,4 @@
-From 586ac95dce13b2136ca70c3968297be504460a45 Mon Sep 17 00:00:00 2001
+From 3352b2165de0fadc8807bd2d7a283106b2b58dbe Mon Sep 17 00:00:00 2001
 From: Eli Barzilay <eli@barzilay.org>
 Date: Thu, 28 Oct 2021 15:21:05 -0400
 Subject: [PATCH 3/5] Some `require` -> `import` conversions
@@ -28,7 +28,7 @@ index 195de1f64a..02cba37fce 100644
  interface ServerCancellationToken {
      isCancellationRequested(): boolean;
 diff --git a/src/harness/findUpDir.ts b/src/harness/findUpDir.ts
-index ee3b429f64..bb2b269ebd 100644
+index 216a63fc84..d660edae63 100644
 --- a/src/harness/findUpDir.ts
 +++ b/src/harness/findUpDir.ts
 @@ -1,5 +1,5 @@
@@ -86,7 +86,7 @@ index c7cbb8d3ec..641d173456 100644
  function instrumentForRecording(fn: string, tscPath: string) {
      instrument(tscPath, `
 diff --git a/src/testRunner/externalCompileRunner.ts b/src/testRunner/externalCompileRunner.ts
-index 3124c69990..a1af12736f 100644
+index d3df109064..5b84cf9f3f 100644
 --- a/src/testRunner/externalCompileRunner.ts
 +++ b/src/testRunner/externalCompileRunner.ts
 @@ -1,8 +1,8 @@
@@ -102,7 +102,7 @@ index 3124c69990..a1af12736f 100644
  interface ExecResult {
      stdout: Buffer;
 diff --git a/src/testRunner/unittests/services/languageService.ts b/src/testRunner/unittests/services/languageService.ts
-index 8ee3b9c8e8..c95148fd57 100644
+index 0d2756e970..bc044212e5 100644
 --- a/src/testRunner/unittests/services/languageService.ts
 +++ b/src/testRunner/unittests/services/languageService.ts
 @@ -2,8 +2,8 @@ import { ScriptSnapshot, getDefaultLibFilePath, emptyArray, LanguageServiceHost,
@@ -114,10 +114,10 @@ index 8ee3b9c8e8..c95148fd57 100644
 +import { expect } from "chai";
 +
  describe("unittests:: services:: languageService", () => {
-         const files: {
-             [index: string]: string;
+     const files: {
+         [index: string]: string;
 diff --git a/src/tsserver/nodeServer.ts b/src/tsserver/nodeServer.ts
-index fac0e26120..9dd32c464b 100644
+index 7cbd4ae0f1..8e7bc4f8c1 100644
 --- a/src/tsserver/nodeServer.ts
 +++ b/src/tsserver/nodeServer.ts
 @@ -1,6 +1,8 @@
@@ -134,10 +134,10 @@ index fac0e26120..9dd32c464b 100644
  export function initializeNodeSystem(): StartInput {
      const sys = Debug.checkDefined(ts.sys) as ServerHost;
 -    const childProcess: {
--            execFileSync(file: string, args: string[], options: {
--                stdio: "ignore";
+-        execFileSync(file: string, args: string[], options: {
+-            stdio: "ignore";
 -            env: MapLike<string>;
--            }): string | Buffer;
+-        }): string | Buffer;
 -    } = require("child_process");
  
      interface Stats {
@@ -152,7 +152,7 @@ index fac0e26120..9dd32c464b 100644
                      if (logger.hasLevel(LogLevel.verbose)) {
                          logger.info(`WatchGuard for path ${path} returned: OK`);
 diff --git a/src/typingsInstaller/nodeTypingsInstaller.ts b/src/typingsInstaller/nodeTypingsInstaller.ts
-index b9f50b823d..8b63193df8 100644
+index e753dc42c3..e3deaee8c9 100644
 --- a/src/typingsInstaller/nodeTypingsInstaller.ts
 +++ b/src/typingsInstaller/nodeTypingsInstaller.ts
 @@ -1,16 +1,8 @@
@@ -161,7 +161,7 @@ index b9f50b823d..8b63193df8 100644
 -import { sys, MapLike, ESMap, getEntries, combinePaths, normalizeSlashes, toPath, createGetCanonicalFileName, stringContains, Debug, version, forEachAncestorDirectory, getDirectoryPath } from "./ts";
 -import * as ts from "./ts";
 -const fs: {
--        appendFileSync(file: string, content: string): void;
+-    appendFileSync(file: string, content: string): void;
 -} = require("fs");
 -
 -const path: {
@@ -176,7 +176,7 @@ index b9f50b823d..8b63193df8 100644
  class FileLog implements Log {
      constructor(private logFile: string | undefined) {
 @@ -24,7 +16,7 @@ class FileLog implements Log {
-                 return;
+             return;
  
          try {
 -            fs.appendFileSync(this.logFile, `[${nowString()}] ${text}${sys.newLine}`);
