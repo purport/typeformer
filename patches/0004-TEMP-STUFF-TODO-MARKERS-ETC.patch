@@ -1,7 +1,7 @@
 From 469ad5f9ba73942923dfeaac5317054ea1067da2 Mon Sep 17 00:00:00 2001
 From: Eli Barzilay <eli@barzilay.org>
 Date: Thu, 28 Oct 2021 13:26:41 -0400
-Subject: [PATCH 4/5] TEMP STUFF - TODO MARKERS ETC
+Subject: [PATCH 4/6] TEMP STUFF - TODO MARKERS ETC
 
 ---
  Gulpfile.js                                               | 3 +++

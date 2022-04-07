@@ -1,7 +1,7 @@
 From d937526d594a6913cb62bdc19aed3e28b07e1835 Mon Sep 17 00:00:00 2001
 From: Eli Barzilay <eli@barzilay.org>
 Date: Thu, 28 Oct 2021 13:26:41 -0400
-Subject: [PATCH 2/5] Post conversion fixes
+Subject: [PATCH 2/6] Post conversion fixes
 
 ---
  Gulpfile.js                                   |  9 +++----
