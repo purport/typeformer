@@ -1,22 +1,22 @@
-From d937526d594a6913cb62bdc19aed3e28b07e1835 Mon Sep 17 00:00:00 2001
+From 8508ec7924e8d514b3f960f96607e44208ce1ae7 Mon Sep 17 00:00:00 2001
 From: Eli Barzilay <eli@barzilay.org>
 Date: Thu, 28 Oct 2021 13:26:41 -0400
 Subject: [PATCH 2/6] Post conversion fixes
 
 ---
- Gulpfile.js                                   |  9 +++----
- src/harness/fourslashImpl.ts                  |  4 ++--
- src/harness/harnessIO.ts                      | 24 +++++++++----------
- src/harness/virtualFileSystemWithWatch.ts     | 20 ++++++++--------
+ Gulpfile.js                                   |  9 ++++---
+ src/harness/fourslashImpl.ts                  |  4 ++-
+ src/harness/harnessIO.ts                      | 26 ++++++++++---------
+ src/harness/virtualFileSystemWithWatch.ts     | 21 ++++++++-------
  src/server/session.ts                         |  6 +++--
  src/testRunner/parallel/host.ts               |  6 ++---
- .../unittests/tsbuild/moduleResolution.ts     |  4 +++-
- .../unittests/tsbuildWatch/programUpdates.ts  |  4 ++--
+ .../unittests/tsbuild/moduleResolution.ts     |  4 ++-
+ .../unittests/tsbuildWatch/programUpdates.ts  |  4 +--
  .../unittests/tsserver/compileOnSave.ts       |  5 ++--
- src/testRunner/unittests/tsserver/helpers.ts  | 15 +++++++-----
- src/testRunner/unittests/tsserver/session.ts  |  4 ++--
- .../unittests/tsserver/typingsInstaller.ts    |  3 +--
- 12 files changed, 55 insertions(+), 49 deletions(-)
+ src/testRunner/unittests/tsserver/helpers.ts  | 16 +++++++-----
+ src/testRunner/unittests/tsserver/session.ts  |  4 +--
+ .../unittests/tsserver/typingsInstaller.ts    |  3 ++-
+ 12 files changed, 61 insertions(+), 47 deletions(-)
 
 diff --git a/Gulpfile.js b/Gulpfile.js
 index c9d3feff80..6dc97369b3 100644
@@ -62,26 +62,22 @@ index c9d3feff80..6dc97369b3 100644
  });
  task("watch", series(preBuild, preTest, parallel(watchLib, watchDiagnostics, watchServices, watchLssl, watchTests, watchRuntests)));
 diff --git a/src/harness/fourslashImpl.ts b/src/harness/fourslashImpl.ts
-index 3edcf787f7..50bc3699a7 100644
+index cf83aa0754..8b4232c6ff 100644
 --- a/src/harness/fourslashImpl.ts
 +++ b/src/harness/fourslashImpl.ts
-@@ -1,4 +1,3 @@
--
- import { TestCaseParser, Compiler, isDefaultLibraryFile, IO, getConfigNameFromFileName, Baseline, virtualFileSystemRoot } from "./Harness";
- import { FileSet, File, FileSystem } from "./vfs";
- import { ESMap, MultiMap, TextRange, ImplementationLocation, CompilerOptions, ScriptTarget, HostCancellationToken, Debug, OperationCanceledException, DiagnosticMessage, IScriptSnapshot, ScriptSnapshot, LanguageService, FormatCodeSettings, SymbolDisplayPart, forEach, parseConfigFileTextToJson, normalizePath, getDirectoryPath, convertCompilerOptionsFromJson, extend, ParsedCommandLine, parseJsonText, parseJsonSourceFileConfigFileContent, getNormalizedAbsolutePath, FileReference, flatten, getSupportedExtensions, contains, isDeclarationFileName, containsPath, some, testFormatSettings, getAllKeys, isString, forEachEntry, LineAndCharacter, normalizeSlashes, emptyOptions, Diagnostic, emptyArray, flatMap, isAnySupportedFileExtension, getBaseFileName, flattenDiagnosticMessageText, SourceFile, getLineAndCharacterOfPosition, forEachKey, getAllowJSCompilerOption, resolutionExtensionIsTSOrJson, extensionFromPath, DiagnosticCategory, createTextSpanFromRange, isNumber, textSpansEqual, DefinitionInfo, DefinitionInfoAndBoundSpan, isArray, hasProperty, zipWith, comparePaths, Comparison, deduplicate, equateValues, textSpanEnd, sys, OutputFile, UserPreferences, InlayHint, CompletionEntry, Completions, displayPartsToString, Program, TypeChecker, Node, getTouchingPropertyName, Symbol, SymbolFlags, MapLike, getEntries, ReferenceEntry, map, find, ReferencedSymbol, group, sort, textSpanContainsPosition, GetCompletionsAtPositionOptions, CompletionInfo, CompletionEntryData, CompletionEntryDetails, realizeDiagnostics, RealizedDiagnostic, JSDocTagInfo, RenameLocation, compareStringsCaseSensitive, textSpanIntersectsWithPosition, SignatureHelpTriggerReason, SignatureHelpParameter, RenameInfoOptions, CharacterCodes, computeLineStarts, computeLineAndCharacterOfPosition, padLeft, repeatString, getPreEmitDiagnostics, DiagnosticMessageChain, filter, endsWith, arrayFrom, SelectionRange, isLineBreak, isWhiteSpaceLike, findLastIndex, concatenate, Extension, SignatureHelpItems, createLanguageServiceSourceFile, TextChange, clone, FormatCodeOptions, toEditorSettings, documentSpansEqual, arrayIsEqualTo, createMultiMap, IndentStyle, classifier, ClassifiedSpan, ClassifiedSpan2020, SemanticClassificationFormat, createTextSpan, OutliningSpan, first, mapDefined, formatStringFromArgs, FileTextChanges, textChanges, getOwnKeys, CodeFixAction, equalOwnProperties, createTextRangeFromSpan, textRangeContainsPositionInclusive, firstOrUndefined, codefix, Diagnostics, TextInsertion, DocCommentTemplateOptions, JsxClosingTagInfo, NavigateToItem, ScriptElementKind, combinePaths, length, RefactorTriggerReason, firstDefined, CallHierarchyItem, mapOneOrMany, getPathUpdater, createGetCanonicalFileName, ApplicableRefactorInfo, transpileModule, changeExtension, isRootedDiskPath, append, regExpEscape } from "./ts";
-@@ -10,7 +9,8 @@ import { memoize, assertInvariants, assertDiagnosticsEquals, assertStructuralEqu
+@@ -9,7 +9,9 @@ import { memoize, assertInvariants, assertDiagnosticsEquals, assertStructuralEqu
  import { SessionClient, protocol } from "./ts.server";
  import * as FourSlashInterface from "./FourSlashInterface";
  import * as ts from "./ts";
 -import ArrayOrSingle = FourSlashInterface.ArrayOrSingle;
 +
 +type ArrayOrSingle<T> = FourSlashInterface.ArrayOrSingle<T>;
- 
++
  export const enum FourSlashTestType {
      Native,
+     Shims,
 diff --git a/src/harness/harnessIO.ts b/src/harness/harnessIO.ts
-index f931fbb0b8..9a866e6a0f 100644
+index 04df01bedb..12d1b60e11 100644
 --- a/src/harness/harnessIO.ts
 +++ b/src/harness/harnessIO.ts
 @@ -1,13 +1,13 @@
@@ -100,25 +96,26 @@ index f931fbb0b8..9a866e6a0f 100644
  export interface IO {
      newLine(): string;
      getCurrentDirectory(): string;
-@@ -264,7 +264,7 @@ export namespace Compiler {
+@@ -231,7 +231,7 @@ export namespace Compiler {
+             return undefined;
          }
- 
          if (!libFileNameSourceFileMap) {
 -            libFileNameSourceFileMap = new ts.Map(getEntries({
 +            libFileNameSourceFileMap = new Map(getEntries({
                  [defaultLibFileName]: createSourceFileAndAssertInvariants(defaultLibFileName, IO.readFile(libFolder + "lib.es5.d.ts")!, /*languageVersion*/ ScriptTarget.Latest)
              }));
          }
-@@ -307,7 +307,7 @@ export namespace Compiler {
+@@ -267,7 +267,8 @@ export namespace Compiler {
+         libFiles?: string;
          noTypesAndSymbols?: boolean;
      }
- 
 -    // Additional options not already in ts.optionDeclarations
++
 +    // Additional options not already in optionDeclarations
      const harnessOptionDeclarations: CommandLineOption[] = [
          { name: "allowNonTsExtensions", type: "boolean", defaultValueDescription: false },
          { name: "useCaseSensitiveFileNames", type: "boolean", defaultValueDescription: false },
-@@ -329,9 +329,9 @@ export namespace Compiler {
+@@ -288,9 +289,9 @@ export namespace Compiler {
      let optionsIndex: ESMap<string, CommandLineOption>;
      function getCommandLineOption(name: string): CommandLineOption | undefined {
          if (!optionsIndex) {
@@ -131,25 +128,26 @@ index f931fbb0b8..9a866e6a0f 100644
                  optionsIndex.set(option.name.toLowerCase(), option);
              }
          }
-@@ -605,7 +605,7 @@ export namespace Compiler {
+@@ -532,7 +533,7 @@ export namespace Compiler {
+         outputLines = "";
          errorsReported = 0;
- 
          // 'merge' the lines of each input file with any errors associated with it
 -        const dupeCase = new ts.Map<string, number>();
 +        const dupeCase = new Map<string, number>();
          for (const inputFile of inputFiles.filter(f => f.content !== undefined)) {
              // Filter down to the errors in the file
              const fileErrors = diagnostics.filter((e): e is DiagnosticWithLocation => {
-@@ -790,7 +790,7 @@ export namespace Compiler {
+@@ -692,7 +693,8 @@ export namespace Compiler {
              if (skipBaseline) {
                  return;
              }
 -            const dupeCase = new ts.Map<string, number>();
 +            const dupeCase = new Map<string, number>();
- 
++
              for (const file of allFiles) {
                  const { unitName } = file;
-@@ -965,7 +965,7 @@ export namespace Compiler {
+                 let typeLines = "=== " + unitName + " ===\r\n";
+@@ -850,7 +852,7 @@ export namespace Compiler {
          // Collect, test, and sort the fileNames
          const files = Array.from(outputFiles);
          files.slice().sort((a, b) => compareStringsCaseSensitive(cleanName(a.file), cleanName(b.file)));
@@ -158,7 +156,7 @@ index f931fbb0b8..9a866e6a0f 100644
          // Yield them
          for (const outputFile of files) {
              yield [checkDuplicatedFileName(outputFile.file, dupeCase), "/*====== " + outputFile.file + " ======*/\r\n" + removeByteOrderMark(outputFile.text)];
-@@ -1101,7 +1101,7 @@ function getVaryByStarSettingValues(varyBy: string): ReadonlyESMap<string, strin
+@@ -969,7 +971,7 @@ function getVaryByStarSettingValues(varyBy: string): ReadonlyESMap<string, strin
              return option.type;
          }
          if (option.type === "boolean") {
@@ -167,17 +165,17 @@ index f931fbb0b8..9a866e6a0f 100644
                  true: 1,
                  false: 0
              })));
-@@ -1451,7 +1451,7 @@ export namespace Baseline {
+@@ -1277,7 +1279,7 @@ export namespace Baseline {
          string
      ]> | null, opts?: BaselineOptions, referencedExtensions?: string[]): void {
          const gen = generateContent();
 -        const writtenFiles = new ts.Map<string, true>();
 +        const writtenFiles = new Map<string, true>();
          const errors: Error[] = [];
- 
          // eslint-disable-next-line no-null/no-null
+         if (gen !== null) {
 diff --git a/src/harness/virtualFileSystemWithWatch.ts b/src/harness/virtualFileSystemWithWatch.ts
-index 57b8819c97..4b6cf548c8 100644
+index 2de9434cc1..8981f61e82 100644
 --- a/src/harness/virtualFileSystemWithWatch.ts
 +++ b/src/harness/virtualFileSystemWithWatch.ts
 @@ -1,7 +1,7 @@
@@ -190,7 +188,7 @@ index 57b8819c97..4b6cf548c8 100644
  export const libFile: File = {
      path: "/a/lib/lib.d.ts",
      content: `/// <reference no-default-lib="true"/>
-@@ -136,7 +136,7 @@ export function getDiffInKeys<T>(map: ESMap<string, T>, expectedKeys: readonly s
+@@ -115,7 +115,7 @@ export function getDiffInKeys<T>(map: ESMap<string, T>, expectedKeys: readonly s
      }
      const notInActual: string[] = [];
      const duplicates: string[] = [];
@@ -199,9 +197,9 @@ index 57b8819c97..4b6cf548c8 100644
      forEach(expectedKeys, expectedKey => {
          if (seen.has(expectedKey)) {
              duplicates.push(expectedKey);
-@@ -235,8 +235,8 @@ export function checkWatchedDirectoriesDetailed(host: TestServerHost, expectedDi
+@@ -207,8 +207,8 @@ export function checkWatchedDirectoriesDetailed(host: TestServerHost, expectedDi
+     }
  }
- 
  export function checkOutputContains(host: TestServerHost, expected: readonly string[]) {
 -    const mapExpected = new ts.Set(expected);
 -    const mapSeen = new ts.Set<string>();
@@ -210,43 +208,44 @@ index 57b8819c97..4b6cf548c8 100644
      for (const f of host.getOutput()) {
          assert.isFalse(mapSeen.has(f), `Already found ${f} in ${JSON.stringify(host.getOutput())}`);
          if (mapExpected.has(f)) {
-@@ -248,7 +248,7 @@ export function checkOutputContains(host: TestServerHost, expected: readonly str
+@@ -219,7 +219,7 @@ export function checkOutputContains(host: TestServerHost, expected: readonly str
+     assert.equal(mapExpected.size, 0, `Output has missing ${JSON.stringify(arrayFrom(mapExpected.keys()))} in ${JSON.stringify(host.getOutput())}`);
  }
- 
  export function checkOutputDoesNotContain(host: TestServerHost, expectedToBeAbsent: string[] | readonly string[]) {
 -    const mapExpectedToBeAbsent = new ts.Set(expectedToBeAbsent);
 +    const mapExpectedToBeAbsent = new Set(expectedToBeAbsent);
      for (const f of host.getOutput()) {
          assert.isFalse(mapExpectedToBeAbsent.has(f), `Contains ${f} in ${JSON.stringify(host.getOutput())}`);
      }
-@@ -351,7 +351,7 @@ export class TestServerHost implements ServerHost, FormatDiagnosticsHost, Module
- 
+@@ -305,7 +305,8 @@ export interface TestServerHostOptions {
+ export class TestServerHost implements ServerHost, FormatDiagnosticsHost, ModuleResolutionHost {
+     args: string[] = [];
      private readonly output: string[] = [];
- 
 -    private fs: ESMap<Path, FSEntry> = new ts.Map();
++
 +    private fs: ESMap<Path, FSEntry> = new Map();
      private time = timeIncrements;
      getCanonicalFileName: (s: string) => string;
      private toPath: (f: string) => Path;
-@@ -996,7 +996,7 @@ export class TestServerHost implements ServerHost, FormatDiagnosticsHost, Module
+@@ -872,7 +873,7 @@ export class TestServerHost implements ServerHost, FormatDiagnosticsHost, Module
+         this.clearOutput();
      }
- 
      snap(): ESMap<Path, FSEntry> {
 -        const result = new ts.Map<Path, FSEntry>();
 +        const result = new Map<Path, FSEntry>();
          this.fs.forEach((value, key) => {
              const cloneValue = clone(value);
              if (isFsFolder(cloneValue)) {
-@@ -1009,7 +1009,7 @@ export class TestServerHost implements ServerHost, FormatDiagnosticsHost, Module
+@@ -883,7 +884,7 @@ export class TestServerHost implements ServerHost, FormatDiagnosticsHost, Module
+         return result;
      }
- 
      writtenFiles?: ESMap<Path, number>;
 -    diff(baseline: string[], base: ESMap<string, FSEntry> = new ts.Map()) {
 +    diff(baseline: string[], base: ESMap<string, FSEntry> = new Map()) {
          this.fs.forEach(newFsEntry => {
              diffFsEntry(baseline, base.get(newFsEntry.path), newFsEntry, this.writtenFiles);
          });
-@@ -1173,7 +1173,7 @@ export type TestServerHostTrackingWrittenFiles = TestServerHost & {
+@@ -1036,7 +1037,7 @@ export type TestServerHostTrackingWrittenFiles = TestServerHost & {
  export function changeToHostTrackingWrittenFiles(inputHost: TestServerHost) {
      const host = inputHost as TestServerHostTrackingWrittenFiles;
      const originalWriteFile = host.writeFile;
@@ -256,7 +255,7 @@ index 57b8819c97..4b6cf548c8 100644
          originalWriteFile.call(host, fileName, content);
          const path = host.toFullPath(fileName);
 diff --git a/src/server/session.ts b/src/server/session.ts
-index 1ef1d426ea..a2b5e7dac2 100644
+index 1725a6095f..6e50bd611a 100644
 --- a/src/server/session.ts
 +++ b/src/server/session.ts
 @@ -1,7 +1,9 @@
@@ -272,7 +271,7 @@ index 1ef1d426ea..a2b5e7dac2 100644
      stack?: string;
  }
 diff --git a/src/testRunner/parallel/host.ts b/src/testRunner/parallel/host.ts
-index 68c1bd902f..713b0aaad0 100644
+index 101021a793..e61650eef7 100644
 --- a/src/testRunner/parallel/host.ts
 +++ b/src/testRunner/parallel/host.ts
 @@ -1,8 +1,8 @@
@@ -286,9 +285,9 @@ index 68c1bd902f..713b0aaad0 100644
  export function start() {
      const Mocha = require("mocha") as typeof import("mocha");
      const Base = Mocha.reporters.Base;
-@@ -28,7 +28,7 @@ export function start() {
+@@ -25,7 +25,7 @@ export function start() {
+     let unknownValue: string | undefined;
      let totalCost = 0;
- 
      class RemoteSuite extends Mocha.Suite {
 -        suiteMap = new ts.Map<string, RemoteSuite>();
 +        suiteMap = new Map<string, RemoteSuite>();
@@ -296,7 +295,7 @@ index 68c1bd902f..713b0aaad0 100644
              super(title);
              this.pending = false;
 diff --git a/src/testRunner/unittests/tsbuild/moduleResolution.ts b/src/testRunner/unittests/tsbuild/moduleResolution.ts
-index cb3f2b6804..a02c9e738d 100644
+index 5c672e99a6..281cad4866 100644
 --- a/src/testRunner/unittests/tsbuild/moduleResolution.ts
 +++ b/src/testRunner/unittests/tsbuild/moduleResolution.ts
 @@ -1,6 +1,8 @@
@@ -310,7 +309,7 @@ index cb3f2b6804..a02c9e738d 100644
      function sys(optionsToExtend?: CompilerOptions) {
          return createWatchedSystem([
 diff --git a/src/testRunner/unittests/tsbuildWatch/programUpdates.ts b/src/testRunner/unittests/tsbuildWatch/programUpdates.ts
-index 3ca8c208b1..64ff36cc02 100644
+index 652b729291..b890429f92 100644
 --- a/src/testRunner/unittests/tsbuildWatch/programUpdates.ts
 +++ b/src/testRunner/unittests/tsbuildWatch/programUpdates.ts
 @@ -1,7 +1,7 @@
@@ -324,7 +323,7 @@ index 3ca8c208b1..64ff36cc02 100644
      type TsBuildWatchSystem = TestFSWithWatch.TestServerHostTrackingWrittenFiles;
      function createTsBuildWatchSystem(fileOrFolderList: readonly TestFSWithWatch.FileOrFolderOrSymLink[], params?: TestFSWithWatch.TestServerHostCreationParameters) {
 diff --git a/src/testRunner/unittests/tsserver/compileOnSave.ts b/src/testRunner/unittests/tsserver/compileOnSave.ts
-index ecc59bd63a..90ffd869c5 100644
+index c80ef6f75c..9294be364e 100644
 --- a/src/testRunner/unittests/tsserver/compileOnSave.ts
 +++ b/src/testRunner/unittests/tsserver/compileOnSave.ts
 @@ -1,9 +1,8 @@
@@ -340,7 +339,7 @@ index ecc59bd63a..90ffd869c5 100644
      return new TestTypingsInstaller("/a/data/", /*throttleLimit*/ 5, host);
  }
 diff --git a/src/testRunner/unittests/tsserver/helpers.ts b/src/testRunner/unittests/tsserver/helpers.ts
-index 4c7c62dc95..2f742472b7 100644
+index b27f23eb1b..2ff84496e4 100644
 --- a/src/testRunner/unittests/tsserver/helpers.ts
 +++ b/src/testRunner/unittests/tsserver/helpers.ts
 @@ -1,11 +1,15 @@
@@ -363,18 +362,19 @@ index 4c7c62dc95..2f742472b7 100644
  export import TestServerHost = ts.TestFSWithWatch.TestServerHost;
  export type File = TestFSWithWatch.File;
  export type SymLink = TestFSWithWatch.SymLink;
-@@ -17,8 +21,7 @@ export import checkWatchedFiles = ts.TestFSWithWatch.checkWatchedFiles;
+@@ -17,8 +21,8 @@ export import checkWatchedFiles = ts.TestFSWithWatch.checkWatchedFiles;
  export import checkWatchedFilesDetailed = ts.TestFSWithWatch.checkWatchedFilesDetailed;
  export import checkWatchedDirectories = ts.TestFSWithWatch.checkWatchedDirectories;
  export import checkWatchedDirectoriesDetailed = ts.TestFSWithWatch.checkWatchedDirectoriesDetailed;
 -export import commonFile1 = ts.tscWatch.commonFile1;
 -export import commonFile2 = ts.tscWatch.commonFile2;
 +export { commonFile1, commonFile2 };
- 
++
  const outputEventRegex = /Content\-Length: [\d]+\r\n\r\n/;
  export function mapOutputToJson(s: string) {
+     return convertToObject(parseJsonText("json.json", s.replace(outputEventRegex, "")), []);
 diff --git a/src/testRunner/unittests/tsserver/session.ts b/src/testRunner/unittests/tsserver/session.ts
-index 989e4106e7..77f21a2969 100644
+index 1da2b15303..d57e1ee3c9 100644
 --- a/src/testRunner/unittests/tsserver/session.ts
 +++ b/src/testRunner/unittests/tsserver/session.ts
 @@ -4,8 +4,8 @@ import { mockHash } from "../../Harness";
@@ -389,23 +389,23 @@ index 989e4106e7..77f21a2969 100644
  const noopFileWatcher: FileWatcher = { close: noop };
  const mockHost: ServerHost = {
 diff --git a/src/testRunner/unittests/tsserver/typingsInstaller.ts b/src/testRunner/unittests/tsserver/typingsInstaller.ts
-index 9205d4c4d5..2255d46364 100644
+index d19467b157..8b44936c85 100644
 --- a/src/testRunner/unittests/tsserver/typingsInstaller.ts
 +++ b/src/testRunner/unittests/tsserver/typingsInstaller.ts
-@@ -5,6 +5,7 @@ import { projects } from "../../ts.tscWatch";
+@@ -5,6 +5,8 @@ import { projects } from "../../ts.tscWatch";
  import * as ts from "../../ts";
  import validatePackageName = ts.JsTyping.validatePackageName;
  import NameValidationResult = ts.JsTyping.NameValidationResult;
 +import { typingsName } from "../../../typingsInstallerCore/typingsInstaller";
- 
++
  interface InstallerParams {
      globalTypingsCacheLocation?: string;
-@@ -47,8 +48,6 @@ function trackingLogger(): {
+     throttleLimit?: number;
+@@ -41,7 +43,6 @@ function trackingLogger(): {
+         }
      };
  }
- 
 -import typingsName = ts.projectSystem.TI.typingsName;
--
  describe("unittests:: tsserver:: typingsInstaller:: local module", () => {
      it("should not be picked up", () => {
          const f1 = {

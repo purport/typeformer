@@ -1,17 +1,17 @@
-From 469ad5f9ba73942923dfeaac5317054ea1067da2 Mon Sep 17 00:00:00 2001
+From 99ccabad33af12d084c7563b4e6176d81ab97f9d Mon Sep 17 00:00:00 2001
 From: Eli Barzilay <eli@barzilay.org>
 Date: Thu, 28 Oct 2021 13:26:41 -0400
 Subject: [PATCH 4/6] TEMP STUFF - TODO MARKERS ETC
 
 ---
- Gulpfile.js                                               | 3 +++
- package.json                                              | 1 +
- scripts/bisect-test.ts                                    | 2 ++
- src/compiler/sys.ts                                       | 2 +-
- src/harness/virtualFileSystemWithWatch.ts                 | 2 +-
- src/server/project.ts                                     | 8 ++++----
- .../parser/ecmascript5/RealWorld/parserharness.ts         | 2 +-
- 7 files changed, 13 insertions(+), 7 deletions(-)
+ Gulpfile.js                                              | 3 +++
+ package.json                                             | 1 +
+ scripts/bisect-test.ts                                   | 2 ++
+ src/compiler/sys.ts                                      | 2 +-
+ src/harness/virtualFileSystemWithWatch.ts                | 3 ++-
+ src/server/project.ts                                    | 9 +++++----
+ .../parser/ecmascript5/RealWorld/parserharness.ts        | 2 +-
+ 7 files changed, 15 insertions(+), 7 deletions(-)
 
 diff --git a/Gulpfile.js b/Gulpfile.js
 index 6dc97369b3..edf1cebb00 100644
@@ -64,10 +64,10 @@ index a3e48b29a8..52668a849a 100644
   * You should have ts-node installed globally before executing this, probably!
   * Otherwise you'll need to compile this script before you start bisecting!
 diff --git a/src/compiler/sys.ts b/src/compiler/sys.ts
-index cc61a2fa7d..58b1b5bd89 100644
+index 680465d6f2..afcc7b944f 100644
 --- a/src/compiler/sys.ts
 +++ b/src/compiler/sys.ts
-@@ -1251,7 +1251,7 @@ export let sys: System = (() => {
+@@ -1136,7 +1136,7 @@ export let sys: System = (() => {
                  }
              },
              getExecutingFilePath() {
@@ -77,44 +77,46 @@ index cc61a2fa7d..58b1b5bd89 100644
              getCurrentDirectory,
              getDirectories,
 diff --git a/src/harness/virtualFileSystemWithWatch.ts b/src/harness/virtualFileSystemWithWatch.ts
-index 4b6cf548c8..864fb85670 100644
+index 8981f61e82..26701af8a0 100644
 --- a/src/harness/virtualFileSystemWithWatch.ts
 +++ b/src/harness/virtualFileSystemWithWatch.ts
-@@ -29,7 +29,7 @@ export const safeList = {
+@@ -27,7 +27,8 @@ export const safeList = {
+         chroma: "chroma-js"
      })
  };
- 
 -function getExecutingFilePathFromLibFile(): string {
++
 +function getExecutingFilePathFromLibFile(): string { //!!!
      return combinePaths(getDirectoryPath(libFile.path), "tsc.js");
  }
- 
+ export interface TestServerHostCreationParameters {
 diff --git a/src/server/project.ts b/src/server/project.ts
-index d0893f3a54..ff57748ea1 100644
+index b77980138e..0100917f28 100644
 --- a/src/server/project.ts
 +++ b/src/server/project.ts
-@@ -1491,8 +1491,8 @@ export abstract class Project implements LanguageServiceHost, ModuleResolutionHo
+@@ -1300,8 +1300,8 @@ export abstract class Project implements LanguageServiceHost, ModuleResolutionHo
          // Search any globally-specified probe paths, then our peer node_modules
          const searchPaths = [
-           ...this.projectService.pluginProbeLocations,
--          // ../../.. to walk from X/node_modules/typescript/lib/tsserver.js to X/node_modules/
+             ...this.projectService.pluginProbeLocations,
+-            // ../../.. to walk from X/node_modules/typescript/lib/tsserver.js to X/node_modules/
 -            combinePaths(this.projectService.getExecutingFilePath(), "../../.."),
-+          // ../../.. to walk from X/node_modules/typescript/lib/tsserver.js to X/node_modules/ //!!!
-+          combinePaths(this.projectService.getExecutingFilePath(), "../../.."), //!!!
++            // ../../.. to walk from X/node_modules/typescript/lib/tsserver.js to X/node_modules/ //!!!
++            combinePaths(this.projectService.getExecutingFilePath(), "../../.."), //!!!
          ];
- 
          if (this.projectService.globalPlugins) {
-@@ -2212,8 +2212,8 @@ export class ConfiguredProject extends Project {
+             // Enable global plugins with synthetic configuration entries
+@@ -1921,8 +1921,9 @@ export class ConfiguredProject extends Project {
+             return;
          }
- 
          // Search our peer node_modules, then any globally-specified probe paths
 -        // ../../.. to walk from X/node_modules/typescript/lib/tsserver.js to X/node_modules/
 -        const searchPaths = [combinePaths(this.projectService.getExecutingFilePath(), "../../.."), ...this.projectService.pluginProbeLocations];
 +        // ../../.. to walk from X/node_modules/typescript/lib/tsserver.js to X/node_modules/ //!!!
 +        const searchPaths = [combinePaths(this.projectService.getExecutingFilePath(), "../../.."), ...this.projectService.pluginProbeLocations]; //!!!
- 
++
          if (this.projectService.allowLocalPluginLoads) {
              const local = getDirectoryPath(this.canonicalConfigFilePath);
+             this.projectService.logger.info(`Local plugin loading enabled; adding ${local} to search paths`);
 diff --git a/tests/cases/conformance/parser/ecmascript5/RealWorld/parserharness.ts b/tests/cases/conformance/parser/ecmascript5/RealWorld/parserharness.ts
 index 4cb9c6cb75..1f0db4ff67 100644
 --- a/tests/cases/conformance/parser/ecmascript5/RealWorld/parserharness.ts

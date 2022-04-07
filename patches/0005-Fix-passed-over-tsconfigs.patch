@@ -1,4 +1,4 @@
-From eda8f898e1a10f17fe907da57cc3549343c6fd7b Mon Sep 17 00:00:00 2001
+From 3dd3191a7be1a92a5ffc8bf886668e4b0ae55da5 Mon Sep 17 00:00:00 2001
 From: Jake Bailey <5341706+jakebailey@users.noreply.github.com>
 Date: Fri, 11 Mar 2022 13:20:26 -0800
 Subject: [PATCH 5/6] Fix passed-over tsconfigs

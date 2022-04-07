@@ -1,55 +1,57 @@
-From 3352b2165de0fadc8807bd2d7a283106b2b58dbe Mon Sep 17 00:00:00 2001
+From c985d4fc9ad10941c4835307f4d8709f8a65555c Mon Sep 17 00:00:00 2001
 From: Eli Barzilay <eli@barzilay.org>
 Date: Thu, 28 Oct 2021 15:21:05 -0400
 Subject: [PATCH 3/6] Some `require` -> `import` conversions
 
 ---
- src/cancellationToken/cancellationToken.ts    |  2 +-
- src/harness/findUpDir.ts                      |  4 ++--
- src/harness/harnessGlobals.ts                 | 16 +++++---------
+ src/cancellationToken/cancellationToken.ts    |  4 +++-
+ src/harness/findUpDir.ts                      |  5 +++--
+ src/harness/harnessGlobals.ts                 | 18 +++++----------
  src/instrumenter/instrumenter.ts              |  4 ++--
- src/testRunner/externalCompileRunner.ts       |  6 ++---
+ src/testRunner/externalCompileRunner.ts       |  7 +++---
  .../unittests/services/languageService.ts     |  4 ++--
  src/tsserver/nodeServer.ts                    | 10 +++------
- src/typingsInstaller/nodeTypingsInstaller.ts  | 22 ++++++-------------
- src/watchGuard/watchGuard.ts                  |  8 +++----
- 9 files changed, 30 insertions(+), 46 deletions(-)
+ src/typingsInstaller/nodeTypingsInstaller.ts  | 22 +++++++------------
+ src/watchGuard/watchGuard.ts                  |  9 ++++----
+ 9 files changed, 36 insertions(+), 47 deletions(-)
 
 diff --git a/src/cancellationToken/cancellationToken.ts b/src/cancellationToken/cancellationToken.ts
-index 195de1f64a..02cba37fce 100644
+index 429ea193d2..0685be988e 100644
 --- a/src/cancellationToken/cancellationToken.ts
 +++ b/src/cancellationToken/cancellationToken.ts
-@@ -1,6 +1,6 @@
+@@ -1,5 +1,7 @@
  /// <reference types="node"/>
- 
 -import fs = require("fs");
++
 +import * as fs from "fs";
- 
++
  interface ServerCancellationToken {
      isCancellationRequested(): boolean;
+     setRequest(requestId: number): void;
 diff --git a/src/harness/findUpDir.ts b/src/harness/findUpDir.ts
-index 216a63fc84..d660edae63 100644
+index 1e469f08e4..ba757a52e7 100644
 --- a/src/harness/findUpDir.ts
 +++ b/src/harness/findUpDir.ts
-@@ -1,5 +1,5 @@
+@@ -1,5 +1,6 @@
 -const { join, resolve, dirname } = require("path") as typeof import("path");
 -const { existsSync } = require("fs") as typeof import("fs");
 +import { join, resolve, dirname } from "path";
 +import { existsSync } from "fs";
- 
++
  // search directories upward to avoid hard-wired paths based on the
  // build tree (same as scripts/build/findUpDir.js)
+ export function findUpFile(name: string): string {
 diff --git a/src/harness/harnessGlobals.ts b/src/harness/harnessGlobals.ts
-index e0cf5e7da7..018d5cef18 100644
+index 9c48b2d6c6..cae1ab111e 100644
 --- a/src/harness/harnessGlobals.ts
 +++ b/src/harness/harnessGlobals.ts
-@@ -2,15 +2,14 @@
- /* eslint-disable no-var */
- 
+@@ -1,15 +1,12 @@
  import { isArray } from "./ts";
 +import * as chai from "chai";
  declare global {
- // this will work in the browser via browserify
+-    // Block scoped definitions work poorly for global variables, temporarily enable var
+-    /* eslint-disable no-var */
+     // this will work in the browser via browserify
 -    var assert: typeof _chai.assert;
 +    var assert: typeof chai.assert;
 +    var expect: typeof chai.expect;
@@ -64,7 +66,7 @@ index e0cf5e7da7..018d5cef18 100644
  {
      // chai's builtin `assert.isFalse` is featureful but slow - we don't use those features,
      // so we'll just overwrite it as an alterative to migrating a bunch of code off of chai
-@@ -39,7 +38,4 @@ globalThis.assert = _chai.assert;
+@@ -36,7 +33,4 @@ globalThis.assert = _chai.assert;
          }
      };
  }
@@ -86,10 +88,10 @@ index c7cbb8d3ec..641d173456 100644
  function instrumentForRecording(fn: string, tscPath: string) {
      instrument(tscPath, `
 diff --git a/src/testRunner/externalCompileRunner.ts b/src/testRunner/externalCompileRunner.ts
-index d3df109064..5b84cf9f3f 100644
+index 1968f9b041..19c12ebb20 100644
 --- a/src/testRunner/externalCompileRunner.ts
 +++ b/src/testRunner/externalCompileRunner.ts
-@@ -1,8 +1,8 @@
+@@ -1,8 +1,9 @@
  import { RunnerBase, IO, isWorker, Baseline, TestRunnerKind } from "./Harness";
  import { Debug, Version, flatten, comparePathsCaseSensitive, compareValues, compareStringsCaseSensitive, stringContains } from "./ts";
 -const fs: typeof import("fs") = require("fs");
@@ -98,11 +100,12 @@ index d3df109064..5b84cf9f3f 100644
 +import * as fs from "fs";
 +import * as path from "path";
 +import * as del from "del";
- 
++
  interface ExecResult {
      stdout: Buffer;
+     stderr: Buffer;
 diff --git a/src/testRunner/unittests/services/languageService.ts b/src/testRunner/unittests/services/languageService.ts
-index 0d2756e970..bc044212e5 100644
+index 8c21046c3e..28de89035b 100644
 --- a/src/testRunner/unittests/services/languageService.ts
 +++ b/src/testRunner/unittests/services/languageService.ts
 @@ -2,8 +2,8 @@ import { ScriptSnapshot, getDefaultLibFilePath, emptyArray, LanguageServiceHost,
@@ -117,7 +120,7 @@ index 0d2756e970..bc044212e5 100644
      const files: {
          [index: string]: string;
 diff --git a/src/tsserver/nodeServer.ts b/src/tsserver/nodeServer.ts
-index 7cbd4ae0f1..8e7bc4f8c1 100644
+index 25dbee4346..2370b3e819 100644
 --- a/src/tsserver/nodeServer.ts
 +++ b/src/tsserver/nodeServer.ts
 @@ -1,6 +1,8 @@
@@ -129,7 +132,7 @@ index 7cbd4ae0f1..8e7bc4f8c1 100644
  /*@internal*/
  interface LogOptions {
      file?: string;
-@@ -100,12 +102,6 @@ function parseServerMode(): LanguageServiceMode | string | undefined {
+@@ -92,12 +94,6 @@ function parseServerMode(): LanguageServiceMode | string | undefined {
  /* @internal */
  export function initializeNodeSystem(): StartInput {
      const sys = Debug.checkDefined(ts.sys) as ServerHost;
@@ -139,10 +142,10 @@ index 7cbd4ae0f1..8e7bc4f8c1 100644
 -            env: MapLike<string>;
 -        }): string | Buffer;
 -    } = require("child_process");
- 
      interface Stats {
          isFile(): boolean;
-@@ -207,7 +203,7 @@ export function initializeNodeSystem(): StartInput {
+         isDirectory(): boolean;
+@@ -188,7 +184,7 @@ export function initializeNodeSystem(): StartInput {
                      if (logger.hasLevel(LogLevel.verbose)) {
                          logger.info(`Starting ${process.execPath} with args:${stringifyIndented(args)}`);
                      }
@@ -152,10 +155,10 @@ index 7cbd4ae0f1..8e7bc4f8c1 100644
                      if (logger.hasLevel(LogLevel.verbose)) {
                          logger.info(`WatchGuard for path ${path} returned: OK`);
 diff --git a/src/typingsInstaller/nodeTypingsInstaller.ts b/src/typingsInstaller/nodeTypingsInstaller.ts
-index e753dc42c3..e3deaee8c9 100644
+index f7c4879404..06ddb61341 100644
 --- a/src/typingsInstaller/nodeTypingsInstaller.ts
 +++ b/src/typingsInstaller/nodeTypingsInstaller.ts
-@@ -1,16 +1,8 @@
+@@ -1,15 +1,9 @@
  import { Log, TypingsInstaller, RequestCompletedAction, installNpmPackages } from "./ts.server.typingsInstaller";
  import { nowString, InstallTypingHost, InitializationFailedResponse, Arguments, TypingInstallerRequestUnion, TypesRegistryResponse, EventTypesRegistry, PackageInstalledResponse, ActionPackageInstalled, TypingInstallerResponseUnion, findArgument, hasArgument } from "./ts.server";
 -import { sys, MapLike, ESMap, getEntries, combinePaths, normalizeSlashes, toPath, createGetCanonicalFileName, stringContains, Debug, version, forEachAncestorDirectory, getDirectoryPath } from "./ts";
@@ -163,7 +166,6 @@ index e753dc42c3..e3deaee8c9 100644
 -const fs: {
 -    appendFileSync(file: string, content: string): void;
 -} = require("fs");
--
 -const path: {
 -    join(...parts: string[]): string;
 -    dirname(path: string): string;
@@ -172,19 +174,20 @@ index e753dc42c3..e3deaee8c9 100644
 +import { sys, MapLike, Map, ESMap, getEntries, combinePaths, normalizeSlashes, toPath, createGetCanonicalFileName, stringContains, Debug, version, forEachAncestorDirectory, getDirectoryPath } from "./ts";
 +import { appendFileSync } from "fs";
 +import * as path from "path";
- 
++
  class FileLog implements Log {
      constructor(private logFile: string | undefined) {
-@@ -24,7 +16,7 @@ class FileLog implements Log {
+     }
+@@ -20,7 +14,7 @@ class FileLog implements Log {
+         if (typeof this.logFile !== "string")
              return;
- 
          try {
 -            fs.appendFileSync(this.logFile, `[${nowString()}] ${text}${sys.newLine}`);
 +            appendFileSync(this.logFile, `[${nowString()}] ${text}${sys.newLine}`);
          }
          catch (e) {
              this.logFile = undefined;
-@@ -55,17 +47,17 @@ function loadTypesRegistryFile(typesRegistryFilePath: string, host: InstallTypin
+@@ -48,17 +42,17 @@ function loadTypesRegistryFile(typesRegistryFilePath: string, host: InstallTypin
          if (log.isEnabled()) {
              log.writeLine(`Types registry file '${typesRegistryFilePath}' does not exist`);
          }
@@ -204,14 +207,14 @@ index e753dc42c3..e3deaee8c9 100644
 +        return new Map<string, MapLike<string>>();
      }
  }
- 
+ const typesRegistryPackageName = "types-registry";
 diff --git a/src/watchGuard/watchGuard.ts b/src/watchGuard/watchGuard.ts
-index 71d7ecb763..5cd6b2e24d 100644
+index 312de0fd4a..5cd6b2e24d 100644
 --- a/src/watchGuard/watchGuard.ts
 +++ b/src/watchGuard/watchGuard.ts
-@@ -1,19 +1,19 @@
+@@ -1,18 +1,19 @@
  /// <reference types="node" />
- 
++
 +import { watch } from "fs";
 +
  if (process.argv.length < 3) {
