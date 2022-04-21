@@ -1,6 +1,7 @@
 node_modules
 *.tsbuildinfo
-lib/**/*.js
+lib/
+!lib/.gitkeep
 test/fixtures/*/output
 test/baselines/local
 **/.vscode/*
