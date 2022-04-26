@@ -1,4 +1,4 @@
-import { TypeChecker, Symbol, TransformationContext, SourceFile, isImportDeclaration, isNamespaceImport, ImportDeclaration, ImportClause, NamespaceImport, visitNodes, updateSourceFileNode, Node, VisitResult, visitEachChild, isQualifiedName, isPropertyAccessExpression, isIdentifier, SymbolFlags, idText, StringLiteral, Identifier, createImportDeclaration, createImportClause, createNamedImports, createLiteral, createImportSpecifier, createIdentifier, isImportEqualsDeclaration, isSourceFile, createNodeArray, setTextRange, isPrivateIdentifier } from "typescript";
+import { TypeChecker, Symbol, TransformationContext, SourceFile, isImportDeclaration, isNamespaceImport, ImportDeclaration, ImportClause, NamespaceImport, visitNodes, updateSourceFileNode, Node, VisitResult, visitEachChild, isQualifiedName, isPropertyAccessExpression, isIdentifier, SymbolFlags, idText, StringLiteral, Identifier, createImportDeclaration, createImportClause, createNamedImports, createLiteral, createImportSpecifier, createIdentifier, isImportEqualsDeclaration, isSourceFile, createNodeArray, setTextRange, isPrivateIdentifier, forEachEntry, setStartsOnNewLine } from "typescript";
 import { getNamespaceImports, removeUnusedNamespaceImports } from "./removeUnusedNamespaceImports";
 import { getTSStyleRelativePath } from "./pathUtil";
 
@@ -6,12 +6,13 @@ export function getInlineImportsTransformFactoryFactory() {
     return getInlineImportsTransformFactory;
 }
 
-interface InternalChecker extends TypeChecker {
-    /* @internal */ resolveName(name: string, location: Node, meaning: SymbolFlags, excludeGlobals: boolean): Symbol | undefined;
-}
 
-function getInlineImportsTransformFactory(rawChecker: TypeChecker) {
-    const checker = rawChecker as InternalChecker;
+// TODO:
+// - This needs to be way more aggressive
+// - Go all the way back to the definition if final symbol is within the same project?
+// - Two-pass visitIdentifiers to figure out the "best" replacement, e.g. if two clashing, and one used more, take it instead?
+
+function getInlineImportsTransformFactory(checker: TypeChecker) {
     return inlineImports;
     function inlineImports(context: TransformationContext) {
         return transformSourceFile;
@@ -21,10 +22,29 @@ function getInlineImportsTransformFactory(rawChecker: TypeChecker) {
             const statements = visitNodes(file.statements, visitIdentifiers);
             const newImportStatements: ImportDeclaration[] = [];
             syntheticImports.forEach((importNames, specifier) => {
+                let width = 'import { '.length;
+                function addLineBreak(s: string): boolean {
+                    const next = s.length + ', '.length
+                    let add = (width + next) >= 120;
+                    if (add) {
+                        width = '    '.length;
+                    }
+                    width += next;
+                    return add;
+                }
+
                 newImportStatements.push(createImportDeclaration(
                     /*decorators*/ undefined,
                     /*modifiers*/ undefined,
-                    createImportClause(/*defaultName*/ undefined, createNamedImports(Array.from(importNames.values()).map(s => createImportSpecifier(/*isTypeOnly*/ false, /*propertyName*/ undefined, createIdentifier(s))))),
+                    createImportClause(
+                        /*defaultName*/ undefined,
+                        setStartsOnNewLine(
+                            createNamedImports(
+                                Array.from(importNames.values()).map(s => setStartsOnNewLine(createImportSpecifier(/*isTypeOnly*/ false, /*propertyName*/ undefined, createIdentifier(s)), addLineBreak(s)))
+                            ),
+                            /*newLine*/true
+                        )
+                    ),
                     createLiteral(specifier)
                 ));
             });
@@ -42,12 +62,14 @@ function getInlineImportsTransformFactory(rawChecker: TypeChecker) {
                     if (isImportEqualsDeclaration(node.parent) && node.parent.moduleReference === node) {
                         return node; // Can't elide the namespace part of an import assignment
                     }
-                    s = checker.getSymbolAtLocation(isQualifiedName(node.left) ? node.left.right : node.left);
+                    // s = checker.getSymbolAtLocation(isQualifiedName(node.left) ? node.left.right : node.left);
+                    s = checker.getSymbolAtLocation(node);
                     rhsName = idText(node.right);
                     possibleSubstitute = node.right;
                 }
                 if (isPropertyAccessExpression(node) && (isIdentifier(node.expression) || isPropertyAccessExpression(node.expression)) && !isPrivateIdentifier(node.name)) { // technically should handle parenthesis, casts, etc - maybe not needed, though
-                    s = checker.getSymbolAtLocation(isPropertyAccessExpression(node.expression) ? node.expression.name : node.expression);
+                    // s = checker.getSymbolAtLocation(isPropertyAccessExpression(node.expression) ? node.expression.name : node.expression);
+                    s = checker.getSymbolAtLocation(node);
                     rhsName = idText(node.name);
                     possibleSubstitute = node.name;
                 }
@@ -60,16 +82,35 @@ function getInlineImportsTransformFactory(rawChecker: TypeChecker) {
                     const bareName = checker.resolveName(rhsName, node, SymbolFlags.Type | SymbolFlags.Value | SymbolFlags.Namespace, shouldExcludeGlobals);
                     if (!bareName) {
                         // Only attempt to inline ns if the thing we're inlining to doesn't currently resolve (globals are OK, we'll over)
-                        const matchingImport = imports.find(i => checker.getSymbolAtLocation(i.importClause.namedBindings.name) === s);
-                        if (matchingImport && addSyntheticImport((matchingImport.moduleSpecifier as StringLiteral).text, rhsName)) {
-                            return possibleSubstitute;
-                        }
-                        if (!matchingImport && s.flags & SymbolFlags.Alias) {
-                            const aliasTarget = checker.getAliasedSymbol(s);
-                            const otherFile = aliasTarget.declarations?.find(d => isSourceFile(d) && !d.isDeclarationFile) as SourceFile | undefined;
-                            if (otherFile && addSyntheticImport(getTSStyleRelativePath(file.fileName, otherFile.fileName).replace(/(\.d)?\.ts$/, ""), rhsName)) {
-                                return possibleSubstitute;
+                        // const matchingImport = imports.find(i => checker.getSymbolAtLocation(i.importClause.namedBindings.name) === s);
+                        // if (matchingImport && addSyntheticImport((matchingImport.moduleSpecifier as StringLiteral).text, rhsName)) {
+                        //     return possibleSubstitute;
+                        // }
+                        // if (!matchingImport && s.flags & SymbolFlags.Alias) {
+                        //     const aliasTarget = checker.getAliasedSymbol(s);
+                        //     const otherFile = aliasTarget.declarations?.find(d => isSourceFile(d) && !d.isDeclarationFile) as SourceFile | undefined;
+                        //     if (otherFile && addSyntheticImport(getTSStyleRelativePath(file.fileName, otherFile.fileName).replace(/(\.d)?\.ts$/, ""), rhsName)) {
+                        //         return possibleSubstitute;
+                        //     }
+                        // }
+
+                        const declPaths = s.declarations?.filter((d) => {
+                            const otherFile = d.getSourceFile();
+                            if (otherFile === file || otherFile.isDeclarationFile) {
+                                return false;
                             }
+
+                            const moduleSymbol = otherFile.symbol;
+                            if (!(moduleSymbol.flags & SymbolFlags.Module)) {
+                                return false;
+                            }
+
+                            return moduleSymbol.exports && forEachEntry(moduleSymbol.exports, (s) => s === d.symbol)
+                        }).map(d => getTSStyleRelativePath(file.fileName, d.getSourceFile().fileName)).sort();
+                        const newPath = declPaths?.[0];
+
+                        if (newPath && addSyntheticImport(newPath.replace(/(\.d)?\.ts$/, ""), rhsName)) {
+                            return possibleSubstitute;
                         }
                     }
                 }
