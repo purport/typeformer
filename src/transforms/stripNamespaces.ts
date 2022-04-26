@@ -1,5 +1,5 @@
 import * as path from "path";
-import { createExportDeclaration, createIdentifier, createImportClause, createImportDeclaration, createLiteral, createNamespaceImport, createNode, createNodeArray, createStringLiteral, createToken, ExportDeclaration, idText, isModuleBlock, isModuleDeclaration, isPropertyAssignment, isStringLiteral, Node, NodeFlags, Program, SourceFile, Statement, SyntaxKind, TransformationContext, TypeChecker, updateSourceFileNode, visitEachChild, visitNodes, VisitResult, isArrayLiteralExpression, updatePropertyAssignment, updateArrayLiteral, LiteralExpression, StringLiteral, isExpressionStatement, isParenthesizedExpression, ExpressionStatement, ParenthesizedExpression, ImportDeclaration, createNamedExports, createExportSpecifier, isIdentifier, getNameOfDeclaration, isPropertyAccessExpression, isQualifiedName, Declaration, isInterfaceDeclaration, createModuleDeclaration, createModuleBlock, setSyntheticLeadingComments, isVariableStatement, setTextRange, createEmptyStatement, setEmitFlags, EmitFlags, sys, createNotEmittedStatement, getLeadingCommentRanges, getTrailingCommentRanges, SynthesizedComment, setSyntheticTrailingComments, forEachLeadingCommentRange, CommentKind, addSyntheticLeadingComment, addSyntheticTrailingComment, forEachTrailingCommentRange } from "typescript";
+import { createExportDeclaration, createIdentifier, createImportClause, createImportDeclaration, createLiteral, createNamespaceImport, createNode, createNodeArray, createStringLiteral, createToken, ExportDeclaration, idText, isModuleBlock, isModuleDeclaration, isPropertyAssignment, isStringLiteral, Node, NodeFlags, Program, SourceFile, Statement, SyntaxKind, TransformationContext, TypeChecker, updateSourceFileNode, visitEachChild, visitNodes, VisitResult, isArrayLiteralExpression, updatePropertyAssignment, updateArrayLiteral, LiteralExpression, StringLiteral, isExpressionStatement, isParenthesizedExpression, ExpressionStatement, ParenthesizedExpression, ImportDeclaration, createNamedExports, createExportSpecifier, isIdentifier, getNameOfDeclaration, isPropertyAccessExpression, isQualifiedName, Declaration, isInterfaceDeclaration, createModuleDeclaration, createModuleBlock, setSyntheticLeadingComments, isVariableStatement, setTextRange, createEmptyStatement, setEmitFlags, EmitFlags, sys, createNotEmittedStatement, getLeadingCommentRanges, getTrailingCommentRanges, SynthesizedComment, setSyntheticTrailingComments, forEachLeadingCommentRange, CommentKind, addSyntheticLeadingComment, addSyntheticTrailingComment, forEachTrailingCommentRange, isStatement } from "typescript";
 import { ProjectTransformerConfig } from "..";
 import { removeUnusedNamespaceImports } from "./removeUnusedNamespaceImports";
 import { getTSStyleRelativePath } from "./pathUtil";
@@ -296,7 +296,7 @@ export function getStripNamespacesTransformFactoryFactory(config: ProjectTransfo
                         getOrCreateNamespaceSet({ namespaceFilePath: parentNsFile, configFilePath: configPath });
                     }
 
-                    const isInternal = (ts as any as { isInternalDeclaration(node: Node, currentSourceFile: SourceFile): boolean }).isInternalDeclaration(statement, currentSourceFile);
+                    const isInternal = !!ts.isInternalDeclaration(statement, currentSourceFile);
                     const replacement = body.statements.map((s, i) => visitStatement(s, isInternal && i !== 0));
                     if (replacement.length) {
                         return [
@@ -337,7 +337,7 @@ export function getStripNamespacesTransformFactoryFactory(config: ProjectTransfo
                         );
                     }
                 }
-                if (isInternal) {
+                if (isInternal && ts.hasSyntacticModifier(statement, ts.ModifierFlags.Export)) {
                     setSyntheticLeadingComments(statement, [{
                         kind: SyntaxKind.MultiLineCommentTrivia,
                         pos: -1,

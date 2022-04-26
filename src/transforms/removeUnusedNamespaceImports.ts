@@ -37,9 +37,9 @@ function containsReferenceTo(name: string, debug: boolean) {
         if (isIdentifier(n) && idText(n) === name &&
             !(n.parent && !isExportSpecifier(n.parent) && getNameOfDeclaration(n.parent as Declaration) === n) // parent points are unreliable unless we're asking about the "original meaning" of the thing
         ) {
-            if (name === "documents" && debug) {
-                debugger;
-            }
+            // if (name === "documents" && debug) {
+            //     debugger;
+            // }
             return true;
         }
         if (isBlock(n) || isModuleBlock(n)) {

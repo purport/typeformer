@@ -9,7 +9,6 @@ const project = new Project({
 project.addSourceFilesAtPaths(["src/**/*.ts", "!**/*.d.ts"]);
 
 project.getSourceFiles().forEach(f => {
-    console.log(f.getFilePath());
     f.getModules().forEach(m => {
         if (m.getDeclarationKind() !== "namespace") return;
         const b = m.getBodyOrThrow();
