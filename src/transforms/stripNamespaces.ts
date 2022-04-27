@@ -294,8 +294,10 @@ export function getStripNamespacesTransformFactoryFactory(config: ProjectTransfo
                         getOrCreateNamespaceSet({ namespaceFilePath: parentNsFile, configFilePath: configPath });
                     }
 
-                    const isInternal = !!ts.isInternalDeclaration(statement, currentSourceFile);
-                    const replacement = body.statements.map((s, i) => visitStatement(s, isInternal && i !== 0));
+                    const isInternal = !!ts.isInternalDeclaration(statement, currentSourceFile) && ts.hasSyntacticModifier(statement, ts.ModifierFlags.Export);
+                    const replacement = body.statements.map((s, i) => visitStatement(s, isInternal));
+
+                    // TODO: something here causes comments to be duplicated.
                     if (replacement.length) {
                         return [
                             copyLeadingComments(ts.createNotEmittedStatement(originalStatement), originalStatement.pos, currentSourceFile),
@@ -335,7 +337,7 @@ export function getStripNamespacesTransformFactoryFactory(config: ProjectTransfo
                         );
                     }
                 }
-                if (isInternal && ts.hasSyntacticModifier(statement, ts.ModifierFlags.Export)) {
+                if (isInternal) {
                     ts.setSyntheticLeadingComments(statement, [{
                         kind: ts.SyntaxKind.MultiLineCommentTrivia,
                         pos: -1,
@@ -358,7 +360,7 @@ export function getStripNamespacesTransformFactoryFactory(config: ProjectTransfo
                         // Global interface/declaration - preserve globality
                         // TODO: Check if declaration is non-ambient, if so, use global augmentation to produce global value
                         // and rewrite implementation to rely on `globalThis` (if needed)
-                        const isInternal = ts.isInternalDeclaration(statement, currentSourceFile);
+                        const isInternal = ts.isInternalDeclaration(statement, currentSourceFile) && ts.hasSyntacticModifier(statement, ts.ModifierFlags.Export);
                         statement = ts.createModuleDeclaration(
                             /*decorators*/ undefined,
                             [ts.createToken(ts.SyntaxKind.DeclareKeyword)],
@@ -366,7 +368,7 @@ export function getStripNamespacesTransformFactoryFactory(config: ProjectTransfo
                             ts.createModuleBlock([stripDeclare(statement)]),
                             ts.NodeFlags.GlobalAugmentation
                         );
-                        if (isInternal && ts.hasSyntacticModifier(statement, ts.ModifierFlags.Export)) {
+                        if (isInternal) {
                             ts.setSyntheticLeadingComments(statement, [{
                                 kind: ts.SyntaxKind.MultiLineCommentTrivia,
                                 pos: -1,

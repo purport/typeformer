@@ -75,7 +75,7 @@ ensure_crlf_at_eof() {
 }
 
 undo_whitespaces() {
-  return # TODO: this helps prevent the removal of newlines, but causes other oddites. enable later.
+  # return # TODO: this helps prevent the removal of newlines, but causes other oddites. enable later.
 
   echo ">>> undoing whitespace changes"
   echo "  creating a hacked diff"
