@@ -366,7 +366,7 @@ export function getStripNamespacesTransformFactoryFactory(config: ProjectTransfo
                             ts.createModuleBlock([stripDeclare(statement)]),
                             ts.NodeFlags.GlobalAugmentation
                         );
-                        if (isInternal) {
+                        if (isInternal && ts.hasSyntacticModifier(statement, ts.ModifierFlags.Export)) {
                             ts.setSyntheticLeadingComments(statement, [{
                                 kind: ts.SyntaxKind.MultiLineCommentTrivia,
                                 pos: -1,
