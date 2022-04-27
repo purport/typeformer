@@ -1,4 +1,6 @@
-import { TypeChecker, Symbol, TransformationContext, SourceFile, isImportDeclaration, isNamespaceImport, ImportDeclaration, ImportClause, NamespaceImport, visitNodes, updateSourceFileNode, Node, VisitResult, visitEachChild, isQualifiedName, isPropertyAccessExpression, isIdentifier, SymbolFlags, idText, StringLiteral, Identifier, createImportDeclaration, createImportClause, createNamedImports, createLiteral, createImportSpecifier, createIdentifier, isImportEqualsDeclaration, isSourceFile, createNodeArray, setTextRange, isPrivateIdentifier, forEachEntry, setStartsOnNewLine } from "typescript";
+import * as ts from "typescript";
+import { Node, Symbol } from "typescript";
+
 import { getNamespaceImports, removeUnusedNamespaceImports } from "./removeUnusedNamespaceImports";
 import { getTSStyleRelativePath } from "./pathUtil";
 
@@ -12,15 +14,15 @@ export function getInlineImportsTransformFactoryFactory() {
 // - Go all the way back to the definition if final symbol is within the same project?
 // - Two-pass visitIdentifiers to figure out the "best" replacement, e.g. if two clashing, and one used more, take it instead?
 
-function getInlineImportsTransformFactory(checker: TypeChecker) {
+function getInlineImportsTransformFactory(checker: ts.TypeChecker) {
     return inlineImports;
-    function inlineImports(context: TransformationContext) {
+    function inlineImports(context: ts.TransformationContext) {
         return transformSourceFile;
-        function transformSourceFile(file: SourceFile) {
-            const imports = getNamespaceImports(file.statements);
+        function transformSourceFile(file: ts.SourceFile) {
+            // const imports = getNamespaceImports(file.statements);
             const syntheticImports = new Map<string, Set<string>>();
-            const statements = visitNodes(file.statements, visitIdentifiers);
-            const newImportStatements: ImportDeclaration[] = [];
+            const statements = ts.visitNodes(file.statements, visitIdentifiers);
+            const newImportStatements: ts.ImportDeclaration[] = [];
             syntheticImports.forEach((importNames, specifier) => {
                 let width = 'import { '.length;
                 function addLineBreak(s: string): boolean {
@@ -33,44 +35,44 @@ function getInlineImportsTransformFactory(checker: TypeChecker) {
                     return add;
                 }
 
-                newImportStatements.push(createImportDeclaration(
+                newImportStatements.push(ts.createImportDeclaration(
                     /*decorators*/ undefined,
                     /*modifiers*/ undefined,
-                    createImportClause(
+                    ts.createImportClause(
                         /*defaultName*/ undefined,
-                        setStartsOnNewLine(
-                            createNamedImports(
-                                Array.from(importNames.values()).map(s => setStartsOnNewLine(createImportSpecifier(/*isTypeOnly*/ false, /*propertyName*/ undefined, createIdentifier(s)), addLineBreak(s)))
+                        ts.setStartsOnNewLine(
+                            ts.createNamedImports(
+                                Array.from(importNames.values()).map(s => ts.setStartsOnNewLine(ts.createImportSpecifier(/*isTypeOnly*/ false, /*propertyName*/ undefined, ts.createIdentifier(s)), addLineBreak(s)))
                             ),
                             /*newLine*/true
                         )
                     ),
-                    createLiteral(specifier)
+                    ts.createLiteral(specifier)
                 ));
             });
-            const minimizedStatements = setTextRange(createNodeArray(removeUnusedNamespaceImports([...newImportStatements, ...statements], true)), file.statements);
-            return updateSourceFileNode(file, minimizedStatements);
+            const minimizedStatements = ts.setTextRange(ts.createNodeArray(removeUnusedNamespaceImports([...newImportStatements, ...statements], true)), file.statements);
+            return ts.updateSourceFileNode(file, minimizedStatements);
 
-            function visitIdentifiers(node: Node): VisitResult<Node> {
-                if (isImportDeclaration(node)) {
+            function visitIdentifiers(node: Node): ts.VisitResult<Node> {
+                if (ts.isImportDeclaration(node)) {
                     return node;
                 }
                 let s: Symbol | undefined;
                 let rhsName: string | undefined;
-                let possibleSubstitute: Identifier | undefined;
-                if (isQualifiedName(node)) {
-                    if (isImportEqualsDeclaration(node.parent) && node.parent.moduleReference === node) {
+                let possibleSubstitute: ts.Identifier | undefined;
+                if (ts.isQualifiedName(node)) {
+                    if (ts.isImportEqualsDeclaration(node.parent) && node.parent.moduleReference === node) {
                         return node; // Can't elide the namespace part of an import assignment
                     }
                     // s = checker.getSymbolAtLocation(isQualifiedName(node.left) ? node.left.right : node.left);
                     s = checker.getSymbolAtLocation(node);
-                    rhsName = idText(node.right);
+                    rhsName = ts.idText(node.right);
                     possibleSubstitute = node.right;
                 }
-                if (isPropertyAccessExpression(node) && (isIdentifier(node.expression) || isPropertyAccessExpression(node.expression)) && !isPrivateIdentifier(node.name)) { // technically should handle parenthesis, casts, etc - maybe not needed, though
+                if (ts.isPropertyAccessExpression(node) && (ts.isIdentifier(node.expression) || ts.isPropertyAccessExpression(node.expression)) && !ts.isPrivateIdentifier(node.name)) { // technically should handle parenthesis, casts, etc - maybe not needed, though
                     // s = checker.getSymbolAtLocation(isPropertyAccessExpression(node.expression) ? node.expression.name : node.expression);
                     s = checker.getSymbolAtLocation(node);
-                    rhsName = idText(node.name);
+                    rhsName = ts.idText(node.name);
                     possibleSubstitute = node.name;
                 }
                 if (s && rhsName && possibleSubstitute) {
@@ -79,7 +81,7 @@ function getInlineImportsTransformFactory(checker: TypeChecker) {
                     // `Symbol` and `Node`, instead. We want to be capable of inlining them we they don't force us to keep
                     // `ts.Symbol` and the `import * as ts` import around.
                     const shouldExcludeGlobals = rhsName === "Symbol" || rhsName === "Node";
-                    const bareName = checker.resolveName(rhsName, node, SymbolFlags.Type | SymbolFlags.Value | SymbolFlags.Namespace, shouldExcludeGlobals);
+                    const bareName = checker.resolveName(rhsName, node, ts.SymbolFlags.Type | ts.SymbolFlags.Value | ts.SymbolFlags.Namespace, shouldExcludeGlobals);
                     if (!bareName) {
                         // Only attempt to inline ns if the thing we're inlining to doesn't currently resolve (globals are OK, we'll over)
                         // const matchingImport = imports.find(i => checker.getSymbolAtLocation(i.importClause.namedBindings.name) === s);
@@ -101,11 +103,11 @@ function getInlineImportsTransformFactory(checker: TypeChecker) {
                             }
 
                             const moduleSymbol = otherFile.symbol;
-                            if (!(moduleSymbol.flags & SymbolFlags.Module)) {
+                            if (!(moduleSymbol.flags & ts.SymbolFlags.Module)) {
                                 return false;
                             }
 
-                            return moduleSymbol.exports && forEachEntry(moduleSymbol.exports, (s) => s === d.symbol)
+                            return moduleSymbol.exports && ts.forEachEntry(moduleSymbol.exports, (s) => s === d.symbol)
                         }).map(d => getTSStyleRelativePath(file.fileName, d.getSourceFile().fileName)).sort();
                         const newPath = declPaths?.[0];
 
@@ -114,7 +116,7 @@ function getInlineImportsTransformFactory(checker: TypeChecker) {
                         }
                     }
                 }
-                return visitEachChild(node, visitIdentifiers, context);
+                return ts.visitEachChild(node, visitIdentifiers, context);
             }
 
             function addSyntheticImport(specifier: string, importName: string) {
