@@ -80,7 +80,7 @@ function getInlineImportsTransformFactory(checker: ts.TypeChecker) {
                     // so we exclude the global `Symbol` and `Node` - we don't use them, and always expect our own local
                     // `Symbol` and `Node`, instead. We want to be capable of inlining them we they don't force us to keep
                     // `ts.Symbol` and the `import * as ts` import around.
-                    const shouldExcludeGlobals = rhsName === "Symbol" || rhsName === "Node";
+                    const shouldExcludeGlobals = ["Symbol", "Node", "Map", "Set"].includes(rhsName);
                     const bareName = checker.resolveName(rhsName, node, ts.SymbolFlags.Type | ts.SymbolFlags.Value | ts.SymbolFlags.Namespace, shouldExcludeGlobals);
                     if (!bareName) {
                         // Only attempt to inline ns if the thing we're inlining to doesn't currently resolve (globals are OK, we'll over)
