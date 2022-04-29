@@ -8,8 +8,8 @@ const project = new Project({
 // except for three one-file directories with non-namespace/empty files.
 project.addSourceFilesAtPaths(["src/**/*.ts", "!**/*.d.ts"]);
 
-project.getSourceFiles().forEach(f => {
-    f.getModules().forEach(m => {
+project.getSourceFiles().forEach((f) => {
+    f.getModules().forEach((m) => {
         if (m.getDeclarationKind() !== "namespace") return;
         const b = m.getBodyOrThrow();
         f.unindent([b.getStart(), b.getEnd()]);

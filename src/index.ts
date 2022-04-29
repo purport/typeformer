@@ -2,20 +2,21 @@ import * as fs from "fs";
 import * as path from "path";
 import {
     createPrinter,
-    NewLineKind,
     createSolutionBuilder,
     createSolutionBuilderHost,
     Diagnostic,
     formatDiagnostic,
+    NewLineKind,
     SourceFile,
     sys,
     transform,
     TransformerFactory,
-    TypeChecker
+    TypeChecker,
 } from "typescript";
+
 import { getExplicitifyTransformFactoryFactory } from "./transforms/explicitify";
-import { getStripNamespacesTransformFactoryFactory } from "./transforms/stripNamespaces";
 import { getInlineImportsTransformFactoryFactory } from "./transforms/inlineImports";
+import { getStripNamespacesTransformFactoryFactory } from "./transforms/stripNamespaces";
 import ts = require("typescript");
 import mergeDirs from "merge-dirs";
 
@@ -29,7 +30,9 @@ export interface CompletedTransformData {
 }
 
 export type SetConfigTransformCallback = (transform: TransformerFactory<SourceFile>) => void;
-export type ProjectTransformerFactory = (projectTransformerConfig: ProjectTransformerConfig) => ProgramTransformerFactory;
+export type ProjectTransformerFactory = (
+    projectTransformerConfig: ProjectTransformerConfig
+) => ProgramTransformerFactory;
 export type ProgramTransformerFactory = (checker: TypeChecker, program: ts.Program) => TransformerFactory<SourceFile>;
 
 /**
@@ -41,10 +44,14 @@ export type ProgramTransformerFactory = (checker: TypeChecker, program: ts.Progr
  *  - The inner call is called once per program within that project with the checker for that program
  *  - The transformer within that is then called once per transformable thing within that program
  */
-export function transformProject(rootConfig: string, outDir: string, getTransformerFactoryFactory: ProjectTransformerFactory) {
+export function transformProject(
+    rootConfig: string,
+    outDir: string,
+    getTransformerFactoryFactory: ProjectTransformerFactory
+) {
     const projDir = path.dirname(rootConfig);
     const buildDiags: Diagnostic[] = [];
-    const host = createSolutionBuilderHost(sys, /*createProgram*/ undefined, diag => {
+    const host = createSolutionBuilderHost(sys, /*createProgram*/ undefined, (diag) => {
         buildDiags.push(diag);
     });
     const allConfigFiles = new Set<string>([rootConfig]);
@@ -57,23 +64,27 @@ export function transformProject(rootConfig: string, outDir: string, getTransfor
     const getTransformFactory = getTransformerFactoryFactory(transformConfig);
     host.createProgram = (names, opts, host, oldProgram, configDiag, refs) => {
         const result = createProgram(names, opts, host, oldProgram, configDiag, refs);
-        [(opts as {configFilePath?: string}).configFilePath!,
-         ...(opts as {configFile?: { extendedSourceFiles?: string[] }})
-                .configFile!.extendedSourceFiles!]
-            .forEach(f => f && allConfigFiles.add(f));
+        [
+            (opts as { configFilePath?: string }).configFilePath!,
+            ...(opts as { configFile?: { extendedSourceFiles?: string[] } }).configFile!.extendedSourceFiles!,
+        ].forEach((f) => f && allConfigFiles.add(f));
         // Transform all actual input source files
-        const candidateFiles = result.getSourceFiles().slice().filter(f =>
-            !f.isDeclarationFile &&
-            !f.fileName.endsWith(".json") &&
-            !f.fileName.endsWith(".js") &&
-            !f.fileName.endsWith(".jsx")
-        );
+        const candidateFiles = result
+            .getSourceFiles()
+            .slice()
+            .filter(
+                (f) =>
+                    !f.isDeclarationFile &&
+                    !f.fileName.endsWith(".json") &&
+                    !f.fileName.endsWith(".js") &&
+                    !f.fileName.endsWith(".jsx")
+            );
         const program = result.getProgram();
         const checker = program.getTypeChecker();
         const newSources = transform(candidateFiles, [getTransformFactory(checker, program)]);
         const printer = createPrinter(printerOptions, {
             onEmitNode: newSources.emitNodeWithNotification,
-            substituteNode: newSources.substituteNode
+            substituteNode: newSources.substituteNode,
         });
         for (const file of newSources.transformed) {
             const fullPath = path.resolve(file.fileName); // assumes file.fileName is absolute - in certain (?) scenarios this may not be the case
@@ -81,14 +92,13 @@ export function transformProject(rootConfig: string, outDir: string, getTransfor
             const newPath = path.join(path.resolve(outDir), fragment);
             try {
                 fs.mkdirSync(path.dirname(newPath), { recursive: true });
-            }
-            catch {}
+            } catch {}
             fs.writeFileSync(newPath, printer.printFile(file));
         }
 
         return result;
     };
-    
+
     const solution = createSolutionBuilder(host, [rootConfig], {});
     solution.clean(); // we _do_ need to clean to get a good build, though
 
@@ -96,33 +106,41 @@ export function transformProject(rootConfig: string, outDir: string, getTransfor
     solution.build();
     if (buildDiags.length) {
         const formatHost = {
-            getCanonicalFileName(s: string) { return s; },
-            getNewLine() { return "\n"; },
-            getCurrentDirectory() { return projDir; }
-        }
+            getCanonicalFileName(s: string) {
+                return s;
+            },
+            getNewLine() {
+                return "\n";
+            },
+            getCurrentDirectory() {
+                return projDir;
+            },
+        };
         throw new Error(`Diagnostics reported during build!:
         
-        ${buildDiags.map(d => formatDiagnostic(d, formatHost)).join("\n")}`);
+        ${buildDiags.map((d) => formatDiagnostic(d, formatHost)).join("\n")}`);
     }
     solution.clean();
 
     // Copy config files to output
-    allConfigFiles.forEach(f => {
-        if (path.basename(f) === "tsconfig.json" && fs.existsSync(f.replace("tsconfig.json", "tsconfig.release.json"))) {
+    allConfigFiles.forEach((f) => {
+        if (
+            path.basename(f) === "tsconfig.json" &&
+            fs.existsSync(f.replace("tsconfig.json", "tsconfig.release.json"))
+        ) {
             allConfigFiles.add(f.replace("tsconfig.json", "tsconfig.release.json"));
         }
-        let content = fs.readFileSync(f).toString();
+        const content = fs.readFileSync(f).toString();
         if (transformConfig.onTransformConfigFile) {
             const result = ts.transform(ts.parseJsonText(f, content), [transformConfig.onTransformConfigFile]);
             const printer = createPrinter(printerOptions, {
                 onEmitNode: result.emitNodeWithNotification,
-                substituteNode: result.substituteNode
+                substituteNode: result.substituteNode,
             });
             for (const file of result.transformed) {
-                writeFileRelativeToOutput(file.fileName, printer.printFile(file))
+                writeFileRelativeToOutput(file.fileName, printer.printFile(file));
             }
-        }
-        else {
+        } else {
             writeFileRelativeToOutput(f, content);
         }
     });
@@ -138,20 +156,30 @@ export function transformProject(rootConfig: string, outDir: string, getTransfor
     }
 
     const diagnostics: Diagnostic[] = [];
-    const checkHost = createSolutionBuilderHost(sys, /*createProgram*/ undefined, diag => {
+    const checkHost = createSolutionBuilderHost(sys, /*createProgram*/ undefined, (diag) => {
         diagnostics.push(diag);
     });
-    const resultSolution = createSolutionBuilder(checkHost, [path.join(path.resolve(outDir), path.relative(path.resolve(projDir), rootConfig))], {});
+    const resultSolution = createSolutionBuilder(
+        checkHost,
+        [path.join(path.resolve(outDir), path.relative(path.resolve(projDir), rootConfig))],
+        {}
+    );
     resultSolution.build();
     if (diagnostics.length > 0) {
         const formatHost = {
-            getCanonicalFileName(s: string) { return s; },
-            getNewLine() { return "\n"; },
-            getCurrentDirectory() { return projDir; }
-        }
+            getCanonicalFileName(s: string) {
+                return s;
+            },
+            getNewLine() {
+                return "\n";
+            },
+            getCurrentDirectory() {
+                return projDir;
+            },
+        };
         throw new Error(`Diagnostics reported!:
         
-        ${diagnostics.map(d => formatDiagnostic(d, formatHost)).join("\n")}`);
+        ${diagnostics.map((d) => formatDiagnostic(d, formatHost)).join("\n")}`);
     }
     resultSolution.clean();
     return;
@@ -161,8 +189,7 @@ export function transformProject(rootConfig: string, outDir: string, getTransfor
         const outPath = path.join(path.resolve(outDir), fragment);
         try {
             fs.mkdirSync(path.dirname(outPath), { recursive: true });
-        }
-        catch {}
+        } catch {}
         fs.writeFileSync(outPath, content);
     }
 }
@@ -173,7 +200,7 @@ export function transformProjectFromNamespacesToModules(rootConfig: string, outD
     //   This means converting `func()` within a namespace to an explicit `ns.func()`
     // 2. Check everything's valid - this step should be a semantic-preserving transform.
     // 3. Remove top-level namespace declarations, exporting all members
-    //   Nested namespaces are tricky here, and automating their export could be hard. Today, we can mix 
+    //   Nested namespaces are tricky here, and automating their export could be hard. Today, we can mix
     //   multiple namespace levels into one file - we can still do that, sorta, but the reexport process
     //   to retain the nested shape will be much less clean. Barring scope conflicts, this means we'll flatten all
     //   the namespaces in a file down, then tease it back apart when we recreate the namespace shape via reexports.
@@ -191,16 +218,16 @@ export function transformProjectFromNamespacesToModules(rootConfig: string, outD
     // This all means we'll be doing 3 seperate transforms, redoing diagnostic checks between each phase.
 
     // 1. Make all namespace references explicit and recheck
-    transformProject(rootConfig, outDir+"_stage1", getExplicitifyTransformFactoryFactory);
+    transformProject(rootConfig, outDir + "_stage1", getExplicitifyTransformFactoryFactory);
     // 2. Strip all namespace declarations, ensure `export` modifiers are present, collect reexport files
     //   and add namespace imports
-    transformProject(outDir+"_stage1/tsconfig.json", outDir+"_stage2", getStripNamespacesTransformFactoryFactory);
+    transformProject(outDir + "_stage1/tsconfig.json", outDir + "_stage2", getStripNamespacesTransformFactoryFactory);
     // 3. Inline Imports
-    transformProject(outDir+"_stage2/tsconfig.json", outDir, getInlineImportsTransformFactoryFactory);
+    transformProject(outDir + "_stage2/tsconfig.json", outDir, getInlineImportsTransformFactoryFactory);
 }
 
 export function transformProjectInPlace(config: string) {
-    const tmpdir = path.dirname(config)+"tmp";
+    const tmpdir = path.dirname(config) + "tmp";
     console.log("ExplicitifyTransform...");
     transformProject(config, tmpdir, getExplicitifyTransformFactoryFactory);
     mergeDirs(tmpdir, path.dirname(config), "overwrite");
@@ -211,13 +238,13 @@ export function transformProjectInPlace(config: string) {
     transformProject(config, tmpdir, getInlineImportsTransformFactoryFactory);
     mergeDirs(tmpdir, path.dirname(config), "overwrite");
     console.log("Removing %j", tmpdir);
-    fs.rmdirSync(tmpdir, {recursive: true});
+    fs.rmdirSync(tmpdir, { recursive: true });
 }
 
 export function transformAndMerge(rootConfig: string, getTransformerFactoryFactory: ProjectTransformerFactory) {
-    const tmpdir = path.dirname(rootConfig)+"tmp";
+    const tmpdir = path.dirname(rootConfig) + "tmp";
     transformProject(rootConfig, tmpdir, getTransformerFactoryFactory);
     mergeDirs(tmpdir, path.dirname(rootConfig), "overwrite");
     console.log("Removing %j", tmpdir);
-    fs.rmdirSync(tmpdir, {recursive: true});
+    fs.rmdirSync(tmpdir, { recursive: true });
 }

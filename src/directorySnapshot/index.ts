@@ -1,7 +1,7 @@
 /// <reference types="jest" />
 
 import { compareSync, Options } from "dir-compare";
-import { matcherHint, EXPECTED_COLOR, RECEIVED_COLOR } from "jest-matcher-utils";
+import { EXPECTED_COLOR, matcherHint, RECEIVED_COLOR } from "jest-matcher-utils";
 import * as path from "path";
 
 export function toMatchDirectorySnapshot(this: jest.MatcherContext, outputDir: string, baselineDir: string) {
@@ -11,24 +11,30 @@ export function toMatchDirectorySnapshot(this: jest.MatcherContext, outputDir: s
     const name = "toMatchDirectorySnapshot";
 
     const options: Partial<Options> = { compareSize: true, compareContent: true };
-    
+
     const res = compareSync(baselineDir, outputDir, options);
     if (res.same) {
         return {
             name,
             pass: true,
-            message: () => '',
+            message: () => "",
         };
     }
 
     const report = () =>
-        `Input directory content ${RECEIVED_COLOR(`${outputDir}`)} does not match directory ${EXPECTED_COLOR(`${baselineDir}`)}.
+        `Input directory content ${RECEIVED_COLOR(`${outputDir}`)} does not match directory ${EXPECTED_COLOR(
+            `${baselineDir}`
+        )}.
 
-${res.diffSet!
-    .filter(d => d.state !== "equal")
-    .map(d => d.state === "right" ? `${EXPECTED_COLOR("baseline")} ${d.type1} ${d.type2} ${path.join(d.relativePath, d.name2 || "")}`
-        : d.state === "left" ? `${RECEIVED_COLOR("output")} ${d.type2} ${d.type1} ${path.join(d.relativePath, d.name1 || "")}`
-        : `${RECEIVED_COLOR("output")} ${path.join(d.relativePath, d.name1 || "")} differs`)
+${res
+    .diffSet!.filter((d) => d.state !== "equal")
+    .map((d) =>
+        d.state === "right"
+            ? `${EXPECTED_COLOR("baseline")} ${d.type1} ${d.type2} ${path.join(d.relativePath, d.name2 || "")}`
+            : d.state === "left"
+            ? `${RECEIVED_COLOR("output")} ${d.type2} ${d.type1} ${path.join(d.relativePath, d.name1 || "")}`
+            : `${RECEIVED_COLOR("output")} ${path.join(d.relativePath, d.name1 || "")} differs`
+    )
     .join("\n")}`;
 
     return {
@@ -38,7 +44,7 @@ ${res.diffSet!
         report,
     };
 }
-expect.extend({toMatchDirectorySnapshot});
+expect.extend({ toMatchDirectorySnapshot });
 
 declare global {
     namespace jest {

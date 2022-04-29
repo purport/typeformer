@@ -1,0 +1,5 @@
+**/package-lock.json
+**/dist/**
+**/lib/**
+test/baselines/**
+test/fixtures/**

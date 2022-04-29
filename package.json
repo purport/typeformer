@@ -1,33 +1,39 @@
 {
-  "name": "typeformer",
-  "version": "0.0.1",
-  "description": "Transforms a project of namespaces into a project of modules exporting a similar top-level structure",
-  "main": "lib/index.js",
-  "bin": {
-    "typeform": "lib/cli.js"
-  },
-  "scripts": {
-    "build": "tsc -p ./",
-    "watch": "tsc --watch",
-    "test": "jest",
-    "diff": "node -e \"require(\\\"child_process\\\").execSync(`\\\"${process.env.DIFF}\\\" test/baselines/reference test/baselines/local`)\""
-  },
-  "author": "",
-  "license": "MIT",
-  "dependencies": {
-    "merge-dirs": "^0.2.1",
-    "ts-morph": "^14.0.0",
-    "typescript": "^4.5.5"
-  },
-  "devDependencies": {
-    "@types/jest": "^27.4.1",
-    "@types/microsoft__typescript-etw": "^0.1.1",
-    "@types/node": "^17.0.25",
-    "@types/ts-expose-internals": "npm:ts-expose-internals@4.5.5",
-    "dir-compare": "^4.0.0",
-    "jest": "^27.5.1",
-    "jest-matcher-utils": "^27.5.1",
-    "ts-essentials": "^9.1.2",
-    "ts-jest": "^27.1.4"
-  }
+    "name": "typeformer",
+    "version": "0.0.1",
+    "description": "Transforms a project of namespaces into a project of modules exporting a similar top-level structure",
+    "main": "lib/index.js",
+    "bin": {
+        "typeform": "lib/cli.js"
+    },
+    "scripts": {
+        "build": "tsc -p ./",
+        "watch": "tsc --watch",
+        "test": "jest",
+        "diff": "node -e \"require(\\\"child_process\\\").execSync(`\\\"${process.env.DIFF}\\\" test/baselines/reference test/baselines/local`)\""
+    },
+    "author": "",
+    "license": "MIT",
+    "dependencies": {
+        "merge-dirs": "^0.2.1",
+        "ts-morph": "^14.0.0",
+        "typescript": "^4.5.5"
+    },
+    "devDependencies": {
+        "@types/jest": "^27.4.1",
+        "@types/microsoft__typescript-etw": "^0.1.1",
+        "@types/node": "^17.0.25",
+        "@types/ts-expose-internals": "npm:ts-expose-internals@4.5.5",
+        "@typescript-eslint/eslint-plugin": "^5.21.0",
+        "@typescript-eslint/parser": "^5.21.0",
+        "dir-compare": "^4.0.0",
+        "eslint": "^8.14.0",
+        "eslint-config-prettier": "^8.5.0",
+        "eslint-plugin-simple-import-sort": "^7.0.0",
+        "jest": "^27.5.1",
+        "jest-matcher-utils": "^27.5.1",
+        "prettier": "^2.6.2",
+        "ts-essentials": "^9.1.2",
+        "ts-jest": "^27.1.4"
+    }
 }
