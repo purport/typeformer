@@ -1,5 +1,3 @@
-import * as fs from "fs";
-import * as path from "path";
 import {
     createPrinter,
     createSolutionBuilder,
@@ -12,13 +10,15 @@ import {
     transform,
     TransformerFactory,
     TypeChecker,
-} from "typescript";
+} from "byots";
+import * as ts from "byots";
+import * as fs from "fs";
+import mergeDirs from "merge-dirs";
+import * as path from "path";
 
 import { getExplicitifyTransformFactoryFactory } from "./transforms/explicitify";
 import { getInlineImportsTransformFactoryFactory } from "./transforms/inlineImports";
 import { getStripNamespacesTransformFactoryFactory } from "./transforms/stripNamespaces";
-import ts = require("typescript");
-import mergeDirs from "merge-dirs";
 
 export interface ProjectTransformerConfig {
     onTransformConfigFile?: TransformerFactory<SourceFile>;

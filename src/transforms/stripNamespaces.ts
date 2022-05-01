@@ -1,7 +1,7 @@
+import * as ts from "byots";
+import { Node, Symbol } from "byots";
 import * as path from "path";
 import { Writable } from "ts-essentials";
-import * as ts from "typescript";
-import { Node, Symbol } from "typescript";
 
 import { ProjectTransformerConfig } from "..";
 import { getTSStyleRelativePath } from "./pathUtil";

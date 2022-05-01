@@ -1,5 +1,5 @@
-import * as ts from "typescript";
-import { Node, Symbol } from "typescript";
+import * as ts from "byots";
+import { Node, Symbol } from "byots";
 
 import { getTSStyleRelativePath } from "./pathUtil";
 import { getNamespaceImports, removeUnusedNamespaceImports } from "./removeUnusedNamespaceImports";

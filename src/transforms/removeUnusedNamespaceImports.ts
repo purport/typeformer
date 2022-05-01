@@ -1,5 +1,5 @@
-import * as ts from "typescript";
-import { Node, Symbol } from "typescript";
+import * as ts from "byots";
+import { Node, Symbol } from "byots";
 
 /**
  * Heuristically removes unused namespace imports if they obviously have no references left
