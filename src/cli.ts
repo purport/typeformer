@@ -5,6 +5,7 @@ import { resolve } from "path";
 import { ProjectTransformerFactory, transformAndMerge, transformProjectInPlace } from ".";
 import { getExplicitifyTransformFactoryFactory } from "./transforms/explicitify";
 import { getInlineImportsTransformFactoryFactory } from "./transforms/inlineImports";
+import { getNoopTransformFactoryFactory } from "./transforms/noop";
 import { getStripNamespacesTransformFactoryFactory } from "./transforms/stripNamespaces";
 
 const fileName = process.argv[2];
@@ -27,6 +28,7 @@ const steps = new Map<string, ProjectTransformerFactory>([
     ["explicitify", getExplicitifyTransformFactoryFactory],
     ["stripNamespaces", getStripNamespacesTransformFactoryFactory],
     ["inlineImports", getInlineImportsTransformFactoryFactory],
+    ["noop", getNoopTransformFactoryFactory],
 ]);
 
 const step = steps.get(stepName);

@@ -100,6 +100,12 @@ apply_patches() {
        "$patchdir"/*.patch
 }
 
+run_transform() {
+  tweak_and_commit "CONVERSION STEP - $1" \
+    -- run_in "src" node "$here/lib/cli.js" "tsconfig.json" "$1" \
+    -- undo_whitespaces
+}
+
 tweak_and_commit "UNDO WEBWORKER CHANGE" \
   -- run sh -c "git revert --no-edit 55e2e15aa37e685b7adcc61dd3091a2d9c7773a1 && git reset HEAD^"
 
@@ -110,9 +116,12 @@ tweak_and_commit "UNDO WEBWORKER CHANGE" \
 
 gen_diag
 
-tweak_and_commit "CONVERSION STEP - explicitify" \
-  -- run_in "src" node "$here/lib/cli.js" "tsconfig.json" "explicitify" \
-  -- undo_whitespaces
+# Terrible, terrible step which preemptively makes all of the changes that appear
+# when roundtripping code through TS's parser and emitter.
+# TODO: figure out the right magic to make TS do better here.
+run_transform noop
+
+run_transform explicitify
 
 # do this after explicitify, which avoids whitespace problems when explicitify
 # tries to restore the indention implied by the braces.
@@ -120,12 +129,8 @@ tweak_and_commit "UNINDENT" \
   -- ensure_crlf_at_eof \
   -- run node "$here/lib/unindent.js"
 
-tweak_and_commit "CONVERSION STEP - stripNamespaces" \
-  -- run_in "src" node "$here/lib/cli.js" "tsconfig.json" "stripNamespaces" \
-  -- undo_whitespaces
+run_transform stripNamespaces
 
-tweak_and_commit "CONVERSION STEP - inlineImports" \
-  -- run_in "src" node "$here/lib/cli.js" "tsconfig.json" "inlineImports" \
-  -- undo_whitespaces
+run_transform inlineImports
 
 # apply_patches
