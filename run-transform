@@ -106,8 +106,11 @@ run_transform() {
     -- undo_whitespaces
 }
 
-tweak_and_commit "UNDO WEBWORKER CHANGE" \
-  -- run sh -c "git revert --no-edit 55e2e15aa37e685b7adcc61dd3091a2d9c7773a1 && git reset HEAD^"
+# TODO: fix up issues with declaration: true
+
+# TODO: submit earlier
+# tweak_and_commit "UNDO WEBWORKER CHANGE" \
+#   -- run sh -c "git revert --no-edit 55e2e15aa37e685b7adcc61dd3091a2d9c7773a1 && git reset HEAD^"
 
 # tweak_and_commit "CONVERTED TO MODULES" \
 #   -- gen_diag \
@@ -119,7 +122,7 @@ gen_diag
 # Terrible, terrible step which preemptively makes all of the changes that appear
 # when roundtripping code through TS's parser and emitter.
 # TODO: figure out the right magic to make TS do better here.
-run_transform noop
+# run_transform noop
 
 run_transform explicitify
 
@@ -127,7 +130,7 @@ run_transform explicitify
 # tries to restore the indention implied by the braces.
 tweak_and_commit "UNINDENT" \
   -- ensure_crlf_at_eof \
-  -- run node "$here/lib/unindent.js"
+  -- run node "$here/lib/morph" "unindent"
 
 run_transform stripNamespaces
 
