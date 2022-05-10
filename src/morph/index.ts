@@ -3,7 +3,7 @@ import { Project, SourceFile } from "ts-morph";
 import { explicitify } from "./explicitify";
 import { unindent } from "./unindent";
 
-type Step = (project: Project, sourceFiles: SourceFile[]) => void;
+type Step = (sourceFile: SourceFile) => void;
 
 const steps = new Map<string, Step>([
     ["explicitify", explicitify],
@@ -41,7 +41,13 @@ let exitCode = 0;
 
 for (const [stepName, step] of stepsToRun) {
     console.log(stepName);
-    step(project, project.getSourceFiles(sourceFileGlobs));
+
+    // Source file listing may change; pull it at each step.
+    const sourceFiles = project.getSourceFiles(sourceFileGlobs);
+
+    for (const sourceFile of sourceFiles) {
+        step(sourceFile);
+    }
 
     const diagnostics = project.getPreEmitDiagnostics();
     if (diagnostics.length > 0) {
