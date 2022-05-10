@@ -1,4 +1,4 @@
-import { Project, SourceFile } from "ts-morph";
+import { SourceFile } from "ts-morph";
 
 export function unindent(sourceFile: SourceFile): void {
     sourceFile.getModules().forEach((module) => {
