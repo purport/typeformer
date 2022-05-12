@@ -1,4 +1,6 @@
-import { SourceFile, ts } from "ts-morph";
+import { Project, SourceFile, ts } from "ts-morph";
+
+import { getSourceFilesFromProject } from "./helpers";
 
 function isSomeDeclarationInLexicalScope(sym: ts.Symbol, location: ts.Node) {
     return sym.declarations?.every((d) => {
@@ -15,16 +17,15 @@ function isSomeDeclarationInLexicalScope(sym: ts.Symbol, location: ts.Node) {
     });
 }
 
-export function explicitify(sourceFile: SourceFile): void {
-    // console.log(sourceFile.getFilePath());
+export function explicitify(project: Project): void {
+    getSourceFilesFromProject(project).forEach((sourceFile) => explicitifyOne(project, sourceFile));
+}
 
-    // TODO: collect nodes to change first? not use a transform?
-
+function explicitifyOne(project: Project, sourceFile: SourceFile) {
     if (sourceFile.isDeclarationFile()) {
         return;
     }
 
-    const project = sourceFile.getProject();
     sourceFile.transform((traversal) => {
         const node = traversal.currentNode;
         const checker = project.getTypeChecker().compilerObject;
