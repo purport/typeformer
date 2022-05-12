@@ -225,7 +225,7 @@ export function stripNamespaces(project: Project): void {
         sourceFile.forEachDescendant(collectReferencedNamespaces);
 
         function collectReferencedNamespaces(node: Node, traversal: ForEachDescendantTraversalControl) {
-            if (Node.isModuleDeclaration(node)) {
+            if (Node.isModuleDeclaration(node) && node.getParentIfKind(ts.SyntaxKind.SourceFile)) {
                 const { body, nsNameParts } = skipDownToNamespaceBody(node);
 
                 if (!Node.isModuleBlock(body)) {
