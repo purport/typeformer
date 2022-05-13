@@ -12,7 +12,7 @@ function timeIt<T>(fn: () => T): T {
         return fn();
     } finally {
         const took = (performance.now() - before) / 1000;
-        console.log(`took ${took.toFixed(2)}s`);
+        console.log(`\ttook ${took.toFixed(2)}s`);
     }
 }
 
@@ -26,7 +26,7 @@ const steps = new Map<string, Step>([
     ["noop", { step: () => {}, batch: false }], // To check diagnostics
     ["unindent", { step: unindent, batch: true }],
     ["explicitify", { step: explicitify, batch: true }],
-    ["stripNamespaces", { step: stripNamespaces, batch: false }], // WIP
+    ["stripNamespaces", { step: stripNamespaces, batch: true }], // WIP
 ]);
 
 const stepName = process.argv[2];
@@ -90,9 +90,9 @@ for (const [stepName, step] of stepsToRun) {
     }
 }
 
-timeIt(() => {
-    console.log("saving");
-    project.saveSync();
-});
+// timeIt(() => {
+//     console.log("saving");
+//     project.saveSync();
+// });
 
 process.exit(exitCode);

@@ -1,15 +1,15 @@
 import { FileUtils, StandardizedFilePath } from "@ts-morph/common";
 import assert from "assert";
 import {
-    ClassDeclaration,
     CompilerNodeToWrappedType,
     ExportDeclarationStructure,
     FileSystemHost,
     ForEachDescendantTraversalControl,
     ImportDeclarationStructure,
-    ModuleBlock,
     ModuleDeclaration,
+    ModuleDeclarationStructure,
     Node,
+    OptionalKind,
     Project,
     SourceFile,
     SourceFileStructure,
@@ -18,28 +18,11 @@ import {
     ts,
 } from "ts-morph";
 
-import { ProjectTransformerConfig } from "..";
 import { getSourceFilesFromProject } from "./helpers";
 import { getTSStyleRelativePath } from "./pathUtil";
-import * as tsInternal from "./tsInternal";
 
-// TODO: do I need this?
-function getNodeFromCompilerNode<LocalCompilerNodeType extends ts.Node = ts.Node>(
-    someNodeInTree: Node,
-    compilerNode: LocalCompilerNodeType
-): CompilerNodeToWrappedType<LocalCompilerNodeType> {
-    // Sorry.
-    return (someNodeInTree as any)._context.compilerFactory.getNodeFromCompilerNode(
-        compilerNode,
-        (someNodeInTree as any)._sourceFile
-    );
-}
-
-function isMarkedInternal(node: Node, sourceFile = node.getSourceFile()): boolean {
-    return (
-        !!tsInternal.isInternalDeclaration(node.compilerNode, sourceFile.compilerNode) &&
-        tsInternal.hasSyntacticModifier(node.compilerNode, ts.ModifierFlags.Export)
-    );
+function isInternalDeclaration(node: Node, sourceFile: SourceFile): boolean {
+    return !!ts.isInternalDeclaration(node.compilerNode, sourceFile.compilerNode);
 }
 
 type NamespaceNameParts = string[];
@@ -219,10 +202,31 @@ export function stripNamespaces(project: Project): void {
     const newNamespaceFiles = createNamespaceFileSet(fs, projectRootMapper);
     // Tracks which configs reference which other configs.
     const configDependencySet = createConfigDependencySet(fs, projectRootMapper);
-
     const checker = project.getTypeChecker();
 
+    const compilerProgram = project.getProgram().compilerObject;
+
+    const sourceMapper = ts.getSourceMapper({
+        useCaseSensitiveFileNames() {
+            return ts.sys.useCaseSensitiveFileNames;
+        },
+        getCurrentDirectory() {
+            return compilerProgram.getCurrentDirectory();
+        },
+        getProgram() {
+            return compilerProgram;
+        },
+        fileExists(path) {
+            return fs.fileExistsSync(path);
+        },
+        readFile(path, encoding) {
+            return fs.readFileSync(path, encoding);
+        },
+        log: () => {},
+    });
+
     // Step 1: Collect references to used namespaces.
+    // #region step1
     console.log("\tcollecting references to used namespaces");
     for (const sourceFile of getSourceFilesFromProject(project)) {
         configDependencySet.add(sourceFile);
@@ -258,7 +262,7 @@ export function stripNamespaces(project: Project): void {
             }
 
             const parent = node.getParentOrThrow();
-            if (tsInternal.getNameOfDeclaration(parent.compilerNode as ts.Declaration) === node.compilerNode) {
+            if (ts.getNameOfDeclaration(parent.compilerNode as ts.Declaration) === node.compilerNode) {
                 return;
             }
 
@@ -285,13 +289,15 @@ export function stripNamespaces(project: Project): void {
                 // and nothing that's a class (we can't faithfully repreoduce class/ns merges anyway, so it's easy to toss these)
                 !decls.some((d) => d.getKind() === ts.SyntaxKind.ClassDeclaration)
             ) {
-                const nsName = tsInternal.symbolToString(checker.compilerObject, sym.compilerSymbol);
+                const nsName = checker.compilerObject.symbolToString(sym.compilerSymbol);
                 referencedNamespaceSet.add(sourceFile, nsName);
             }
         }
     }
+    // #endregion step2
 
     // Step 2: Create files for fake namespaces
+    // #region step2
     console.log("\tcreating files for fake namespaces");
     newNamespaceFiles.forEach((reexports, filename) => {
         const reexportStatements: (ExportDeclarationStructure | ImportDeclarationStructure)[] = [];
@@ -356,12 +362,11 @@ export function stripNamespaces(project: Project): void {
 
         project.createSourceFile(filename, structure);
     });
+    // #endregion step2
 
-    // Step 3: Convert each file into a module with exports
-    console.log("\tconverting each file into a module");
-    // TODO: add @internal comments
-    // TODO: once the fix for https://github.com/dsherret/ts-morph/issues/1248 is released,
-    // use statement.unwrap().
+    // Step 3: Fix up interface augmentation
+    // #region step3
+    console.log("\tfixing up interface augmentation");
     for (const sourceFile of getSourceFilesFromProject(project)) {
         for (const statement of sourceFile.getStatementsWithComments()) {
             if (Node.isModuleDeclaration(statement)) {
@@ -369,40 +374,165 @@ export function stripNamespaces(project: Project): void {
                 if (!Node.isModuleBlock(body)) {
                     continue;
                 }
-                const newText = body.getChildSyntaxListOrThrow().getFullText();
-                statement.replaceWithText(newText);
+
+                const isNamespaceInternal = isInternalDeclaration(statement, sourceFile);
+                statement.getStatements().forEach((s) => visitStatementWithinNamespace(s, isNamespaceInternal));
+                continue;
+            }
+            visitGlobalishStatement(statement);
+        }
+
+        function visitStatementWithinNamespace(statement: Statement, isNamespaceInternal: boolean) {
+            const needsInternal =
+                Node.isExportGetable(statement) && // If this can be exported
+                statement.isExported() && // And it is exported
+                !isInternalDeclaration(statement, sourceFile) && // And it's not already @internal
+                isNamespaceInternal; // And we're in a workspace that is internal
+
+            if (Node.isInterfaceDeclaration(statement)) {
+                // TODO: can we just do statement.getSymbolOrThrow().getDeclarations()
+                const name = statement.getNameNode();
+                const sym = checker.getSymbolAtLocation(name);
+                const decls = sym && sym.getDeclarations();
+                if (
+                    decls &&
+                    decls.length > 1 &&
+                    !decls.every((d) => d.getSourceFile() === decls[0].getSourceFile()) &&
+                    statement !== decls[0]
+                ) {
+                    const sourceMappedOriginalLocation = sourceMapper.tryGetSourcePosition({
+                        fileName: decls[0].getSourceFile().getFilePath(),
+                        pos: decls[0].getPos(),
+                    });
+                    const targetFilename = sourceMappedOriginalLocation
+                        ? FileUtils.getStandardizedAbsolutePath(fs, sourceMappedOriginalLocation.fileName)
+                        : decls[0].getSourceFile().getFilePath();
+
+                    const originalText = statement.getText(true);
+                    statement.replaceWithText((writer) => {
+                        const name = getTSStyleRelativePath(
+                            sourceFile.getFilePath(),
+                            targetFilename.replace(/(\.d)?\.ts$/, "") as StandardizedFilePath
+                        );
+                        writer
+                            .conditionalWriteLine(needsInternal, "/* @internal */")
+                            .write("declare module")
+                            .quote(name)
+                            .write(" ")
+                            .block(() => {
+                                writer
+                                    .writeLine("// Module transform: converted from interface augmentation")
+                                    .write(originalText);
+                            });
+                    });
+                    return;
+                }
+            }
+
+            if (needsInternal) {
+                // Make it internal.
+                // TODO: this indents code not from the first line.
+                // maybe we shouldn't even do the unindent step and view the diff with ?w=1?
+                const originalText = statement.getText(true);
+                statement.replaceWithText((writer) => {
+                    (writer as any)._indentationText = ""; // HACK; doesn't work?
+                    writer.writeLine("/* @internal */");
+                    writer.write(originalText);
+                });
+            }
+        }
+
+        function visitGlobalishStatement(statement: Statement) {
+            if (Node.isInterfaceDeclaration(statement) || Node.isVariableStatement(statement)) {
+                const node = Node.isVariableStatement(statement)
+                    ? statement.getDeclarationList().getDeclarations()[0]
+                    : statement;
+                const name = node.getNameNode();
+                const sym = checker.getSymbolAtLocation(name);
+                const decls = sym && sym.getDeclarations();
+
+                const isMerged =
+                    decls &&
+                    decls.length > 1 &&
+                    !decls.every((d) => d.getSourceFile() === sym.getDeclarations()?.[0].getSourceFile());
+                const isAmbient = statement.hasModifier(ts.SyntaxKind.DeclareKeyword);
+
+                if (isMerged || isAmbient) {
+                    const isInternal = isInternalDeclaration(statement, sourceFile);
+                    statement.setHasDeclareKeyword(false);
+                    const originalText = statement.getText(true);
+                    statement.replaceWithText((writer) => {
+                        writer.write("declare global").block(() => {
+                            writer
+                                .writeLine("// Module transform: converted from ambient declaration")
+                                .conditionalWriteLine(isInternal, "/* @internal */")
+                                .write(originalText);
+                        });
+                    });
+                }
             }
         }
     }
+    // #endregion step3
 
-    function visitStatements(statement: Statement) {
-        if (
-            Node.isModuleDeclaration(statement) &&
-            !Node.isStringLiteral(statement.getNameNode()) &&
-            statement.getBody()
-        ) {
-            const { body } = skipDownToNamespaceBody(statement);
-            if (!Node.isModuleBlock(body)) {
-                return;
+    // Step 4: Convert each file into a module with exports
+    // This must be done _after_ we screw around with any of the other contents,
+    // since converting a file to a module will invalidate references to it (ts-morph
+    // does bookkeeping and actively modify nodes).
+    // #region step4
+    console.log("\tconverting each file into a module");
+    for (const sourceFile of getSourceFilesFromProject(project)) {
+        for (const statement of sourceFile.getStatementsWithComments()) {
+            if (Node.isModuleDeclaration(statement)) {
+                const { body } = skipDownToNamespaceBody(statement);
+                if (!Node.isModuleBlock(body)) {
+                    continue;
+                }
+
+                const previous = statement.getPreviousSibling();
+                if (previous && Node.isCommentStatement(previous) && previous.getText().includes("@internal")) {
+                    previous.remove();
+                }
+
+                // TODO: once the fix for https://github.com/dsherret/ts-morph/issues/1248 is released,
+                // use statement.unwrap().
+                const size = body.getStatements().length;
+                if (size === 0) {
+                    statement.remove();
+                } else {
+                    const newText = body.getChildSyntaxListOrThrow().getText(true);
+                    statement.replaceWithText(newText);
+                }
             }
+        }
+    }
+    // #endregion step4
 
-            const isInternal = isMarkedInternal(statement);
-
-            // body.forEachChildAsArray();
-
-            // body.getStatements().forEach((s) => visitStatement(statement, isInternal));
-
-            return;
+    // Step 5: Add import statements.
+    console.log("\tadding import statements");
+    // #region step5
+    for (const sourceFile of getSourceFilesFromProject(project)) {
+        const referenced = referencedNamespaceSet.get(sourceFile);
+        if (!referenced) {
+            continue;
         }
 
-        visitGlobalishStateemnt(statement);
+        const configFilePath = projectRootMapper.getTsConfigPath(sourceFile.getFilePath());
+        const projRootDir = FileUtils.getDirPath(configFilePath);
+
+        const imports: OptionalKind<ImportDeclarationStructure>[] = [];
+        referenced.forEach((ns) => {
+            const nsFilePath = getTSStyleRelativePath(sourceFile.getFilePath(), FileUtils.pathJoin(projRootDir, ns));
+            imports.push({
+                namespaceImport: ns,
+                moduleSpecifier: nsFilePath,
+            });
+        });
+
+        sourceFile.insertImportDeclarations(0, imports);
+        console.log(sourceFile.getFilePath());
     }
+    // #endregion step5
 
-    function visitStatement(statement: Statement, isInternal: boolean) {
-        visitIdentifiers(statement);
-    }
-
-    function visitGlobalishStateemnt(statement: Statement) {}
-
-    function visitIdentifiers(node: Node) {}
+    // TODO: add barrels to tsconfig.json files
 }
