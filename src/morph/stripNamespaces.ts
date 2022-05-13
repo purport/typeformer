@@ -206,13 +206,18 @@ export function stripNamespaces(project: Project): void {
     // What we actually have to do:
     // - Collect a list of namespaces used (produced by explicitify)
     // - Create files for those namespaces
-    // - Import those files
     // - Remove outer namespace and transfer @internal comments downward
+    // - Import those files
+    // - Modify the tsconfigs to add the new files
 
     const fs = project.getFileSystem();
+    // Tracks which namespaces each source file uses.
     const referencedNamespaceSet = createReferencedNamespaceSet();
+    // Gets the project config path for a file (since we are loading this as one project)
     const projectRootMapper = createProjectRootMapper(fs);
+    // Tracks newly added namespace files.
     const newNamespaceFiles = createNamespaceFileSet(fs, projectRootMapper);
+    // Tracks which configs reference which other configs.
     const configDependencySet = createConfigDependencySet(fs, projectRootMapper);
 
     const checker = project.getTypeChecker();
@@ -351,6 +356,24 @@ export function stripNamespaces(project: Project): void {
 
         project.createSourceFile(filename, structure);
     });
+
+    // Step 3: Convert each file into a module with exports
+    console.log("\tconverting each file into a module");
+    // TODO: add @internal comments
+    // TODO: once the fix for https://github.com/dsherret/ts-morph/issues/1248 is released,
+    // use statement.unwrap().
+    for (const sourceFile of getSourceFilesFromProject(project)) {
+        for (const statement of sourceFile.getStatementsWithComments()) {
+            if (Node.isModuleDeclaration(statement)) {
+                const { body } = skipDownToNamespaceBody(statement);
+                if (!Node.isModuleBlock(body)) {
+                    continue;
+                }
+                const newText = body.getChildSyntaxListOrThrow().getFullText();
+                statement.replaceWithText(newText);
+            }
+        }
+    }
 
     function visitStatements(statement: Statement) {
         if (

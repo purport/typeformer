@@ -441,7 +441,7 @@ export function getStripNamespacesTransformFactoryFactory(config: ProjectTransfo
             }
 
             function visitStatement(statement: Node, isInternal: boolean) {
-                statement = visitIdentifiers(statement);
+                statement = visitIdentifiers(statement); // Note: result is unchanged.
                 // If the statement is an interface and that interface is an augmentation of an interface in another file
                 // rewrite it into a module augmentation so that augmentation actually takes place
                 if (ts.isInterfaceDeclaration(statement)) {
@@ -487,7 +487,7 @@ export function getStripNamespacesTransformFactoryFactory(config: ProjectTransfo
             }
 
             function visitGlobalishStatement(statement: Node): ts.VisitResult<Node> {
-                statement = visitIdentifiers(statement);
+                statement = visitIdentifiers(statement); // Note: result is unchanged.
                 if (ts.isInterfaceDeclaration(statement) || ts.isVariableStatement(statement)) {
                     const sym = checker.getSymbolAtLocation(
                         ts.getNameOfDeclaration(

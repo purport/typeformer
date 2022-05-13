@@ -1,9 +1,20 @@
+import { performance } from "perf_hooks";
 import { Project } from "ts-morph";
 
 import { explicitify } from "./explicitify";
 import { addSourceFilesToProject } from "./helpers";
 import { stripNamespaces } from "./stripNamespaces";
 import { unindent } from "./unindent";
+
+function timeIt<T>(fn: () => T): T {
+    const before = performance.now();
+    try {
+        return fn();
+    } finally {
+        const took = (performance.now() - before) / 1000;
+        console.log(`took ${took.toFixed(2)}s`);
+    }
+}
 
 type Step = {
     step: (project: Project) => void;
@@ -13,22 +24,24 @@ type Step = {
 
 const steps = new Map<string, Step>([
     ["noop", { step: () => {}, batch: false }], // To check diagnostics
-    ["explicitify", { step: explicitify, batch: true }],
     ["unindent", { step: unindent, batch: true }],
+    ["explicitify", { step: explicitify, batch: true }],
     ["stripNamespaces", { step: stripNamespaces, batch: false }], // WIP
 ]);
 
 const stepName = process.argv[2];
 
-console.log("loading project");
+const project = timeIt(() => {
+    console.log("loading project");
+    const project = new Project({
+        // Just for settings; we load the files below.
+        tsConfigFilePath: "src/tsconfig-base.json",
+        skipAddingFilesFromTsConfig: true,
+    });
 
-const project = new Project({
-    // Just for settings, we load the files below.
-    tsConfigFilePath: "src/tsconfig-base.json",
-    skipAddingFilesFromTsConfig: true,
+    addSourceFilesToProject(project);
+    return project;
 });
-
-addSourceFilesToProject(project);
 
 let stepsToRun: Iterable<[name: string, step: Step]>;
 
@@ -53,18 +66,33 @@ for (const [stepName, step] of stepsToRun) {
         continue;
     }
 
-    console.log(stepName);
-    step.step(project);
+    timeIt(() => {
+        console.log(stepName);
+        step.step(project);
+    });
 
-    const diagnostics = project.getPreEmitDiagnostics();
-    if (diagnostics.length > 0) {
-        console.log(project.formatDiagnosticsWithColorAndContext(diagnostics));
+    const exit = timeIt(() => {
+        console.log("checking");
+        const diagnostics = project.getPreEmitDiagnostics();
+        if (diagnostics.length > 0) {
+            if (diagnostics.length < 100) {
+                console.error(project.formatDiagnosticsWithColorAndContext(diagnostics));
+            } else {
+                console.error("way too many diagnostics; open the repo instead");
+            }
+            return true;
+        }
+    });
+
+    if (exit) {
         exitCode = 1;
         break;
     }
 }
 
-console.log("saving");
-project.saveSync();
+timeIt(() => {
+    console.log("saving");
+    project.saveSync();
+});
 
 process.exit(exitCode);
