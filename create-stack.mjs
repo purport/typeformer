@@ -4,6 +4,8 @@ import assert from "assert";
 import { readFileSync } from "fs";
 import { $, cd, question, which } from "zx";
 
+const repoName = "jakebailey/TypeScript";
+
 // Make sure we have the gh tool.
 await which("gh");
 
@@ -82,18 +84,19 @@ for (const step of plan) {
     await $`git cherry-pick ${step.commit}`;
     await $`git push --force -u origin HEAD`;
 
-    let body = "This PR is a part of a stack.";
-    if (step.previousBranch) {
-        body += `\n\n[Previous PR](https://github.com/jakebailey/TypeScript/pull/${step.previousBranch})`;
-    }
-    if (step.nextBranch) {
-        body += `\n\n[Next PR](https://github.com/jakebailey/TypeScript/pull/${step.nextBranch})`;
+    let body = "This PR is a part of a stack:\n";
+    for (const otherStep of plan) {
+        if (otherStep === step) {
+            body += `\n  1. ${otherStep.message} (this PR)`;
+        } else {
+            body += `\n  1. [${otherStep.message}](https://github.com/${repoName}/pull/${otherStep.branch})`;
+        }
     }
 
     try {
-        await $`gh pr create -R jakebailey/TypeScript --draft --base ${step.prBase} --head ${step.branch} --title ${step.message} --body ${body}`;
+        await $`gh pr create -R ${repoName} --draft --base ${step.prBase} --head ${step.branch} --title ${step.message} --body ${body}`;
     } catch {
-        await $`gh pr edit ${step.branch} -R jakebailey/TypeScript --title ${step.message} --body ${body}`;
+        await $`gh pr edit ${step.branch} -R ${repoName} --title ${step.message} --body ${body}`;
     }
 }
 
