@@ -2,7 +2,47 @@
 
 import assert from "assert";
 import { readFileSync } from "fs";
-import { $, cd, question, which } from "zx";
+import { $, cd, os, ProcessPromise, question, which } from "zx";
+
+if (os.platform() === "win32") {
+    throw new Error("This script doesn't work on Windows, sorry.");
+}
+
+// Tremendously terrible hack to make xz print only the commands and not their outputs.
+// Please, look away.
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-ignore
+Object.defineProperty(ProcessPromise.prototype, "_run", {
+    configurable: true,
+    enumerable: true,
+    get: function () {
+        return this.__run;
+    },
+    set: function (run) {
+        this.__run = run;
+
+        /** @type { number | true } */
+        let _quiet = this._quiet || 0;
+
+        Object.defineProperty(this, "_quiet", {
+            configurable: true,
+            enumerable: true,
+            get: function () {
+                if (_quiet === true) {
+                    return true;
+                }
+                return !!_quiet++;
+            },
+            set: function (quiet) {
+                if (quiet) {
+                    _quiet = true;
+                } else {
+                    _quiet = 0;
+                }
+            },
+        });
+    },
+});
 
 const repoName = "jakebailey/TypeScript";
 
@@ -32,8 +72,21 @@ function branchName(i) {
     return `transform-stack-commit-${i}`;
 }
 
+/** @typedef {{
+    branch: string;
+    previousBranch?: string | undefined;
+    commit: string;
+    prBase: string;
+    message: string;
+    nextBranch?: string | undefined;
+}} Step */
+
+/**
+ *
+ * @returns {Promise<Step[]>}
+ */
 async function getPlan() {
-    const { stdout } = await $`git log --pretty=oneline --reverse ${mergeBase}..HEAD`;
+    const { stdout } = await $`git log --oneline --reverse ${mergeBase}..HEAD`;
 
     return stdout
         .trim()
@@ -60,6 +113,13 @@ async function getPlan() {
 
 const plan = await getPlan();
 
+console.log();
+console.log("I will:");
+for (const step of plan) {
+    console.log(`    cherry-pick ${step.commit} into ${step.branch} and send a PR to ${step.prBase}`);
+}
+console.log();
+
 let ok = await question("Ready? (y/n) ", {
     choices: ["y", "n"],
 });
@@ -68,8 +128,9 @@ if (ok !== "y") {
     process.exit(1);
 }
 
-const pwd = process.cwd();
+console.log();
 
+const pwd = process.cwd();
 const worktree = ".git/tmp/stack-worktree";
 
 for (const step of plan) {
