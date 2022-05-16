@@ -10,6 +10,7 @@ if (os.platform() === "win32") {
 
 // Tremendously terrible hack to make xz print only the commands and not their outputs.
 // Please, look away.
+// Soon: https://github.com/google/zx/issues/306
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore
 Object.defineProperty(ProcessPromise.prototype, "_run", {
