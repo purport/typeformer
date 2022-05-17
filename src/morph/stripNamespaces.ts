@@ -103,7 +103,7 @@ function createProjectRootMapper(fs: FileSystemHost): ProjectRootMapper {
     };
 }
 
-function createNamespaceFileSet(fs: FileSystemHost, projectRootMapper: ProjectRootMapper) {
+function createNamespaceFileSet(projectRootMapper: ProjectRootMapper) {
     const newNamespaceFiles = new Map<StandardizedFilePath, Set<StandardizedFilePath>>();
     const extraFilesFieldMembers = new Map<StandardizedFilePath, Set<StandardizedFilePath>>();
 
@@ -192,7 +192,7 @@ export function stripNamespaces(project: Project): void {
     // Gets the project config path for a file (since we are loading this as one project)
     const projectRootMapper = createProjectRootMapper(fs);
     // Tracks newly added namespace files.
-    const newNamespaceFiles = createNamespaceFileSet(fs, projectRootMapper);
+    const newNamespaceFiles = createNamespaceFileSet(projectRootMapper);
     // Tracks which configs reference which other configs.
     const configDependencySet = createConfigDependencySet(fs, projectRootMapper);
 
