@@ -1,3 +1,4 @@
+import ts from "byots";
 import { performance } from "perf_hooks";
 import { Project } from "ts-morph";
 
@@ -37,6 +38,9 @@ const project = timeIt(() => {
         // Just for settings; we load the files below.
         tsConfigFilePath: "src/tsconfig-base.json",
         skipAddingFilesFromTsConfig: true,
+        manipulationSettings: {
+            newLineKind: ts.NewLineKind.CarriageReturnLineFeed,
+        },
     });
 
     addSourceFilesToProject(project);

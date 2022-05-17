@@ -539,5 +539,8 @@ export function stripNamespaces(project: Project): void {
         }
     }
 
+    // TODO: CRLF
+    
     // TODO: update prepend and outFile
+
 }
