@@ -18,6 +18,7 @@ import {
 } from "ts-morph";
 
 import { getSourceFilesFromProject } from "./helpers";
+import { log } from "./logging";
 import { getTSStyleRelativePath } from "./pathUtil";
 
 function isInternalDeclaration(node: Node, sourceFile: SourceFile): boolean {
@@ -217,7 +218,7 @@ export function stripNamespaces(project: Project): void {
     });
 
     // Step 1: Collect references to used namespaces.
-    console.log("\tcollecting references to used namespaces");
+    log("collecting references to used namespaces");
     for (const sourceFile of getSourceFilesFromProject(project)) {
         configDependencySet.add(sourceFile);
 
@@ -286,7 +287,7 @@ export function stripNamespaces(project: Project): void {
     }
 
     // Step 2: Create files for fake namespaces
-    console.log("\tcreating files for fake namespaces");
+    log("creating files for fake namespaces");
     newNamespaceFiles.forEach((reexports, filename) => {
         const reexportStatements: (ExportDeclarationStructure | ImportDeclarationStructure)[] = [];
         const associatedConfig = newNamespaceFiles.findAssociatedConfig(filename);
@@ -364,7 +365,7 @@ export function stripNamespaces(project: Project): void {
     });
 
     // Step 3: Fix up interface augmentation
-    console.log("\tfixing up interface augmentation");
+    log("fixing up interface augmentation");
     for (const sourceFile of getSourceFilesFromProject(project)) {
         if (sourceFile.getFilePath().endsWith("exportAsModule.ts")) {
             // Special case; the declare here is to export as a module, which
@@ -478,7 +479,7 @@ export function stripNamespaces(project: Project): void {
     // This must be done _after_ we screw around with any of the other contents,
     // since converting a file to a module will invalidate references to it (ts-morph
     // does bookkeeping and actively modify nodes).
-    console.log("\tconverting each file into a module");
+    log("converting each file into a module");
     for (const sourceFile of getSourceFilesFromProject(project)) {
         for (const statement of sourceFile.getStatementsWithComments()) {
             if (
@@ -510,7 +511,7 @@ export function stripNamespaces(project: Project): void {
     }
 
     // Step 5: Add import statements.
-    console.log("\tadding import statements");
+    log("adding import statements");
     for (const sourceFile of getSourceFilesFromProject(project)) {
         const referenced = referencedNamespaceSet.get(sourceFile);
         if (!referenced) {
@@ -540,7 +541,6 @@ export function stripNamespaces(project: Project): void {
     }
 
     // TODO: CRLF
-    
-    // TODO: update prepend and outFile
 
+    // TODO: update prepend and outFile
 }

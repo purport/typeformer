@@ -22,13 +22,21 @@ async function generateDiagnostics() {
 }
 
 /**
+ * @param {string} message
+ * @param {() => Promise<any>} fn
+ */
+async function runAndCommit(message, fn) {
+    await fn();
+    await $`git add . && git commit -m ${message}`;
+}
+
+/**
  * @param {string} name
  */
 async function runMorph(name) {
-    await $`node ${path.join(__dirname, "lib", "morph")} ${name}`;
-    await $`git add .`;
-    const message = `CONVERSION STEP - ${name}`;
-    await $`git commit -m ${message}`;
+    await runAndCommit(`CONVERSION STEP - ${name}`, async () => {
+        await $`node ${path.join(__dirname, "lib", "morph")} ${name}`;
+    });
 }
 
 async function applyPatches() {
