@@ -366,6 +366,12 @@ export function stripNamespaces(project: Project): void {
     // Step 3: Fix up interface augmentation
     console.log("\tfixing up interface augmentation");
     for (const sourceFile of getSourceFilesFromProject(project)) {
+        if (sourceFile.getFilePath().endsWith("exportAsModule.ts")) {
+            // Special case; the declare here is to export as a module, which
+            // we'll eventually change by hand.
+            continue;
+        }
+
         for (const statement of sourceFile.getStatementsWithComments()) {
             if (Node.isModuleDeclaration(statement)) {
                 const { body } = skipDownToNamespaceBody(statement);
@@ -532,4 +538,6 @@ export function stripNamespaces(project: Project): void {
             sourceFile.addExportDeclarations([{}]);
         }
     }
+
+    // TODO: update prepend and outFile
 }
