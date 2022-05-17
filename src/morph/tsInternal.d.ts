@@ -55,5 +55,7 @@ declare module "ts-morph" {
         _getNodeFromCompilerNodeIfExists<LocalCompilerNodeType extends ts.Node = ts.Node>(
             compilerNode: LocalCompilerNodeType | undefined
         ): CompilerNodeToWrappedType<LocalCompilerNodeType> | undefined;
+
+        replaceWithText(textOrWriterFunction: string | WriterFunction, writer: CodeBlockWriter): Node;
     }
 }

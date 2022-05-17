@@ -1,13 +1,12 @@
 import { FileUtils, StandardizedFilePath } from "@ts-morph/common";
 import assert from "assert";
 import {
-    CompilerNodeToWrappedType,
     ExportDeclarationStructure,
     FileSystemHost,
     ForEachDescendantTraversalControl,
     ImportDeclarationStructure,
     ModuleDeclaration,
-    ModuleDeclarationStructure,
+    ModuleDeclarationKind,
     Node,
     OptionalKind,
     Project,
@@ -186,13 +185,6 @@ function createConfigDependencySet(fs: FileSystemHost, projectRootMapper: Projec
 }
 
 export function stripNamespaces(project: Project): void {
-    // What we actually have to do:
-    // - Collect a list of namespaces used (produced by explicitify)
-    // - Create files for those namespaces
-    // - Remove outer namespace and transfer @internal comments downward
-    // - Import those files
-    // - Modify the tsconfigs to add the new files
-
     const fs = project.getFileSystem();
     // Tracks which namespaces each source file uses.
     const referencedNamespaceSet = createReferencedNamespaceSet();
@@ -202,10 +194,9 @@ export function stripNamespaces(project: Project): void {
     const newNamespaceFiles = createNamespaceFileSet(fs, projectRootMapper);
     // Tracks which configs reference which other configs.
     const configDependencySet = createConfigDependencySet(fs, projectRootMapper);
+
     const checker = project.getTypeChecker();
-
     const compilerProgram = project.getProgram().compilerObject;
-
     const sourceMapper = ts.getSourceMapper({
         useCaseSensitiveFileNames() {
             return ts.sys.useCaseSensitiveFileNames;
@@ -226,7 +217,6 @@ export function stripNamespaces(project: Project): void {
     });
 
     // Step 1: Collect references to used namespaces.
-    // #region step1
     console.log("\tcollecting references to used namespaces");
     for (const sourceFile of getSourceFilesFromProject(project)) {
         configDependencySet.add(sourceFile);
@@ -294,10 +284,8 @@ export function stripNamespaces(project: Project): void {
             }
         }
     }
-    // #endregion step2
 
     // Step 2: Create files for fake namespaces
-    // #region step2
     console.log("\tcreating files for fake namespaces");
     newNamespaceFiles.forEach((reexports, filename) => {
         const reexportStatements: (ExportDeclarationStructure | ImportDeclarationStructure)[] = [];
@@ -361,11 +349,21 @@ export function stripNamespaces(project: Project): void {
         };
 
         project.createSourceFile(filename, structure);
+
+        const configForFile = projectRootMapper.getTsConfigPath(filename);
+        const configSourceFile = project.addSourceFileAtPath(configForFile);
+        configSourceFile.forEachDescendant((node, traversal) => {
+            if (Node.isPropertyAssignment(node) && node.getName() === '"files"') {
+                const initializer = node.getInitializerIfKindOrThrow(ts.SyntaxKind.ArrayLiteralExpression);
+                initializer.addElement(`"${FileUtils.getBaseName(filename)}"`);
+                traversal.stop();
+            }
+        });
+        configSourceFile.saveSync();
+        project.removeSourceFile(configSourceFile);
     });
-    // #endregion step2
 
     // Step 3: Fix up interface augmentation
-    // #region step3
     console.log("\tfixing up interface augmentation");
     for (const sourceFile of getSourceFilesFromProject(project)) {
         for (const statement of sourceFile.getStatementsWithComments()) {
@@ -430,15 +428,11 @@ export function stripNamespaces(project: Project): void {
             }
 
             if (needsInternal) {
-                // Make it internal.
-                // TODO: this indents code not from the first line.
-                // maybe we shouldn't even do the unindent step and view the diff with ?w=1?
                 const originalText = statement.getText(true);
                 statement.replaceWithText((writer) => {
-                    (writer as any)._indentationText = ""; // HACK; doesn't work?
                     writer.writeLine("/* @internal */");
                     writer.write(originalText);
-                });
+                }, project.createWriter());
             }
         }
 
@@ -473,17 +467,18 @@ export function stripNamespaces(project: Project): void {
             }
         }
     }
-    // #endregion step3
 
     // Step 4: Convert each file into a module with exports
     // This must be done _after_ we screw around with any of the other contents,
     // since converting a file to a module will invalidate references to it (ts-morph
     // does bookkeeping and actively modify nodes).
-    // #region step4
     console.log("\tconverting each file into a module");
     for (const sourceFile of getSourceFilesFromProject(project)) {
         for (const statement of sourceFile.getStatementsWithComments()) {
-            if (Node.isModuleDeclaration(statement)) {
+            if (
+                Node.isModuleDeclaration(statement) &&
+                statement.getDeclarationKind() === ModuleDeclarationKind.Namespace
+            ) {
                 const { body } = skipDownToNamespaceBody(statement);
                 if (!Node.isModuleBlock(body)) {
                     continue;
@@ -500,17 +495,16 @@ export function stripNamespaces(project: Project): void {
                 if (size === 0) {
                     statement.remove();
                 } else {
-                    const newText = body.getChildSyntaxListOrThrow().getText(true);
+                    // Not getText(true), becuase that drops leading @internal comments.
+                    const newText = body.getChildSyntaxListOrThrow().getFullText().trim();
                     statement.replaceWithText(newText);
                 }
             }
         }
     }
-    // #endregion step4
 
     // Step 5: Add import statements.
     console.log("\tadding import statements");
-    // #region step5
     for (const sourceFile of getSourceFilesFromProject(project)) {
         const referenced = referencedNamespaceSet.get(sourceFile);
         if (!referenced) {
@@ -530,9 +524,12 @@ export function stripNamespaces(project: Project): void {
         });
 
         sourceFile.insertImportDeclarations(0, imports);
-        console.log(sourceFile.getFilePath());
-    }
-    // #endregion step5
 
-    // TODO: add barrels to tsconfig.json files
+        // Remove unused imports.
+        sourceFile.organizeImports();
+        if (sourceFile.getExportSymbols().length === 0) {
+            // organizeImports was too strong, add an empty export to make sure this is a module.
+            sourceFile.addExportDeclarations([{}]);
+        }
+    }
 }

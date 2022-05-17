@@ -71,7 +71,7 @@ for (const [stepName, step] of stepsToRun) {
         step.step(project);
     });
 
-    const exit = timeIt(() => {
+    exitCode = timeIt((): number => {
         console.log("checking");
         const diagnostics = project.getPreEmitDiagnostics();
         if (diagnostics.length > 0) {
@@ -80,19 +80,19 @@ for (const [stepName, step] of stepsToRun) {
             } else {
                 console.error("way too many diagnostics; open the repo instead");
             }
-            return true;
+            return 1;
         }
+        return 0;
     });
 
-    if (exit) {
-        exitCode = 1;
+    if (exitCode) {
         break;
     }
 }
 
-// timeIt(() => {
-//     console.log("saving");
-//     project.saveSync();
-// });
+timeIt(() => {
+    console.log("saving");
+    project.saveSync();
+});
 
 process.exit(exitCode);

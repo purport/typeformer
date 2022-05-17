@@ -106,34 +106,49 @@ run_transform() {
     -- undo_whitespaces
 }
 
-# TODO: fix up issues with declaration: true
+# Pre-ts-morph; keeping for posterity.
+transform_old() {
+  # TODO: submit earlier
+  tweak_and_commit "UNDO WEBWORKER CHANGE" \
+    -- run sh -c "git revert --no-edit 55e2e15aa37e685b7adcc61dd3091a2d9c7773a1 && git reset HEAD^"
 
-# TODO: submit earlier
-# tweak_and_commit "UNDO WEBWORKER CHANGE" \
-#   -- run sh -c "git revert --no-edit 55e2e15aa37e685b7adcc61dd3091a2d9c7773a1 && git reset HEAD^"
+  # Uncomment to use the single step conversion.
+  # tweak_and_commit "CONVERTED TO MODULES" \
+  #   -- gen_diag \
+  #   -- run_in "src" node "$here/lib/cli.js" "tsconfig.json" \
+  #   -- undo_whitespaces
 
-# tweak_and_commit "CONVERTED TO MODULES" \
-#   -- gen_diag \
-#   -- run_in "src" node "$here/lib/cli.js" "tsconfig.json" \
-#   -- undo_whitespaces
+  # Terrible, terrible step which preemptively makes all of the changes that appear
+  # when roundtripping code through TS's parser and emitter.
+  # TODO: figure out the right magic to make TS do better here.
+  # run_transform noop
+
+  run_transform explicitify
+
+  # do this after explicitify, which avoids whitespace problems when explicitify
+  # tries to restore the indention implied by the braces.
+  tweak_and_commit "UNINDENT" \
+    -- ensure_crlf_at_eof \
+    -- run node "$here/lib/morph" "unindent"
+
+  run_transform stripNamespaces
+
+  run_transform inlineImports
+}
+
+
+
+run_morph() {
+  # Not run in src
+  tweak_and_commit "CONVERSION STEP - $1" -- node "$here/lib/morph" "$1"
+}
 
 gen_diag
 
-# Terrible, terrible step which preemptively makes all of the changes that appear
-# when roundtripping code through TS's parser and emitter.
-# TODO: figure out the right magic to make TS do better here.
-# run_transform noop
+# transform_old
 
-run_transform explicitify
-
-# do this after explicitify, which avoids whitespace problems when explicitify
-# tries to restore the indention implied by the braces.
-tweak_and_commit "UNINDENT" \
-  -- ensure_crlf_at_eof \
-  -- run node "$here/lib/morph" "unindent"
-
-run_transform stripNamespaces
-
-run_transform inlineImports
+run_morph unindent
+run_morph explicitify
+run_morph stripNamespaces
 
 # apply_patches
