@@ -1,6 +1,5 @@
-import ts from "byots";
 import { performance } from "perf_hooks";
-import { Project } from "ts-morph";
+import { Project, ts } from "ts-morph";
 
 import { explicitify } from "./explicitify";
 import { addSourceFilesToProject } from "./helpers";
