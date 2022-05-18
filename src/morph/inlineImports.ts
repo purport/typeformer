@@ -116,7 +116,9 @@ export function inlineImports(project: Project): void {
         const imports: OptionalKind<ImportDeclarationStructure>[] = [];
         syntheticImports.forEach((importNames, specifier) => {
             imports.push({
-                namedImports: Array.from(importNames.values()).map((s) => ({ name: s })),
+                namedImports: Array.from(importNames.values())
+                    .sort()
+                    .map((s) => ({ name: s })),
                 moduleSpecifier: specifier,
             });
         });
@@ -124,15 +126,12 @@ export function inlineImports(project: Project): void {
         sourceFile.insertImportDeclarations(0, imports);
         sourceFile.organizeImports();
 
-        // TODO: this is really, really slow, and doesn't even indent properly;
-        // the code writer is really bad at indention, for some reason.
+        // TODO: this is really, really slow.
         const maxLineLength = 120;
-        const importWidth = "import {".length;
-        const indent = "    ";
-        const indentWidth = indent.length;
+        const indentWidth = 4;
 
         for (const importDeclaration of sourceFile.getImportDeclarations()) {
-            let width = importWidth;
+            let width = indentWidth; // After formatting, imports will begin on a new indented line.
             function addLineBreak(s: string): boolean {
                 const next = s.length + ", ".length;
                 const add = width + next >= maxLineLength;
@@ -143,11 +142,15 @@ export function inlineImports(project: Project): void {
                 return add;
             }
 
+            // This doesn't indent properly, but at least gets the code split correctly.
             for (const namedImport of importDeclaration.getNamedImports()) {
                 if (addLineBreak(namedImport.getName())) {
-                    namedImport.prependWhitespace(`\r\n`);
+                    namedImport.prependWhitespace("\r\n");
                 }
             }
+
+            // Fix up broken indent.
+            importDeclaration.formatText();
         }
     }
 }
