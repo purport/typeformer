@@ -349,7 +349,8 @@ export function stripNamespaces(project: Project): void {
             statements: reexportStatements,
         };
 
-        project.createSourceFile(filename, structure);
+        const sourceFile = project.createSourceFile(filename, structure);
+        sourceFile.insertStatements(0, `/* Generated file to enumate the ${currentNSName} namespace. */`);
 
         const configForFile = projectRootMapper.getTsConfigPath(filename);
         const configSourceFile = project.addSourceFileAtPath(configForFile);
@@ -370,6 +371,10 @@ export function stripNamespaces(project: Project): void {
         if (sourceFile.getFilePath().endsWith("exportAsModule.ts")) {
             // Special case; the declare here is to export as a module, which
             // we'll eventually change by hand.
+            continue;
+        }
+
+        if (newNamespaceFiles.has(sourceFile.getFilePath())) {
             continue;
         }
 
@@ -481,6 +486,10 @@ export function stripNamespaces(project: Project): void {
     // does bookkeeping and actively modify nodes).
     log("converting each file into a module");
     for (const sourceFile of getSourceFilesFromProject(project)) {
+        if (newNamespaceFiles.has(sourceFile.getFilePath())) {
+            continue;
+        }
+
         for (const statement of sourceFile.getStatementsWithComments()) {
             if (
                 Node.isModuleDeclaration(statement) &&
@@ -513,6 +522,10 @@ export function stripNamespaces(project: Project): void {
     // Step 5: Add import statements.
     log("adding import statements");
     for (const sourceFile of getSourceFilesFromProject(project)) {
+        if (newNamespaceFiles.has(sourceFile.getFilePath())) {
+            continue;
+        }
+
         const referenced = referencedNamespaceSet.get(sourceFile);
         if (!referenced) {
             continue;
@@ -539,8 +552,6 @@ export function stripNamespaces(project: Project): void {
             sourceFile.addExportDeclarations([{}]);
         }
     }
-
-    // TODO: CRLF
 
     // TODO: update prepend and outFile
 }

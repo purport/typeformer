@@ -46,7 +46,23 @@ declare module "ts-morph" {
                 meaning?: SymbolFlags,
                 flags?: SymbolFormatFlags
             ): string;
+            resolveName(
+                name: string,
+                location: Node | undefined,
+                meaning: SymbolFlags,
+                excludeGlobals: boolean
+            ): Symbol | undefined;
         }
+
+        interface Node {
+            symbol: Symbol;
+        }
+
+        function forEachEntry<K, V, U>(
+            map: ReadonlyESMap<K, V>,
+            callback: (value: V, key: K) => U | undefined
+        ): U | undefined;
+        function forEachKey<K, T>(map: ReadonlyCollection<K>, callback: (key: K) => T | undefined): T | undefined;
     }
 
     interface Node {

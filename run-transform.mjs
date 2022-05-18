@@ -48,8 +48,13 @@ await $`git clean -fd && git restore . && git reset --hard $(git merge-base HEAD
 
 await generateDiagnostics();
 
+await runAndCommit("Undo webworker change", async () => {
+    await $`git revert --no-edit 55e2e15aa37e685b7adcc61dd3091a2d9c7773a1 && git reset HEAD^`;
+});
+
 await runMorph("unindent");
 await runMorph("explicitify");
 await runMorph("stripNamespaces");
+await runMorph("inlineImports");
 
 // await applyPatches();
