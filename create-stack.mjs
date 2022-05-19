@@ -117,11 +117,11 @@ const plan = await getPlan();
 console.log();
 console.log("I will:");
 for (const step of plan) {
-    console.log(`    cherry-pick ${step.commit} into ${step.branch} and send a PR to ${step.prBase}`);
+    console.log(`    cherry-pick "${step.message}" into ${step.branch} and send a PR to ${step.prBase}`);
 }
 console.log();
 
-let ok = await question("Ready? (y/n) ", {
+let ok = await question("Ready? (y/N) ", {
     choices: ["y", "n"],
 });
 

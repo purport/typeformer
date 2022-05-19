@@ -17,7 +17,7 @@ import {
     ts,
 } from "ts-morph";
 
-import { getSourceFilesFromProject } from "./helpers";
+import { addTsConfigsToProject, getSourceFilesFromProject, getTsConfigsFromProject } from "./helpers";
 import { log } from "./logging";
 import { getTSStyleRelativePath } from "./pathUtil";
 
@@ -217,7 +217,6 @@ export function stripNamespaces(project: Project): void {
         log: () => {},
     });
 
-    // Step 1: Collect references to used namespaces.
     log("collecting references to used namespaces");
     for (const sourceFile of getSourceFilesFromProject(project)) {
         configDependencySet.add(sourceFile);
@@ -286,7 +285,6 @@ export function stripNamespaces(project: Project): void {
         }
     }
 
-    // Step 2: Create files for fake namespaces
     log("creating files for fake namespaces");
     newNamespaceFiles.forEach((reexports, filename) => {
         const reexportStatements: (ExportDeclarationStructure | ImportDeclarationStructure)[] = [];
@@ -350,22 +348,24 @@ export function stripNamespaces(project: Project): void {
         };
 
         const sourceFile = project.createSourceFile(filename, structure);
-        sourceFile.insertStatements(0, `/* Generated file to enumate the ${currentNSName} namespace. */`);
+        sourceFile.insertStatements(0, `/* Generated file to emulate the ${currentNSName} namespace. */`);
 
         const configForFile = projectRootMapper.getTsConfigPath(filename);
         const configSourceFile = project.addSourceFileAtPath(configForFile);
         configSourceFile.forEachDescendant((node, traversal) => {
-            if (Node.isPropertyAssignment(node) && node.getName() === '"files"') {
-                const initializer = node.getInitializerIfKindOrThrow(ts.SyntaxKind.ArrayLiteralExpression);
-                initializer.addElement(`"${FileUtils.getBaseName(filename)}"`);
-                traversal.stop();
+            if (Node.isPropertyAssignment(node)) {
+                const name = node.getNameNode().asKindOrThrow(ts.SyntaxKind.StringLiteral);
+                if (name.getLiteralText() === "files") {
+                    const initializer = node.getInitializerIfKindOrThrow(ts.SyntaxKind.ArrayLiteralExpression);
+                    initializer.addElement(`"${FileUtils.getBaseName(filename)}"`);
+                    traversal.stop();
+                }
             }
         });
         configSourceFile.saveSync();
         project.removeSourceFile(configSourceFile);
     });
 
-    // Step 3: Fix up interface augmentation
     log("fixing up interface augmentation");
     for (const sourceFile of getSourceFilesFromProject(project)) {
         if (sourceFile.getFilePath().endsWith("exportAsModule.ts")) {
@@ -480,7 +480,6 @@ export function stripNamespaces(project: Project): void {
         }
     }
 
-    // Step 4: Convert each file into a module with exports
     // This must be done _after_ we screw around with any of the other contents,
     // since converting a file to a module will invalidate references to it (ts-morph
     // does bookkeeping and actively modify nodes).
@@ -519,7 +518,6 @@ export function stripNamespaces(project: Project): void {
         }
     }
 
-    // Step 5: Add import statements.
     log("adding import statements");
     for (const sourceFile of getSourceFilesFromProject(project)) {
         if (newNamespaceFiles.has(sourceFile.getFilePath())) {
@@ -553,5 +551,56 @@ export function stripNamespaces(project: Project): void {
         }
     }
 
-    // TODO: update prepend and outFile
+    log("converting tsconfigs to outDir and removing prepends");
+    const configsBefore = getTsConfigsFromProject(project);
+    addTsConfigsToProject(project);
+
+    // Transform is run in TS repo root.
+    const cwd = FileUtils.getStandardizedAbsolutePath(fs, process.cwd());
+    const src = FileUtils.pathJoin(cwd, "src");
+    const local = FileUtils.pathJoin(cwd, "built", "local");
+    const localRelease = FileUtils.pathJoin(cwd, "built", "local", "release");
+
+    for (const sourceFile of getTsConfigsFromProject(project)) {
+        sourceFile.forEachDescendant((node, traversal) => {
+            if (Node.isPropertyAssignment(node)) {
+                const name = node.getNameNode().asKindOrThrow(ts.SyntaxKind.StringLiteral);
+                switch (name.getLiteralText()) {
+                    case "prepend":
+                        traversal.skip();
+                        node.remove();
+                        return;
+                    case "outFile":
+                        traversal.skip();
+                        node.set({
+                            name: '"outDir"',
+                            initializer: (writer) => {
+                                // e.g. /TypeScript/src/compiler
+                                const dir = sourceFile.getDirectoryPath();
+
+                                // e.g. compiler
+                                const projectPath = FileUtils.getRelativePathTo(src, dir);
+
+                                const builtLocal = sourceFile.getBaseName().includes(".release.")
+                                    ? localRelease
+                                    : local;
+
+                                // e.g. ../../built/local
+                                const relativeToBuilt = FileUtils.getRelativePathTo(dir, builtLocal);
+
+                                // e.g. ../../built/local/compiler
+                                const outDir = FileUtils.pathJoin(relativeToBuilt, projectPath);
+
+                                writer.quote(outDir);
+                            },
+                        });
+                }
+            }
+        });
+
+        sourceFile.saveSync();
+        if (!configsBefore.includes(sourceFile)) {
+            project.removeSourceFile(sourceFile);
+        }
+    }
 }
