@@ -1,6 +1,6 @@
 import { Project, ts } from "ts-morph";
 
-import { getSourceFilesFromProject } from "./utilities";
+import { getTsSourceFiles } from "./utilities";
 
 function isSomeDeclarationInLexicalScope(sym: ts.Symbol, location: ts.Node) {
     return sym.declarations?.every((d) => {
@@ -18,7 +18,7 @@ function isSomeDeclarationInLexicalScope(sym: ts.Symbol, location: ts.Node) {
 }
 
 export function explicitify(project: Project): void {
-    for (const sourceFile of getSourceFilesFromProject(project)) {
+    for (const sourceFile of getTsSourceFiles(project)) {
         if (sourceFile.isDeclarationFile()) {
             continue;
         }

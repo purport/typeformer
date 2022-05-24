@@ -1,14 +1,15 @@
 import { FileUtils } from "@ts-morph/common";
 import { ImportDeclarationStructure, OptionalKind, Project, ts } from "ts-morph";
 
-import { getSourceFilesFromProject, getTSStyleRelativePath } from "./utilities";
+import { getTsSourceFiles, getTsStyleRelativePath, log } from "./utilities";
 
 export function inlineImports(project: Project): void {
     const fs = project.getFileSystem();
     const checker = project.getTypeChecker();
     const compilerChecker = checker.compilerObject;
 
-    for (const sourceFile of getSourceFilesFromProject(project)) {
+    log("removing namespace uses");
+    for (const sourceFile of getTsSourceFiles(project)) {
         const syntheticImports = new Map<string, Set<string>>();
 
         sourceFile.transform((traversal) => {
@@ -82,7 +83,7 @@ export function inlineImports(project: Project): void {
                             return moduleSymbol.exports && ts.forEachEntry(moduleSymbol.exports, (s) => s === d.symbol);
                         })
                         .map((d) =>
-                            getTSStyleRelativePath(
+                            getTsStyleRelativePath(
                                 sourceFile.getFilePath(),
                                 FileUtils.getStandardizedAbsolutePath(fs, d.getSourceFile().fileName)
                             )
@@ -123,9 +124,20 @@ export function inlineImports(project: Project): void {
         });
 
         sourceFile.insertImportDeclarations(0, imports);
-        sourceFile.organizeImports();
+    }
 
-        // TODO: this is really, really slow.
+    // TODO: the below steps are very slow; on my machine, 1 minute to organize
+    // all imports, and 3 more minutes to do line wrapping. There's definitely
+    // a better way to do this, given everyone does these same things on-save
+    // in VS Code without trouble.
+
+    log("organizing imports");
+    for (const sourceFile of getTsSourceFiles(project)) {
+        sourceFile.organizeImports();
+    }
+
+    log("wrapping long import lines");
+    for (const sourceFile of getTsSourceFiles(project)) {
         const maxLineLength = 120;
         const indentWidth = 4;
 

@@ -19,9 +19,9 @@ import {
 
 import {
     addTsConfigsToProject,
-    getSourceFilesFromProject,
+    getTsSourceFiles,
     getTsConfigsFromProject,
-    getTSStyleRelativePath,
+    getTsStyleRelativePath,
     log,
 } from "./utilities";
 
@@ -222,7 +222,7 @@ export function stripNamespaces(project: Project): void {
     });
 
     log("collecting references to used namespaces");
-    for (const sourceFile of getSourceFilesFromProject(project)) {
+    for (const sourceFile of getTsSourceFiles(project)) {
         configDependencySet.add(sourceFile);
 
         sourceFile.forEachDescendant(collectReferencedNamespaces);
@@ -300,7 +300,7 @@ export function stripNamespaces(project: Project): void {
             if (newNamespaceFiles.has(nsFileName)) {
                 reexportStatements.push({
                     kind: StructureKind.ExportDeclaration,
-                    moduleSpecifier: getTSStyleRelativePath(filename, nsFileName).replace(/\.ts$/, ""),
+                    moduleSpecifier: getTsStyleRelativePath(filename, nsFileName).replace(/\.ts$/, ""),
                 });
             }
         });
@@ -308,7 +308,7 @@ export function stripNamespaces(project: Project): void {
         reexports.forEach((exportingPath) => {
             reexportStatements.push({
                 kind: StructureKind.ExportDeclaration,
-                moduleSpecifier: getTSStyleRelativePath(filename, exportingPath).replace(/\.ts$/, ""),
+                moduleSpecifier: getTsStyleRelativePath(filename, exportingPath).replace(/\.ts$/, ""),
             });
         });
 
@@ -330,7 +330,7 @@ export function stripNamespaces(project: Project): void {
                     reexportStatements.push({
                         kind: StructureKind.ImportDeclaration,
                         namespaceImport: partsOther[partsOther.length - 1],
-                        moduleSpecifier: getTSStyleRelativePath(filename, otherFilename).replace(/\.ts$/, ""),
+                        moduleSpecifier: getTsStyleRelativePath(filename, otherFilename).replace(/\.ts$/, ""),
                     });
 
                     reexportStatements.push({
@@ -371,7 +371,7 @@ export function stripNamespaces(project: Project): void {
     });
 
     log("fixing up interface augmentation");
-    for (const sourceFile of getSourceFilesFromProject(project)) {
+    for (const sourceFile of getTsSourceFiles(project)) {
         if (sourceFile.getFilePath().endsWith("exportAsModule.ts")) {
             // Special case; the declare here is to export as a module, which
             // we'll eventually change by hand.
@@ -424,7 +424,7 @@ export function stripNamespaces(project: Project): void {
 
                     const originalText = statement.getText(true);
                     statement.replaceWithText((writer) => {
-                        const name = getTSStyleRelativePath(
+                        const name = getTsStyleRelativePath(
                             sourceFile.getFilePath(),
                             targetFilename.replace(/(\.d)?\.ts$/, "") as StandardizedFilePath
                         );
@@ -488,7 +488,7 @@ export function stripNamespaces(project: Project): void {
     // since converting a file to a module will invalidate references to it (ts-morph
     // does bookkeeping and actively modify nodes).
     log("converting each file into a module");
-    for (const sourceFile of getSourceFilesFromProject(project)) {
+    for (const sourceFile of getTsSourceFiles(project)) {
         if (newNamespaceFiles.has(sourceFile.getFilePath())) {
             continue;
         }
@@ -523,7 +523,7 @@ export function stripNamespaces(project: Project): void {
     }
 
     log("adding import statements");
-    for (const sourceFile of getSourceFilesFromProject(project)) {
+    for (const sourceFile of getTsSourceFiles(project)) {
         if (newNamespaceFiles.has(sourceFile.getFilePath())) {
             continue;
         }
@@ -538,7 +538,7 @@ export function stripNamespaces(project: Project): void {
 
         const imports: OptionalKind<ImportDeclarationStructure>[] = [];
         referenced.forEach((ns) => {
-            const nsFilePath = getTSStyleRelativePath(sourceFile.getFilePath(), FileUtils.pathJoin(projRootDir, ns));
+            const nsFilePath = getTsStyleRelativePath(sourceFile.getFilePath(), FileUtils.pathJoin(projRootDir, ns));
             imports.push({
                 namespaceImport: ns,
                 moduleSpecifier: nsFilePath,

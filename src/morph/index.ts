@@ -4,7 +4,7 @@ import { explicitify } from "./explicitify";
 import { inlineImports } from "./inlineImports";
 import { stripNamespaces } from "./stripNamespaces";
 import { unindent } from "./unindent";
-import { addSourceFilesToProject, indentLog, log } from "./utilities";
+import { addTsSourceFiles, indentLog, log } from "./utilities";
 
 type Step = {
     step: (project: Project) => void;
@@ -32,7 +32,7 @@ const project = new Project({
     },
 });
 
-addSourceFilesToProject(project);
+addTsSourceFiles(project);
 
 let stepsToRun: Iterable<[name: string, step: Step]>;
 
