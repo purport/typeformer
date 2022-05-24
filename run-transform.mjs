@@ -1,8 +1,11 @@
+#!/usr/bin/env node
 //@ts-check
 
 import assert from "assert";
 import { readFileSync } from "fs";
 import * as path from "path";
+import { performance } from "perf_hooks";
+import prettyMs from "pretty-ms";
 import { fileURLToPath } from "url";
 import { $, os } from "zx";
 
@@ -27,7 +30,7 @@ async function generateDiagnostics() {
  */
 async function runAndCommit(message, fn) {
     await fn();
-    await $`git add . && git commit -m ${message}`;
+    await $`git add . && git commit --quiet -m ${message}`;
 }
 
 /**
@@ -35,7 +38,9 @@ async function runAndCommit(message, fn) {
  */
 async function runMorph(name) {
     await runAndCommit(`CONVERSION STEP - ${name}`, async () => {
+        const before = performance.now();
         await $`node ${path.join(__dirname, "lib", "morph")} ${name}`;
+        console.log(`took ${prettyMs(performance.now() - before)}`);
     });
 }
 
@@ -58,3 +63,4 @@ await runMorph("stripNamespaces");
 await runMorph("inlineImports");
 
 // await applyPatches();
+// await generateDiagnostics();

@@ -1,49 +1,17 @@
+#!/usr/bin/env node
 //@ts-check
 
 import assert from "assert";
 import { readFileSync } from "fs";
-import { $, cd, os, ProcessPromise, question, which } from "zx";
+import { $, cd, os, question, which } from "zx";
+
+import * as zxHacks from "./zx-hacks.mjs";
 
 if (os.platform() === "win32") {
     throw new Error("This script doesn't work on Windows, sorry.");
 }
 
-// Tremendously terrible hack to make xz print only the commands and not their outputs.
-// Please, look away.
-// Soon: https://github.com/google/zx/issues/306
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-// @ts-ignore
-Object.defineProperty(ProcessPromise.prototype, "_run", {
-    configurable: true,
-    enumerable: true,
-    get: function () {
-        return this.__run;
-    },
-    set: function (run) {
-        this.__run = run;
-
-        /** @type { number | true } */
-        let _quiet = this._quiet || 0;
-
-        Object.defineProperty(this, "_quiet", {
-            configurable: true,
-            enumerable: true,
-            get: function () {
-                if (_quiet === true) {
-                    return true;
-                }
-                return !!_quiet++;
-            },
-            set: function (quiet) {
-                if (quiet) {
-                    _quiet = true;
-                } else {
-                    _quiet = 0;
-                }
-            },
-        });
-    },
-});
+zxHacks.setHideOutput(true);
 
 const repoName = "jakebailey/TypeScript";
 
