@@ -1,11 +1,10 @@
 import { Project, ts } from "ts-morph";
 
 import { explicitify } from "./explicitify";
-import { addSourceFilesToProject } from "./helpers";
 import { inlineImports } from "./inlineImports";
-import { indentLog, log } from "./logging";
 import { stripNamespaces } from "./stripNamespaces";
 import { unindent } from "./unindent";
+import { addSourceFilesToProject, indentLog, log } from "./utilities";
 
 type Step = {
     step: (project: Project) => void;

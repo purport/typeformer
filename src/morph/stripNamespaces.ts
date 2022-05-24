@@ -17,9 +17,13 @@ import {
     ts,
 } from "ts-morph";
 
-import { addTsConfigsToProject, getSourceFilesFromProject, getTsConfigsFromProject } from "./helpers";
-import { log } from "./logging";
-import { getTSStyleRelativePath } from "./pathUtil";
+import {
+    addTsConfigsToProject,
+    getSourceFilesFromProject,
+    getTsConfigsFromProject,
+    getTSStyleRelativePath,
+    log,
+} from "./utilities";
 
 function isInternalDeclaration(node: Node, sourceFile: SourceFile): boolean {
     return !!ts.isInternalDeclaration(node.compilerNode, sourceFile.compilerNode);

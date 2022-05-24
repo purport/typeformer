@@ -1,6 +1,6 @@
-import { Project, SourceFile, ts } from "ts-morph";
+import { Project, ts } from "ts-morph";
 
-import { getSourceFilesFromProject } from "./helpers";
+import { getSourceFilesFromProject } from "./utilities";
 
 function isSomeDeclarationInLexicalScope(sym: ts.Symbol, location: ts.Node) {
     return sym.declarations?.every((d) => {
@@ -18,66 +18,64 @@ function isSomeDeclarationInLexicalScope(sym: ts.Symbol, location: ts.Node) {
 }
 
 export function explicitify(project: Project): void {
-    getSourceFilesFromProject(project).forEach((sourceFile) => explicitifyOne(project, sourceFile));
-}
+    for (const sourceFile of getSourceFilesFromProject(project)) {
+        if (sourceFile.isDeclarationFile()) {
+            continue;
+        }
 
-function explicitifyOne(project: Project, sourceFile: SourceFile) {
-    if (sourceFile.isDeclarationFile()) {
-        return;
-    }
+        sourceFile.transform((traversal) => {
+            const node = traversal.currentNode;
+            const checker = project.getTypeChecker().compilerObject;
 
-    sourceFile.transform((traversal) => {
-        const node = traversal.currentNode;
-        const checker = project.getTypeChecker().compilerObject;
-
-        // We narrow the identifiers we check down to just those which aren't the name of
-        // a declaration and aren't the RHS of a property access or qualified name
-        if (
-            ts.isIdentifier(node) &&
-            ts.getNameOfDeclaration(node.parent as ts.Declaration) !== node &&
-            !(ts.isPropertyAccessExpression(node.parent) && node.parent.name === node) &&
-            !(
-                ts.isQualifiedName(node.parent) &&
-                (node.parent.right === node || ts.isImportTypeNode(node.parent.parent))
-            )
-        ) {
-            const sym = checker.getSymbolAtLocation(node);
-            const parent = sym && (sym as { parent?: ts.Symbol }).parent;
+            // We narrow the identifiers we check down to just those which aren't the name of
+            // a declaration and aren't the RHS of a property access or qualified name
             if (
-                parent &&
-                parent.declarations &&
-                parent.declarations.length &&
-                parent.declarations.some(ts.isModuleDeclaration) &&
-                !isSomeDeclarationInLexicalScope(sym, node)
+                ts.isIdentifier(node) &&
+                ts.getNameOfDeclaration(node.parent as ts.Declaration) !== node &&
+                !(ts.isPropertyAccessExpression(node.parent) && node.parent.name === node) &&
+                !(
+                    ts.isQualifiedName(node.parent) &&
+                    (node.parent.right === node || ts.isImportTypeNode(node.parent.parent))
+                )
             ) {
-                const newName = checker.symbolToEntityName(
-                    sym,
-                    ts.SymbolFlags.Namespace,
-                    sourceFile.compilerNode,
-                    ts.NodeBuilderFlags.UseOnlyExternalAliasing
-                );
-                if (newName && !ts.isIdentifier(newName)) {
-                    if (
-                        ts.isQualifiedName(node.parent) ||
-                        ts.isTypeReferenceNode(node.parent) ||
-                        ts.isTypeQueryNode(node.parent)
-                    ) {
-                        return newName;
-                    }
-
-                    const exp = checker.symbolToExpression(
+                const sym = checker.getSymbolAtLocation(node);
+                const parent = sym && (sym as { parent?: ts.Symbol }).parent;
+                if (
+                    parent &&
+                    parent.declarations &&
+                    parent.declarations.length &&
+                    parent.declarations.some(ts.isModuleDeclaration) &&
+                    !isSomeDeclarationInLexicalScope(sym, node)
+                ) {
+                    const newName = checker.symbolToEntityName(
                         sym,
                         ts.SymbolFlags.Namespace,
                         sourceFile.compilerNode,
                         ts.NodeBuilderFlags.UseOnlyExternalAliasing
                     );
-                    if (exp) {
-                        return exp;
+                    if (newName && !ts.isIdentifier(newName)) {
+                        if (
+                            ts.isQualifiedName(node.parent) ||
+                            ts.isTypeReferenceNode(node.parent) ||
+                            ts.isTypeQueryNode(node.parent)
+                        ) {
+                            return newName;
+                        }
+
+                        const exp = checker.symbolToExpression(
+                            sym,
+                            ts.SymbolFlags.Namespace,
+                            sourceFile.compilerNode,
+                            ts.NodeBuilderFlags.UseOnlyExternalAliasing
+                        );
+                        if (exp) {
+                            return exp;
+                        }
                     }
                 }
             }
-        }
 
-        return traversal.visitChildren();
-    });
+            return traversal.visitChildren();
+        });
+    }
 }

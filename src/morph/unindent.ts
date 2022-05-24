@@ -1,11 +1,14 @@
-import { Project } from "ts-morph";
+import { ModuleDeclarationKind, Project } from "ts-morph";
 
-import { getSourceFilesFromProject } from "./helpers";
+import { getSourceFilesFromProject } from "./utilities";
 
 export function unindent(project: Project): void {
     getSourceFilesFromProject(project).forEach((sourceFile) => {
         sourceFile.getModules().forEach((module) => {
-            if (module.getDeclarationKind() !== "namespace") return;
+            if (module.getDeclarationKind() !== ModuleDeclarationKind.Namespace) {
+                return;
+            }
+
             const body = module.getBodyOrThrow();
             sourceFile.unindent([body.getStart(), body.getEnd()]);
         });

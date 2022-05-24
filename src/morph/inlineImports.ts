@@ -1,8 +1,7 @@
 import { FileUtils } from "@ts-morph/common";
-import { ImportDeclarationStructure, Node, OptionalKind, Project, SourceFile, ts } from "ts-morph";
+import { ImportDeclarationStructure, OptionalKind, Project, ts } from "ts-morph";
 
-import { getSourceFilesFromProject } from "./helpers";
-import { getTSStyleRelativePath } from "./pathUtil";
+import { getSourceFilesFromProject, getTSStyleRelativePath } from "./utilities";
 
 export function inlineImports(project: Project): void {
     const fs = project.getFileSystem();
