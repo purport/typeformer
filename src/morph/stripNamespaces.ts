@@ -19,8 +19,8 @@ import {
 
 import {
     addTsConfigsToProject,
-    getTsSourceFiles,
     getTsConfigsFromProject,
+    getTsSourceFiles,
     getTsStyleRelativePath,
     log,
 } from "./utilities";
@@ -107,7 +107,9 @@ function createProjectRootMapper(fs: FileSystemHost): ProjectRootMapper {
     };
 }
 
-function createNamespaceFileSet(projectRootMapper: ProjectRootMapper) {
+const namespacesDirName = "_namespaces";
+
+function createNamespaceFileSet(fs: FileSystemHost, projectRootMapper: ProjectRootMapper) {
     const newNamespaceFiles = new Map<StandardizedFilePath, Set<StandardizedFilePath>>();
     const extraFilesFieldMembers = new Map<StandardizedFilePath, Set<StandardizedFilePath>>();
 
@@ -138,15 +140,20 @@ function createNamespaceFileSet(projectRootMapper: ProjectRootMapper) {
             const sourceFilePath = sourceFile.getFilePath();
             const configFilePath = projectRootMapper.getTsConfigPath(sourceFilePath);
             const projRootDir = FileUtils.getDirPath(configFilePath);
+            const namespacesRoot = FileUtils.pathJoin(projRootDir, namespacesDirName);
 
-            const nsFilePath = FileUtils.pathJoin(projRootDir, namespacePartsToFilename(nsPath));
+            // Shouldn't be required, but if we don't have a real directory on disk, we fail
+            // to perform the walk to add the tsconfigs to the project later.
+            fs.mkdirSync(namespacesRoot);
+
+            const nsFilePath = FileUtils.pathJoin(namespacesRoot, namespacePartsToFilename(nsPath));
             getOrCreate({
                 namespaceFilePath: nsFilePath,
                 configFilePath,
             }).add(sourceFilePath);
 
             for (let i = 1; i < nsPath.length; i++) {
-                const parentNsFile = FileUtils.pathJoin(projRootDir, namespacePartsToFilename(nsPath.slice(0, i)));
+                const parentNsFile = FileUtils.pathJoin(namespacesRoot, namespacePartsToFilename(nsPath.slice(0, i)));
                 getOrCreate({
                     namespaceFilePath: parentNsFile,
                     configFilePath,
@@ -196,7 +203,7 @@ export function stripNamespaces(project: Project): void {
     // Gets the project config path for a file (since we are loading this as one project)
     const projectRootMapper = createProjectRootMapper(fs);
     // Tracks newly added namespace files.
-    const newNamespaceFiles = createNamespaceFileSet(projectRootMapper);
+    const newNamespaceFiles = createNamespaceFileSet(fs, projectRootMapper);
     // Tracks which configs reference which other configs.
     const configDependencySet = createConfigDependencySet(fs, projectRootMapper);
 
@@ -296,7 +303,13 @@ export function stripNamespaces(project: Project): void {
 
         const dependentPaths = configDependencySet.get(associatedConfig);
         dependentPaths?.forEach((requiredProjectPath) => {
-            const nsFileName = FileUtils.pathJoin(requiredProjectPath, FileUtils.getBaseName(filename));
+            // Reexport namespace contributions of other projects listed in tsconfig,
+            // e.g., in services, export everything from compiler too.
+            const nsFileName = FileUtils.pathJoin(
+                requiredProjectPath,
+                namespacesDirName,
+                FileUtils.getBaseName(filename)
+            );
             if (newNamespaceFiles.has(nsFileName)) {
                 reexportStatements.push({
                     kind: StructureKind.ExportDeclaration,
@@ -305,6 +318,7 @@ export function stripNamespaces(project: Project): void {
             }
         });
 
+        // Reexport everything in this namespace.
         reexports.forEach((exportingPath) => {
             reexportStatements.push({
                 kind: StructureKind.ExportDeclaration,
@@ -312,6 +326,9 @@ export function stripNamespaces(project: Project): void {
             });
         });
 
+        // Export each nested namespace as objects via:
+        //     import * as bar from "./foo.bar"
+        //     export { bar }
         const partsThis = FileUtils.getBaseName(filename)
             .slice(0, FileUtils.getBaseName(filename).length - FileUtils.getExtension(filename).length)
             .split(".");
@@ -355,13 +372,16 @@ export function stripNamespaces(project: Project): void {
         sourceFile.insertStatements(0, `/* Generated file to emulate the ${currentNSName} namespace. */`);
 
         const configForFile = projectRootMapper.getTsConfigPath(filename);
+        const projRootDir = FileUtils.getDirPath(configForFile);
+        const newFileEntry = FileUtils.getRelativePathTo(projRootDir, filename);
+
         const configSourceFile = project.addSourceFileAtPath(configForFile);
         configSourceFile.forEachDescendant((node, traversal) => {
             if (Node.isPropertyAssignment(node)) {
                 const name = node.getNameNode().asKindOrThrow(ts.SyntaxKind.StringLiteral);
                 if (name.getLiteralText() === "files") {
                     const initializer = node.getInitializerIfKindOrThrow(ts.SyntaxKind.ArrayLiteralExpression);
-                    initializer.addElement(`"${FileUtils.getBaseName(filename)}"`);
+                    initializer.addElement(`"${newFileEntry}"`);
                     traversal.stop();
                 }
             }
@@ -538,7 +558,10 @@ export function stripNamespaces(project: Project): void {
 
         const imports: OptionalKind<ImportDeclarationStructure>[] = [];
         referenced.forEach((ns) => {
-            const nsFilePath = getTsStyleRelativePath(sourceFile.getFilePath(), FileUtils.pathJoin(projRootDir, ns));
+            const nsFilePath = getTsStyleRelativePath(
+                sourceFile.getFilePath(),
+                FileUtils.pathJoin(projRootDir, namespacesDirName, ns)
+            );
             imports.push({
                 namespaceImport: ns,
                 moduleSpecifier: nsFilePath,
