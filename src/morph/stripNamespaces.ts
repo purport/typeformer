@@ -450,7 +450,7 @@ export function stripNamespaces(project: Project): void {
                         );
                         writer
                             .conditionalWriteLine(needsInternal, "/* @internal */")
-                            .write("declare module")
+                            .write("declare module ")
                             .quote(name)
                             .write(" ")
                             .block(() => {
@@ -458,7 +458,7 @@ export function stripNamespaces(project: Project): void {
                                     .writeLine("// Module transform: converted from interface augmentation")
                                     .write(originalText);
                             });
-                    });
+                    }, project.createWriter());
                     return;
                 }
             }
