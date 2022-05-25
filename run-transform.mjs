@@ -25,19 +25,37 @@ async function generateDiagnostics() {
 }
 
 /**
+ * @param {string} s
+ */
+function reformatParagraphs(s) {
+    return s
+        .split(/\r?\n\r?\n/)
+        .map((paragraph) =>
+            paragraph
+                .split(/\r?\n/)
+                .map((line) => line.trim())
+                .join(" ")
+                .trim()
+        )
+        .join("\n\n")
+        .trim();
+}
+
+/**
  * @param {string} message
  * @param {() => Promise<any>} fn
  */
 async function runAndCommit(message, fn) {
     await fn();
-    await $`git add . && git commit --quiet -m ${message}`;
+    await $`git add . && git commit --quiet -m ${reformatParagraphs(message)}`;
 }
 
 /**
  * @param {string} name
+ * @param {string} description
  */
-async function runMorph(name) {
-    await runAndCommit(`CONVERSION STEP - ${name}`, async () => {
+async function runMorph(name, description) {
+    await runAndCommit(`CONVERSION STEP - ${name}\n\n${description}`, async () => {
         const before = performance.now();
         await $`node ${path.join(__dirname, "lib", "morph")} ${name}`;
         console.log(`took ${prettyMs(performance.now() - before)}`);
@@ -53,14 +71,55 @@ await $`git clean -fd && git restore . && git reset --hard $(git merge-base HEAD
 
 await generateDiagnostics();
 
-await runAndCommit("Undo webworker change", async () => {
-    await $`git revert --no-edit 55e2e15aa37e685b7adcc61dd3091a2d9c7773a1 && git reset HEAD^`;
-});
+await runAndCommit(
+    `Undo webworker change
 
-await runMorph("unindent");
-await runMorph("explicitify");
-await runMorph("stripNamespaces");
-await runMorph("inlineImports");
+This change causes problems for project loading
+(even though it really shouldn't); revert it for now.
+`,
+    async () => {
+        await $`git revert --no-edit 55e2e15aa37e685b7adcc61dd3091a2d9c7773a1 && git reset HEAD^`;
+    }
+);
+
+await runMorph(
+    "unindent",
+    `
+This step makes further commits look clearer by unindenting all
+of the top level namespaces preemptively.
+`
+);
+
+await runMorph(
+    "explicitify",
+    `
+This step makes all implicit namespace accesses explicit, e.g. "Node" turns into
+"ts.Node".
+`
+);
+
+await runMorph(
+    "stripNamespaces",
+    `
+This step converts each file into an exported module by hoisting the namespace
+bodies into the global scope and transferring internal markers down onto declarations
+as needed.
+
+The namespaces are reconstructed as "barrel"-style modules, which are identical
+to the old namespace objects in structure. These reconstructed namespaces are then
+imported in the newly module-ified files, making existing expressions like "ts." valid.
+`
+);
+
+await runMorph(
+    "inlineImports",
+    `
+This step converts as many explicit accesses as possible in favor of direct imports
+from the modules in which things were declared. This restores the code (as much as possible)
+back to how it looked originally before the explicitify step, e.g. instead of "ts.Node"
+and "ts.Symbol", we have just "Node" and "Symbol".
+`
+);
 
 // await applyPatches();
 // await generateDiagnostics();

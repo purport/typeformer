@@ -114,7 +114,17 @@ for (const step of plan) {
     await $`git cherry-pick ${step.commit}`;
     await $`git push --force -u origin HEAD`;
 
-    let body = "This PR is a part of a stack:\n";
+    let { stdout: fullMessage } = await $`git show -s --format=%B ${step.commit}`;
+    fullMessage = fullMessage.replace(/\r/g, "");
+    fullMessage = fullMessage.slice(fullMessage.indexOf("\n\n")).trim();
+
+    let body = "";
+    body += `${fullMessage}\n\n`;
+    body += "---\n\n";
+    body += "**Please do not comment on this PR**. ";
+    body += "Depending on how this set of PRs evolves, ";
+    body += "this PR's contents may change entirely based on the order of commits.\n\n";
+    body += "This PR is a part of a stack:\n";
     for (const otherStep of plan) {
         if (otherStep === step) {
             body += `\n  1. ${otherStep.message} (this PR)`;
