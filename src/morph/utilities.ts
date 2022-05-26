@@ -73,9 +73,8 @@ export function formatImports(sourceFile: SourceFile) {
     }
 }
 
-
 export const namespacesDirName = "_namespaces";
 
 export function isNamespaceBarrel(sourceFile: SourceFile): boolean {
-    return sourceFile.getFilePath().includes(namespacesDirName)
+    return sourceFile.getFilePath().includes(namespacesDirName);
 }
