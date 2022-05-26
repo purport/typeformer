@@ -18,8 +18,8 @@ import {
 } from "ts-morph";
 
 import {
-    addTsConfigsToProject,
-    getTsConfigsFromProject,
+    addTsConfigs,
+    getTsConfigs,
     getTsSourceFiles,
     getTsStyleRelativePath,
     log,
@@ -578,8 +578,8 @@ export function stripNamespaces(project: Project): void {
     }
 
     log("converting tsconfigs to outDir and removing prepends");
-    const configsBefore = getTsConfigsFromProject(project);
-    addTsConfigsToProject(project);
+    const configsBefore = getTsConfigs(project);
+    addTsConfigs(project);
 
     // Transform is run in TS repo root.
     const cwd = FileUtils.getStandardizedAbsolutePath(fs, process.cwd());
@@ -587,7 +587,7 @@ export function stripNamespaces(project: Project): void {
     const local = FileUtils.pathJoin(cwd, "built", "local");
     const localRelease = FileUtils.pathJoin(cwd, "built", "local", "release");
 
-    for (const sourceFile of getTsConfigsFromProject(project)) {
+    for (const sourceFile of getTsConfigs(project)) {
         sourceFile.forEachDescendant((node, traversal) => {
             if (Node.isPropertyAssignment(node)) {
                 const name = node.getNameNode().asKindOrThrow(ts.SyntaxKind.StringLiteral);

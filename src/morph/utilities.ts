@@ -13,11 +13,11 @@ export function getTsSourceFiles(project: Project): SourceFile[] {
     return project.getSourceFiles(sourceFileGlobs);
 }
 
-export function addTsConfigsToProject(project: Project) {
+export function addTsConfigs(project: Project) {
     project.addSourceFilesAtPaths(tsconfigGlob);
 }
 
-export function getTsConfigsFromProject(project: Project): SourceFile[] {
+export function getTsConfigs(project: Project): SourceFile[] {
     return project.getSourceFiles(tsconfigGlob);
 }
 
