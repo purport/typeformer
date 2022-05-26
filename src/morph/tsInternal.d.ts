@@ -63,6 +63,8 @@ declare module "ts-morph" {
             callback: (value: V, key: K) => U | undefined
         ): U | undefined;
         function forEachKey<K, T>(map: ReadonlyCollection<K>, callback: (key: K) => T | undefined): T | undefined;
+
+        function skipAlias(symbol: Symbol, checker: TypeChecker): Symbol;
     }
 
     interface Node {

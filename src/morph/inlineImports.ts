@@ -48,26 +48,31 @@ export function inlineImports(project: Project): void {
                 // `Symbol` and `Node`, instead. We want to be capable of inlining them we they don't force us to keep
                 // `ts.Symbol` and the `import * as ts` import around.
                 const shouldExcludeGlobals = ["Symbol", "Node", "Map", "Set"].includes(rhsName);
-                const bareName = compilerChecker.resolveName(
-                    rhsName,
-                    node,
-                    ts.SymbolFlags.Type | ts.SymbolFlags.Value | ts.SymbolFlags.Namespace,
-                    shouldExcludeGlobals
-                );
-                if (!bareName) {
-                    // Only attempt to inline ns if the thing we're inlining to doesn't currently resolve (globals are OK, we'll over)
-                    // const matchingImport = imports.find(i => checker.getSymbolAtLocation(i.importClause.namedBindings.name) === s);
-                    // if (matchingImport && addSyntheticImport((matchingImport.moduleSpecifier as StringLiteral).text, rhsName)) {
-                    //     return possibleSubstitute;
-                    // }
-                    // if (!matchingImport && s.flags & SymbolFlags.Alias) {
-                    //     const aliasTarget = checker.getAliasedSymbol(s);
-                    //     const otherFile = aliasTarget.declarations?.find(d => isSourceFile(d) && !d.isDeclarationFile) as SourceFile | undefined;
-                    //     if (otherFile && addSyntheticImport(getTSStyleRelativePath(file.fileName, otherFile.fileName).replace(/(\.d)?\.ts$/, ""), rhsName)) {
-                    //         return possibleSubstitute;
-                    //     }
-                    // }
 
+                // TODO: s = ts.skipAlias(s) ?
+                const sFlags = ts.skipAlias(s, compilerChecker).flags;
+                const isValue = (sFlags & ts.SymbolFlags.Value) !== 0;
+                const isType = (sFlags & ts.SymbolFlags.Type) !== 0;
+                // const isNamespace = (sFlags & ts.SymbolFlags.Namespace) !== 0;
+
+                let flags: ts.SymbolFlags = ts.SymbolFlags.Namespace; // TODO: can we do better?
+                if (isValue) {
+                    flags |= ts.SymbolFlags.Value;
+                }
+                if (isType) {
+                    flags |= ts.SymbolFlags.Type;
+                }
+
+                // TODO: Iterator, ReadonlySet (???), MapConstructor
+
+                const bareName = compilerChecker.resolveName(rhsName, node, flags, shouldExcludeGlobals);
+                if (bareName) {
+                    // Name resolved to something; if this is the symbol we're looking for, use it directly.
+                    if (bareName === s) {
+                        return possibleSubstitute;
+                    }
+                } else {
+                    // Name did not resolve to anything; replace with an import.
                     const declPaths = s.declarations
                         ?.filter((d) => {
                             const otherFile = d.getSourceFile();
@@ -133,11 +138,18 @@ export function inlineImports(project: Project): void {
 
     log("organizing imports");
     for (const sourceFile of getTsSourceFiles(project)) {
+        if (sourceFile.getFilePath().includes("_namespaces")) {
+            continue;
+        }
         sourceFile.organizeImports();
     }
 
     log("wrapping long import lines");
     for (const sourceFile of getTsSourceFiles(project)) {
+        if (sourceFile.getFilePath().includes("_namespaces")) {
+            continue;
+        }
+
         const maxLineLength = 120;
         const indentWidth = 4;
 
