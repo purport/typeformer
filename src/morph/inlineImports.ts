@@ -3,6 +3,21 @@ import { ImportDeclarationStructure, OptionalKind, Project, ts } from "ts-morph"
 
 import { getTsSourceFiles, getTsStyleRelativePath, log } from "./utilities";
 
+// These are names which are already declared in the global scope, but TS
+// has redeclared one way or another. If we don't allow these to be shadowed,
+// we end up with ts.Symbol, ts.Node, ts.Set, etc, all over the codebase.
+const redeclaredGlobals = new Set([
+    "Symbol",
+    "Node",
+    "Map",
+    "MapConstructor",
+    "ReadonlyMap",
+    "Set",
+    "SetConstructor",
+    "ReadonlySet",
+    "Iterator",
+]);
+
 export function inlineImports(project: Project): void {
     const fs = project.getFileSystem();
     const checker = project.getTypeChecker();
@@ -43,11 +58,7 @@ export function inlineImports(project: Project): void {
                 possibleSubstitute = node.name;
             }
             if (s && rhsName && possibleSubstitute) {
-                // This is very TS-specific, but we exclude globals from the lookup if we're resolving `Symbol` or `Node`
-                // so we exclude the global `Symbol` and `Node` - we don't use them, and always expect our own local
-                // `Symbol` and `Node`, instead. We want to be capable of inlining them we they don't force us to keep
-                // `ts.Symbol` and the `import * as ts` import around.
-                const shouldExcludeGlobals = ["Symbol", "Node", "Map", "Set"].includes(rhsName);
+                const shouldExcludeGlobals = redeclaredGlobals.has(rhsName);
 
                 // TODO: s = ts.skipAlias(s) ?
                 const sFlags = ts.skipAlias(s, compilerChecker).flags;
@@ -62,8 +73,6 @@ export function inlineImports(project: Project): void {
                 if (isType) {
                     flags |= ts.SymbolFlags.Type;
                 }
-
-                // TODO: Iterator, ReadonlySet (???), MapConstructor
 
                 const bareName = compilerChecker.resolveName(rhsName, node, flags, shouldExcludeGlobals);
                 if (bareName) {
