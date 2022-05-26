@@ -1,7 +1,7 @@
 import { FileUtils } from "@ts-morph/common";
 import { ImportDeclarationStructure, OptionalKind, Project, ts } from "ts-morph";
 
-import { getTsSourceFiles, getTsStyleRelativePath, log } from "./utilities";
+import { formatImports, getTsSourceFiles, getTsStyleRelativePath, log } from "./utilities";
 
 // These are names which are already declared in the global scope, but TS
 // has redeclared one way or another. If we don't allow these to be shadowed,
@@ -140,49 +140,21 @@ export function inlineImports(project: Project): void {
         sourceFile.insertImportDeclarations(0, imports);
     }
 
-    // TODO: the below steps are very slow; on my machine, 1 minute to organize
-    // all imports, and 3 more minutes to do line wrapping. There's definitely
-    // a better way to do this, given everyone does these same things on-save
-    // in VS Code without trouble.
+    // log("organizing imports");
+    // for (const sourceFile of getTsSourceFiles(project)) {
+    //     if (sourceFile.getFilePath().includes("_namespaces")) {
+    //         continue;
+    //     }
+    //     sourceFile.organizeImports();
+    // }
 
-    log("organizing imports");
+    // This also removes unused imports.
+    log("reformatting imports");
     for (const sourceFile of getTsSourceFiles(project)) {
         if (sourceFile.getFilePath().includes("_namespaces")) {
             continue;
         }
-        sourceFile.organizeImports();
-    }
 
-    log("wrapping long import lines");
-    for (const sourceFile of getTsSourceFiles(project)) {
-        if (sourceFile.getFilePath().includes("_namespaces")) {
-            continue;
-        }
-
-        const maxLineLength = 120;
-        const indentWidth = 4;
-
-        for (const importDeclaration of sourceFile.getImportDeclarations()) {
-            let width = indentWidth; // After formatting, imports will begin on a new indented line.
-            function addLineBreak(s: string): boolean {
-                const next = s.length + ", ".length;
-                const add = width + next >= maxLineLength;
-                if (add) {
-                    width = indentWidth;
-                }
-                width += next;
-                return add;
-            }
-
-            // This doesn't indent properly, but at least gets the code split correctly.
-            for (const namedImport of importDeclaration.getNamedImports()) {
-                if (addLineBreak(namedImport.getName())) {
-                    namedImport.prependWhitespace("\r\n");
-                }
-            }
-
-            // Fix up broken indent.
-            importDeclaration.formatText();
-        }
+        formatImports(sourceFile);
     }
 }

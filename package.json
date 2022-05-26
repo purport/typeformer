@@ -19,6 +19,7 @@
     },
     "dependencies": {
         "byots": "4.8.0-dev.20220524.1.35",
+        "format-imports": "^3.0.12",
         "merge-dirs": "^0.2.1",
         "ts-morph": "^15.0.0",
         "typescript": "4.8.0-dev.20220524"

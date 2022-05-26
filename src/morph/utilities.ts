@@ -1,4 +1,5 @@
 import { FileUtils, StandardizedFilePath } from "@ts-morph/common";
+import { formatSourceWithoutFile } from "format-imports";
 import { Project, SourceFile } from "ts-morph";
 
 const sourceFileGlobs = ["src/**/*.ts", "!**/*.d.ts"];
@@ -43,5 +44,31 @@ export function indentLog(fn: () => void) {
         fn();
     } finally {
         currentIndent = lastIndent;
+    }
+}
+
+// Faster than organize imports, but may not always work as well.
+export function formatImports(sourceFile: SourceFile) {
+    const text = sourceFile.getFullText();
+    const newText = formatSourceWithoutFile.sync(
+        text,
+        "ts",
+        {
+            maxLineLength: 120,
+            tabSize: 4,
+            wrappingStyle: {
+                maxBindingNamesPerLine: 0,
+                maxDefaultAndBindingNamesPerLine: 0,
+                maxExportNamesPerLine: 0,
+                maxNamesPerWrappedLine: 0,
+            },
+            formatExports: false,
+            quoteMark: "double",
+            eol: "CRLF",
+        },
+        { skipEslintConfig: true, skipTsConfig: true }
+    );
+    if (newText !== undefined) {
+        sourceFile.replaceWithText(newText);
     }
 }
