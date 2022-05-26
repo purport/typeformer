@@ -1,7 +1,8 @@
 import { FileUtils } from "@ts-morph/common";
-import { ImportDeclarationStructure, OptionalKind, Project, ts } from "ts-morph";
+import assert from "assert";
+import { ImportDeclarationStructure, OptionalKind, Project, Statement, ts } from "ts-morph";
 
-import { formatImports, getTsSourceFiles, getTsStyleRelativePath, log } from "./utilities";
+import { formatImports, getTsSourceFiles, getTsStyleRelativePath, isNamespaceBarrel, log } from "./utilities";
 
 // These are names which are already declared in the global scope, but TS
 // has redeclared one way or another. If we don't allow these to be shadowed,
@@ -25,7 +26,13 @@ export function inlineImports(project: Project): void {
 
     log("removing namespace uses");
     for (const sourceFile of getTsSourceFiles(project)) {
-        const syntheticImports = new Map<string, Set<string>>();
+        if (isNamespaceBarrel(sourceFile)) {
+            continue;
+        }
+
+        const syntheticImports = new Map<string, Map<string, string>>();
+
+        const nodesToRemove: Statement[] = [];
 
         sourceFile.transform((traversal) => {
             const node = traversal.currentNode;
@@ -34,19 +41,54 @@ export function inlineImports(project: Project): void {
             }
 
             let s: ts.Symbol | undefined;
-            let rhsName: string | undefined;
-            let possibleSubstitute: ts.Identifier | undefined;
+            let foreignName: string | undefined;
+            let localName: string | undefined;
+            let possibleSubstitute: ts.Node | undefined;
+            let checkShadowed = true;
 
-            if (ts.isQualifiedName(node)) {
+            if (
+                ts.isImportEqualsDeclaration(node) &&
+                ts.isQualifiedName(node.moduleReference) &&
+                !ts.isModuleBlock(node.parent) // You can't do "export { something }" in a namespace.
+            ) {
+                checkShadowed = false;
+                s = compilerChecker.getSymbolAtLocation(node.moduleReference);
+                localName = ts.idText(node.name);
+                foreignName = ts.idText(node.moduleReference.right); // TODO: is this right?
+
+                if (ts.hasSyntacticModifier(node, ts.ModifierFlags.Export)) {
+                    // export import name = ...;
+                    //     ->
+                    // import { bar as name } from '...'
+                    // export { name };
+
+                    possibleSubstitute = traversal.factory.createExportDeclaration(
+                        undefined,
+                        undefined,
+                        false,
+                        traversal.factory.createNamedExports([
+                            traversal.factory.createExportSpecifier(false, undefined, localName),
+                        ])
+                    );
+                } else {
+                    // import name = ts.Foo.bar;
+                    //     ->
+                    // import { bar as name } from '...'
+
+                    // We can't return `undefined` in ts-morph's transform API, so just leave as-is and remove later.
+                    possibleSubstitute = node;
+                    nodesToRemove.push(sourceFile._getNodeFromCompilerNode(node));
+                }
+            } else if (ts.isQualifiedName(node)) {
                 if (ts.isImportEqualsDeclaration(node.parent) && node.parent.moduleReference === node) {
                     return node; // Can't elide the namespace part of an import assignment
                 }
                 // s = checker.getSymbolAtLocation(isQualifiedName(node.left) ? node.left.right : node.left);
                 s = compilerChecker.getSymbolAtLocation(node);
-                rhsName = ts.idText(node.right);
+                foreignName = ts.idText(node.right);
+                localName = foreignName;
                 possibleSubstitute = node.right;
-            }
-            if (
+            } else if (
                 ts.isPropertyAccessExpression(node) &&
                 (ts.isIdentifier(node.expression) || ts.isPropertyAccessExpression(node.expression)) &&
                 !ts.isPrivateIdentifier(node.name)
@@ -54,27 +96,36 @@ export function inlineImports(project: Project): void {
                 // technically should handle parenthesis, casts, etc - maybe not needed, though
                 // s = checker.getSymbolAtLocation(isPropertyAccessExpression(node.expression) ? node.expression.name : node.expression);
                 s = compilerChecker.getSymbolAtLocation(node);
-                rhsName = ts.idText(node.name);
+                foreignName = ts.idText(node.name);
+                localName = foreignName;
                 possibleSubstitute = node.name;
             }
-            if (s && rhsName && possibleSubstitute) {
-                const shouldExcludeGlobals = redeclaredGlobals.has(rhsName);
 
-                // TODO: s = ts.skipAlias(s) ?
-                const sFlags = ts.skipAlias(s, compilerChecker).flags;
-                const isValue = (sFlags & ts.SymbolFlags.Value) !== 0;
-                const isType = (sFlags & ts.SymbolFlags.Type) !== 0;
-                // const isNamespace = (sFlags & ts.SymbolFlags.Namespace) !== 0;
+            if (s) {
+                assert(localName);
+                assert(foreignName);
+                assert(possibleSubstitute);
 
-                let flags: ts.SymbolFlags = ts.SymbolFlags.Namespace; // TODO: can we do better?
-                if (isValue) {
-                    flags |= ts.SymbolFlags.Value;
+                let bareName: ts.Symbol | undefined;
+                if (checkShadowed) {
+                    const shouldExcludeGlobals = redeclaredGlobals.has(localName);
+
+                    const sFlags = ts.skipAlias(s, compilerChecker).flags;
+                    const isValue = (sFlags & ts.SymbolFlags.Value) !== 0;
+                    const isType = (sFlags & ts.SymbolFlags.Type) !== 0;
+                    // const isNamespace = (sFlags & ts.SymbolFlags.Namespace) !== 0;
+
+                    let flags: ts.SymbolFlags = ts.SymbolFlags.Namespace; // TODO: can we do better?
+                    if (isValue) {
+                        flags |= ts.SymbolFlags.Value;
+                    }
+                    if (isType) {
+                        flags |= ts.SymbolFlags.Type;
+                    }
+
+                    bareName = compilerChecker.resolveName(localName, node, flags, shouldExcludeGlobals);
                 }
-                if (isType) {
-                    flags |= ts.SymbolFlags.Type;
-                }
 
-                const bareName = compilerChecker.resolveName(rhsName, node, flags, shouldExcludeGlobals);
                 if (bareName) {
                     // Name resolved to something; if this is the symbol we're looking for, use it directly.
                     if (bareName === s) {
@@ -105,7 +156,7 @@ export function inlineImports(project: Project): void {
                         .sort();
                     const newPath = declPaths?.[0];
 
-                    if (newPath && addSyntheticImport(newPath.replace(/(\.d)?\.ts$/, ""), rhsName)) {
+                    if (newPath && addSyntheticImport(newPath.replace(/(\.d)?\.ts$/, ""), foreignName, localName)) {
                         return possibleSubstitute;
                     }
                 }
@@ -113,26 +164,33 @@ export function inlineImports(project: Project): void {
             return traversal.visitChildren();
         });
 
+        for (const node of nodesToRemove) {
+            node.remove();
+        }
+
         // TODO: can we be smarter and pick the imports which minimizes the number of leftover namespace uses?
-        function addSyntheticImport(specifier: string, importName: string) {
+        function addSyntheticImport(specifier: string, foreignName: string, localName: string) {
             if (
-                Array.from(syntheticImports.entries()).some(([spec, set]) => spec !== specifier && set.has(importName))
+                Array.from(syntheticImports.entries()).some(([spec, set]) => spec !== specifier && set.has(localName))
             ) {
                 // Import name already taken by a different import - gotta leave the second instance explicit
                 return false;
             }
-            const synthMap = syntheticImports.get(specifier) || new Set();
+            const synthMap = syntheticImports.get(specifier) || new Map();
             syntheticImports.set(specifier, synthMap);
-            synthMap.add(importName);
+            synthMap.set(localName, foreignName);
             return true;
         }
 
         const imports: OptionalKind<ImportDeclarationStructure>[] = [];
         syntheticImports.forEach((importNames, specifier) => {
             imports.push({
-                namedImports: Array.from(importNames.values())
+                namedImports: Array.from(importNames.entries())
                     .sort()
-                    .map((s) => ({ name: s })),
+                    .map(([localName, foreignName]) => ({
+                        name: foreignName,
+                        alias: foreignName !== localName ? localName : undefined,
+                    })),
                 moduleSpecifier: specifier,
             });
         });
@@ -142,7 +200,7 @@ export function inlineImports(project: Project): void {
 
     // log("organizing imports");
     // for (const sourceFile of getTsSourceFiles(project)) {
-    //     if (sourceFile.getFilePath().includes("_namespaces")) {
+    //     if (isNamespaceBarrel(sourceFile)) {
     //         continue;
     //     }
     //     sourceFile.organizeImports();
@@ -151,10 +209,9 @@ export function inlineImports(project: Project): void {
     // This also removes unused imports.
     log("reformatting imports");
     for (const sourceFile of getTsSourceFiles(project)) {
-        if (sourceFile.getFilePath().includes("_namespaces")) {
+        if (isNamespaceBarrel(sourceFile)) {
             continue;
         }
-
         formatImports(sourceFile);
     }
 }

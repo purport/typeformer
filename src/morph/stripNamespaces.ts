@@ -23,6 +23,7 @@ import {
     getTsSourceFiles,
     getTsStyleRelativePath,
     log,
+    namespacesDirName,
 } from "./utilities";
 
 function isInternalDeclaration(node: Node, sourceFile: SourceFile): boolean {
@@ -106,8 +107,6 @@ function createProjectRootMapper(fs: FileSystemHost): ProjectRootMapper {
         },
     };
 }
-
-const namespacesDirName = "_namespaces";
 
 function createNamespaceFileSet(fs: FileSystemHost, projectRootMapper: ProjectRootMapper) {
     const newNamespaceFiles = new Map<StandardizedFilePath, Set<StandardizedFilePath>>();
