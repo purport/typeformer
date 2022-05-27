@@ -3,7 +3,7 @@
 
 import assert from "assert";
 import { readFileSync } from "fs";
-import { $, cd, os, question, which } from "zx";
+import { $, cd, os, question, quiet, which } from "zx";
 
 import * as zxHacks from "./zx-hacks.mjs";
 
@@ -119,8 +119,10 @@ for (const step of plan) {
     fullMessage = fullMessage.slice(fullMessage.indexOf("\n\n")).trim();
 
     let body = "";
-    body += `${fullMessage}\n\n`;
-    body += "---\n\n";
+    if (fullMessage) {
+        body += `${fullMessage}\n\n`;
+        body += "---\n\n";
+    }
     body += "**Please do not comment on this PR**. ";
     body += "Depending on how this set of PRs evolves, ";
     body += "this PR's contents may change entirely based on the order of commits.\n\n";
@@ -133,11 +135,18 @@ for (const step of plan) {
         }
     }
 
+    let created = true;
     try {
-        await $`gh pr create -R ${repoName} --draft --base ${step.prBase} --head ${step.branch} --title ${step.message} --body ${body}`;
+        await quiet(
+            $`gh pr create -R ${repoName} --draft --base ${step.prBase} --head ${step.branch} --title ${step.message} --body ${body}`
+        );
     } catch {
-        await $`gh pr edit ${step.branch} -R ${repoName} --title ${step.message} --body ${body}`;
+        created = false;
+        await quiet($`gh pr edit ${step.branch} -R ${repoName} --title ${step.message} --body ${body}`);
     }
+
+    const { stdout: prList } = await $`gh pr list -R ${repoName} --head ${step.branch} --json url`;
+    console.log(`${created ? "Created" : "Updated"} ${JSON.parse(prList)[0].url}`);
 }
 
 cd(pwd);
