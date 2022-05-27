@@ -5,21 +5,35 @@ Subject: [PATCH] Remove a bunch of namespace uses
 
 ---
  src/compiler/binder.ts                        |  3 +--
- src/compiler/parser.ts                        | 20 +++++++++----------
- src/compiler/resolutionCache.ts               |  9 +++++----
+ src/compiler/builder.ts                       |  6 +++---
+ src/compiler/checker.ts                       | 14 ++++++-------
+ src/compiler/emitter.ts                       |  8 +++----
+ src/compiler/parser.ts                        | 20 +++++++++---------
+ src/compiler/program.ts                       |  4 ++--
+ src/compiler/resolutionCache.ts               |  9 ++++----
+ src/compiler/sys.ts                           | 21 +++++++++----------
+ src/compiler/transformers/declarations.ts     |  7 +++----
  .../transformers/declarations/diagnostics.ts  |  5 ++---
  src/compiler/tsbuildPublic.ts                 |  5 ++---
+ src/compiler/types.ts                         |  1 +
+ src/compiler/utilities.ts                     |  9 ++------
  src/compiler/watch.ts                         |  7 ++++---
- src/debug/dbg.ts                              |  8 --------
+ src/compiler/watchPublic.ts                   |  5 ++---
+ src/compiler/watchUtilities.ts                |  5 ++---
+ src/debug/dbg.ts                              |  8 -------
+ src/executeCommandLine/executeCommandLine.ts  |  9 ++++----
  src/harness/client.ts                         |  2 +-
- src/harness/fourslashImpl.ts                  |  2 +-
- src/harness/fourslashInterfaceImpl.ts         |  2 +-
+ src/harness/fourslashImpl.ts                  |  4 ++--
+ src/harness/fourslashInterfaceImpl.ts         |  4 ++--
+ src/harness/vfsUtil.ts                        |  2 +-
  src/server/editorServices.ts                  |  2 +-
  src/server/project.ts                         |  2 +-
  src/server/scriptInfo.ts                      |  2 +-
  src/server/scriptVersionCache.ts              |  2 +-
  src/server/session.ts                         |  2 +-
+ src/services/completions.ts                   |  5 ++---
  src/services/documentRegistry.ts              |  5 ++---
+ src/testRunner/runner.ts                      |  2 +-
  .../unittests/services/textChanges.ts         |  7 ++++---
  src/testRunner/unittests/tsbuild/publicApi.ts |  4 ++--
  src/testRunner/unittests/tsc/helpers.ts       |  5 ++---
@@ -39,7 +53,7 @@ Subject: [PATCH] Remove a bunch of namespace uses
  .../unittests/tsserver/typingsInstaller.ts    |  2 +-
  src/tsserver/nodeServer.ts                    |  2 +-
  src/webServer/webServer.ts                    |  2 +-
- 35 files changed, 59 insertions(+), 69 deletions(-)
+ 49 files changed, 105 insertions(+), 125 deletions(-)
 
 diff --git a/src/compiler/binder.ts b/src/compiler/binder.ts
 index 4c06caaa9d..17fa819ffc 100644
@@ -59,6 +73,149 @@ index 4c06caaa9d..17fa819ffc 100644
                  const functionType = node.parent as JSDocFunctionType;
                  const index = functionType.parameters.indexOf(node as ParameterDeclaration);
                  return "arg" + index as __String;
+diff --git a/src/compiler/builder.ts b/src/compiler/builder.ts
+index ff784ad15c..ed43ea1ce3 100644
+--- a/src/compiler/builder.ts
++++ b/src/compiler/builder.ts
+@@ -1,4 +1,3 @@
+-import * as ts from "./_namespaces/ts";
+ import {
+     AffectedFileResult, BuilderProgram, BuilderProgramHost, EmitAndSemanticDiagnosticsBuilderProgram,
+     SemanticDiagnosticsBuilderProgram,
+@@ -16,6 +15,7 @@ import { getTsBuildInfoEmitOutputFilePath } from "./emitter";
+ import { isDeclarationFileName } from "./parser";
+ import {
+     ensurePathIsNonModuleName, getDirectoryPath, getNormalizedAbsolutePath, getRelativePathFromDirectory,
++    toPath as toPathInternal,
+ } from "./path";
+ import { createProgram, emitSkippedWithNoDiagnostics, filterSemanticDiagnostics, handleNoEmitOptions } from "./program";
+ import { generateDjb2Hash } from "./sys";
+@@ -328,7 +328,7 @@ function convertToDiagnostics(diagnostics: readonly ReusableDiagnostic[], newPro
+     });
+ 
+     function toPath(path: string) {
+-        return ts.toPath(path, buildInfoDirectory, getCanonicalFileName);
++        return toPathInternal(path, buildInfoDirectory, getCanonicalFileName);
+     }
+ }
+ 
+@@ -1456,7 +1456,7 @@ export function createBuildProgramUsingProgramBuildInfo(program: ProgramBuildInf
+     };
+ 
+     function toPath(path: string) {
+-        return ts.toPath(path, buildInfoDirectory, getCanonicalFileName);
++        return toPathInternal(path, buildInfoDirectory, getCanonicalFileName);
+     }
+ 
+     function toAbsolutePath(path: string) {
+diff --git a/src/compiler/checker.ts b/src/compiler/checker.ts
+index 3a2a0ed3fa..5d8d36fcce 100644
+--- a/src/compiler/checker.ts
++++ b/src/compiler/checker.ts
+@@ -1,4 +1,3 @@
+-import * as ts from "./_namespaces/ts";
+ import { bindSourceFile, getModuleInstanceState, ModuleInstanceState } from "./binder";
+ import {
+     addRange, and, append, appendIfUnique, arrayFrom, arrayOf, arraysEqual, arrayToMultiMap, binarySearch,
+@@ -212,8 +211,8 @@ import {
+     getEffectiveConstraintOfTypeParameter, getEffectiveTypeParameterDeclarations, getJSDocClassTag,
+     getJSDocDeprecatedTag, getJSDocEnumTag, getJSDocParameterTags, getJSDocTags, getJSDocThisTag, getJSDocType,
+     getJSDocTypeTag, getNameOfDeclaration, getOriginalNode, getParseTreeNode, getTextOfJSDocComment, hasInitializer,
+-    hasJSDocNodes, hasJSDocParameterTags, hasOnlyExpressionInitializer, hasRestParameter, hasScopeMarker, idText,
+-    isAccessor, isAssertionExpression, isAssignmentPattern, isBindingPattern, isCallChain, isCallLikeExpression,
++    hasJSDocNodes, hasJSDocParameterTags, hasOnlyExpressionInitializer, hasRestParameter, hasScopeMarker, hasType,
++    idText, isAccessor, isAssertionExpression, isAssignmentPattern, isBindingPattern, isCallChain, isCallLikeExpression,
+     isCallOrNewExpression, isClassElement, isClassLike, isConstTypeReference, isDeclaration, isEntityName, isExpression,
+     isExpressionOfOptionalChainRoot, isExternalModuleIndicator, isExternalModuleNameRelative, isForInOrOfStatement,
+     isFunctionLike, isFunctionLikeDeclaration, isFunctionLikeOrClassStaticBlockDeclaration, isFunctionOrModuleBlock,
+@@ -966,6 +965,7 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
+         isPropertyAccessible,
+         getTypeOnlyAliasDeclaration,
+         getMemberOverrideModifierStatus,
++        typeHasCallOrConstructSignatures,
+     };
+ 
+     function runWithInferenceBlockedFromSourceNode<T>(node: Node | undefined, fn: () => T): T {
+@@ -8817,7 +8817,7 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
+ 
+     function findResolutionCycleStartIndex(target: TypeSystemEntity, propertyName: TypeSystemPropertyName): number {
+         for (let i = resolutionTargets.length - 1; i >= 0; i--) {
+-            if (hasType(resolutionTargets[i], resolutionPropertyNames[i])) {
++            if (resolutionTargetHasType(resolutionTargets[i], resolutionPropertyNames[i])) {
+                 return -1;
+             }
+             if (resolutionTargets[i] === target && resolutionPropertyNames[i] === propertyName) {
+@@ -8827,7 +8827,7 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
+         return -1;
+     }
+ 
+-    function hasType(target: TypeSystemEntity, propertyName: TypeSystemPropertyName): boolean {
++    function resolutionTargetHasType(target: TypeSystemEntity, propertyName: TypeSystemPropertyName): boolean {
+         switch (propertyName) {
+             case TypeSystemPropertyName.Type:
+                 return !!getSymbolLinks(target as Symbol).type;
+@@ -17751,7 +17751,7 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
+             return false;
+         }
+         // Or functions with annotated parameter types
+-        if (some(node.parameters, ts.hasType)) {
++        if (some(node.parameters, hasType)) {
+             return false;
+         }
+         const sourceSig = getSingleCallSignature(source);
+@@ -42643,7 +42643,7 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
+     }
+ 
+     function typeHasCallOrConstructSignatures(type: Type): boolean {
+-        return ts.typeHasCallOrConstructSignatures(type, checker);
++        return getSignaturesOfType(type, SignatureKind.Call).length !== 0 || getSignaturesOfType(type, SignatureKind.Construct).length !== 0;
+     }
+ 
+     function getRootSymbols(symbol: Symbol): readonly Symbol[] {
+diff --git a/src/compiler/emitter.ts b/src/compiler/emitter.ts
+index 573e289227..886026aff6 100644
+--- a/src/compiler/emitter.ts
++++ b/src/compiler/emitter.ts
+@@ -1,4 +1,3 @@
+-import * as ts from "./_namespaces/ts";
+ import { OutputFile } from "./builderStatePublic";
+ import { getNodeId } from "./checker";
+ import {
+@@ -6,7 +5,7 @@ import {
+     forEach, GetCanonicalFileName, isArray, last, lastOrUndefined, length, memoize, notImplemented, returnFalse,
+     returnUndefined, singleOrUndefined, some, stableSort, stringContains,
+ } from "./core";
+-import { Comparison, Map, Set } from "./corePublic";
++import { Comparison, Map, Set, version } from "./corePublic";
+ import { Debug } from "./debug";
+ import { compareEmitHelpers } from "./factory/emitHelpers";
+ import {
+@@ -98,7 +97,7 @@ import {
+     nodeIsSynthesized, outFile, positionIsSynthesized, positionsAreOnSameLine, rangeEndIsOnSameLineAsRangeStart,
+     rangeEndPositionsAreOnSameLine, rangeIsOnSingleLine, rangeStartPositionsAreOnSameLine, removeFileExtension,
+     setEachParent, setParent, setTextRangePosEnd, setTextRangePosWidth, supportedJSExtensionsFlat, writeCommentRange,
+-    writeFile,
++    writeFile, isFileLevelUniqueName as isFileLevelUniqueNameInternal
+ } from "./utilities";
+ import {
+     escapeLeadingUnderscores, getOriginalNode, getParseTreeNode, getTextOfJSDocComment, guessIndentation, idText,
+@@ -472,7 +471,6 @@ export function emitFiles(resolver: EmitResolver, host: EmitHost, targetSourceFi
+             emitSkipped = true;
+             return;
+         }
+-        const version = ts.version; // Extracted into a const so the form is stable between namespace and module
+         writeFile(host, emitterDiagnostics, buildInfoPath, getBuildInfoText({ bundle, program, version }), /*writeByteOrderMark*/ false);
+     }
+ 
+@@ -5210,7 +5208,7 @@ export function createPrinter(printerOptions: PrinterOptions = {}, handlers: Pri
+      * Returns a value indicating whether a name is unique globally or within the current file.
+      */
+     function isFileLevelUniqueName(name: string) {
+-        return currentSourceFile ? ts.isFileLevelUniqueName(currentSourceFile, name, hasGlobalName) : true;
++        return currentSourceFile ? isFileLevelUniqueNameInternal(currentSourceFile, name, hasGlobalName) : true;
+     }
+ 
+     /**
 diff --git a/src/compiler/parser.ts b/src/compiler/parser.ts
 index e7e2b39881..7e18aa5ac9 100644
 --- a/src/compiler/parser.ts
@@ -129,6 +286,28 @@ index e7e2b39881..7e18aa5ac9 100644
                                      return false;
                                  }
                                  return child;
+diff --git a/src/compiler/program.ts b/src/compiler/program.ts
+index 07250f8584..96409f0b55 100644
+--- a/src/compiler/program.ts
++++ b/src/compiler/program.ts
+@@ -41,7 +41,7 @@ import {
+     ensureTrailingDirectorySeparator, fileExtensionIs, fileExtensionIsOneOf, forEachAncestorDirectory, getBaseFileName,
+     getDirectoryPath, getNormalizedAbsolutePath, getNormalizedAbsolutePathWithoutRoot, getNormalizedPathComponents,
+     getPathFromPathComponents, getRootLength, hasExtension, isRootedDiskPath, normalizePath, pathIsAbsolute,
+-    pathIsRelative,
++    pathIsRelative, toPath as toPathInternal,
+ } from "./path";
+ import { mark, measure } from "./performance";
+ import {
+@@ -1570,7 +1570,7 @@ export function createProgram(rootNamesOrOptions: readonly string[] | CreateProg
+     }
+ 
+     function toPath(fileName: string): Path {
+-        return ts.toPath(fileName, currentDirectory, getCanonicalFileName);
++        return toPathInternal(fileName, currentDirectory, getCanonicalFileName);
+     }
+ 
+     function getCommonSourceDirectory() {
 diff --git a/src/compiler/resolutionCache.ts b/src/compiler/resolutionCache.ts
 index 5b79bdcbb1..6f444844f1 100644
 --- a/src/compiler/resolutionCache.ts
@@ -167,6 +346,125 @@ index 5b79bdcbb1..6f444844f1 100644
      }
  
      interface ResolveNamesWithLocalCacheInput<T extends ResolutionWithFailedLookupLocations, R extends ResolutionWithResolvedFileName> {
+diff --git a/src/compiler/sys.ts b/src/compiler/sys.ts
+index a8628245ac..aaf8bca43d 100644
+--- a/src/compiler/sys.ts
++++ b/src/compiler/sys.ts
+@@ -1,4 +1,3 @@
+-import * as ts from "./_namespaces/ts";
+ import { matchesExclude } from "./commandLineParser";
+ import {
+     AssertionLevel, contains, createGetCanonicalFileName, createMultiMap, emptyArray, enumerateInsertsAndDeletes,
+@@ -215,26 +214,26 @@ export function createDynamicPriorityPollingWatchFile(host: {
+     getModifiedTime: NonNullable<System["getModifiedTime"]>;
+     setTimeout: NonNullable<System["setTimeout"]>;
+ }): HostWatchFile {
+-    interface WatchedFile extends ts.WatchedFile {
++    interface DynamicWatchedFile extends WatchedFile {
+         isClosed?: boolean;
+         unchangedPolls: number;
+     }
+ 
+-    interface PollingIntervalQueue extends Array<WatchedFile> {
++    interface PollingIntervalQueue extends Array<DynamicWatchedFile> {
+         pollingInterval: PollingInterval;
+         pollIndex: number;
+         pollScheduled: boolean;
+     }
+ 
+-    const watchedFiles: WatchedFile[] = [];
+-    const changedFilesInLastPoll: WatchedFile[] = [];
++    const watchedFiles: DynamicWatchedFile[] = [];
++    const changedFilesInLastPoll: DynamicWatchedFile[] = [];
+     const lowPollingIntervalQueue = createPollingIntervalQueue(PollingInterval.Low);
+     const mediumPollingIntervalQueue = createPollingIntervalQueue(PollingInterval.Medium);
+     const highPollingIntervalQueue = createPollingIntervalQueue(PollingInterval.High);
+     return watchFile;
+ 
+     function watchFile(fileName: string, callback: FileWatcherCallback, defaultPollingInterval: PollingInterval): FileWatcher {
+-        const file: WatchedFile = {
++        const file: DynamicWatchedFile = {
+             fileName,
+             callback,
+             unchangedPolls: 0,
+@@ -254,7 +253,7 @@ export function createDynamicPriorityPollingWatchFile(host: {
+     }
+ 
+     function createPollingIntervalQueue(pollingInterval: PollingInterval): PollingIntervalQueue {
+-        const queue = [] as WatchedFile[] as PollingIntervalQueue;
++        const queue = [] as DynamicWatchedFile[] as PollingIntervalQueue;
+         queue.pollingInterval = pollingInterval;
+         queue.pollIndex = 0;
+         queue.pollScheduled = false;
+@@ -286,7 +285,7 @@ export function createDynamicPriorityPollingWatchFile(host: {
+         }
+     }
+ 
+-    function pollQueue(queue: (WatchedFile | undefined)[], pollingInterval: PollingInterval, pollIndex: number, chunkSize: number) {
++    function pollQueue(queue: (DynamicWatchedFile | undefined)[], pollingInterval: PollingInterval, pollIndex: number, chunkSize: number) {
+         return pollWatchedFileQueue(
+             host,
+             queue,
+@@ -295,7 +294,7 @@ export function createDynamicPriorityPollingWatchFile(host: {
+             onWatchFileStat
+         );
+ 
+-        function onWatchFileStat(watchedFile: WatchedFile, pollIndex: number, fileChanged: boolean) {
++        function onWatchFileStat(watchedFile: DynamicWatchedFile, pollIndex: number, fileChanged: boolean) {
+             if (fileChanged) {
+                 watchedFile.unchangedPolls = 0;
+                 // Changed files go to changedFilesInLastPoll queue
+@@ -332,12 +331,12 @@ export function createDynamicPriorityPollingWatchFile(host: {
+         }
+     }
+ 
+-    function addToPollingIntervalQueue(file: WatchedFile, pollingInterval: PollingInterval) {
++    function addToPollingIntervalQueue(file: DynamicWatchedFile, pollingInterval: PollingInterval) {
+         pollingIntervalQueue(pollingInterval).push(file);
+         scheduleNextPollIfNotAlreadyScheduled(pollingInterval);
+     }
+ 
+-    function addChangedFileToLowPollingIntervalQueue(file: WatchedFile) {
++    function addChangedFileToLowPollingIntervalQueue(file: DynamicWatchedFile) {
+         changedFilesInLastPoll.push(file);
+         scheduleNextPollIfNotAlreadyScheduled(PollingInterval.Low);
+     }
+diff --git a/src/compiler/transformers/declarations.ts b/src/compiler/transformers/declarations.ts
+index 641496e5de..7b35a3e62f 100644
+--- a/src/compiler/transformers/declarations.ts
++++ b/src/compiler/transformers/declarations.ts
+@@ -1,4 +1,3 @@
+-import * as ts from "../_namespaces/ts";
+ import {
+     append, arrayFrom, compact, concatenate, contains, emptyArray, filter, flatMap, flatten, forEach, isArray, last,
+     length, map, mapDefined, orderedRemoveItem, pushIfUnique, some, startsWith, stringContains, toFileNameLowerCase,
+@@ -886,7 +885,7 @@ export function transformDeclarations(context: TransformationContext) {
+         while (length(lateMarkedStatements)) {
+             const i = lateMarkedStatements!.shift()!;
+             if (!isLateVisibilityPaintedStatement(i)) {
+-                return Debug.fail(`Late replaced statement was found which is not handled by the declaration transformer!: ${(ts as any).SyntaxKind ? (ts as any).SyntaxKind[(i as any).kind] : (i as any).kind}`);
++                return Debug.fail(`Late replaced statement was found which is not handled by the declaration transformer!: ${Debug.formatSyntaxKind((i as any).kind)}`);
+             }
+             const priorNeedsDeclare = needsDeclare;
+             needsDeclare = i.parent && isSourceFile(i.parent) && !(isExternalModule(i.parent) && isBundledEmit);
+@@ -1142,7 +1141,7 @@ export function transformDeclarations(context: TransformationContext) {
+                         input.isTypeOf
+                     ));
+                 }
+-                default: Debug.assertNever(input, `Attempted to process unhandled node kind: ${(ts as any).SyntaxKind[(input as any).kind]}`);
++                default: Debug.assertNever(input, `Attempted to process unhandled node kind: ${Debug.formatSyntaxKind((input as any).kind)}`);
+             }
+         }
+ 
+@@ -1571,7 +1570,7 @@ export function transformDeclarations(context: TransformationContext) {
+             }
+         }
+         // Anything left unhandled is an error, so this should be unreachable
+-        return Debug.assertNever(input, `Unhandled top-level node in declaration emit: ${(ts as any).SyntaxKind[(input as any).kind]}`);
++        return Debug.assertNever(input, `Unhandled top-level node in declaration emit: ${Debug.formatSyntaxKind((input as any).kind)}`);
+ 
+         function cleanup<T extends Node>(node: T | undefined): T | undefined {
+             if (isEnclosingDeclaration(input)) {
 diff --git a/src/compiler/transformers/declarations/diagnostics.ts b/src/compiler/transformers/declarations/diagnostics.ts
 index a821217498..0b7535fcdb 100644
 --- a/src/compiler/transformers/declarations/diagnostics.ts
@@ -221,6 +519,45 @@ index c457a697ca..c3546ec61b 100644
  }
  
  function toResolvedConfigFilePath(state: SolutionBuilderState, fileName: ResolvedConfigFileName): ResolvedConfigFilePath {
+diff --git a/src/compiler/types.ts b/src/compiler/types.ts
+index a0960a9520..a9ae4d1be7 100644
+--- a/src/compiler/types.ts
++++ b/src/compiler/types.ts
+@@ -4468,6 +4468,7 @@ export interface TypeChecker {
+     /* @internal */ isPropertyAccessible(node: Node, isSuper: boolean, isWrite: boolean, containingType: Type, property: Symbol): boolean;
+     /* @internal */ getTypeOnlyAliasDeclaration(symbol: Symbol): TypeOnlyAliasDeclaration | undefined;
+     /* @internal */ getMemberOverrideModifierStatus(node: ClassLikeDeclaration, member: ClassElement): MemberOverrideStatus;
++    /* @internal */ typeHasCallOrConstructSignatures(type: Type): boolean;
+ }
+ 
+ /* @internal */
+diff --git a/src/compiler/utilities.ts b/src/compiler/utilities.ts
+index 25e4e6f08b..75c1920517 100644
+--- a/src/compiler/utilities.ts
++++ b/src/compiler/utilities.ts
+@@ -87,8 +87,8 @@ import {
+     PropertyAccessExpression, PropertyAssignment, PropertyDeclaration, PropertyName, PropertyNameLiteral, PseudoBigInt,
+     QualifiedName, ReadonlyTextRange, RequireOrImportCall, RequireVariableStatement, ResolvedModuleFull,
+     ResolvedTypeReferenceDirective, ReturnStatement, ScriptKind, ScriptTarget, SetAccessorDeclaration,
+-    ShorthandPropertyAssignment, Signature, SignatureDeclaration, SignatureFlags, SignatureKind, SourceFile,
+-    SourceFileLike, SourceFileMayBeEmittedHost, SourceMapSource, Statement, StringLiteral, StringLiteralLike, SuperCall,
++    ShorthandPropertyAssignment, Signature, SignatureDeclaration, SignatureFlags, SourceFile, SourceFileLike,
++    SourceFileMayBeEmittedHost, SourceMapSource, Statement, StringLiteral, StringLiteralLike, SuperCall,
+     SuperExpression, SuperProperty, SwitchStatement, Symbol, SymbolFlags, SymbolTable, SyntaxKind, SyntaxList,
+     TaggedTemplateExpression, TemplateLiteral, TemplateLiteralLikeNode, TemplateLiteralTypeSpan, TemplateSpan,
+     TextRange, TextSpan, ThisTypePredicate, Token, TokenFlags, TransformFlags, TransientSymbol, TriviaSyntaxKind,
+@@ -6326,11 +6326,6 @@ export function getObjectFlags(type: Type): ObjectFlags {
+     return type.flags & TypeFlags.ObjectFlagsType ? (type as ObjectFlagsType).objectFlags : 0;
+ }
+ 
+-/* @internal */
+-export function typeHasCallOrConstructSignatures(type: Type, checker: TypeChecker) {
+-    return checker.getSignaturesOfType(type, SignatureKind.Call).length !== 0 || checker.getSignaturesOfType(type, SignatureKind.Construct).length !== 0;
+-}
+-
+ /* @internal */
+ export function forSomeAncestorDirectory(directory: string, callback: (directory: string) => boolean): boolean {
+     return !!forEachAncestorDirectory(directory, d => callback(d) ? true : undefined);
 diff --git a/src/compiler/watch.ts b/src/compiler/watch.ts
 index 9997c288d2..af090f302a 100644
 --- a/src/compiler/watch.ts
@@ -250,6 +587,60 @@ index 9997c288d2..af090f302a 100644
      writeLog: (s: string) => void;
  }
  
+diff --git a/src/compiler/watchPublic.ts b/src/compiler/watchPublic.ts
+index abfcfc4ab4..658b4a5005 100644
+--- a/src/compiler/watchPublic.ts
++++ b/src/compiler/watchPublic.ts
+@@ -1,4 +1,3 @@
+-import * as ts from "./_namespaces/ts";
+ import { createBuildProgramUsingProgramBuildInfo } from "./builder";
+ import {
+     BuilderProgram, createEmitAndSemanticDiagnosticsBuilderProgram, EmitAndSemanticDiagnosticsBuilderProgram,
+@@ -13,7 +12,7 @@ import { Debug } from "./debug";
+ import { Diagnostics } from "./diagnosticInformationMap.generated";
+ import { getBuildInfo, getTsBuildInfoEmitOutputFilePath } from "./emitter";
+ import { CreateSourceFileOptions } from "./parser";
+-import { getDirectoryPath, getNormalizedAbsolutePath, toPath } from "./path";
++import { getDirectoryPath, getNormalizedAbsolutePath, toPath, toPath as toPathInternal } from "./path";
+ import { perfLogger } from "./perfLogger";
+ import {
+     changeCompilerHostLikeToUseCache, createCompilerHostWorker, getConfigFileParsingDiagnostics,
+@@ -556,7 +555,7 @@ export function createWatchProgram<T extends BuilderProgram>(host: WatchCompiler
+     }
+ 
+     function toPath(fileName: string) {
+-        return ts.toPath(fileName, currentDirectory, getCanonicalFileName);
++        return toPathInternal(fileName, currentDirectory, getCanonicalFileName);
+     }
+ 
+     function isFileMissingOnHost(hostSourceFile: HostFileInfo | undefined): hostSourceFile is FileMissingOnHost {
+diff --git a/src/compiler/watchUtilities.ts b/src/compiler/watchUtilities.ts
+index 5a9110e2b3..b3e5305d0a 100644
+--- a/src/compiler/watchUtilities.ts
++++ b/src/compiler/watchUtilities.ts
+@@ -1,4 +1,3 @@
+-import * as ts from "./_namespaces/ts";
+ import { BuilderProgram } from "./builderPublic";
+ import { ExtendedConfigCacheEntry, isExcludedFile, matchesExclude } from "./commandLineParser";
+ import {
+@@ -10,7 +9,7 @@ import { Debug } from "./debug";
+ import { isDeclarationFileName } from "./parser";
+ import {
+     ensureTrailingDirectorySeparator, fileExtensionIsOneOf, getBaseFileName, getDirectoryPath,
+-    getNormalizedAbsolutePath, hasExtension, normalizePath,
++    getNormalizedAbsolutePath, hasExtension, normalizePath, toPath as toPathInternal,
+ } from "./path";
+ import { timestamp } from "./performanceCore";
+ import { removeIgnoredPath } from "./resolutionCache";
+@@ -91,7 +90,7 @@ export function createCachedDirectoryStructureHost(host: DirectoryStructureHost,
+     };
+ 
+     function toPath(fileName: string) {
+-        return ts.toPath(fileName, currentDirectory, getCanonicalFileName);
++        return toPathInternal(fileName, currentDirectory, getCanonicalFileName);
+     }
+ 
+     function getCachedFileSystemEntries(rootDirPath: Path) {
 diff --git a/src/debug/dbg.ts b/src/debug/dbg.ts
 index c86b021fe2..342bf6bd2d 100644
 --- a/src/debug/dbg.ts
@@ -271,6 +662,44 @@ index c86b021fe2..342bf6bd2d 100644
 -    module.exports = Debug;
 -}
 \ No newline at end of file
+diff --git a/src/executeCommandLine/executeCommandLine.ts b/src/executeCommandLine/executeCommandLine.ts
+index 0c082eede3..4a3951ec53 100644
+--- a/src/executeCommandLine/executeCommandLine.ts
++++ b/src/executeCommandLine/executeCommandLine.ts
+@@ -37,12 +37,13 @@ import {
+ import { validateLocaleAndSetLanguage } from "../compiler/utilitiesPublic";
+ import {
+     createDiagnosticReporter, createWatchCompilerHostOfConfigFile, createWatchCompilerHostOfFilesAndCompilerOptions,
+-    emitFilesAndReportErrorsAndGetExitStatus, getErrorSummaryText, parseConfigFileWithSystem,
++    createWatchStatusReporter as createWatchStatusReporterInternal, emitFilesAndReportErrorsAndGetExitStatus,
++    getErrorSummaryText, parseConfigFileWithSystem,
++    performIncrementalCompilation as performIncrementalCompilationInternal,
+ } from "../compiler/watch";
+ import {
+     createIncrementalCompilerHost, CreateProgram, createWatchProgram, WatchCompilerHost,
+ } from "../compiler/watchPublic";
+-import * as ts from "./_namespaces/ts";
+ 
+ interface Statistic {
+     name: string;
+@@ -863,7 +864,7 @@ function performIncrementalCompilation(
+     const { options, fileNames, projectReferences } = config;
+     enableStatisticsAndTracing(sys, options, /*isBuildMode*/ false);
+     const host = createIncrementalCompilerHost(options, sys);
+-    const exitStatus = ts.performIncrementalCompilation({
++    const exitStatus = performIncrementalCompilationInternal({
+         host,
+         system: sys,
+         rootNames: fileNames,
+@@ -919,7 +920,7 @@ function updateWatchCompilationHost(
+ }
+ 
+ function createWatchStatusReporter(sys: System, options: CompilerOptions | BuildOptions) {
+-    return ts.createWatchStatusReporter(sys, shouldBePretty(sys, options));
++    return createWatchStatusReporterInternal(sys, shouldBePretty(sys, options));
+ }
+ 
+ function createWatchOfConfigFile(
 diff --git a/src/harness/client.ts b/src/harness/client.ts
 index 1c7d6f7cea..d33388551a 100644
 --- a/src/harness/client.ts
@@ -285,7 +714,7 @@ index 1c7d6f7cea..d33388551a 100644
  import { DocumentHighlights } from "../services/documentHighlights";
  import { PatternMatchKind } from "../services/patternMatcher";
 diff --git a/src/harness/fourslashImpl.ts b/src/harness/fourslashImpl.ts
-index 4bfec6c1e5..a1d2e6f76d 100644
+index 0e0f6354fa..ffa7d58579 100644
 --- a/src/harness/fourslashImpl.ts
 +++ b/src/harness/fourslashImpl.ts
 @@ -36,7 +36,7 @@ import {
@@ -297,8 +726,17 @@ index 4bfec6c1e5..a1d2e6f76d 100644
  import { TokenEncodingConsts, TokenModifier, TokenType } from "../services/classifier2020";
  import { importFixName } from "../services/codefixes/importFixes";
  import { SortText } from "../services/completions";
+@@ -59,7 +59,7 @@ import {
+     createTextRangeFromSpan, createTextSpanFromRange, documentSpansEqual, getTouchingPropertyName, mapOneOrMany,
+     repeatString, textSpansEqual,
+ } from "../services/utilities";
+-import * as FourSlashInterface from "./_namespaces/FourSlashInterface";
++import * as FourSlashInterface from "./fourslashInterfaceImpl";
+ import * as ts from "./_namespaces/ts";
+ import { SessionClient } from "./client";
+ import { ParseConfigHost } from "./fakesHosts";
 diff --git a/src/harness/fourslashInterfaceImpl.ts b/src/harness/fourslashInterfaceImpl.ts
-index ece75ec3b3..941afe03e7 100644
+index ece75ec3b3..77ecc59158 100644
 --- a/src/harness/fourslashInterfaceImpl.ts
 +++ b/src/harness/fourslashInterfaceImpl.ts
 @@ -4,7 +4,7 @@ import { Comparison, ESMap, MapLike } from "../compiler/corePublic";
@@ -310,6 +748,28 @@ index ece75ec3b3..941afe03e7 100644
  import { Completions } from "../services/_namespaces/ts";
  import { SortText } from "../services/completions";
  import { PatternMatchKind } from "../services/patternMatcher";
+@@ -14,7 +14,7 @@ import {
+     IndentStyle, InlayHintKind, JSDocTagInfo, JsxClosingTagInfo, RefactorTriggerReason, RenameInfoOptions,
+     ScriptElementKind, SemanticClassificationFormat, SignatureHelpTriggerReason, SymbolDisplayPart,
+ } from "../services/types";
+-import * as FourSlash from "./_namespaces/FourSlash";
++import * as FourSlash from "./fourslashImpl";
+ import * as ts from "./_namespaces/ts";
+ import { Marker, Range, TestState } from "./fourslashImpl";
+ 
+diff --git a/src/harness/vfsUtil.ts b/src/harness/vfsUtil.ts
+index 26427d6067..bf82c18bf4 100644
+--- a/src/harness/vfsUtil.ts
++++ b/src/harness/vfsUtil.ts
+@@ -1,7 +1,7 @@
+ import { arrayFrom } from "../compiler/core";
+ import { sys } from "../compiler/sys";
+ import { FileSystemEntries } from "../compiler/utilities";
+-import * as vpath from "./_namespaces/vpath";
++import * as vpath from "./vpathUtil";
+ import { closeIterator, getIterator, Metadata, nextResult, SortedMap } from "./collectionsImpl";
+ import { TextDocument } from "./documentsUtil";
+ import { Compiler } from "./harnessIO";
 diff --git a/src/server/editorServices.ts b/src/server/editorServices.ts
 index 899f8ffb19..2e6c937517 100644
 --- a/src/server/editorServices.ts
@@ -397,6 +857,29 @@ index 0df63f2cf4..cdded16804 100644
  import { ScriptInfo } from "./scriptInfo";
  import { ServerHost } from "./types";
  import { ITypingsInstaller } from "./typingsCache";
+diff --git a/src/services/completions.ts b/src/services/completions.ts
+index 25a2467732..331214cc8a 100644
+--- a/src/services/completions.ts
++++ b/src/services/completions.ts
+@@ -50,8 +50,7 @@ import {
+     isLiteralImportTypeNode, isNamedImportsOrExports, isObjectTypeDeclaration, isPartOfTypeNode, isPropertyNameLiteral,
+     isSingleOrDoubleQuote, isSourceFileJS, isStatic, isStringANonContextualKeyword, isValidTypeOnlyAliasUseSite,
+     isVariableLike, modifiersToFlags, modifierToFlag, nodeIsMissing, positionsAreOnSameLine, pseudoBigIntToString,
+-    rangeIsOnSingleLine, skipAlias, stripQuotes, tryGetImportFromModuleSpecifier, typeHasCallOrConstructSignatures,
+-    walkUpParenthesizedExpressions,
++    rangeIsOnSingleLine, skipAlias, stripQuotes, tryGetImportFromModuleSpecifier, walkUpParenthesizedExpressions,
+ } from "../compiler/utilities";
+ import {
+     createTextSpanFromBounds, findAncestor, getNameOfDeclaration, hasInitializer, hasType, isAssertionExpression,
+@@ -4177,7 +4176,7 @@ function getApparentProperties(type: Type, node: ObjectLiteralExpression | JsxAt
+         !(memberType.flags & TypeFlags.Primitive
+             || checker.isArrayLikeType(memberType)
+             || checker.isTypeInvalidDueToUnionDiscriminant(memberType, node)
+-            || typeHasCallOrConstructSignatures(memberType, checker)
++            || checker.typeHasCallOrConstructSignatures(memberType)
+             || memberType.isClass() && containsNonPublicProperties(memberType.getApparentProperties()))));
+ }
+ 
 diff --git a/src/services/documentRegistry.ts b/src/services/documentRegistry.ts
 index 2dc2d26fe3..72fa96d99e 100644
 --- a/src/services/documentRegistry.ts
@@ -426,6 +909,19 @@ index 2dc2d26fe3..72fa96d99e 100644
              str += `${key}: ${compilerOptionValueToString((value as any)[key])}`;
          }
      }
+diff --git a/src/testRunner/runner.ts b/src/testRunner/runner.ts
+index be2fc590c4..16289661d3 100644
+--- a/src/testRunner/runner.ts
++++ b/src/testRunner/runner.ts
+@@ -4,7 +4,7 @@ import { FourSlashTestType } from "../harness/fourslashImpl";
+ import { IO, setLightMode } from "../harness/harnessIO";
+ import { RunnerBase, setShardId, setShards, TestRunnerKind } from "../harness/runnerbase";
+ import { basename } from "../harness/vpathUtil";
+-import { Host } from "./_namespaces/Harness.Parallel";
++import * as Host from "./parallel/host";
+ import { CompilerBaselineRunner, CompilerTestType } from "./compilerRunner";
+ import { DefinitelyTypedRunner, DockerfileRunner, UserCodeRunner } from "./externalCompileRunner";
+ import { FourSlashRunner, GeneratedFourslashRunner } from "./fourslashRunner";
 diff --git a/src/testRunner/unittests/services/textChanges.ts b/src/testRunner/unittests/services/textChanges.ts
 index 4ce51c2475..07b55da43a 100644
 --- a/src/testRunner/unittests/services/textChanges.ts

@@ -1,6 +1,6 @@
 import { FileUtils } from "@ts-morph/common";
 import assert from "assert";
-import { ImportDeclarationStructure, OptionalKind, Project, Statement, ts } from "ts-morph";
+import { ImportDeclarationStructure, Node, OptionalKind, Project, Statement, ts } from "ts-morph";
 
 import { formatImports, getTsSourceFiles, getTsStyleRelativePath, isNamespaceBarrel, log } from "./utilities";
 
@@ -19,6 +19,10 @@ const redeclaredGlobals = new Set([
     "Iterator",
 ]);
 
+interface RemovableNode {
+    remove(): void;
+}
+
 export function inlineImports(project: Project): void {
     const fs = project.getFileSystem();
     const checker = project.getTypeChecker();
@@ -32,7 +36,7 @@ export function inlineImports(project: Project): void {
 
         const syntheticImports = new Map<string, Map<string, string>>();
 
-        const nodesToRemove: Statement[] = [];
+        const nodesToRemove: RemovableNode[] = [];
 
         sourceFile.transform((traversal) => {
             const node = traversal.currentNode;
@@ -45,6 +49,7 @@ export function inlineImports(project: Project): void {
             let localName: string | undefined;
             let possibleSubstitute: ts.Node | undefined;
             let checkShadowed = true;
+            let nodeToRemove: RemovableNode | undefined;
 
             if (
                 ts.isImportEqualsDeclaration(node) &&
@@ -77,7 +82,7 @@ export function inlineImports(project: Project): void {
 
                     // We can't return `undefined` in ts-morph's transform API, so just leave as-is and remove later.
                     possibleSubstitute = node;
-                    nodesToRemove.push(sourceFile._getNodeFromCompilerNode(node));
+                    nodeToRemove = sourceFile._getNodeFromCompilerNode(node);
                 }
             } else if (ts.isQualifiedName(node)) {
                 if (ts.isImportEqualsDeclaration(node.parent) && node.parent.moduleReference === node) {
@@ -129,6 +134,9 @@ export function inlineImports(project: Project): void {
                 if (bareName) {
                     // Name resolved to something; if this is the symbol we're looking for, use it directly.
                     if (bareName === s) {
+                        if (nodeToRemove) {
+                            nodesToRemove.push(nodeToRemove);
+                        }
                         return possibleSubstitute;
                     }
                 } else {
@@ -158,9 +166,15 @@ export function inlineImports(project: Project): void {
 
                     if (
                         newPath &&
-                        !newPath.endsWith("protocol.ts") && // Special case; leave these fully qualified
+                        // Special case; these were originally written fully-qualified.
+                        !newPath.endsWith("protocol.ts") &&
+                        !newPath.endsWith("fourslashImpl.ts") &&
+                        !newPath.endsWith("fourslashInterfaceImpl.ts") &&
                         addSyntheticImport(newPath.replace(/(\.d)?\.ts$/, ""), foreignName, localName)
                     ) {
+                        if (nodeToRemove) {
+                            nodesToRemove.push(nodeToRemove);
+                        }
                         return possibleSubstitute;
                     }
                 }
