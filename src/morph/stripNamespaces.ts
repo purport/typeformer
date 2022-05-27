@@ -535,7 +535,15 @@ export function stripNamespaces(project: Project): void {
                     statement.remove();
                 } else {
                     // Not getText(true), becuase that drops leading @internal comments.
-                    const newText = body.getChildSyntaxListOrThrow().getFullText().trim();
+                    let newText = body.getChildSyntaxListOrThrow().getFullText().trim();
+
+                    // Prevent jsdoc style comments on top of namespaces from getting dropped.
+                    const possibleJsDocs = statement.getJsDocs();
+                    if (possibleJsDocs.length !== 0) {
+                        assert(possibleJsDocs.length === 1);
+                        newText = `${possibleJsDocs[0].getFullText()}\r\n\r\n${newText}`;
+                    }
+
                     statement.replaceWithText(newText);
                 }
             }
