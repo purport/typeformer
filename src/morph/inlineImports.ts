@@ -166,12 +166,24 @@ export function inlineImports(project: Project): void {
 
                     if (
                         newPath &&
-                        // Special case; these were originally written fully-qualified.
+                        // Special cases; these were originally written fully-qualified, but we have no idea
+                        // at this point because the explicitify step made everything explicit.
                         !newPath.endsWith("protocol.ts") &&
                         !newPath.endsWith("performance.ts") &&
                         !newPath.endsWith("moduleSpecifiers.ts") &&
+                        !newPath.endsWith("vpathUtil.ts") &&
+                        !newPath.endsWith("documentsUtil.ts") &&
+                        !newPath.endsWith("collectionsImpl.ts") &&
+                        !newPath.endsWith("vfsUtil.ts") &&
+                        !newPath.endsWith("fakes.ts") &&
+                        !newPath.endsWith("harnessIO.ts") &&
+                        !newPath.endsWith("jsTyping.ts") &&
                         !newPath.endsWith("fourslashImpl.ts") &&
                         !newPath.endsWith("fourslashInterfaceImpl.ts") &&
+                        !newPath.endsWith("findAllReferences.ts") &&
+                        !newPath.endsWith("goToDefinition.ts") &&
+                        !newPath.endsWith("formatting.ts") &&
+                        !newPath.endsWith("textChanges.ts") &&
                         addSyntheticImport(newPath.replace(/(\.d)?\.ts$/, ""), foreignName, localName)
                     ) {
                         if (nodeToRemove) {

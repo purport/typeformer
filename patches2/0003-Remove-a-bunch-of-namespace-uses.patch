@@ -26,9 +26,9 @@ Subject: [PATCH] Remove a bunch of namespace uses
  src/debug/dbg.ts                              |  8 -------
  src/executeCommandLine/executeCommandLine.ts  | 11 +++++-----
  src/harness/client.ts                         |  2 +-
- src/harness/fourslashImpl.ts                  |  4 ++--
+ src/harness/fourslashImpl.ts                  |  6 ++---
  src/harness/fourslashInterfaceImpl.ts         |  4 ++--
- src/harness/vfsUtil.ts                        |  2 +-
+ src/harness/vfsUtil.ts                        |  6 ++---
  src/server/editorServices.ts                  |  2 +-
  src/server/project.ts                         |  2 +-
  src/server/scriptInfo.ts                      |  2 +-
@@ -51,11 +51,11 @@ Subject: [PATCH] Remove a bunch of namespace uses
  src/testRunner/fakesRef.ts                    |  2 --
  src/testRunner/fourslashRef.ts                |  2 --
  src/testRunner/playbackRef.ts                 |  2 --
- src/testRunner/runner.ts                      |  2 +-
+ src/testRunner/runner.ts                      |  4 ++--
  src/testRunner/tsconfig.json                  | 10 ---------
- .../unittests/services/textChanges.ts         |  7 +++---
+ .../unittests/services/textChanges.ts         |  4 +++-
  src/testRunner/unittests/tsbuild/publicApi.ts |  4 ++--
- src/testRunner/unittests/tsc/helpers.ts       |  5 ++---
+ src/testRunner/unittests/tsc/helpers.ts       |  7 +++---
  src/testRunner/unittests/tscWatch/helpers.ts  |  4 ++--
  .../unittests/tsserver/cancellationToken.ts   |  2 +-
  .../unittests/tsserver/compileOnSave.ts       |  2 +-
@@ -76,7 +76,7 @@ Subject: [PATCH] Remove a bunch of namespace uses
  src/tsserver/nodeServer.ts                    |  2 +-
  src/tsserver/webServer.ts                     |  2 +-
  src/webServer/webServer.ts                    |  2 +-
- 72 files changed, 123 insertions(+), 179 deletions(-)
+ 72 files changed, 127 insertions(+), 182 deletions(-)
  delete mode 100644 src/testRunner/compilerRef.ts
  delete mode 100644 src/testRunner/documentsRef.ts
  delete mode 100644 src/testRunner/evaluatorRef.ts
@@ -882,30 +882,41 @@ index 1c7d6f7cea..d33388551a 100644
  import { DocumentHighlights } from "../services/documentHighlights";
  import { PatternMatchKind } from "../services/patternMatcher";
 diff --git a/src/harness/fourslashImpl.ts b/src/harness/fourslashImpl.ts
-index 0e0f6354fa..8db37c337a 100644
+index ecd804e2ba..8defd6fe50 100644
 --- a/src/harness/fourslashImpl.ts
 +++ b/src/harness/fourslashImpl.ts
-@@ -36,7 +36,7 @@ import {
+@@ -36,14 +36,14 @@ import {
      createTextSpan, textRangeContainsPositionInclusive, textSpanContainsPosition, textSpanEnd,
      textSpanIntersectsWithPosition,
  } from "../compiler/utilitiesPublic";
 -import { protocol } from "../server/_namespaces/ts.server";
+-import { textChanges } from "../services/_namespaces/ts";
 +import * as protocol from "../server/protocol";
  import { TokenEncodingConsts, TokenModifier, TokenType } from "../services/classifier2020";
  import { importFixName } from "../services/codefixes/importFixes";
  import { SortText } from "../services/completions";
-@@ -59,10 +59,10 @@ import {
+ import { getPathUpdater } from "../services/getEditsForFileRename";
+ import { createLanguageServiceSourceFile, displayPartsToString, toEditorSettings } from "../services/services";
+ import { RealizedDiagnostic, realizeDiagnostics } from "../services/shims";
++import * as textChanges from "../services/textChanges";
+ import { transpileModule } from "../services/transpile";
+ import {
+     ApplicableRefactorInfo, CallHierarchyItem, ClassifiedSpan, ClassifiedSpan2020, CodeFixAction, CompletionEntry,
+@@ -59,13 +59,13 @@ import {
      createTextRangeFromSpan, createTextSpanFromRange, documentSpansEqual, getTouchingPropertyName, mapOneOrMany,
      repeatString, textSpansEqual,
  } from "../services/utilities";
 -import * as FourSlashInterface from "./_namespaces/FourSlashInterface";
+ import * as Harness from "./_namespaces/Harness";
  import * as ts from "./_namespaces/ts";
+ import * as vfs from "./_namespaces/vfs";
+ import * as vpath from "./_namespaces/vpath";
  import { SessionClient } from "./client";
  import { ParseConfigHost } from "./fakesHosts";
 +import * as FourSlashInterface from "./fourslashInterfaceImpl";
  import {
-     Baseline, Compiler, getConfigNameFromFileName, IO, isDefaultLibraryFile, TestCaseParser, virtualFileSystemRoot,
- } from "./harnessIO";
+     LanguageServiceAdapter, LanguageServiceAdapterHost, NativeLanguageServiceAdapter, ScriptInfo,
+     ServerLanguageServiceAdapter, ShimLanguageServiceAdapter,
 diff --git a/src/harness/fourslashInterfaceImpl.ts b/src/harness/fourslashInterfaceImpl.ts
 index f0fddd78c2..23fcd515b3 100644
 --- a/src/harness/fourslashInterfaceImpl.ts
@@ -930,22 +941,24 @@ index f0fddd78c2..23fcd515b3 100644
  export class Test {
      constructor(private state: FourSlash.TestState) {
 diff --git a/src/harness/vfsUtil.ts b/src/harness/vfsUtil.ts
-index 26427d6067..96497d5a84 100644
+index e8afae1d88..50b2752951 100644
 --- a/src/harness/vfsUtil.ts
 +++ b/src/harness/vfsUtil.ts
 @@ -1,11 +1,11 @@
  import { arrayFrom } from "../compiler/core";
  import { sys } from "../compiler/sys";
  import { FileSystemEntries } from "../compiler/utilities";
+-import * as collections from "./_namespaces/collections";
+-import * as documents from "./_namespaces/documents";
+ import * as Harness from "./_namespaces/Harness";
 -import * as vpath from "./_namespaces/vpath";
- import { closeIterator, getIterator, Metadata, nextResult, SortedMap } from "./collectionsImpl";
- import { TextDocument } from "./documentsUtil";
- import { Compiler } from "./harnessIO";
++import * as collections from "./collectionsImpl";
++import * as documents from "./documentsUtil";
  import { timeIncrements } from "./virtualFileSystemWithWatch";
 +import * as vpath from "./vpathUtil";
- import {
-     addTrailingSeparator, combine, compare, compareCaseInsensitive, compareCaseSensitive, dirname, format, isRoot,
-     parse, resolve, validate, ValidationFlags,
+ 
+ /**
+  * Posix-style path to the TypeScript compiler build outputs (including tsc.js, lib.d.ts, etc.)
 diff --git a/src/server/editorServices.ts b/src/server/editorServices.ts
 index 899f8ffb19..2e6c937517 100644
 --- a/src/server/editorServices.ts
@@ -965,7 +978,7 @@ index 899f8ffb19..2e6c937517 100644
  import { Session } from "./session";
  import { ServerHost } from "./types";
 diff --git a/src/server/project.ts b/src/server/project.ts
-index dfd37c3eb6..48c7bf0f88 100644
+index d6d1f3591e..c87b12ba19 100644
 --- a/src/server/project.ts
 +++ b/src/server/project.ts
 @@ -54,12 +54,12 @@ import {
@@ -1014,10 +1027,10 @@ index 4eec06854a..74d4ba7eb4 100644
  
  const lineCollectionCapacity = 4;
 diff --git a/src/server/session.ts b/src/server/session.ts
-index 0df63f2cf4..cdded16804 100644
+index cc6ef0db90..741c932ed1 100644
 --- a/src/server/session.ts
 +++ b/src/server/session.ts
-@@ -50,7 +50,6 @@ import {
+@@ -48,7 +48,6 @@ import {
  import {
      documentSpansEqual, getSnapshotText, getTouchingPropertyName, mapOneOrMany, PossibleProgramFileInfo,
  } from "../services/utilities";
@@ -1025,7 +1038,7 @@ index 0df63f2cf4..cdded16804 100644
  import {
      ConfigFileDiagEvent, convertFormatOptions, convertScriptKindName, convertUserPreferences, isConfigFile,
      LargeFileReferencedEvent, ProjectInfoTelemetryEvent, ProjectLanguageServiceStateEvent, ProjectLoadingFinishEvent,
-@@ -60,6 +59,7 @@ import {
+@@ -58,6 +57,7 @@ import {
  import {
      ConfiguredProject, EmitResult, isConfiguredProject, isExternalProject, isInferredProject, Project, ProjectKind,
  } from "./project";
@@ -1034,7 +1047,7 @@ index 0df63f2cf4..cdded16804 100644
  import { ServerHost } from "./types";
  import { ITypingsInstaller } from "./typingsCache";
 diff --git a/src/services/completions.ts b/src/services/completions.ts
-index 25a2467732..331214cc8a 100644
+index 3164515fdf..2482f591ad 100644
 --- a/src/services/completions.ts
 +++ b/src/services/completions.ts
 @@ -50,8 +50,7 @@ import {
@@ -1047,7 +1060,7 @@ index 25a2467732..331214cc8a 100644
  } from "../compiler/utilities";
  import {
      createTextSpanFromBounds, findAncestor, getNameOfDeclaration, hasInitializer, hasType, isAssertionExpression,
-@@ -4177,7 +4176,7 @@ function getApparentProperties(type: Type, node: ObjectLiteralExpression | JsxAt
+@@ -4176,7 +4175,7 @@ function getApparentProperties(type: Type, node: ObjectLiteralExpression | JsxAt
          !(memberType.flags & TypeFlags.Primitive
              || checker.isArrayLikeType(memberType)
              || checker.isTypeInvalidDueToUnionDiscriminant(memberType, node)
@@ -1215,14 +1228,18 @@ index 9a46d5740c..0000000000
 -// empty ref to Playback so it can be referenced by unittests
 -export { };
 diff --git a/src/testRunner/runner.ts b/src/testRunner/runner.ts
-index 7c9c284e86..1a968567b4 100644
+index d1d9b7fe55..d85e1af7d2 100644
 --- a/src/testRunner/runner.ts
 +++ b/src/testRunner/runner.ts
-@@ -4,10 +4,10 @@ import { IO, setLightMode } from "../harness/harnessIO";
+@@ -1,13 +1,13 @@
+ import { forEach, getUILocale, noop, setUILocale } from "../compiler/core";
+ import { Debug } from "../compiler/debug";
  import { RunnerBase, setShardId, setShards, TestRunnerKind } from "../harness/runnerbase";
- import { basename } from "../harness/vpathUtil";
++import * as vpath from "../harness/vpathUtil";
  import * as FourSlash from "./_namespaces/FourSlash";
+ import * as Harness from "./_namespaces/Harness";
 -import { Host } from "./_namespaces/Harness.Parallel";
+-import * as vpath from "./_namespaces/vpath";
  import { CompilerBaselineRunner, CompilerTestType } from "./compilerRunner";
  import { DefinitelyTypedRunner, DockerfileRunner, UserCodeRunner } from "./externalCompileRunner";
  import { FourSlashRunner, GeneratedFourslashRunner } from "./fourslashRunner";
@@ -1252,21 +1269,19 @@ index c0e652fdbd..d7b9d0ebc2 100644
          "compilerRunner.ts",
          "projectsRunner.ts",
 diff --git a/src/testRunner/unittests/services/textChanges.ts b/src/testRunner/unittests/services/textChanges.ts
-index c6c9dd548e..e7ac83b918 100644
+index 95a6f5ffa5..33915fae23 100644
 --- a/src/testRunner/unittests/services/textChanges.ts
 +++ b/src/testRunner/unittests/services/textChanges.ts
-@@ -12,15 +12,17 @@ import {
+@@ -11,14 +11,16 @@ import {
+ } from "../../../compiler/types";
  import { getNewLineCharacter } from "../../../compiler/utilities";
  import { isDeclaration } from "../../../compiler/utilitiesPublic";
- import { Baseline } from "../../../harness/harnessIO";
--import { textChanges } from "../../../services/_namespaces/ts";
- import { FormatContext } from "../../../services/formatting/formatting";
+-import { formatting, textChanges } from "../../../services/_namespaces/ts";
++import * as formatting from "../../../services/_namespaces/ts.formatting";
  import { getFormatContext } from "../../../services/formatting/rulesMap";
--import { applyChanges, ChangeTracker, LeadingTriviaOption, TrailingTriviaOption } from "../../../services/textChanges";
-+import {
-+    applyChanges, ChangeTracker, deleteNode, LeadingTriviaOption, TrailingTriviaOption,
-+} from "../../../services/textChanges";
++import * as textChanges from "../../../services/textChanges";
  import { testFormatSettings } from "../../../services/types";
+ import * as Harness from "../../_namespaces/Harness";
  import { notImplementedHost } from "./extract/helpers";
  
  // Some tests have trailing whitespace
@@ -1275,21 +1290,13 @@ index c6c9dd548e..e7ac83b918 100644
  describe("unittests:: services:: textChanges", () => {
      function findChild(name: string, n: Node) {
          return find(n)!;
-@@ -145,7 +147,6 @@ function bar() {
-     function findVariableDeclarationContaining(name: string, sourceFile: SourceFile): VariableDeclaration {
-         return cast(findChild(name, sourceFile), isVariableDeclaration);
-     }
--    const { deleteNode } = textChanges;
-     {
-         const text = `
- var x = 1; // some comment - 1
 diff --git a/src/testRunner/unittests/tsbuild/publicApi.ts b/src/testRunner/unittests/tsbuild/publicApi.ts
-index 78431d4b2f..f5ded28a72 100644
+index 55b004f3e1..c5bf2c3afc 100644
 --- a/src/testRunner/unittests/tsbuild/publicApi.ts
 +++ b/src/testRunner/unittests/tsbuild/publicApi.ts
 @@ -13,7 +13,7 @@ import { createDiagnosticReporter, getErrorSummaryText } from "../../../compiler
  import { patchHostForBuildInfoReadWrite, System } from "../../../harness/fakesHosts";
- import { formatPatch } from "../../../harness/vfsUtil";
+ import * as vfs from "../../_namespaces/vfs";
  import { commandLineCallbacks, TscCompileSystem, verifyTscBaseline } from "../tsc/helpers";
 -import { baselinePrograms } from "../tscWatch/helpers";
 +import { baselineAllPrograms } from "../tscWatch/helpers";
@@ -1306,14 +1313,18 @@ index 78431d4b2f..f5ded28a72 100644
          fs.makeReadonly();
          sys.baseLine = () => {
 diff --git a/src/testRunner/unittests/tsc/helpers.ts b/src/testRunner/unittests/tsc/helpers.ts
-index 54c8dba349..557fbbb12b 100644
+index 7be3052ac6..a0bf785006 100644
 --- a/src/testRunner/unittests/tsc/helpers.ts
 +++ b/src/testRunner/unittests/tsc/helpers.ts
-@@ -12,9 +12,8 @@ import { patchHostForBuildInfoReadWrite, patchHostForBuildInfoWrite, System } fr
- import { Baseline } from "../../../harness/harnessIO";
- import { FileSystem, formatPatch } from "../../../harness/vfsUtil";
+@@ -9,12 +9,11 @@ import {
+     executeCommandLine, ExecuteCommandLineCallbacks, isBuild,
+ } from "../../../executeCommandLine/executeCommandLine";
+ import { patchHostForBuildInfoReadWrite, patchHostForBuildInfoWrite, System } from "../../../harness/fakesHosts";
++import * as vfs from "../../../harness/vfsUtil";
+ import * as Harness from "../../_namespaces/Harness";
  import * as ts from "../../_namespaces/ts";
 -import { tscWatch } from "../../_namespaces/ts";
+-import * as vfs from "../../_namespaces/vfs";
  import { baselineBuildInfo, generateSourceMapBaselineFiles, TestTscEdit, toPathWithSystem } from "../tsbuild/helpers";
 -import { WatchedSystem } from "../tscWatch/helpers";
 +import { baselineAllPrograms, WatchedSystem } from "../tscWatch/helpers";
@@ -1330,7 +1341,7 @@ index 54c8dba349..557fbbb12b 100644
          }
          if (baselineReadFileCalls) {
 diff --git a/src/testRunner/unittests/tscWatch/helpers.ts b/src/testRunner/unittests/tscWatch/helpers.ts
-index bc4d380f02..9f1362fd52 100644
+index b24019abc9..512b585f77 100644
 --- a/src/testRunner/unittests/tscWatch/helpers.ts
 +++ b/src/testRunner/unittests/tscWatch/helpers.ts
 @@ -335,7 +335,7 @@ export interface WatchBaseline extends BaselineBase, TscWatchCheckOptions {
@@ -1378,10 +1389,10 @@ index 05863a3172..a373c8de14 100644
  import { ServerHost } from "../../../server/types";
  import { projectSystem } from "../../_namespaces/ts";
 diff --git a/src/testRunner/unittests/tsserver/helpers.ts b/src/testRunner/unittests/tsserver/helpers.ts
-index 628b199e9a..9158b3d51e 100644
+index 89793c060b..4a5a425aff 100644
 --- a/src/testRunner/unittests/tsserver/helpers.ts
 +++ b/src/testRunner/unittests/tsserver/helpers.ts
-@@ -19,12 +19,12 @@ import {
+@@ -18,12 +18,12 @@ import {
      createServerHost, libFile, safeList, TestServerHost,
  } from "../../../harness/virtualFileSystemWithWatch";
  import { InvalidateCachedTypings, SetTypings } from "../../../jsTyping/types";
@@ -1470,12 +1481,12 @@ index 6161da3c7a..dcd8c9fc96 100644
  import { projectSystem } from "../../_namespaces/ts";
  import { projectRoot } from "../tscWatch/helpers";
 diff --git a/src/testRunner/unittests/tsserver/session.ts b/src/testRunner/unittests/tsserver/session.ts
-index e0b47d1746..391826207c 100644
+index 95cf0a202a..9c7bef4fa8 100644
 --- a/src/testRunner/unittests/tsserver/session.ts
 +++ b/src/testRunner/unittests/tsserver/session.ts
-@@ -9,8 +9,8 @@ import {
+@@ -8,8 +8,8 @@ import {
+     CompilerOptions, JsxEmit, ModuleKind, ModuleResolutionKind, NewLineKind, ScriptTarget,
  } from "../../../compiler/types";
- import { mockHash } from "../../../harness/harnessIO";
  import { byteLength } from "../../../harness/harnessUtils";
 -import { protocol } from "../../../server/_namespaces/ts.server";
  import { ProjectService } from "../../../server/editorServices";
@@ -1510,11 +1521,11 @@ index 2adb39d201..6438df4d1f 100644
  
  describe("unittests:: tsserver:: project telemetry", () => {
 diff --git a/src/testRunner/unittests/tsserver/typingsInstaller.ts b/src/testRunner/unittests/tsserver/typingsInstaller.ts
-index c8fa197b31..0cc0a280c4 100644
+index b139f2a600..4c04f05656 100644
 --- a/src/testRunner/unittests/tsserver/typingsInstaller.ts
 +++ b/src/testRunner/unittests/tsserver/typingsInstaller.ts
-@@ -11,9 +11,9 @@ import {
- } from "../../../jsTyping/jsTyping";
+@@ -9,9 +9,9 @@ import { TestFSWithWatch } from "../../../harness/_namespaces/ts";
+ import { JsTyping } from "../../../jsTyping/_namespaces/ts";
  import { EventBeginInstallTypes, EventEndInstallTypes } from "../../../jsTyping/shared";
  import { BeginInstallTypes, EndInstallTypes, InvalidateCachedTypings, SetTypings } from "../../../jsTyping/types";
 -import { protocol } from "../../../server/_namespaces/ts.server";
@@ -1549,7 +1560,7 @@ index 13cb846ee5..0000000000
 -// empty ref to vpath so it can be referenced by unittests
 -export { };
 diff --git a/src/tsserver/nodeServer.ts b/src/tsserver/nodeServer.ts
-index a0ee7a3a09..0d249c11a8 100644
+index 8c8263c202..ea620d9194 100644
 --- a/src/tsserver/nodeServer.ts
 +++ b/src/tsserver/nodeServer.ts
 @@ -18,9 +18,9 @@ import {
