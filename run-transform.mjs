@@ -64,7 +64,8 @@ async function runMorph(name, description) {
 
 async function applyPatches() {
     // Regenerate patches by removing the patches dir then running:
-    //     git format-patch -o ~/work/typeformer/patches --no-numbered --no-base HEAD^{"/CONVERSION STEP"} 
+    //     rm ~/work/typeformer/patches2/*
+    //     git format-patch -o ~/work/typeformer/patches2 --no-numbered --no-base --zero-commit HEAD^{"/CONVERSION STEP"}
     await $`git am --3way --whitespace=nowarn --quoted-cr=nowarn --keep-cr ${__dirname}/patches/*.patch`;
 }
 

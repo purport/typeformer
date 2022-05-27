@@ -1,4 +1,4 @@
-From 741a2db088006a00ed85393ce1be9847a47e60a0 Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Jake Bailey <5341706+jakebailey@users.noreply.github.com>
 Date: Thu, 26 May 2022 16:45:32 -0700
 Subject: [PATCH] Make processDiagnosticMessages generate a module

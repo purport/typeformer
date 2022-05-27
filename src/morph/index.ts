@@ -1,6 +1,7 @@
 import { Project, ts } from "ts-morph";
 
 import { explicitify } from "./explicitify";
+import { formatImports } from "./formatImports";
 import { inlineImports } from "./inlineImports";
 import { stripNamespaces } from "./stripNamespaces";
 import { unindent } from "./unindent";
@@ -16,8 +17,9 @@ const steps = new Map<string, Step>([
     ["noop", { step: () => {}, batch: false }], // To check diagnostics
     ["unindent", { step: unindent, batch: true }],
     ["explicitify", { step: explicitify, batch: true }],
-    ["stripNamespaces", { step: stripNamespaces, batch: true }], // WIP
-    ["inlineImports", { step: inlineImports, batch: true }], // WIP
+    ["stripNamespaces", { step: stripNamespaces, batch: true }],
+    ["inlineImports", { step: inlineImports, batch: true }],
+    ["formatImports", { step: formatImports, batch: false }],
 ]);
 
 const stepName = process.argv[2];

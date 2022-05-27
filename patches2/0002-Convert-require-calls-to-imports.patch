@@ -1,11 +1,11 @@
-From 3a9689ddd526a0816ec425cfe451d39e9f7b914a Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Jake Bailey <5341706+jakebailey@users.noreply.github.com>
 Date: Thu, 26 May 2022 17:00:27 -0700
 Subject: [PATCH] Convert require calls to imports
 
 ---
  src/cancellationToken/cancellationToken.ts    |  2 +-
- src/harness/findUpDir.ts                      |  4 ++--
+ src/harness/findUpDir.ts                      |  5 ++---
  src/harness/harnessGlobals.ts                 | 20 ++++++++-----------
  src/instrumenter/instrumenter.ts              |  4 ++--
  src/testRunner/externalCompileRunner.ts       |  8 ++++----
@@ -13,30 +13,30 @@ Subject: [PATCH] Convert require calls to imports
  src/testRunner/unittests/tsserver/session.ts  |  4 ++--
  src/typingsInstaller/nodeTypingsInstaller.ts  | 13 +++---------
  src/watchGuard/watchGuard.ts                  |  3 ++-
- 9 files changed, 26 insertions(+), 36 deletions(-)
+ 9 files changed, 26 insertions(+), 37 deletions(-)
 
 diff --git a/src/cancellationToken/cancellationToken.ts b/src/cancellationToken/cancellationToken.ts
-index aaa19750b8..cab50efb80 100644
+index aaa19750b8..57c82e7522 100644
 --- a/src/cancellationToken/cancellationToken.ts
 +++ b/src/cancellationToken/cancellationToken.ts
 @@ -1,6 +1,6 @@
  /// <reference types="node"/>
  
 -import fs = require("fs");
-+import * as fs from 'fs';
++import * as fs from "fs";
  
  interface ServerCancellationToken {
      isCancellationRequested(): boolean;
 diff --git a/src/harness/findUpDir.ts b/src/harness/findUpDir.ts
-index 621e2dff1b..1471ccf863 100644
+index 621e2dff1b..1df1706e41 100644
 --- a/src/harness/findUpDir.ts
 +++ b/src/harness/findUpDir.ts
-@@ -1,6 +1,6 @@
- 
+@@ -1,6 +1,5 @@
+-
 -const { join, resolve, dirname } = require("path") as typeof import("path");
 -const { existsSync } = require("fs") as typeof import("fs");
-+import { join, resolve, dirname } from "path";
 +import { existsSync } from "fs";
++import { dirname, join, resolve } from "path";
  
  // search directories upward to avoid hard-wired paths based on the
  // build tree (same as scripts/build/findUpDir.js)
@@ -94,13 +94,13 @@ index c7cbb8d3ec..641d173456 100644
  function instrumentForRecording(fn: string, tscPath: string) {
      instrument(tscPath, `
 diff --git a/src/testRunner/externalCompileRunner.ts b/src/testRunner/externalCompileRunner.ts
-index cff64f9d2c..e09a98e20a 100644
+index cff64f9d2c..63aedcb787 100644
 --- a/src/testRunner/externalCompileRunner.ts
 +++ b/src/testRunner/externalCompileRunner.ts
 @@ -1,3 +1,7 @@
++import * as del from "del";
 +import * as fs from "fs";
 +import * as path from "path";
-+import * as del from "del";
 +
  import { compareStringsCaseSensitive, compareValues, flatten, stringContains } from "../compiler/core";
  import { Debug } from "../compiler/debug";
@@ -117,11 +117,11 @@ index cff64f9d2c..e09a98e20a 100644
      stdout: Buffer;
      stderr: Buffer;
 diff --git a/src/testRunner/unittests/services/languageService.ts b/src/testRunner/unittests/services/languageService.ts
-index a2f957f776..384a580c0e 100644
+index a2f957f776..3837c652cc 100644
 --- a/src/testRunner/unittests/services/languageService.ts
 +++ b/src/testRunner/unittests/services/languageService.ts
 @@ -1,3 +1,5 @@
-+import { expect } from "chai"
++import { expect } from "chai";
 +
  import { getParsedCommandLineOfConfigFile } from "../../../compiler/commandLineParser";
  import { emptyArray, noop, returnTrue } from "../../../compiler/core";
@@ -136,7 +136,7 @@ index a2f957f776..384a580c0e 100644
      const files: {[index: string]: string} = {
          "foo.ts": `import Vue from "./vue";
 diff --git a/src/testRunner/unittests/tsserver/session.ts b/src/testRunner/unittests/tsserver/session.ts
-index ee385551fb..ab7b2cc0bd 100644
+index 993c03edd8..b443e5c8f7 100644
 --- a/src/testRunner/unittests/tsserver/session.ts
 +++ b/src/testRunner/unittests/tsserver/session.ts
 @@ -1,3 +1,5 @@
@@ -145,8 +145,8 @@ index ee385551fb..ab7b2cc0bd 100644
  import { AnyFunction, noop, returnUndefined } from "../../../compiler/core";
  import { Map, version } from "../../../compiler/corePublic";
  import { Debug } from "../../../compiler/debug";
-@@ -20,8 +22,6 @@ import { FileTextChanges } from "../../../services/types";
- import * as ts from "../../_namespaces/ts";
+@@ -17,8 +19,6 @@ import { NormalizedPath } from "../../../server/utilitiesPublic";
+ import { FileTextChanges, IndentStyle } from "../../../services/types";
  import { createHasErrorMessageLogger, nullLogger } from "./helpers";
  
 -const _chai: typeof import("chai") = require("chai");

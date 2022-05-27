@@ -1,23 +1,45 @@
-From 254e84e55dfadf3dc69a5cfc1b524382668d717b Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Jake Bailey <5341706+jakebailey@users.noreply.github.com>
 Date: Thu, 26 May 2022 20:40:20 -0700
 Subject: [PATCH] Remove a bunch of namespace uses
 
 ---
- src/compiler/binder.ts                        |  3 +-
- src/compiler/parser.ts                        | 15 +++--
- src/compiler/resolutionCache.ts               |  6 +-
- .../transformers/declarations/diagnostics.ts  |  5 +-
- src/compiler/tsbuildPublic.ts                 |  5 +-
- src/compiler/watch.ts                         |  5 +-
- src/debug/dbg.ts                              |  8 ---
- src/server/editorServices.ts                  | 55 +++++++++----------
- src/services/documentRegistry.ts              |  5 +-
- .../unittests/services/textChanges.ts         |  5 +-
- src/testRunner/unittests/tsbuild/publicApi.ts |  4 +-
- src/testRunner/unittests/tsc/helpers.ts       |  5 +-
- src/testRunner/unittests/tscWatch/helpers.ts  |  4 +-
- 13 files changed, 52 insertions(+), 73 deletions(-)
+ src/compiler/binder.ts                        |  3 +--
+ src/compiler/parser.ts                        | 20 +++++++++----------
+ src/compiler/resolutionCache.ts               |  9 +++++----
+ .../transformers/declarations/diagnostics.ts  |  5 ++---
+ src/compiler/tsbuildPublic.ts                 |  5 ++---
+ src/compiler/watch.ts                         |  7 ++++---
+ src/debug/dbg.ts                              |  8 --------
+ src/harness/client.ts                         |  2 +-
+ src/harness/fourslashImpl.ts                  |  2 +-
+ src/harness/fourslashInterfaceImpl.ts         |  2 +-
+ src/server/editorServices.ts                  |  2 +-
+ src/server/project.ts                         |  2 +-
+ src/server/scriptInfo.ts                      |  2 +-
+ src/server/scriptVersionCache.ts              |  2 +-
+ src/server/session.ts                         |  2 +-
+ src/services/documentRegistry.ts              |  5 ++---
+ .../unittests/services/textChanges.ts         |  7 ++++---
+ src/testRunner/unittests/tsbuild/publicApi.ts |  4 ++--
+ src/testRunner/unittests/tsc/helpers.ts       |  5 ++---
+ src/testRunner/unittests/tscWatch/helpers.ts  |  4 ++--
+ .../unittests/tsserver/cancellationToken.ts   |  2 +-
+ .../unittests/tsserver/compileOnSave.ts       |  2 +-
+ src/testRunner/unittests/tsserver/helpers.ts  |  2 +-
+ .../unittests/tsserver/inferredProjects.ts    |  2 +-
+ .../unittests/tsserver/projectErrors.ts       |  2 +-
+ src/testRunner/unittests/tsserver/projects.ts |  2 +-
+ .../unittests/tsserver/refactors.ts           |  2 +-
+ src/testRunner/unittests/tsserver/reload.ts   |  2 +-
+ .../unittests/tsserver/resolutionCache.ts     |  2 +-
+ src/testRunner/unittests/tsserver/session.ts  |  2 +-
+ .../unittests/tsserver/syntacticServer.ts     |  2 +-
+ .../unittests/tsserver/telemetry.ts           |  2 +-
+ .../unittests/tsserver/typingsInstaller.ts    |  2 +-
+ src/tsserver/nodeServer.ts                    |  2 +-
+ src/webServer/webServer.ts                    |  2 +-
+ 35 files changed, 59 insertions(+), 69 deletions(-)
 
 diff --git a/src/compiler/binder.ts b/src/compiler/binder.ts
 index 4c06caaa9d..17fa819ffc 100644
@@ -38,7 +60,7 @@ index 4c06caaa9d..17fa819ffc 100644
                  const index = functionType.parameters.indexOf(node as ParameterDeclaration);
                  return "arg" + index as __String;
 diff --git a/src/compiler/parser.ts b/src/compiler/parser.ts
-index e7e2b39881..46105d1168 100644
+index e7e2b39881..7e18aa5ac9 100644
 --- a/src/compiler/parser.ts
 +++ b/src/compiler/parser.ts
 @@ -1,4 +1,3 @@
@@ -46,16 +68,21 @@ index e7e2b39881..46105d1168 100644
  import { convertToObjectWorker } from "./commandLineParser";
  import {
      addRange, append, AssertionLevel, concatenate, emptyArray, emptyMap, findIndex, forEach, getSpellingSuggestion,
-@@ -13,7 +12,7 @@ import {
+@@ -11,9 +10,10 @@ import { BaseNodeFactory } from "./factory/baseNodeFactory";
+ import { createNodeFactory, NodeFactoryFlags } from "./factory/nodeFactory";
+ import {
      isAsyncModifier, isExportAssignment, isExportDeclaration, isExportModifier, isExternalModuleReference,
-     isFunctionTypeNode, isImportDeclaration, isImportEqualsDeclaration, isJSDocFunctionType, isJSDocNullableType,
-     isJSDocReturnTag, isJSDocTypeTag, isJsxOpeningElement, isJsxOpeningFragment, isMetaProperty, isNonNullExpression,
+-    isFunctionTypeNode, isImportDeclaration, isImportEqualsDeclaration, isJSDocFunctionType, isJSDocNullableType,
+-    isJSDocReturnTag, isJSDocTypeTag, isJsxOpeningElement, isJsxOpeningFragment, isMetaProperty, isNonNullExpression,
 -    isPrivateIdentifier, isTaggedTemplateExpression, isTypeReferenceNode,
-+    isPrivateIdentifier, isTaggedTemplateExpression, isTypeReferenceNode, isIdentifier as isIdentifierNode,
++    isFunctionTypeNode, isIdentifier as isIdentifierNode, isImportDeclaration, isImportEqualsDeclaration,
++    isJSDocFunctionType, isJSDocNullableType, isJSDocReturnTag, isJSDocTypeTag, isJsxOpeningElement,
++    isJsxOpeningFragment, isMetaProperty, isNonNullExpression, isPrivateIdentifier, isTaggedTemplateExpression,
++    isTypeReferenceNode,
  } from "./factory/nodeTests";
  import { setTextRange } from "./factory/utilitiesPublic";
  import { fileExtensionIsOneOf, normalizePath } from "./path";
-@@ -1757,7 +1756,7 @@ namespace Parser {
+@@ -1757,7 +1757,7 @@ namespace Parser {
          }
  
          // Otherwise, if this isn't a well-known keyword-like identifier, give the generic fallback message.
@@ -64,7 +91,7 @@ index e7e2b39881..46105d1168 100644
          if (!expressionText || !isIdentifierText(expressionText, languageVersion)) {
              parseErrorAtCurrentToken(Diagnostics._0_expected, tokenToString(SyntaxKind.SemicolonToken));
              return;
-@@ -6335,7 +6334,7 @@ namespace Parser {
+@@ -6335,7 +6335,7 @@ namespace Parser {
          let node: ExpressionStatement | LabeledStatement;
          const hasParen = token() === SyntaxKind.OpenParenToken;
          const expression = allowInAnd(parseExpression);
@@ -73,7 +100,7 @@ index e7e2b39881..46105d1168 100644
              node = factory.createLabeledStatement(expression, parseStatement());
          }
          else {
-@@ -8393,7 +8392,7 @@ namespace Parser {
+@@ -8393,7 +8393,7 @@ namespace Parser {
                      case SyntaxKind.ArrayType:
                          return isObjectOrObjectArrayTypeReference((node as ArrayTypeNode).elementType);
                      default:
@@ -82,7 +109,7 @@ index e7e2b39881..46105d1168 100644
                  }
              }
  
-@@ -8664,8 +8663,8 @@ namespace Parser {
+@@ -8664,8 +8664,8 @@ namespace Parser {
              }
  
              function escapedTextsEqual(a: EntityName, b: EntityName): boolean {
@@ -93,7 +120,7 @@ index e7e2b39881..46105d1168 100644
                          a = a.left;
                          b = b.left;
                      }
-@@ -8690,7 +8689,7 @@ namespace Parser {
+@@ -8690,7 +8690,7 @@ namespace Parser {
                                  const child = tryParseChildTag(target, indent);
                                  if (child && (child.kind === SyntaxKind.JSDocParameterTag || child.kind === SyntaxKind.JSDocPropertyTag) &&
                                      target !== PropertyLikeParse.CallbackParameter &&
@@ -103,7 +130,7 @@ index e7e2b39881..46105d1168 100644
                                  }
                                  return child;
 diff --git a/src/compiler/resolutionCache.ts b/src/compiler/resolutionCache.ts
-index 5b79bdcbb1..41578375a6 100644
+index 5b79bdcbb1..6f444844f1 100644
 --- a/src/compiler/resolutionCache.ts
 +++ b/src/compiler/resolutionCache.ts
 @@ -1,4 +1,3 @@
@@ -111,15 +138,18 @@ index 5b79bdcbb1..41578375a6 100644
  import {
      arrayToMap, contains, createMultiMap, emptyIterator, endsWith, firstDefinedIterator, GetCanonicalFileName, isString,
      length, memoize, removeSuffix, returnTrue, some, startsWith, stringContains, unorderedRemoveItem,
-@@ -10,6 +9,7 @@ import {
+@@ -9,7 +8,9 @@ import { Diagnostics } from "./diagnosticInformationMap.generated";
+ import {
      CacheWithRedirects, createCacheWithRedirects, createModeAwareCache, createModuleResolutionCache,
      createTypeReferenceDirectiveResolutionCache, getEffectiveTypeRoots, isTraceEnabled, loadModuleFromGlobalCache,
-     ModeAwareCache, ModuleResolutionCache, parseNodeModuleFromPath, pathContainsNodeModules, PerModuleNameCache, trace,
-+    resolveTypeReferenceDirective as internalResolveTypeReferenceDirective, resolveModuleName as internalResolveModuleName,
+-    ModeAwareCache, ModuleResolutionCache, parseNodeModuleFromPath, pathContainsNodeModules, PerModuleNameCache, trace,
++    ModeAwareCache, ModuleResolutionCache, parseNodeModuleFromPath, pathContainsNodeModules, PerModuleNameCache,
++    resolveModuleName as internalResolveModuleName,
++    resolveTypeReferenceDirective as internalResolveTypeReferenceDirective, trace,
  } from "./moduleNameResolver";
  import {
      directorySeparator, fileExtensionIs, fileExtensionIsOneOf, getDirectoryPath, getNormalizedAbsolutePath,
-@@ -349,7 +349,7 @@ export function createResolutionCache(resolutionHost: ResolutionCacheHost, rootD
+@@ -349,7 +350,7 @@ export function createResolutionCache(resolutionHost: ResolutionCacheHost, rootD
      }
  
      function resolveModuleName(moduleName: string, containingFile: string, compilerOptions: CompilerOptions, host: ModuleResolutionHost, redirectedReference?: ResolvedProjectReference, _containingSourceFile?: never, mode?: ModuleKind.CommonJS | ModuleKind.ESNext | undefined): CachedResolvedModuleWithFailedLookupLocations {
@@ -128,7 +158,7 @@ index 5b79bdcbb1..41578375a6 100644
          // return result immediately only if global cache support is not enabled or if it is .ts, .tsx or .d.ts
          if (!resolutionHost.getGlobalCache) {
              return primaryResult;
-@@ -381,7 +381,7 @@ export function createResolutionCache(resolutionHost: ResolutionCacheHost, rootD
+@@ -381,7 +382,7 @@ export function createResolutionCache(resolutionHost: ResolutionCacheHost, rootD
      }
  
      function resolveTypeReferenceDirective(typeReferenceDirectiveName: string, containingFile: string | undefined, options: CompilerOptions, host: ModuleResolutionHost, redirectedReference?: ResolvedProjectReference, _containingSourceFile?: SourceFile, resolutionMode?: SourceFile["impliedNodeFormat"] | undefined): CachedResolvedTypeReferenceDirectiveWithFailedLookupLocations {
@@ -192,7 +222,7 @@ index c457a697ca..c3546ec61b 100644
  
  function toResolvedConfigFilePath(state: SolutionBuilderState, fileName: ResolvedConfigFileName): ResolvedConfigFilePath {
 diff --git a/src/compiler/watch.ts b/src/compiler/watch.ts
-index 9997c288d2..c9b5ce2735 100644
+index 9997c288d2..af090f302a 100644
 --- a/src/compiler/watch.ts
 +++ b/src/compiler/watch.ts
 @@ -1,4 +1,3 @@
@@ -200,16 +230,18 @@ index 9997c288d2..c9b5ce2735 100644
  import {
      BuilderProgram, createEmitAndSemanticDiagnosticsBuilderProgram, EmitAndSemanticDiagnosticsBuilderProgram,
  } from "./builderPublic";
-@@ -42,7 +41,7 @@ import {
+@@ -42,7 +41,9 @@ import {
      createIncrementalCompilerHost, createIncrementalProgram, CreateProgram, ProgramHost, WatchCompilerHost,
      WatchCompilerHostOfConfigFile, WatchCompilerHostOfFilesAndCompilerOptions, WatchHost, WatchStatusReporter,
  } from "./watchPublic";
 -import { DirectoryStructureHost, getWatchFactory, WatchFactoryHost, WatchLogLevel } from "./watchUtilities";
-+import { DirectoryStructureHost, getWatchFactory, WatchFactoryHost, WatchLogLevel, WatchFactory as InternalWatchFactory } from "./watchUtilities";
++import {
++    DirectoryStructureHost, getWatchFactory, WatchFactory as InternalWatchFactory, WatchFactoryHost, WatchLogLevel,
++} from "./watchUtilities";
  
  const sysFormatDiagnosticsHost: FormatDiagnosticsHost | undefined = sys ? {
      getCurrentDirectory: () => sys.getCurrentDirectory(),
-@@ -613,7 +612,7 @@ export interface WatchTypeRegistry {
+@@ -613,7 +614,7 @@ export interface WatchTypeRegistry {
      NodeModulesForModuleSpecifierCache: "node_modules for module specifier cache invalidation",
  }
  
@@ -239,219 +271,132 @@ index c86b021fe2..342bf6bd2d 100644
 -    module.exports = Debug;
 -}
 \ No newline at end of file
+diff --git a/src/harness/client.ts b/src/harness/client.ts
+index 1c7d6f7cea..d33388551a 100644
+--- a/src/harness/client.ts
++++ b/src/harness/client.ts
+@@ -10,7 +10,7 @@ import {
+     UserPreferences,
+ } from "../compiler/types";
+ import { createTextSpanFromBounds } from "../compiler/utilitiesPublic";
+-import { protocol } from "../server/_namespaces/ts.server";
++import * as protocol from "../server/protocol";
+ import { CommandNames } from "../server/session";
+ import { DocumentHighlights } from "../services/documentHighlights";
+ import { PatternMatchKind } from "../services/patternMatcher";
+diff --git a/src/harness/fourslashImpl.ts b/src/harness/fourslashImpl.ts
+index 4bfec6c1e5..a1d2e6f76d 100644
+--- a/src/harness/fourslashImpl.ts
++++ b/src/harness/fourslashImpl.ts
+@@ -36,7 +36,7 @@ import {
+     createTextSpan, textRangeContainsPositionInclusive, textSpanContainsPosition, textSpanEnd,
+     textSpanIntersectsWithPosition,
+ } from "../compiler/utilitiesPublic";
+-import { protocol } from "../server/_namespaces/ts.server";
++import * as protocol from "../server/protocol";
+ import { TokenEncodingConsts, TokenModifier, TokenType } from "../services/classifier2020";
+ import { importFixName } from "../services/codefixes/importFixes";
+ import { SortText } from "../services/completions";
+diff --git a/src/harness/fourslashInterfaceImpl.ts b/src/harness/fourslashInterfaceImpl.ts
+index ece75ec3b3..941afe03e7 100644
+--- a/src/harness/fourslashInterfaceImpl.ts
++++ b/src/harness/fourslashInterfaceImpl.ts
+@@ -4,7 +4,7 @@ import { Comparison, ESMap, MapLike } from "../compiler/corePublic";
+ import { tokenToString } from "../compiler/scanner";
+ import { LineAndCharacter, Symbol, SyntaxKind, TextSpan, UserPreferences } from "../compiler/types";
+ import { createTextSpan } from "../compiler/utilitiesPublic";
+-import { protocol } from "../server/_namespaces/ts.server";
++import * as protocol from "../server/protocol";
+ import { Completions } from "../services/_namespaces/ts";
+ import { SortText } from "../services/completions";
+ import { PatternMatchKind } from "../services/patternMatcher";
 diff --git a/src/server/editorServices.ts b/src/server/editorServices.ts
-index 9364bc6a0c..0ec292cce1 100644
+index 899f8ffb19..2e6c937517 100644
 --- a/src/server/editorServices.ts
 +++ b/src/server/editorServices.ts
-@@ -25,7 +25,7 @@ import { tracing } from "../compiler/tracing";
- import {
-     CommandLineOption, CompilerOptions, Diagnostic, DocumentPosition, DocumentPositionMapper, FileExtensionInfo,
-     ParsedCommandLine, Path, ProjectReference, ResolvedProjectReference, ScriptKind, SourceFile, Ternary,
--    TsConfigSourceFile, TypeAcquisition, WatchDirectoryFlags, WatchOptions,
-+    TsConfigSourceFile, TypeAcquisition, UserPreferences, WatchDirectoryFlags, WatchOptions,
- } from "../compiler/types";
- import {
-     addToSeen, clearMap, forEachEntry, forEachKey, hasTSFileExtension, isJsonEqual, removeFileExtension,
-@@ -49,19 +49,14 @@ import {
-     CompletionInfo, emptyOptions, getDefaultFormatCodeSettings, HostCancellationToken, IncompleteCompletionsCache,
-     IndentStyle, LanguageServiceMode, PackageJsonAutoImportPreference, PackageJsonInfo, PerformanceEvent, TextChange,
+@@ -51,12 +51,12 @@ import {
+     PerformanceEvent, TextChange,
  } from "../services/types";
-+import * as servicesTypes from "../services/types";
  import { getSnapshotText, isInsideNodeModules } from "../services/utilities";
--import * as ts from "./_namespaces/ts";
 -import { protocol } from "./_namespaces/ts.server";
  import { createPackageJsonCache, PackageJsonCache } from "./packageJsonCache";
  import {
      AutoImportProviderProject, ConfiguredProject, countEachFileTypes, ExternalProject, hasNoTypeScriptSource,
      InferredProject, isConfiguredProject, isInferredProject, Project, ProjectFilesWithTSDiagnostics, ProjectKind,
  } from "./project";
--import {
--    CompileOnSaveMixin, ConfigurePluginRequestArguments, ConfigureRequestArguments, ExternalFile,
--    ExternalProjectCompilerOptions, FormatCodeSettings, InferredProjectCompilerOptions, ProjectVersionInfo,
--    ScriptKindName, UserPreferences,
--} from "./protocol";
 +import * as protocol from "./protocol";
  import { isDynamicFileName, ScriptInfo, ScriptInfoVersion } from "./scriptInfo";
  import { Session } from "./session";
  import { ServerHost } from "./types";
-@@ -307,7 +302,7 @@ const defaultTypeSafeList: SafeList = {
-     }
- };
+diff --git a/src/server/project.ts b/src/server/project.ts
+index dfd37c3eb6..48c7bf0f88 100644
+--- a/src/server/project.ts
++++ b/src/server/project.ts
+@@ -54,12 +54,12 @@ import {
+ } from "../services/types";
+ import { cloneCompilerOptions, isInsideNodeModules } from "../services/utilities";
+ import * as ts from "./_namespaces/ts";
+-import { protocol } from "./_namespaces/ts.server";
+ import {
+     FileStats, forEachResolvedProjectReferenceProject, projectContainsInfoDirectly, ProjectReferenceProjectLoadKind,
+     ProjectService, updateProjectIfDirty,
+ } from "./editorServices";
+ import { createModuleSpecifierCache } from "./moduleSpecifierCache";
++import * as protocol from "./protocol";
+ import { ScriptInfo } from "./scriptInfo";
+ import { Session } from "./session";
+ import { ServerHost } from "./types";
+diff --git a/src/server/scriptInfo.ts b/src/server/scriptInfo.ts
+index b01706465f..2aa1a9ce7a 100644
+--- a/src/server/scriptInfo.ts
++++ b/src/server/scriptInfo.ts
+@@ -18,12 +18,12 @@ import {
+     emptyOptions, FormatCodeSettings, getDefaultFormatCodeSettings, IScriptSnapshot, ScriptSnapshot,
+ } from "../services/types";
+ import { getSnapshotText } from "../services/utilities";
+-import { protocol } from "./_namespaces/ts.server";
+ import { maxFileSize } from "./editorServices";
+ import {
+     ConfiguredProject, ExternalProject, InferredProject, isConfiguredProject, isExternalProject, isInferredProject,
+     Project, ProjectKind,
+ } from "./project";
++import * as protocol from "./protocol";
+ import { AbsolutePositionAndLineText, ScriptVersionCache } from "./scriptVersionCache";
+ import { ServerHost } from "./types";
+ import { Errors, NormalizedPath } from "./utilitiesPublic";
+diff --git a/src/server/scriptVersionCache.ts b/src/server/scriptVersionCache.ts
+index 4eec06854a..74d4ba7eb4 100644
+--- a/src/server/scriptVersionCache.ts
++++ b/src/server/scriptVersionCache.ts
+@@ -5,7 +5,7 @@ import {
+     collapseTextChangeRangesAcrossMultipleVersions, createTextChangeRange, createTextSpan, unchangedTextChangeRange,
+ } from "../compiler/utilitiesPublic";
+ import { IScriptSnapshot } from "../services/types";
+-import { protocol } from "./_namespaces/ts.server";
++import * as protocol from "./protocol";
+ import { emptyArray } from "./utilitiesPublic";
  
--export function convertFormatOptions(protocolOptions: FormatCodeSettings): ts.FormatCodeSettings {
-+export function convertFormatOptions(protocolOptions: protocol.FormatCodeSettings): servicesTypes.FormatCodeSettings {
-     if (isString(protocolOptions.indentStyle)) {
-         protocolOptions.indentStyle = indentStyle.get(protocolOptions.indentStyle.toLowerCase());
-         Debug.assert(protocolOptions.indentStyle !== undefined);
-@@ -315,7 +310,7 @@ export function convertFormatOptions(protocolOptions: FormatCodeSettings): ts.Fo
-     return protocolOptions as any;
- }
- 
--export function convertCompilerOptions(protocolOptions: ExternalProjectCompilerOptions): CompilerOptions & CompileOnSaveMixin {
-+export function convertCompilerOptions(protocolOptions: protocol.ExternalProjectCompilerOptions): CompilerOptions & protocol.CompileOnSaveMixin {
-     compilerOptionConverters.forEach((mappedValues, id) => {
-         const propertyValue = protocolOptions[id];
-         if (isString(propertyValue)) {
-@@ -325,7 +320,7 @@ export function convertCompilerOptions(protocolOptions: ExternalProjectCompilerO
-     return protocolOptions as any;
- }
- 
--export function convertWatchOptions(protocolOptions: ExternalProjectCompilerOptions, currentDirectory?: string): WatchOptionsAndErrors | undefined {
-+export function convertWatchOptions(protocolOptions: protocol.ExternalProjectCompilerOptions, currentDirectory?: string): WatchOptionsAndErrors | undefined {
-     let watchOptions: WatchOptions | undefined;
-     let errors: Diagnostic[] | undefined;
-     optionsForWatch.forEach(option => {
-@@ -339,7 +334,7 @@ export function convertWatchOptions(protocolOptions: ExternalProjectCompilerOpti
-     return watchOptions && { watchOptions, errors };
- }
- 
--export function convertTypeAcquisition(protocolOptions: InferredProjectCompilerOptions): TypeAcquisition | undefined {
-+export function convertTypeAcquisition(protocolOptions: protocol.InferredProjectCompilerOptions): TypeAcquisition | undefined {
-     let result: TypeAcquisition | undefined;
-     typeAcquisitionDeclarations.forEach((option) => {
-         const propertyValue = protocolOptions[option.name];
-@@ -349,11 +344,11 @@ export function convertTypeAcquisition(protocolOptions: InferredProjectCompilerO
-     return result;
- }
- 
--export function tryConvertScriptKindName(scriptKindName: ScriptKindName | ScriptKind): ScriptKind {
-+export function tryConvertScriptKindName(scriptKindName: protocol.ScriptKindName | ScriptKind): ScriptKind {
-     return isString(scriptKindName) ? convertScriptKindName(scriptKindName) : scriptKindName;
- }
- 
--export function convertScriptKindName(scriptKindName: ScriptKindName) {
-+export function convertScriptKindName(scriptKindName: protocol.ScriptKindName) {
-     switch (scriptKindName) {
-         case "JS":
-             return ScriptKind.JS;
-@@ -369,14 +364,14 @@ export function convertScriptKindName(scriptKindName: ScriptKindName) {
- }
- 
- /*@internal*/
--export function convertUserPreferences(preferences: UserPreferences): ts.UserPreferences {
-+export function convertUserPreferences(preferences: protocol.UserPreferences): UserPreferences {
-     const { lazyConfiguredProjectsFromExternalProject, ...userPreferences } = preferences;
-     return userPreferences;
- }
- 
- export interface HostConfiguration {
--    formatCodeOptions: ts.FormatCodeSettings;
--    preferences: UserPreferences;
-+    formatCodeOptions: servicesTypes.FormatCodeSettings;
-+    preferences: protocol.UserPreferences;
-     hostInfo: string;
-     extraFileExtensions?: FileExtensionInfo[];
-     watchOptions?: WatchOptions;
-@@ -418,7 +413,7 @@ const fileNamePropertyReader: FilePropertyReader<string> = {
-     hasMixedContent: (fileName, extraFileExtensions) => some(extraFileExtensions, ext => ext.isMixedContent && fileExtensionIs(fileName, ext.extension)),
- };
- 
--const externalFilePropertyReader: FilePropertyReader<ExternalFile> = {
-+const externalFilePropertyReader: FilePropertyReader<protocol.ExternalFile> = {
-     getFileName: x => x.fileName,
-     getScriptKind: x => tryConvertScriptKindName(x.scriptKind!), // TODO: GH#18217
-     hasMixedContent: x => !!x.hasMixedContent,
-@@ -701,7 +696,7 @@ function setProjectOptionsUsed(project: ConfiguredProject | ExternalProject) {
- export interface OpenFileArguments {
-     fileName: string;
-     content?: string;
--    scriptKind?: ScriptKindName | ScriptKind;
-+    scriptKind?: protocol.ScriptKindName | ScriptKind;
-     hasMixedContent?: boolean;
-     projectRootPath?: string;
- }
-@@ -1160,7 +1155,7 @@ export class ProjectService {
-         }
-     }
- 
--    setCompilerOptionsForInferredProjects(projectCompilerOptions: InferredProjectCompilerOptions, projectRootPath?: string): void {
-+    setCompilerOptionsForInferredProjects(projectCompilerOptions: protocol.InferredProjectCompilerOptions, projectRootPath?: string): void {
-         Debug.assert(projectRootPath === undefined || this.useInferredProjectPerProjectRoot, "Setting compiler options per project root path is only supported when useInferredProjectPerProjectRoot is enabled");
- 
-         const compilerOptions = convertCompilerOptions(projectCompilerOptions);
-@@ -1286,16 +1281,16 @@ export class ProjectService {
-         return info && info.getFormatCodeSettings() || this.hostConfiguration.formatCodeOptions;
-     }
- 
--    getPreferences(file: NormalizedPath): UserPreferences {
-+    getPreferences(file: NormalizedPath): protocol.UserPreferences {
-         const info = this.getScriptInfoForNormalizedPath(file);
-         return { ...this.hostConfiguration.preferences, ...info && info.getPreferences() };
-     }
- 
--    getHostFormatCodeOptions(): ts.FormatCodeSettings {
-+    getHostFormatCodeOptions(): servicesTypes.FormatCodeSettings {
-         return this.hostConfiguration.formatCodeOptions;
-     }
- 
--    getHostPreferences(): UserPreferences {
-+    getHostPreferences(): protocol.UserPreferences {
-         return this.hostConfiguration.preferences;
-     }
- 
-@@ -2062,7 +2057,7 @@ export class ProjectService {
-         this.projectToSizeMap.set(name, totalNonTsFileSize);
-     }
- 
--    private createExternalProject(projectFileName: string, files: ExternalFile[], options: ExternalProjectCompilerOptions, typeAcquisition: TypeAcquisition, excludedFiles: NormalizedPath[]) {
-+    private createExternalProject(projectFileName: string, files: protocol.ExternalFile[], options: protocol.ExternalProjectCompilerOptions, typeAcquisition: TypeAcquisition, excludedFiles: NormalizedPath[]) {
-         const compilerOptions = convertCompilerOptions(options);
-         const watchOptionsAndErrors = convertWatchOptions(options, getDirectoryPath(normalizeSlashes(projectFileName)));
-         const project = new ExternalProject(
-@@ -3056,7 +3051,7 @@ export class ProjectService {
-         this.performanceEventHandler = performanceEventHandler;
-     }
- 
--    setHostConfiguration(args: ConfigureRequestArguments) {
-+    setHostConfiguration(args: protocol.ConfigureRequestArguments) {
-         if (args.file) {
-             const info = this.getScriptInfoForNormalizedPath(toNormalizedPath(args.file));
-             if (info) {
-@@ -3746,7 +3741,7 @@ export class ProjectService {
-     }
- 
-     private collectChanges(
--        lastKnownProjectVersions: ProjectVersionInfo[],
-+        lastKnownProjectVersions: protocol.ProjectVersionInfo[],
-         currentProjects: Project[],
-         includeProjectReferenceRedirectInfo: boolean | undefined,
-         result: ProjectFilesWithTSDiagnostics[]
-@@ -3758,7 +3753,7 @@ export class ProjectService {
-     }
- 
-     /* @internal */
--    synchronizeProjectList(knownProjects: ProjectVersionInfo[], includeProjectReferenceRedirectInfo?: boolean): ProjectFilesWithTSDiagnostics[] {
-+    synchronizeProjectList(knownProjects: protocol.ProjectVersionInfo[], includeProjectReferenceRedirectInfo?: boolean): ProjectFilesWithTSDiagnostics[] {
-         const files: ProjectFilesWithTSDiagnostics[] = [];
-         this.collectChanges(knownProjects, this.externalProjects, includeProjectReferenceRedirectInfo, files);
-         this.collectChanges(knownProjects, arrayFrom(this.configuredProjects.values()), includeProjectReferenceRedirectInfo, files);
-@@ -3965,7 +3960,7 @@ export class ProjectService {
-         }
- 
-         const excludeRegexes = excludeRules.map(e => new RegExp(e, "i"));
--        const filesToKeep: ExternalFile[] = [];
-+        const filesToKeep: protocol.ExternalFile[] = [];
-         for (let i = 0; i < proj.rootFiles.length; i++) {
-             if (excludeRegexes.some(re => re.test(normalizedNames[i]))) {
-                 excludedFiles.push(normalizedNames[i]);
-@@ -4023,7 +4018,7 @@ export class ProjectService {
-         const excludedFiles = this.applySafeList(proj);
- 
-         let tsConfigFiles: NormalizedPath[] | undefined;
--        const rootFiles: ExternalFile[] = [];
-+        const rootFiles: protocol.ExternalFile[] = [];
-         for (const file of proj.rootFiles) {
-             const normalized = toNormalizedPath(file.fileName);
-             if (getBaseConfigFileName(normalized)) {
-@@ -4137,7 +4132,7 @@ export class ProjectService {
-         return false;
-     }
- 
--    configurePlugin(args: ConfigurePluginRequestArguments) {
-+    configurePlugin(args: protocol.ConfigurePluginRequestArguments) {
-         // For any projects that already have the plugin loaded, configure the plugin
-         this.forEachEnabledProject(project => project.onPluginConfigurationChanged(args.pluginName, args.configuration));
- 
+ const lineCollectionCapacity = 4;
+diff --git a/src/server/session.ts b/src/server/session.ts
+index 0df63f2cf4..cdded16804 100644
+--- a/src/server/session.ts
++++ b/src/server/session.ts
+@@ -50,7 +50,6 @@ import {
+ import {
+     documentSpansEqual, getSnapshotText, getTouchingPropertyName, mapOneOrMany, PossibleProgramFileInfo,
+ } from "../services/utilities";
+-import { protocol } from "./_namespaces/ts.server";
+ import {
+     ConfigFileDiagEvent, convertFormatOptions, convertScriptKindName, convertUserPreferences, isConfigFile,
+     LargeFileReferencedEvent, ProjectInfoTelemetryEvent, ProjectLanguageServiceStateEvent, ProjectLoadingFinishEvent,
+@@ -60,6 +59,7 @@ import {
+ import {
+     ConfiguredProject, EmitResult, isConfiguredProject, isExternalProject, isInferredProject, Project, ProjectKind,
+ } from "./project";
++import * as protocol from "./protocol";
+ import { ScriptInfo } from "./scriptInfo";
+ import { ServerHost } from "./types";
+ import { ITypingsInstaller } from "./typingsCache";
 diff --git a/src/services/documentRegistry.ts b/src/services/documentRegistry.ts
 index 2dc2d26fe3..72fa96d99e 100644
 --- a/src/services/documentRegistry.ts
@@ -482,10 +427,10 @@ index 2dc2d26fe3..72fa96d99e 100644
          }
      }
 diff --git a/src/testRunner/unittests/services/textChanges.ts b/src/testRunner/unittests/services/textChanges.ts
-index 4ce51c2475..7ce38d0590 100644
+index 4ce51c2475..07b55da43a 100644
 --- a/src/testRunner/unittests/services/textChanges.ts
 +++ b/src/testRunner/unittests/services/textChanges.ts
-@@ -12,15 +12,15 @@ import {
+@@ -12,15 +12,17 @@ import {
  import { getNewLineCharacter } from "../../../compiler/utilities";
  import { isDeclaration } from "../../../compiler/utilitiesPublic";
  import { Baseline } from "../../../harness/harnessIO";
@@ -493,7 +438,9 @@ index 4ce51c2475..7ce38d0590 100644
  import { FormatContext } from "../../../services/formatting/formatting";
  import { getFormatContext } from "../../../services/formatting/rulesMap";
 -import { applyChanges, ChangeTracker, LeadingTriviaOption, TrailingTriviaOption } from "../../../services/textChanges";
-+import { applyChanges, ChangeTracker, deleteNode, LeadingTriviaOption, TrailingTriviaOption } from "../../../services/textChanges";
++import {
++    applyChanges, ChangeTracker, deleteNode, LeadingTriviaOption, TrailingTriviaOption,
++} from "../../../services/textChanges";
  import { testFormatSettings } from "../../../services/types";
  import { notImplementedHost } from "./extract/helpers";
  
@@ -503,7 +450,7 @@ index 4ce51c2475..7ce38d0590 100644
  describe("unittests:: services:: textChanges", () => {
      function findChild(name: string, n: Node) {
          return find(n)!;
-@@ -145,7 +145,6 @@ function bar() {
+@@ -145,7 +147,6 @@ function bar() {
      function findVariableDeclarationContaining(name: string, sourceFile: SourceFile): VariableDeclaration {
          return cast(findChild(name, sourceFile), isVariableDeclaration);
      }
@@ -579,6 +526,207 @@ index bc4d380f02..9f1362fd52 100644
      const programs = getPrograms();
      for (let i = 0; i < programs.length; i++) {
          baselineProgram(baseline, programs[i], oldPrograms[i], baselineDependencies);
+diff --git a/src/testRunner/unittests/tsserver/cancellationToken.ts b/src/testRunner/unittests/tsserver/cancellationToken.ts
+index eb635c66bd..ec89b2348b 100644
+--- a/src/testRunner/unittests/tsserver/cancellationToken.ts
++++ b/src/testRunner/unittests/tsserver/cancellationToken.ts
+@@ -1,7 +1,7 @@
+ import { AnyFunction, noop } from "../../../compiler/core";
+ import { OperationCanceledException } from "../../../compiler/types";
+ import { extractMessage } from "../../../harness/client";
+-import { protocol } from "../../../server/_namespaces/ts.server";
++import * as protocol from "../../../server/protocol";
+ import { ServerCancellationToken } from "../../../server/session";
+ import { projectSystem } from "../../_namespaces/ts";
+ import { createServerHost, createSession, TestServerCancellationToken } from "./helpers";
+diff --git a/src/testRunner/unittests/tsserver/compileOnSave.ts b/src/testRunner/unittests/tsserver/compileOnSave.ts
+index 2038a9ebd1..f1bbf2b49b 100644
+--- a/src/testRunner/unittests/tsserver/compileOnSave.ts
++++ b/src/testRunner/unittests/tsserver/compileOnSave.ts
+@@ -2,7 +2,7 @@ import { arrayIsEqualTo, compareStringsCaseSensitive, emptyArray, map, stringCon
+ import { Diagnostics } from "../../../compiler/diagnosticInformationMap.generated";
+ import { CompilerOptions, diagnosticCategoryName, Extension } from "../../../compiler/types";
+ import { changeExtension, formatStringFromArgs } from "../../../compiler/utilities";
+-import { protocol } from "../../../server/_namespaces/ts.server";
++import * as protocol from "../../../server/protocol";
+ import { CommandNames, Session } from "../../../server/session";
+ import { ServerHost } from "../../../server/types";
+ import { projectSystem } from "../../_namespaces/ts";
+diff --git a/src/testRunner/unittests/tsserver/helpers.ts b/src/testRunner/unittests/tsserver/helpers.ts
+index 628b199e9a..9158b3d51e 100644
+--- a/src/testRunner/unittests/tsserver/helpers.ts
++++ b/src/testRunner/unittests/tsserver/helpers.ts
+@@ -19,12 +19,12 @@ import {
+     createServerHost, libFile, safeList, TestServerHost,
+ } from "../../../harness/virtualFileSystemWithWatch";
+ import { InvalidateCachedTypings, SetTypings } from "../../../jsTyping/types";
+-import { protocol } from "../../../server/_namespaces/ts.server";
+ import {
+     FileStats, OpenFileInfo, OpenFileInfoTelemetryEvent, OpenFileInfoTelemetryEventData, ProjectInfoTelemetryEvent,
+     ProjectInfoTelemetryEventData, ProjectService, ProjectServiceEvent, ProjectServiceOptions,
+ } from "../../../server/editorServices";
+ import { Project, ProjectKind } from "../../../server/project";
++import * as protocol from "../../../server/protocol";
+ import {
+     CommandNames, nullCancellationToken, ServerCancellationToken, Session, SessionOptions, toEvent,
+ } from "../../../server/session";
+diff --git a/src/testRunner/unittests/tsserver/inferredProjects.ts b/src/testRunner/unittests/tsserver/inferredProjects.ts
+index 06fa9e4462..f053bdeab1 100644
+--- a/src/testRunner/unittests/tsserver/inferredProjects.ts
++++ b/src/testRunner/unittests/tsserver/inferredProjects.ts
+@@ -1,8 +1,8 @@
+ import { Map } from "../../../compiler/corePublic";
+ import { combinePaths } from "../../../compiler/path";
+ import { ModuleResolutionKind, ScriptKind, ScriptTarget } from "../../../compiler/types";
+-import { protocol } from "../../../server/_namespaces/ts.server";
+ import { InferredProject } from "../../../server/project";
++import * as protocol from "../../../server/protocol";
+ import { projectRoot } from "../tscWatch/helpers";
+ import {
+     checkArray, checkNumberOfConfiguredProjects, checkNumberOfInferredProjects, checkNumberOfProjects,
+diff --git a/src/testRunner/unittests/tsserver/projectErrors.ts b/src/testRunner/unittests/tsserver/projectErrors.ts
+index 09c161a9f7..9b86d041f2 100644
+--- a/src/testRunner/unittests/tsserver/projectErrors.ts
++++ b/src/testRunner/unittests/tsserver/projectErrors.ts
+@@ -3,8 +3,8 @@ import { Diagnostics } from "../../../compiler/diagnosticInformationMap.generate
+ import { getBaseFileName } from "../../../compiler/path";
+ import { flattenDiagnosticMessageText } from "../../../compiler/program";
+ import { Diagnostic, ModuleKind } from "../../../compiler/types";
+-import { protocol } from "../../../server/_namespaces/ts.server";
+ import { ProjectFilesWithTSDiagnostics } from "../../../server/project";
++import * as protocol from "../../../server/protocol";
+ import { CommandNames } from "../../../server/session";
+ import { projectSystem } from "../../_namespaces/ts";
+ import { projectRoot } from "../tscWatch/helpers";
+diff --git a/src/testRunner/unittests/tsserver/projects.ts b/src/testRunner/unittests/tsserver/projects.ts
+index 09695df970..f79f6851ff 100644
+--- a/src/testRunner/unittests/tsserver/projects.ts
++++ b/src/testRunner/unittests/tsserver/projects.ts
+@@ -5,7 +5,7 @@ import { Debug } from "../../../compiler/debug";
+ import { combinePaths, getDirectoryPath, normalizePath } from "../../../compiler/path";
+ import { Path, ScriptKind, ScriptTarget } from "../../../compiler/types";
+ import { createTextSpan } from "../../../compiler/utilitiesPublic";
+-import { protocol } from "../../../server/_namespaces/ts.server";
++import * as protocol from "../../../server/protocol";
+ import { CommandNames } from "../../../server/session";
+ import { ITypingsInstaller } from "../../../server/typingsCache";
+ import {
+diff --git a/src/testRunner/unittests/tsserver/refactors.ts b/src/testRunner/unittests/tsserver/refactors.ts
+index 125a4008a7..88288e02ce 100644
+--- a/src/testRunner/unittests/tsserver/refactors.ts
++++ b/src/testRunner/unittests/tsserver/refactors.ts
+@@ -1,4 +1,4 @@
+-import { protocol } from "../../../server/_namespaces/ts.server";
++import * as protocol from "../../../server/protocol";
+ import { projectSystem } from "../../_namespaces/ts";
+ import { createServerHost, createSession, executeSessionRequest, File, openFilesForSession } from "./helpers";
+ 
+diff --git a/src/testRunner/unittests/tsserver/reload.ts b/src/testRunner/unittests/tsserver/reload.ts
+index 946ed9338f..9897c808d4 100644
+--- a/src/testRunner/unittests/tsserver/reload.ts
++++ b/src/testRunner/unittests/tsserver/reload.ts
+@@ -1,4 +1,4 @@
+-import { protocol } from "../../../server/_namespaces/ts.server";
++import * as protocol from "../../../server/protocol";
+ import { getSnapshotText } from "../../../services/utilities";
+ import { checkNumberOfProjects, createServerHost, createSession, libFile } from "./helpers";
+ 
+diff --git a/src/testRunner/unittests/tsserver/resolutionCache.ts b/src/testRunner/unittests/tsserver/resolutionCache.ts
+index 7ef9f71c82..bf4c856313 100644
+--- a/src/testRunner/unittests/tsserver/resolutionCache.ts
++++ b/src/testRunner/unittests/tsserver/resolutionCache.ts
+@@ -4,7 +4,7 @@ import { Debug } from "../../../compiler/debug";
+ import { combinePaths, forEachAncestorDirectory, getDirectoryPath, normalizePath } from "../../../compiler/path";
+ import { ModuleResolutionHost, ScriptKind } from "../../../compiler/types";
+ import { removeFileExtension } from "../../../compiler/utilities";
+-import { protocol } from "../../../server/_namespaces/ts.server";
++import * as protocol from "../../../server/protocol";
+ import { CommandNames } from "../../../server/session";
+ import { projectSystem } from "../../_namespaces/ts";
+ import { projectRoot } from "../tscWatch/helpers";
+diff --git a/src/testRunner/unittests/tsserver/session.ts b/src/testRunner/unittests/tsserver/session.ts
+index b443e5c8f7..65bb2212a9 100644
+--- a/src/testRunner/unittests/tsserver/session.ts
++++ b/src/testRunner/unittests/tsserver/session.ts
+@@ -9,8 +9,8 @@ import {
+ } from "../../../compiler/types";
+ import { mockHash } from "../../../harness/harnessIO";
+ import { byteLength } from "../../../harness/harnessUtils";
+-import { protocol } from "../../../server/_namespaces/ts.server";
+ import { ProjectService } from "../../../server/editorServices";
++import * as protocol from "../../../server/protocol";
+ import {
+     CommandNames, getLocationInNewDocument, HandlerResponse, nullCancellationToken, Session, SessionOptions,
+ } from "../../../server/session";
+diff --git a/src/testRunner/unittests/tsserver/syntacticServer.ts b/src/testRunner/unittests/tsserver/syntacticServer.ts
+index 866935e6ab..256aaef904 100644
+--- a/src/testRunner/unittests/tsserver/syntacticServer.ts
++++ b/src/testRunner/unittests/tsserver/syntacticServer.ts
+@@ -1,5 +1,5 @@
+ import { emptyArray } from "../../../compiler/core";
+-import { protocol } from "../../../server/_namespaces/ts.server";
++import * as protocol from "../../../server/protocol";
+ import { projectSystem } from "../../_namespaces/ts";
+ import { projectRoot } from "../tscWatch/helpers";
+ import {
+diff --git a/src/testRunner/unittests/tsserver/telemetry.ts b/src/testRunner/unittests/tsserver/telemetry.ts
+index 96cd0e13e2..cb6a9340c1 100644
+--- a/src/testRunner/unittests/tsserver/telemetry.ts
++++ b/src/testRunner/unittests/tsserver/telemetry.ts
+@@ -1,9 +1,9 @@
+ import { isString } from "../../../compiler/core";
+ import { CompilerOptions } from "../../../compiler/types";
+-import { protocol } from "../../../server/_namespaces/ts.server";
+ import {
+     maxProgramSizeForNonTsFiles, ProjectInfoTelemetryEvent, ProjectLanguageServiceStateEvent,
+ } from "../../../server/editorServices";
++import * as protocol from "../../../server/protocol";
+ import { checkNumberOfProjects, File, fileStats, TestServerEventManager, toExternalFiles } from "./helpers";
+ 
+ describe("unittests:: tsserver:: project telemetry", () => {
+diff --git a/src/testRunner/unittests/tsserver/typingsInstaller.ts b/src/testRunner/unittests/tsserver/typingsInstaller.ts
+index c67437645c..f2fd08e378 100644
+--- a/src/testRunner/unittests/tsserver/typingsInstaller.ts
++++ b/src/testRunner/unittests/tsserver/typingsInstaller.ts
+@@ -11,9 +11,9 @@ import {
+ } from "../../../jsTyping/jsTyping";
+ import { EventBeginInstallTypes, EventEndInstallTypes } from "../../../jsTyping/shared";
+ import { BeginInstallTypes, EndInstallTypes, InvalidateCachedTypings, SetTypings } from "../../../jsTyping/types";
+-import { protocol } from "../../../server/_namespaces/ts.server";
+ import { updateProjectIfDirty } from "../../../server/editorServices";
+ import { Project } from "../../../server/project";
++import * as protocol from "../../../server/protocol";
+ import { ServerHost } from "../../../server/types";
+ import {
+     getNpmCommandForInstallation, installNpmPackages, Log, RequestCompletedAction, typingsName,
+diff --git a/src/tsserver/nodeServer.ts b/src/tsserver/nodeServer.ts
+index a0ee7a3a09..0d249c11a8 100644
+--- a/src/tsserver/nodeServer.ts
++++ b/src/tsserver/nodeServer.ts
+@@ -18,9 +18,9 @@ import {
+     BeginInstallTypes, EndInstallTypes, InitializationFailedResponse, InstallPackageRequest, InvalidateCachedTypings,
+     PackageInstalledResponse, SetTypings, TypesRegistryResponse, TypingInstallerRequestUnion,
+ } from "../jsTyping/types";
+-import { protocol } from "../server/_namespaces/ts.server";
+ import { ProjectService } from "../server/editorServices";
+ import { Project } from "../server/project";
++import * as protocol from "../server/protocol";
+ import {
+     Event, formatMessage, nullCancellationToken, ServerCancellationToken, Session, toEvent,
+ } from "../server/session";
+diff --git a/src/webServer/webServer.ts b/src/webServer/webServer.ts
+index a248c8253c..5a6b7d6f2c 100644
+--- a/src/webServer/webServer.ts
++++ b/src/webServer/webServer.ts
+@@ -4,7 +4,7 @@ import { directorySeparator, ensureTrailingDirectorySeparator, getDirectoryPath
+ import { perfLogger } from "../compiler/perfLogger";
+ import { returnNoopFileWatcher } from "../compiler/watch";
+ import { nowString } from "../jsTyping/shared";
+-import { protocol } from "../server/_namespaces/ts.server";
++import * as protocol from "../server/protocol";
+ import { ServerCancellationToken, Session, SessionOptions } from "../server/session";
+ import { ServerHost } from "../server/types";
+ import { nullTypingsInstaller } from "../server/typingsCache";
 -- 
 2.36.1
 
