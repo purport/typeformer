@@ -156,7 +156,11 @@ export function inlineImports(project: Project): void {
                         .sort();
                     const newPath = declPaths?.[0];
 
-                    if (newPath && addSyntheticImport(newPath.replace(/(\.d)?\.ts$/, ""), foreignName, localName)) {
+                    if (
+                        newPath &&
+                        !newPath.endsWith("protocol.ts") && // Special case; leave these fully qualified
+                        addSyntheticImport(newPath.replace(/(\.d)?\.ts$/, ""), foreignName, localName)
+                    ) {
                         return possibleSubstitute;
                     }
                 }
