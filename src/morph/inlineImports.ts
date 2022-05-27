@@ -168,6 +168,7 @@ export function inlineImports(project: Project): void {
                         newPath &&
                         // Special case; these were originally written fully-qualified.
                         !newPath.endsWith("protocol.ts") &&
+                        !newPath.endsWith("performance.ts") &&
                         !newPath.endsWith("fourslashImpl.ts") &&
                         !newPath.endsWith("fourslashInterfaceImpl.ts") &&
                         addSyntheticImport(newPath.replace(/(\.d)?\.ts$/, ""), foreignName, localName)
@@ -216,20 +217,8 @@ export function inlineImports(project: Project): void {
         sourceFile.insertImportDeclarations(0, imports);
     }
 
-    // log("organizing imports");
-    // for (const sourceFile of getTsSourceFiles(project)) {
-    //     if (isNamespaceBarrel(sourceFile)) {
-    //         continue;
-    //     }
-    //     sourceFile.organizeImports();
-    // }
-
-    // This also removes unused imports.
-    log("reformatting imports");
+    log("cleaning up imports");
     for (const sourceFile of getTsSourceFiles(project)) {
-        if (isNamespaceBarrel(sourceFile)) {
-            continue;
-        }
         formatImports(sourceFile);
     }
 }

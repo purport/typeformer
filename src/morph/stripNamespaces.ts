@@ -19,6 +19,7 @@ import {
 
 import {
     addTsConfigs,
+    formatImports,
     getTsConfigs,
     getTsSourceFiles,
     getTsStyleRelativePath,
@@ -368,7 +369,7 @@ export function stripNamespaces(project: Project): void {
         };
 
         const sourceFile = project.createSourceFile(filename, structure);
-        sourceFile.insertStatements(0, `/* Generated file to emulate the ${currentNSName} namespace. */`);
+        sourceFile.insertStatements(0, `/* Generated file to emulate the ${currentNSName} namespace. */\r\n\r\n`);
 
         const configForFile = projectRootMapper.getTsConfigPath(filename);
         const projRootDir = FileUtils.getDirPath(configForFile);
@@ -568,13 +569,11 @@ export function stripNamespaces(project: Project): void {
         });
 
         sourceFile.insertImportDeclarations(0, imports);
+    }
 
-        // Remove unused imports.
-        sourceFile.organizeImports();
-        if (sourceFile.getExportSymbols().length === 0) {
-            // organizeImports was too strong, add an empty export to make sure this is a module.
-            sourceFile.addExportDeclarations([{}]);
-        }
+    log("cleaning up imports");
+    for (const sourceFile of getTsSourceFiles(project)) {
+        formatImports(sourceFile);
     }
 
     log("converting tsconfigs to outDir and removing prepends");

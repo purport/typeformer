@@ -70,6 +70,12 @@ export function formatImports(sourceFile: SourceFile) {
     );
     if (newText !== undefined) {
         sourceFile.replaceWithText(newText);
+        if (sourceFile.getImportDeclarations().length === 0 && sourceFile.getExportSymbols().length === 0) {
+            // We did too good of a job, and now the file isn't a module anymore because it's missing
+            // any imports or exports (how TS decides if something is a module). Add something back.
+            // TODO: I think the most recent version of TS lets us force all files to be modules.
+            sourceFile.addExportDeclarations([{}]);
+        }
     }
 }
 
