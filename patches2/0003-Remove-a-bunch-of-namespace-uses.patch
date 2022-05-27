@@ -6,7 +6,7 @@ Subject: [PATCH] Remove a bunch of namespace uses
 ---
  src/compiler/binder.ts                        |  5 ++---
  src/compiler/builder.ts                       |  6 ++---
- src/compiler/checker.ts                       | 16 +++++++-------
+ src/compiler/checker.ts                       | 17 +++++++-------
  src/compiler/emitter.ts                       | 20 ++++++++---------
  src/compiler/parser.ts                        | 22 +++++++++----------
  src/compiler/program.ts                       |  6 ++---
@@ -15,7 +15,7 @@ Subject: [PATCH] Remove a bunch of namespace uses
  src/compiler/sys.ts                           | 21 +++++++++---------
  src/compiler/tracing.ts                       |  2 +-
  src/compiler/transformer.ts                   |  2 +-
- src/compiler/transformers/declarations.ts     |  7 +++---
+ src/compiler/transformers/declarations.ts     |  9 ++++----
  .../transformers/declarations/diagnostics.ts  |  5 ++---
  src/compiler/tsbuildPublic.ts                 |  5 ++---
  src/compiler/types.ts                         |  1 +
@@ -76,7 +76,7 @@ Subject: [PATCH] Remove a bunch of namespace uses
  src/tsserver/nodeServer.ts                    |  2 +-
  src/tsserver/webServer.ts                     |  2 +-
  src/webServer/webServer.ts                    |  2 +-
- 72 files changed, 121 insertions(+), 178 deletions(-)
+ 72 files changed, 123 insertions(+), 179 deletions(-)
  delete mode 100644 src/testRunner/compilerRef.ts
  delete mode 100644 src/testRunner/documentsRef.ts
  delete mode 100644 src/testRunner/evaluatorRef.ts
@@ -150,16 +150,24 @@ index ff784ad15c..ed43ea1ce3 100644
  
      function toAbsolutePath(path: string) {
 diff --git a/src/compiler/checker.ts b/src/compiler/checker.ts
-index 99291e11a5..c4032f9b79 100644
+index 3e74b1f36c..f15ba7088e 100644
 --- a/src/compiler/checker.ts
 +++ b/src/compiler/checker.ts
 @@ -1,5 +1,3 @@
 -import * as ts from "./_namespaces/ts";
--import { performance } from "./_namespaces/ts";
+-import { moduleSpecifiers, performance } from "./_namespaces/ts";
  import { bindSourceFile, getModuleInstanceState, ModuleInstanceState } from "./binder";
  import {
      addRange, and, append, appendIfUnique, arrayFrom, arrayOf, arraysEqual, arrayToMultiMap, binarySearch,
-@@ -57,6 +55,7 @@ import {
+@@ -49,6 +47,7 @@ import {
+ } from "./factory/utilities";
+ import { setTextRange } from "./factory/utilitiesPublic";
+ import { getTypesPackageName, mangleScopedPackageName } from "./moduleNameResolver";
++import * as moduleSpecifiers from "./moduleSpecifiers";
+ import {
+     forEachChild, forEachChildRecursively, isExternalModule, parseIsolatedEntityName, parseNodeFactory,
+ } from "./parser";
+@@ -56,6 +55,7 @@ import {
      comparePaths, fileExtensionIs, fileExtensionIsOneOf, getDirectoryPath, getNormalizedAbsolutePath, hasExtension,
      pathIsRelative,
  } from "./path";
@@ -167,7 +175,7 @@ index 99291e11a5..c4032f9b79 100644
  import {
      getModeForUsageLocation, getResolutionDiagnostic, getResolutionModeOverrideForClause,
      isExclusivelyTypeOnlyImportOrExport, resolveTripleslashReference,
-@@ -212,8 +211,8 @@ import {
+@@ -211,8 +211,8 @@ import {
      getEffectiveConstraintOfTypeParameter, getEffectiveTypeParameterDeclarations, getJSDocClassTag,
      getJSDocDeprecatedTag, getJSDocEnumTag, getJSDocParameterTags, getJSDocTags, getJSDocThisTag, getJSDocType,
      getJSDocTypeTag, getNameOfDeclaration, getOriginalNode, getParseTreeNode, getTextOfJSDocComment, hasInitializer,
@@ -178,7 +186,7 @@ index 99291e11a5..c4032f9b79 100644
      isCallOrNewExpression, isClassElement, isClassLike, isConstTypeReference, isDeclaration, isEntityName, isExpression,
      isExpressionOfOptionalChainRoot, isExternalModuleIndicator, isExternalModuleNameRelative, isForInOrOfStatement,
      isFunctionLike, isFunctionLikeDeclaration, isFunctionLikeOrClassStaticBlockDeclaration, isFunctionOrModuleBlock,
-@@ -966,6 +965,7 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
+@@ -965,6 +965,7 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
          isPropertyAccessible,
          getTypeOnlyAliasDeclaration,
          getMemberOverrideModifierStatus,
@@ -186,7 +194,7 @@ index 99291e11a5..c4032f9b79 100644
      };
  
      function runWithInferenceBlockedFromSourceNode<T>(node: Node | undefined, fn: () => T): T {
-@@ -8817,7 +8817,7 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
+@@ -8816,7 +8817,7 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
  
      function findResolutionCycleStartIndex(target: TypeSystemEntity, propertyName: TypeSystemPropertyName): number {
          for (let i = resolutionTargets.length - 1; i >= 0; i--) {
@@ -195,7 +203,7 @@ index 99291e11a5..c4032f9b79 100644
                  return -1;
              }
              if (resolutionTargets[i] === target && resolutionPropertyNames[i] === propertyName) {
-@@ -8827,7 +8827,7 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
+@@ -8826,7 +8827,7 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
          return -1;
      }
  
@@ -204,7 +212,7 @@ index 99291e11a5..c4032f9b79 100644
          switch (propertyName) {
              case TypeSystemPropertyName.Type:
                  return !!getSymbolLinks(target as Symbol).type;
-@@ -17751,7 +17751,7 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
+@@ -17750,7 +17751,7 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
              return false;
          }
          // Or functions with annotated parameter types
@@ -213,7 +221,7 @@ index 99291e11a5..c4032f9b79 100644
              return false;
          }
          const sourceSig = getSingleCallSignature(source);
-@@ -42643,7 +42643,7 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
+@@ -42642,7 +42643,7 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
      }
  
      function typeHasCallOrConstructSignatures(type: Type): boolean {
@@ -559,14 +567,23 @@ index 2df182d5e7..78706cfd2a 100644
  import { transformClassFields } from "./transformers/classFields";
  import { transformDeclarations } from "./transformers/declarations";
 diff --git a/src/compiler/transformers/declarations.ts b/src/compiler/transformers/declarations.ts
-index 641496e5de..7b35a3e62f 100644
+index 594b920035..6cecbf4c21 100644
 --- a/src/compiler/transformers/declarations.ts
 +++ b/src/compiler/transformers/declarations.ts
-@@ -1,4 +1,3 @@
+@@ -1,5 +1,3 @@
 -import * as ts from "../_namespaces/ts";
+-import { moduleSpecifiers } from "../_namespaces/ts";
  import {
      append, arrayFrom, compact, concatenate, contains, emptyArray, filter, flatMap, flatten, forEach, isArray, last,
      length, map, mapDefined, orderedRemoveItem, pushIfUnique, some, startsWith, stringContains, toFileNameLowerCase,
+@@ -21,6 +19,7 @@ import {
+ import { canHaveModifiers, createEmptyExports } from "../factory/utilities";
+ import { setTextRange } from "../factory/utilitiesPublic";
+ import { pathContainsNodeModules } from "../moduleNameResolver";
++import * as moduleSpecifiers from "../moduleSpecifiers";
+ import { isExternalModule, parseNodeFactory } from "../parser";
+ import {
+     getDirectoryPath, getRelativePathToDirectoryOrUrl, hasExtension, normalizeSlashes, pathIsRelative, toPath,
 @@ -886,7 +885,7 @@ export function transformDeclarations(context: TransformationContext) {
          while (length(lateMarkedStatements)) {
              const i = lateMarkedStatements!.shift()!;

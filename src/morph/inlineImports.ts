@@ -169,6 +169,7 @@ export function inlineImports(project: Project): void {
                         // Special case; these were originally written fully-qualified.
                         !newPath.endsWith("protocol.ts") &&
                         !newPath.endsWith("performance.ts") &&
+                        !newPath.endsWith("moduleSpecifiers.ts") &&
                         !newPath.endsWith("fourslashImpl.ts") &&
                         !newPath.endsWith("fourslashInterfaceImpl.ts") &&
                         addSyntheticImport(newPath.replace(/(\.d)?\.ts$/, ""), foreignName, localName)
