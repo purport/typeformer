@@ -1,0 +1,584 @@
+From 254e84e55dfadf3dc69a5cfc1b524382668d717b Mon Sep 17 00:00:00 2001
+From: Jake Bailey <5341706+jakebailey@users.noreply.github.com>
+Date: Thu, 26 May 2022 20:40:20 -0700
+Subject: [PATCH] Remove a bunch of namespace uses
+
+---
+ src/compiler/binder.ts                        |  3 +-
+ src/compiler/parser.ts                        | 15 +++--
+ src/compiler/resolutionCache.ts               |  6 +-
+ .../transformers/declarations/diagnostics.ts  |  5 +-
+ src/compiler/tsbuildPublic.ts                 |  5 +-
+ src/compiler/watch.ts                         |  5 +-
+ src/debug/dbg.ts                              |  8 ---
+ src/server/editorServices.ts                  | 55 +++++++++----------
+ src/services/documentRegistry.ts              |  5 +-
+ .../unittests/services/textChanges.ts         |  5 +-
+ src/testRunner/unittests/tsbuild/publicApi.ts |  4 +-
+ src/testRunner/unittests/tsc/helpers.ts       |  5 +-
+ src/testRunner/unittests/tscWatch/helpers.ts  |  4 +-
+ 13 files changed, 52 insertions(+), 73 deletions(-)
+
+diff --git a/src/compiler/binder.ts b/src/compiler/binder.ts
+index 4c06caaa9d..17fa819ffc 100644
+--- a/src/compiler/binder.ts
++++ b/src/compiler/binder.ts
+@@ -1,4 +1,3 @@
+-import * as ts from "./_namespaces/ts";
+ import { getNodeId } from "./checker";
+ import {
+     append, appendIfUnique, cast, concatenate, contains, every, forEach, getRangesWhere, isString, length, Pattern,
+@@ -471,7 +470,7 @@ function createBinder(): (file: SourceFile, options: CompilerOptions) => void {
+             case SyntaxKind.Parameter:
+                 // Parameters with names are handled at the top of this function.  Parameters
+                 // without names can only come from JSDocFunctionTypes.
+-                Debug.assert(node.parent.kind === SyntaxKind.JSDocFunctionType, "Impossible parameter parent kind", () => `parent is: ${(ts as any).SyntaxKind ? (ts as any).SyntaxKind[node.parent.kind] : node.parent.kind}, expected JSDocFunctionType`);
++                Debug.assert(node.parent.kind === SyntaxKind.JSDocFunctionType, "Impossible parameter parent kind", () => `parent is: ${Debug.formatSyntaxKind(node.parent.kind)}, expected JSDocFunctionType`);
+                 const functionType = node.parent as JSDocFunctionType;
+                 const index = functionType.parameters.indexOf(node as ParameterDeclaration);
+                 return "arg" + index as __String;
+diff --git a/src/compiler/parser.ts b/src/compiler/parser.ts
+index e7e2b39881..46105d1168 100644
+--- a/src/compiler/parser.ts
++++ b/src/compiler/parser.ts
+@@ -1,4 +1,3 @@
+-import * as ts from "./_namespaces/ts";
+ import { convertToObjectWorker } from "./commandLineParser";
+ import {
+     addRange, append, AssertionLevel, concatenate, emptyArray, emptyMap, findIndex, forEach, getSpellingSuggestion,
+@@ -13,7 +12,7 @@ import {
+     isAsyncModifier, isExportAssignment, isExportDeclaration, isExportModifier, isExternalModuleReference,
+     isFunctionTypeNode, isImportDeclaration, isImportEqualsDeclaration, isJSDocFunctionType, isJSDocNullableType,
+     isJSDocReturnTag, isJSDocTypeTag, isJsxOpeningElement, isJsxOpeningFragment, isMetaProperty, isNonNullExpression,
+-    isPrivateIdentifier, isTaggedTemplateExpression, isTypeReferenceNode,
++    isPrivateIdentifier, isTaggedTemplateExpression, isTypeReferenceNode, isIdentifier as isIdentifierNode,
+ } from "./factory/nodeTests";
+ import { setTextRange } from "./factory/utilitiesPublic";
+ import { fileExtensionIsOneOf, normalizePath } from "./path";
+@@ -1757,7 +1756,7 @@ namespace Parser {
+         }
+ 
+         // Otherwise, if this isn't a well-known keyword-like identifier, give the generic fallback message.
+-        const expressionText = ts.isIdentifier(node) ? idText(node) : undefined;
++        const expressionText = isIdentifierNode(node) ? idText(node) : undefined;
+         if (!expressionText || !isIdentifierText(expressionText, languageVersion)) {
+             parseErrorAtCurrentToken(Diagnostics._0_expected, tokenToString(SyntaxKind.SemicolonToken));
+             return;
+@@ -6335,7 +6334,7 @@ namespace Parser {
+         let node: ExpressionStatement | LabeledStatement;
+         const hasParen = token() === SyntaxKind.OpenParenToken;
+         const expression = allowInAnd(parseExpression);
+-        if (ts.isIdentifier(expression) && parseOptional(SyntaxKind.ColonToken)) {
++        if (isIdentifierNode(expression) && parseOptional(SyntaxKind.ColonToken)) {
+             node = factory.createLabeledStatement(expression, parseStatement());
+         }
+         else {
+@@ -8393,7 +8392,7 @@ namespace Parser {
+                     case SyntaxKind.ArrayType:
+                         return isObjectOrObjectArrayTypeReference((node as ArrayTypeNode).elementType);
+                     default:
+-                        return isTypeReferenceNode(node) && ts.isIdentifier(node.typeName) && node.typeName.escapedText === "Object" && !node.typeArguments;
++                        return isTypeReferenceNode(node) && isIdentifierNode(node.typeName) && node.typeName.escapedText === "Object" && !node.typeArguments;
+                 }
+             }
+ 
+@@ -8664,8 +8663,8 @@ namespace Parser {
+             }
+ 
+             function escapedTextsEqual(a: EntityName, b: EntityName): boolean {
+-                while (!ts.isIdentifier(a) || !ts.isIdentifier(b)) {
+-                    if (!ts.isIdentifier(a) && !ts.isIdentifier(b) && a.right.escapedText === b.right.escapedText) {
++                while (!isIdentifierNode(a) || !isIdentifierNode(b)) {
++                    if (!isIdentifierNode(a) && !isIdentifierNode(b) && a.right.escapedText === b.right.escapedText) {
+                         a = a.left;
+                         b = b.left;
+                     }
+@@ -8690,7 +8689,7 @@ namespace Parser {
+                                 const child = tryParseChildTag(target, indent);
+                                 if (child && (child.kind === SyntaxKind.JSDocParameterTag || child.kind === SyntaxKind.JSDocPropertyTag) &&
+                                     target !== PropertyLikeParse.CallbackParameter &&
+-                                    name && (ts.isIdentifier(child.name) || !escapedTextsEqual(name, child.name.left))) {
++                                    name && (isIdentifierNode(child.name) || !escapedTextsEqual(name, child.name.left))) {
+                                     return false;
+                                 }
+                                 return child;
+diff --git a/src/compiler/resolutionCache.ts b/src/compiler/resolutionCache.ts
+index 5b79bdcbb1..41578375a6 100644
+--- a/src/compiler/resolutionCache.ts
++++ b/src/compiler/resolutionCache.ts
+@@ -1,4 +1,3 @@
+-import * as ts from "./_namespaces/ts";
+ import {
+     arrayToMap, contains, createMultiMap, emptyIterator, endsWith, firstDefinedIterator, GetCanonicalFileName, isString,
+     length, memoize, removeSuffix, returnTrue, some, startsWith, stringContains, unorderedRemoveItem,
+@@ -10,6 +9,7 @@ import {
+     CacheWithRedirects, createCacheWithRedirects, createModeAwareCache, createModuleResolutionCache,
+     createTypeReferenceDirectiveResolutionCache, getEffectiveTypeRoots, isTraceEnabled, loadModuleFromGlobalCache,
+     ModeAwareCache, ModuleResolutionCache, parseNodeModuleFromPath, pathContainsNodeModules, PerModuleNameCache, trace,
++    resolveTypeReferenceDirective as internalResolveTypeReferenceDirective, resolveModuleName as internalResolveModuleName,
+ } from "./moduleNameResolver";
+ import {
+     directorySeparator, fileExtensionIs, fileExtensionIsOneOf, getDirectoryPath, getNormalizedAbsolutePath,
+@@ -349,7 +349,7 @@ export function createResolutionCache(resolutionHost: ResolutionCacheHost, rootD
+     }
+ 
+     function resolveModuleName(moduleName: string, containingFile: string, compilerOptions: CompilerOptions, host: ModuleResolutionHost, redirectedReference?: ResolvedProjectReference, _containingSourceFile?: never, mode?: ModuleKind.CommonJS | ModuleKind.ESNext | undefined): CachedResolvedModuleWithFailedLookupLocations {
+-        const primaryResult = ts.resolveModuleName(moduleName, containingFile, compilerOptions, host, moduleResolutionCache, redirectedReference, mode);
++        const primaryResult = internalResolveModuleName(moduleName, containingFile, compilerOptions, host, moduleResolutionCache, redirectedReference, mode);
+         // return result immediately only if global cache support is not enabled or if it is .ts, .tsx or .d.ts
+         if (!resolutionHost.getGlobalCache) {
+             return primaryResult;
+@@ -381,7 +381,7 @@ export function createResolutionCache(resolutionHost: ResolutionCacheHost, rootD
+     }
+ 
+     function resolveTypeReferenceDirective(typeReferenceDirectiveName: string, containingFile: string | undefined, options: CompilerOptions, host: ModuleResolutionHost, redirectedReference?: ResolvedProjectReference, _containingSourceFile?: SourceFile, resolutionMode?: SourceFile["impliedNodeFormat"] | undefined): CachedResolvedTypeReferenceDirectiveWithFailedLookupLocations {
+-        return ts.resolveTypeReferenceDirective(typeReferenceDirectiveName, containingFile, options, host, redirectedReference, typeReferenceDirectiveResolutionCache, resolutionMode);
++        return internalResolveTypeReferenceDirective(typeReferenceDirectiveName, containingFile, options, host, redirectedReference, typeReferenceDirectiveResolutionCache, resolutionMode);
+     }
+ 
+     interface ResolveNamesWithLocalCacheInput<T extends ResolutionWithFailedLookupLocations, R extends ResolutionWithResolvedFileName> {
+diff --git a/src/compiler/transformers/declarations/diagnostics.ts b/src/compiler/transformers/declarations/diagnostics.ts
+index a821217498..0b7535fcdb 100644
+--- a/src/compiler/transformers/declarations/diagnostics.ts
++++ b/src/compiler/transformers/declarations/diagnostics.ts
+@@ -1,4 +1,3 @@
+-import * as ts from "../../_namespaces/ts";
+ import { Debug } from "../../debug";
+ import { Diagnostics } from "../../diagnosticInformationMap.generated";
+ import {
+@@ -185,7 +184,7 @@ export function createGetSymbolAccessibilityDiagnosticForNode(node: DeclarationD
+         return getTypeAliasDeclarationVisibilityError;
+     }
+     else {
+-        return Debug.assertNever(node, `Attempted to set a declaration diagnostic context for unhandled node kind: ${(ts as any).SyntaxKind[(node as any).kind]}`);
++        return Debug.assertNever(node, `Attempted to set a declaration diagnostic context for unhandled node kind: ${Debug.formatSyntaxKind((node as any).kind)}`);
+     }
+ 
+     function getVariableDeclarationTypeVisibilityDiagnosticMessage(symbolAccessibilityResult: SymbolAccessibilityResult) {
+@@ -414,7 +413,7 @@ export function createGetSymbolAccessibilityDiagnosticForNode(node: DeclarationD
+                     Diagnostics.Parameter_0_of_accessor_has_or_is_using_private_name_1;
+ 
+             default:
+-                return Debug.fail(`Unknown parent for parameter: ${(ts as any).SyntaxKind[node.parent.kind]}`);
++                return Debug.fail(`Unknown parent for parameter: ${Debug.formatSyntaxKind(node.parent.kind)}`);
+         }
+     }
+ 
+diff --git a/src/compiler/tsbuildPublic.ts b/src/compiler/tsbuildPublic.ts
+index c457a697ca..c3546ec61b 100644
+--- a/src/compiler/tsbuildPublic.ts
++++ b/src/compiler/tsbuildPublic.ts
+@@ -1,4 +1,3 @@
+-import * as ts from "./_namespaces/ts";
+ import {
+     AffectedFileResult, BuilderProgram, EmitAndSemanticDiagnosticsBuilderProgram, SemanticDiagnosticsBuilderProgram,
+ } from "./builderPublic";
+@@ -23,7 +22,7 @@ import {
+     resolveTypeReferenceDirective, TypeReferenceDirectiveResolutionCache,
+ } from "./moduleNameResolver";
+ import { isDeclarationFileName } from "./parser";
+-import { convertToRelativePath, getDirectoryPath, resolvePath } from "./path";
++import { convertToRelativePath, getDirectoryPath, resolvePath, toPath as internalToPath } from "./path";
+ import {
+     changeCompilerHostLikeToUseCache, flattenDiagnosticMessageText, ForegroundColorEscapeSequences, formatColorAndReset,
+     getConfigFileParsingDiagnostics, loadWithModeAwareCache, loadWithTypeDirectiveCache,
+@@ -408,7 +407,7 @@ function createSolutionBuilderState<T extends BuilderProgram>(watch: boolean, ho
+ }
+ 
+ function toPath(state: SolutionBuilderState, fileName: string) {
+-    return ts.toPath(fileName, state.currentDirectory, state.getCanonicalFileName);
++    return internalToPath(fileName, state.currentDirectory, state.getCanonicalFileName);
+ }
+ 
+ function toResolvedConfigFilePath(state: SolutionBuilderState, fileName: ResolvedConfigFileName): ResolvedConfigFilePath {
+diff --git a/src/compiler/watch.ts b/src/compiler/watch.ts
+index 9997c288d2..c9b5ce2735 100644
+--- a/src/compiler/watch.ts
++++ b/src/compiler/watch.ts
+@@ -1,4 +1,3 @@
+-import * as ts from "./_namespaces/ts";
+ import {
+     BuilderProgram, createEmitAndSemanticDiagnosticsBuilderProgram, EmitAndSemanticDiagnosticsBuilderProgram,
+ } from "./builderPublic";
+@@ -42,7 +41,7 @@ import {
+     createIncrementalCompilerHost, createIncrementalProgram, CreateProgram, ProgramHost, WatchCompilerHost,
+     WatchCompilerHostOfConfigFile, WatchCompilerHostOfFilesAndCompilerOptions, WatchHost, WatchStatusReporter,
+ } from "./watchPublic";
+-import { DirectoryStructureHost, getWatchFactory, WatchFactoryHost, WatchLogLevel } from "./watchUtilities";
++import { DirectoryStructureHost, getWatchFactory, WatchFactoryHost, WatchLogLevel, WatchFactory as InternalWatchFactory } from "./watchUtilities";
+ 
+ const sysFormatDiagnosticsHost: FormatDiagnosticsHost | undefined = sys ? {
+     getCurrentDirectory: () => sys.getCurrentDirectory(),
+@@ -613,7 +612,7 @@ export interface WatchTypeRegistry {
+     NodeModulesForModuleSpecifierCache: "node_modules for module specifier cache invalidation",
+ }
+ 
+-interface WatchFactory<X, Y = undefined> extends ts.WatchFactory<X, Y> {
++interface WatchFactory<X, Y = undefined> extends InternalWatchFactory<X, Y> {
+     writeLog: (s: string) => void;
+ }
+ 
+diff --git a/src/debug/dbg.ts b/src/debug/dbg.ts
+index c86b021fe2..342bf6bd2d 100644
+--- a/src/debug/dbg.ts
++++ b/src/debug/dbg.ts
+@@ -1,5 +1,3 @@
+-import * as Debug from "./_namespaces/Debug";
+-
+ /// <reference lib="es2019" />
+ 
+ interface Node {
+@@ -510,9 +508,3 @@ export function formatControlFlowGraph(flowNode: FlowNode) {
+         return s;
+     }
+ }
+-
+-// Export as a module. NOTE: Can't use module exports as this is built using --outFile
+-declare const module: { exports: {} };
+-if (typeof module !== "undefined" && module.exports) {
+-    module.exports = Debug;
+-}
+\ No newline at end of file
+diff --git a/src/server/editorServices.ts b/src/server/editorServices.ts
+index 9364bc6a0c..0ec292cce1 100644
+--- a/src/server/editorServices.ts
++++ b/src/server/editorServices.ts
+@@ -25,7 +25,7 @@ import { tracing } from "../compiler/tracing";
+ import {
+     CommandLineOption, CompilerOptions, Diagnostic, DocumentPosition, DocumentPositionMapper, FileExtensionInfo,
+     ParsedCommandLine, Path, ProjectReference, ResolvedProjectReference, ScriptKind, SourceFile, Ternary,
+-    TsConfigSourceFile, TypeAcquisition, WatchDirectoryFlags, WatchOptions,
++    TsConfigSourceFile, TypeAcquisition, UserPreferences, WatchDirectoryFlags, WatchOptions,
+ } from "../compiler/types";
+ import {
+     addToSeen, clearMap, forEachEntry, forEachKey, hasTSFileExtension, isJsonEqual, removeFileExtension,
+@@ -49,19 +49,14 @@ import {
+     CompletionInfo, emptyOptions, getDefaultFormatCodeSettings, HostCancellationToken, IncompleteCompletionsCache,
+     IndentStyle, LanguageServiceMode, PackageJsonAutoImportPreference, PackageJsonInfo, PerformanceEvent, TextChange,
+ } from "../services/types";
++import * as servicesTypes from "../services/types";
+ import { getSnapshotText, isInsideNodeModules } from "../services/utilities";
+-import * as ts from "./_namespaces/ts";
+-import { protocol } from "./_namespaces/ts.server";
+ import { createPackageJsonCache, PackageJsonCache } from "./packageJsonCache";
+ import {
+     AutoImportProviderProject, ConfiguredProject, countEachFileTypes, ExternalProject, hasNoTypeScriptSource,
+     InferredProject, isConfiguredProject, isInferredProject, Project, ProjectFilesWithTSDiagnostics, ProjectKind,
+ } from "./project";
+-import {
+-    CompileOnSaveMixin, ConfigurePluginRequestArguments, ConfigureRequestArguments, ExternalFile,
+-    ExternalProjectCompilerOptions, FormatCodeSettings, InferredProjectCompilerOptions, ProjectVersionInfo,
+-    ScriptKindName, UserPreferences,
+-} from "./protocol";
++import * as protocol from "./protocol";
+ import { isDynamicFileName, ScriptInfo, ScriptInfoVersion } from "./scriptInfo";
+ import { Session } from "./session";
+ import { ServerHost } from "./types";
+@@ -307,7 +302,7 @@ const defaultTypeSafeList: SafeList = {
+     }
+ };
+ 
+-export function convertFormatOptions(protocolOptions: FormatCodeSettings): ts.FormatCodeSettings {
++export function convertFormatOptions(protocolOptions: protocol.FormatCodeSettings): servicesTypes.FormatCodeSettings {
+     if (isString(protocolOptions.indentStyle)) {
+         protocolOptions.indentStyle = indentStyle.get(protocolOptions.indentStyle.toLowerCase());
+         Debug.assert(protocolOptions.indentStyle !== undefined);
+@@ -315,7 +310,7 @@ export function convertFormatOptions(protocolOptions: FormatCodeSettings): ts.Fo
+     return protocolOptions as any;
+ }
+ 
+-export function convertCompilerOptions(protocolOptions: ExternalProjectCompilerOptions): CompilerOptions & CompileOnSaveMixin {
++export function convertCompilerOptions(protocolOptions: protocol.ExternalProjectCompilerOptions): CompilerOptions & protocol.CompileOnSaveMixin {
+     compilerOptionConverters.forEach((mappedValues, id) => {
+         const propertyValue = protocolOptions[id];
+         if (isString(propertyValue)) {
+@@ -325,7 +320,7 @@ export function convertCompilerOptions(protocolOptions: ExternalProjectCompilerO
+     return protocolOptions as any;
+ }
+ 
+-export function convertWatchOptions(protocolOptions: ExternalProjectCompilerOptions, currentDirectory?: string): WatchOptionsAndErrors | undefined {
++export function convertWatchOptions(protocolOptions: protocol.ExternalProjectCompilerOptions, currentDirectory?: string): WatchOptionsAndErrors | undefined {
+     let watchOptions: WatchOptions | undefined;
+     let errors: Diagnostic[] | undefined;
+     optionsForWatch.forEach(option => {
+@@ -339,7 +334,7 @@ export function convertWatchOptions(protocolOptions: ExternalProjectCompilerOpti
+     return watchOptions && { watchOptions, errors };
+ }
+ 
+-export function convertTypeAcquisition(protocolOptions: InferredProjectCompilerOptions): TypeAcquisition | undefined {
++export function convertTypeAcquisition(protocolOptions: protocol.InferredProjectCompilerOptions): TypeAcquisition | undefined {
+     let result: TypeAcquisition | undefined;
+     typeAcquisitionDeclarations.forEach((option) => {
+         const propertyValue = protocolOptions[option.name];
+@@ -349,11 +344,11 @@ export function convertTypeAcquisition(protocolOptions: InferredProjectCompilerO
+     return result;
+ }
+ 
+-export function tryConvertScriptKindName(scriptKindName: ScriptKindName | ScriptKind): ScriptKind {
++export function tryConvertScriptKindName(scriptKindName: protocol.ScriptKindName | ScriptKind): ScriptKind {
+     return isString(scriptKindName) ? convertScriptKindName(scriptKindName) : scriptKindName;
+ }
+ 
+-export function convertScriptKindName(scriptKindName: ScriptKindName) {
++export function convertScriptKindName(scriptKindName: protocol.ScriptKindName) {
+     switch (scriptKindName) {
+         case "JS":
+             return ScriptKind.JS;
+@@ -369,14 +364,14 @@ export function convertScriptKindName(scriptKindName: ScriptKindName) {
+ }
+ 
+ /*@internal*/
+-export function convertUserPreferences(preferences: UserPreferences): ts.UserPreferences {
++export function convertUserPreferences(preferences: protocol.UserPreferences): UserPreferences {
+     const { lazyConfiguredProjectsFromExternalProject, ...userPreferences } = preferences;
+     return userPreferences;
+ }
+ 
+ export interface HostConfiguration {
+-    formatCodeOptions: ts.FormatCodeSettings;
+-    preferences: UserPreferences;
++    formatCodeOptions: servicesTypes.FormatCodeSettings;
++    preferences: protocol.UserPreferences;
+     hostInfo: string;
+     extraFileExtensions?: FileExtensionInfo[];
+     watchOptions?: WatchOptions;
+@@ -418,7 +413,7 @@ const fileNamePropertyReader: FilePropertyReader<string> = {
+     hasMixedContent: (fileName, extraFileExtensions) => some(extraFileExtensions, ext => ext.isMixedContent && fileExtensionIs(fileName, ext.extension)),
+ };
+ 
+-const externalFilePropertyReader: FilePropertyReader<ExternalFile> = {
++const externalFilePropertyReader: FilePropertyReader<protocol.ExternalFile> = {
+     getFileName: x => x.fileName,
+     getScriptKind: x => tryConvertScriptKindName(x.scriptKind!), // TODO: GH#18217
+     hasMixedContent: x => !!x.hasMixedContent,
+@@ -701,7 +696,7 @@ function setProjectOptionsUsed(project: ConfiguredProject | ExternalProject) {
+ export interface OpenFileArguments {
+     fileName: string;
+     content?: string;
+-    scriptKind?: ScriptKindName | ScriptKind;
++    scriptKind?: protocol.ScriptKindName | ScriptKind;
+     hasMixedContent?: boolean;
+     projectRootPath?: string;
+ }
+@@ -1160,7 +1155,7 @@ export class ProjectService {
+         }
+     }
+ 
+-    setCompilerOptionsForInferredProjects(projectCompilerOptions: InferredProjectCompilerOptions, projectRootPath?: string): void {
++    setCompilerOptionsForInferredProjects(projectCompilerOptions: protocol.InferredProjectCompilerOptions, projectRootPath?: string): void {
+         Debug.assert(projectRootPath === undefined || this.useInferredProjectPerProjectRoot, "Setting compiler options per project root path is only supported when useInferredProjectPerProjectRoot is enabled");
+ 
+         const compilerOptions = convertCompilerOptions(projectCompilerOptions);
+@@ -1286,16 +1281,16 @@ export class ProjectService {
+         return info && info.getFormatCodeSettings() || this.hostConfiguration.formatCodeOptions;
+     }
+ 
+-    getPreferences(file: NormalizedPath): UserPreferences {
++    getPreferences(file: NormalizedPath): protocol.UserPreferences {
+         const info = this.getScriptInfoForNormalizedPath(file);
+         return { ...this.hostConfiguration.preferences, ...info && info.getPreferences() };
+     }
+ 
+-    getHostFormatCodeOptions(): ts.FormatCodeSettings {
++    getHostFormatCodeOptions(): servicesTypes.FormatCodeSettings {
+         return this.hostConfiguration.formatCodeOptions;
+     }
+ 
+-    getHostPreferences(): UserPreferences {
++    getHostPreferences(): protocol.UserPreferences {
+         return this.hostConfiguration.preferences;
+     }
+ 
+@@ -2062,7 +2057,7 @@ export class ProjectService {
+         this.projectToSizeMap.set(name, totalNonTsFileSize);
+     }
+ 
+-    private createExternalProject(projectFileName: string, files: ExternalFile[], options: ExternalProjectCompilerOptions, typeAcquisition: TypeAcquisition, excludedFiles: NormalizedPath[]) {
++    private createExternalProject(projectFileName: string, files: protocol.ExternalFile[], options: protocol.ExternalProjectCompilerOptions, typeAcquisition: TypeAcquisition, excludedFiles: NormalizedPath[]) {
+         const compilerOptions = convertCompilerOptions(options);
+         const watchOptionsAndErrors = convertWatchOptions(options, getDirectoryPath(normalizeSlashes(projectFileName)));
+         const project = new ExternalProject(
+@@ -3056,7 +3051,7 @@ export class ProjectService {
+         this.performanceEventHandler = performanceEventHandler;
+     }
+ 
+-    setHostConfiguration(args: ConfigureRequestArguments) {
++    setHostConfiguration(args: protocol.ConfigureRequestArguments) {
+         if (args.file) {
+             const info = this.getScriptInfoForNormalizedPath(toNormalizedPath(args.file));
+             if (info) {
+@@ -3746,7 +3741,7 @@ export class ProjectService {
+     }
+ 
+     private collectChanges(
+-        lastKnownProjectVersions: ProjectVersionInfo[],
++        lastKnownProjectVersions: protocol.ProjectVersionInfo[],
+         currentProjects: Project[],
+         includeProjectReferenceRedirectInfo: boolean | undefined,
+         result: ProjectFilesWithTSDiagnostics[]
+@@ -3758,7 +3753,7 @@ export class ProjectService {
+     }
+ 
+     /* @internal */
+-    synchronizeProjectList(knownProjects: ProjectVersionInfo[], includeProjectReferenceRedirectInfo?: boolean): ProjectFilesWithTSDiagnostics[] {
++    synchronizeProjectList(knownProjects: protocol.ProjectVersionInfo[], includeProjectReferenceRedirectInfo?: boolean): ProjectFilesWithTSDiagnostics[] {
+         const files: ProjectFilesWithTSDiagnostics[] = [];
+         this.collectChanges(knownProjects, this.externalProjects, includeProjectReferenceRedirectInfo, files);
+         this.collectChanges(knownProjects, arrayFrom(this.configuredProjects.values()), includeProjectReferenceRedirectInfo, files);
+@@ -3965,7 +3960,7 @@ export class ProjectService {
+         }
+ 
+         const excludeRegexes = excludeRules.map(e => new RegExp(e, "i"));
+-        const filesToKeep: ExternalFile[] = [];
++        const filesToKeep: protocol.ExternalFile[] = [];
+         for (let i = 0; i < proj.rootFiles.length; i++) {
+             if (excludeRegexes.some(re => re.test(normalizedNames[i]))) {
+                 excludedFiles.push(normalizedNames[i]);
+@@ -4023,7 +4018,7 @@ export class ProjectService {
+         const excludedFiles = this.applySafeList(proj);
+ 
+         let tsConfigFiles: NormalizedPath[] | undefined;
+-        const rootFiles: ExternalFile[] = [];
++        const rootFiles: protocol.ExternalFile[] = [];
+         for (const file of proj.rootFiles) {
+             const normalized = toNormalizedPath(file.fileName);
+             if (getBaseConfigFileName(normalized)) {
+@@ -4137,7 +4132,7 @@ export class ProjectService {
+         return false;
+     }
+ 
+-    configurePlugin(args: ConfigurePluginRequestArguments) {
++    configurePlugin(args: protocol.ConfigurePluginRequestArguments) {
+         // For any projects that already have the plugin loaded, configure the plugin
+         this.forEachEnabledProject(project => project.onPluginConfigurationChanged(args.pluginName, args.configuration));
+ 
+diff --git a/src/services/documentRegistry.ts b/src/services/documentRegistry.ts
+index 2dc2d26fe3..72fa96d99e 100644
+--- a/src/services/documentRegistry.ts
++++ b/src/services/documentRegistry.ts
+@@ -1,6 +1,6 @@
+ import { sourceFileAffectingCompilerOptions } from "../compiler/commandLineParser";
+ import {
+-    arrayFrom, createGetCanonicalFileName, firstDefinedIterator, getOrUpdate, identity, isArray, map,
++    arrayFrom, createGetCanonicalFileName, firstDefinedIterator, getOrUpdate, hasProperty, identity, isArray, map,
+ } from "../compiler/core";
+ import { ESMap, Map } from "../compiler/corePublic";
+ import { Debug } from "../compiler/debug";
+@@ -14,7 +14,6 @@ import {
+ import {
+     ensureScriptKind, forEachEntry, getCompilerOptionValue, getEmitScriptTarget, getSetExternalModuleIndicator,
+ } from "../compiler/utilities";
+-import * as ts from "./_namespaces/ts";
+ import { createLanguageServiceSourceFile, updateLanguageServiceSourceFile } from "./services";
+ import { IScriptSnapshot } from "./types";
+ 
+@@ -385,7 +384,7 @@ function compilerOptionValueToString(value: unknown): string {
+     }
+     let str = "{";
+     for (const key in value) {
+-        if (ts.hasOwnProperty.call(value, key)) { // eslint-disable-line @typescript-eslint/no-unnecessary-qualifier
++        if (hasProperty.call(value, key)) { // eslint-disable-line @typescript-eslint/no-unnecessary-qualifier
+             str += `${key}: ${compilerOptionValueToString((value as any)[key])}`;
+         }
+     }
+diff --git a/src/testRunner/unittests/services/textChanges.ts b/src/testRunner/unittests/services/textChanges.ts
+index 4ce51c2475..7ce38d0590 100644
+--- a/src/testRunner/unittests/services/textChanges.ts
++++ b/src/testRunner/unittests/services/textChanges.ts
+@@ -12,15 +12,15 @@ import {
+ import { getNewLineCharacter } from "../../../compiler/utilities";
+ import { isDeclaration } from "../../../compiler/utilitiesPublic";
+ import { Baseline } from "../../../harness/harnessIO";
+-import { textChanges } from "../../../services/_namespaces/ts";
+ import { FormatContext } from "../../../services/formatting/formatting";
+ import { getFormatContext } from "../../../services/formatting/rulesMap";
+-import { applyChanges, ChangeTracker, LeadingTriviaOption, TrailingTriviaOption } from "../../../services/textChanges";
++import { applyChanges, ChangeTracker, deleteNode, LeadingTriviaOption, TrailingTriviaOption } from "../../../services/textChanges";
+ import { testFormatSettings } from "../../../services/types";
+ import { notImplementedHost } from "./extract/helpers";
+ 
+ // Some tests have trailing whitespace
+ 
++
+ describe("unittests:: services:: textChanges", () => {
+     function findChild(name: string, n: Node) {
+         return find(n)!;
+@@ -145,7 +145,6 @@ function bar() {
+     function findVariableDeclarationContaining(name: string, sourceFile: SourceFile): VariableDeclaration {
+         return cast(findChild(name, sourceFile), isVariableDeclaration);
+     }
+-    const { deleteNode } = textChanges;
+     {
+         const text = `
+ var x = 1; // some comment - 1
+diff --git a/src/testRunner/unittests/tsbuild/publicApi.ts b/src/testRunner/unittests/tsbuild/publicApi.ts
+index 534a5f0e27..8c8e3e3c68 100644
+--- a/src/testRunner/unittests/tsbuild/publicApi.ts
++++ b/src/testRunner/unittests/tsbuild/publicApi.ts
+@@ -13,7 +13,7 @@ import { createDiagnosticReporter, getErrorSummaryText } from "../../../compiler
+ import { patchHostForBuildInfoReadWrite, System } from "../../../harness/fakesHosts";
+ import { formatPatch } from "../../../harness/vfsUtil";
+ import { commandLineCallbacks, TscCompileSystem, verifyTscBaseline } from "../tsc/helpers";
+-import { baselinePrograms } from "../tscWatch/helpers";
++import { baselineAllPrograms } from "../tscWatch/helpers";
+ import { loadProjectFromFiles, toPathWithSystem } from "./helpers";
+ 
+ describe("unittests:: tsbuild:: Public API with custom transformers when passed to build", () => {
+@@ -78,7 +78,7 @@ export function f22() { } // trailing`,
+         sys.exit(exitStatus);
+         sys.write(`exitCode:: ExitStatus.${ExitStatus[sys.exitCode as ExitStatus]}\n`);
+         const baseline: string[] = [];
+-        baselinePrograms(baseline, getPrograms, emptyArray, /*baselineDependencies*/ false);
++        baselineAllPrograms(baseline, getPrograms, emptyArray, /*baselineDependencies*/ false);
+         sys.write(baseline.join("\n"));
+         fs.makeReadonly();
+         sys.baseLine = () => {
+diff --git a/src/testRunner/unittests/tsc/helpers.ts b/src/testRunner/unittests/tsc/helpers.ts
+index 54c8dba349..557fbbb12b 100644
+--- a/src/testRunner/unittests/tsc/helpers.ts
++++ b/src/testRunner/unittests/tsc/helpers.ts
+@@ -12,9 +12,8 @@ import { patchHostForBuildInfoReadWrite, patchHostForBuildInfoWrite, System } fr
+ import { Baseline } from "../../../harness/harnessIO";
+ import { FileSystem, formatPatch } from "../../../harness/vfsUtil";
+ import * as ts from "../../_namespaces/ts";
+-import { tscWatch } from "../../_namespaces/ts";
+ import { baselineBuildInfo, generateSourceMapBaselineFiles, TestTscEdit, toPathWithSystem } from "../tsbuild/helpers";
+-import { WatchedSystem } from "../tscWatch/helpers";
++import { baselineAllPrograms, WatchedSystem } from "../tscWatch/helpers";
+ 
+ export type TscCompileSystem = System & {
+     writtenFiles: Set<Path>;
+@@ -210,7 +209,7 @@ export function testTscCompile(input: TestTscCompile) {
+         const { baselineSourceMap, baselineReadFileCalls, baselinePrograms, baselineDependencies } = input;
+         if (baselinePrograms) {
+             const baseline: string[] = [];
+-            tscWatch.baselinePrograms(baseline, getPrograms!, emptyArray, baselineDependencies);
++            baselineAllPrograms(baseline, getPrograms!, emptyArray, baselineDependencies);
+             sys.write(baseline.join("\n"));
+         }
+         if (baselineReadFileCalls) {
+diff --git a/src/testRunner/unittests/tscWatch/helpers.ts b/src/testRunner/unittests/tscWatch/helpers.ts
+index bc4d380f02..9f1362fd52 100644
+--- a/src/testRunner/unittests/tscWatch/helpers.ts
++++ b/src/testRunner/unittests/tscWatch/helpers.ts
+@@ -335,7 +335,7 @@ export interface WatchBaseline extends BaselineBase, TscWatchCheckOptions {
+ export function watchBaseline({ baseline, getPrograms, oldPrograms, sys, oldSnap, baselineSourceMap, baselineDependencies }: WatchBaseline) {
+     if (baselineSourceMap) generateSourceMapBaselineFiles(sys);
+     sys.serializeOutput(baseline);
+-    const programs = baselinePrograms(baseline, getPrograms, oldPrograms, baselineDependencies);
++    const programs = baselineAllPrograms(baseline, getPrograms, oldPrograms, baselineDependencies);
+     sys.serializeWatches(baseline);
+     baseline.push(`exitCode:: ExitStatus.${ExitStatus[sys.exitCode as ExitStatus]}`, "");
+     sys.diff(baseline, oldSnap);
+@@ -346,7 +346,7 @@ export function watchBaseline({ baseline, getPrograms, oldPrograms, sys, oldSnap
+     return programs;
+ }
+ 
+-export function baselinePrograms(baseline: string[], getPrograms: () => readonly CommandLineProgram[], oldPrograms: readonly (CommandLineProgram | undefined)[], baselineDependencies: boolean | undefined) {
++export function baselineAllPrograms(baseline: string[], getPrograms: () => readonly CommandLineProgram[], oldPrograms: readonly (CommandLineProgram | undefined)[], baselineDependencies: boolean | undefined) {
+     const programs = getPrograms();
+     for (let i = 0; i < programs.length; i++) {
+         baselineProgram(baseline, programs[i], oldPrograms[i], baselineDependencies);
+-- 
+2.36.1
+
