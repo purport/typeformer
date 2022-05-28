@@ -12,19 +12,20 @@ export class RunTransformCommand extends Command {
         description: "Runs all transforms and applies fixup patches.",
     });
 
-    reset = Option.Boolean("--reset --no-reset", true);
+    reset = Option.Boolean("--reset", true, {
+        description: "Reset the current branch to its merge base with main before running.",
+    });
 
     async execute() {
         if (os.platform() === "win32") {
             throw new Error("This script doesn't work on Windows, sorry.");
         }
 
-        // This totally wipes the repo and starts from scratch.
         if (this.reset) {
-            await $`git clean -fd`;
-            await $`git restore --staged .`;
-            await $`git restore .`;
-            await $`git reset --hard $(git merge-base HEAD main)`;
+            await $`git restore --staged .`; // Unstage all changes.
+            await $`git restore .`; // Undoo all changes.
+            await $`git clean -fd`; // Remove any potentially new files.
+            await $`git reset --hard $(git merge-base HEAD main)`; // Reset back to the merge base.
         }
 
         await generateDiagnostics();
