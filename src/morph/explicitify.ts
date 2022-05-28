@@ -1,6 +1,6 @@
 import { Project, ts } from "ts-morph";
 
-import { getTsSourceFiles } from "./utilities";
+import { getTsSourceFiles } from "./utilities.js";
 
 function isSomeDeclarationInLexicalScope(sym: ts.Symbol, location: ts.Node) {
     return sym.declarations?.every((d) => {

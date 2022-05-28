@@ -1,13 +1,13 @@
-//@ts-check
-
-import { ProcessOutput, ProcessPromise } from "zx";
+// This is a * import so TS doesn't drop the import because it thinks
+// ProcessPromise is a value. (zx's type definitions are wrong; ProcessPromise is a class)
+import * as zx from "zx";
 
 // Tremendously terrible hack to make xz print only the commands and not their outputs.
-// Please, look away.
+// Please, look away. (This is only validated to work in zx 6.1.0)
 // Soon: https://github.com/google/zx/issues/306
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore
-Object.defineProperty(ProcessPromise.prototype, "_run", {
+Object.defineProperty(zx.ProcessPromise.prototype, "_run", {
     configurable: true,
     enumerable: true,
     get: function () {
@@ -16,15 +16,13 @@ Object.defineProperty(ProcessPromise.prototype, "_run", {
     set: function (run) {
         this.__run = run;
 
-        /** @type { boolean } */
-        let _quiet = this._quiet;
+        let _quiet: boolean = this._quiet;
 
         Object.defineProperty(this, "_quiet", {
             configurable: true,
             enumerable: true,
             get: function () {
                 if (_quiet) {
-                    //
                     return true;
                 }
 
@@ -43,30 +41,16 @@ Object.defineProperty(ProcessPromise.prototype, "_run", {
 
 let defaultHideOutput = false;
 
-/**
- * Sets the default output setting for zx processes.
- * @param {boolean} hideOutput
- */
-export function setHideOutput(hideOutput) {
+export function setHideOutput(hideOutput: boolean) {
     defaultHideOutput = hideOutput;
 }
 
-/**
- * Hides stdout and stderr.
- * @param {ProcessPromise<ProcessOutput>} p
- * @returns {ProcessPromise<ProcessOutput>}
- */
-export function hideOutput(p) {
-    /** @type {any} */ (p).__hideOutput = true;
+export function hideOutput(p: zx.ProcessPromise<zx.ProcessOutput>) {
+    (p as any).__hideOutput = true;
     return p;
 }
 
-/**
- * Shows stdout and stderr.
- * @param {ProcessPromise<ProcessOutput>} p
- * @returns {ProcessPromise<ProcessOutput>}
- */
-export function showOutput(p) {
-    /** @type {any} */ (p).__hideOutput = false;
+export function showOutput(p: zx.ProcessPromise<zx.ProcessOutput>) {
+    (p as any).__hideOutput = false;
     return p;
 }

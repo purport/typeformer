@@ -1,6 +1,6 @@
 import { ModuleDeclarationKind, Project } from "ts-morph";
 
-import { getTsSourceFiles } from "./utilities";
+import { getTsSourceFiles } from "./utilities.js";
 
 export function unindent(project: Project): void {
     getTsSourceFiles(project).forEach((sourceFile) => {

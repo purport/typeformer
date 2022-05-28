@@ -2,9 +2,8 @@
     "name": "typeformer",
     "version": "0.0.1",
     "description": "Transforms a project of namespaces into a project of modules exporting a similar top-level structure",
-    "bin": {
-        "typeformer-morph": "dist/morph/cli.js"
-    },
+    "type": "module",
+    "main": "dist/cli.js",
     "scripts": {
         "build": "tsc",
         "watch": "tsc --watch"
@@ -13,20 +12,21 @@
     "license": "MIT",
     "dependencies": {
         "@ts-morph/common": "^0.15.0",
+        "clipanion": "^3.2.0-rc.11",
         "format-imports": "^3.0.12",
         "pretty-ms": "^7.0.1",
         "ts-morph": "^15.0.0",
         "typescript": "^4.7.2",
-        "zx": "^6.1.0"
+        "zx": "6.1.0"
     },
     "devDependencies": {
         "@tsconfig/node14": "^1.0.1",
-        "@types/node": "^16.11.36",
+        "@types/node": "^14.18.18",
         "@typescript-eslint/eslint-plugin": "^5.26.0",
         "@typescript-eslint/parser": "^5.26.0",
         "eslint": "^8.16.0",
         "eslint-config-prettier": "^8.5.0",
         "eslint-plugin-simple-import-sort": "^7.0.0",
-        "prettier": "^2.6.2"
+        "prettier": "2.6.2"
     }
 }

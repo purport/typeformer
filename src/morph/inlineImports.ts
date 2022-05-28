@@ -1,8 +1,8 @@
 import { FileUtils } from "@ts-morph/common";
 import assert from "assert";
-import { ImportDeclarationStructure, Node, OptionalKind, Project, Statement, ts } from "ts-morph";
+import { ImportDeclarationStructure, OptionalKind, Project, ts } from "ts-morph";
 
-import { formatImports, getTsSourceFiles, getTsStyleRelativePath, isNamespaceBarrel, log } from "./utilities";
+import { formatImports, getTsSourceFiles, getTsStyleRelativePath, isNamespaceBarrel, log } from "./utilities.js";
 
 // These are names which are already declared in the global scope, but TS
 // has redeclared one way or another. If we don't allow these to be shadowed,

@@ -25,7 +25,7 @@ import {
     getTsStyleRelativePath,
     log,
     namespacesDirName,
-} from "./utilities";
+} from "./utilities.js";
 
 function isInternalDeclaration(node: Node, sourceFile: SourceFile): boolean {
     return !!ts.isInternalDeclaration(node.compilerNode, sourceFile.compilerNode);

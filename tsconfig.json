@@ -1,9 +1,10 @@
 {
     "extends": "@tsconfig/node14",
     "compilerOptions": {
-        "incremental": true /* Enable incremental compilation */,
-        "outDir": "./dist" /* Redirect output structure to the directory. */,
-        "sourceMap": true
+        "incremental": true,
+        "outDir": "./dist",
+        "sourceMap": true,
+        "module": "Node16" // Technically node14+ but that's okay. NodeNext would be a moving target.
     },
     "include": ["src/**/*.ts"]
 }
