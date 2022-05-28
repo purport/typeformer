@@ -50,6 +50,8 @@ async function runAndCommit(message, fn) {
     await $`git add . && git commit --quiet -m ${reformatParagraphs(message)}`;
 }
 
+const morphPath = path.join(__dirname, "dist", "morph", "cli.js");
+
 /**
  * @param {string} name
  * @param {string} description
@@ -57,13 +59,13 @@ async function runAndCommit(message, fn) {
 async function runMorph(name, description) {
     await runAndCommit(`CONVERSION STEP - ${name}\n\n${description}`, async () => {
         const before = performance.now();
-        await $`node ${path.join(__dirname, "lib", "morph")} ${name}`;
+        await $`node ${morphPath} ${name}`;
         console.log(`took ${prettyMs(performance.now() - before)}`);
     });
 }
 
 async function noopStep() {
-    await $`node ${path.join(__dirname, "lib", "morph")} noop`;
+    await $`node ${morphPath} noop`;
 }
 
 async function applyPatches() {

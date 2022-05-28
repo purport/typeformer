@@ -2,15 +2,12 @@
     "name": "typeformer",
     "version": "0.0.1",
     "description": "Transforms a project of namespaces into a project of modules exporting a similar top-level structure",
-    "main": "lib/index.js",
     "bin": {
-        "typeform": "lib/cli.js"
+        "typeformer-morph": "dist/morph/cli.js"
     },
     "scripts": {
-        "build": "tsc -p ./",
-        "watch": "tsc --watch",
-        "test": "jest",
-        "diff": "node -e \"require(\\\"child_process\\\").execSync(`\\\"${process.env.DIFF}\\\" test/baselines/reference test/baselines/local`)\""
+        "build": "tsc",
+        "watch": "tsc --watch"
     },
     "author": "",
     "license": "MIT",
@@ -20,27 +17,20 @@
     "dependencies": {
         "byots": "4.8.0-dev.20220524.1.35",
         "format-imports": "^3.0.12",
-        "merge-dirs": "^0.2.1",
         "ts-morph": "^15.0.0",
         "typescript": "4.8.0-dev.20220524"
     },
     "devDependencies": {
         "@tsconfig/node14": "^1.0.1",
-        "@types/jest": "^27.5.1",
-        "@types/microsoft__typescript-etw": "^0.1.1",
         "@types/node": "^16.11.36",
         "@typescript-eslint/eslint-plugin": "^5.26.0",
         "@typescript-eslint/parser": "^5.26.0",
-        "dir-compare": "^4.0.0",
         "eslint": "^8.16.0",
         "eslint-config-prettier": "^8.5.0",
         "eslint-plugin-simple-import-sort": "^7.0.0",
-        "jest": "^28.1.0",
-        "jest-matcher-utils": "^28.1.0",
         "prettier": "^2.6.2",
         "pretty-ms": "^7.0.1",
         "ts-essentials": "^9.1.2",
-        "ts-jest": "^28.0.3",
         "zx": "^6.1.0"
     }
 }

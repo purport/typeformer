@@ -2,7 +2,7 @@
     "extends": "@tsconfig/node14",
     "compilerOptions": {
         "incremental": true /* Enable incremental compilation */,
-        "outDir": "./lib" /* Redirect output structure to the directory. */,
+        "outDir": "./dist" /* Redirect output structure to the directory. */,
         "sourceMap": true
     },
     "include": ["src/**/*.ts"]

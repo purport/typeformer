@@ -1,3 +1,0 @@
-namespace ns.nested {
-    foo();
-}
