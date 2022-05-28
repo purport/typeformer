@@ -11,14 +11,10 @@
     },
     "author": "",
     "license": "MIT",
-    "overrides": {
-        "typescript": "4.8.0-dev.20220524"
-    },
     "dependencies": {
-        "byots": "4.8.0-dev.20220524.1.35",
         "format-imports": "^3.0.12",
         "ts-morph": "^15.0.0",
-        "typescript": "4.8.0-dev.20220524"
+        "typescript": "^4.7.2"
     },
     "devDependencies": {
         "@tsconfig/node14": "^1.0.1",
