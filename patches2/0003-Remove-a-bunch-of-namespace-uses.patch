@@ -26,16 +26,98 @@ Subject: [PATCH] Remove a bunch of namespace uses
  src/debug/dbg.ts                              |  8 -------
  src/executeCommandLine/executeCommandLine.ts  | 11 +++++-----
  src/harness/client.ts                         |  2 +-
- src/harness/fourslashImpl.ts                  |  6 ++---
+ src/harness/compilerImpl.ts                   | 10 ++++-----
+ src/harness/evaluatorImpl.ts                  |  6 ++---
+ src/harness/fakesHosts.ts                     |  8 +++----
+ src/harness/fourslashImpl.ts                  | 12 +++++-----
  src/harness/fourslashInterfaceImpl.ts         |  4 ++--
+ src/harness/harnessIO.ts                      | 10 ++++-----
+ src/harness/harnessLanguageService.ts         | 10 ++++-----
+ src/harness/sourceMapRecorder.ts              |  2 +-
  src/harness/vfsUtil.ts                        |  6 ++---
+ src/harness/vpathUtil.ts                      |  2 +-
+ src/jsTyping/types.ts                         |  2 +-
  src/server/editorServices.ts                  |  2 +-
- src/server/project.ts                         |  2 +-
+ src/server/project.ts                         |  4 ++--
  src/server/scriptInfo.ts                      |  2 +-
  src/server/scriptVersionCache.ts              |  2 +-
  src/server/session.ts                         |  2 +-
- src/services/completions.ts                   |  5 ++---
+ src/services/codeFixProvider.ts               |  2 +-
+ ...dConvertToUnknownForNonOverlappingTypes.ts |  2 +-
+ .../codefixes/addEmptyExportDeclaration.ts    |  4 ++--
+ src/services/codefixes/addMissingAsync.ts     |  2 +-
+ src/services/codefixes/addMissingConst.ts     |  2 +-
+ .../codefixes/addMissingDeclareProperty.ts    |  2 +-
+ .../addMissingInvocationForDecorator.ts       |  2 +-
+ .../codefixes/addNameToNamelessParameter.ts   |  2 +-
+ .../codefixes/addOptionalPropertyUndefined.ts |  2 +-
+ .../codefixes/annotateWithTypeFromJSDoc.ts    |  2 +-
+ src/services/codefixes/convertConstToLet.ts   |  2 +-
+ .../codefixes/convertFunctionToEs6Class.ts    |  2 +-
+ .../convertLiteralTypeToMappedType.ts         |  2 +-
+ .../codefixes/convertToAsyncFunction.ts       |  2 +-
+ src/services/codefixes/convertToEsModule.ts   |  2 +-
+ .../codefixes/convertToMappedObjectType.ts    |  2 +-
+ .../codefixes/convertToTypeOnlyExport.ts      |  2 +-
+ .../codefixes/convertToTypeOnlyImport.ts      |  2 +-
+ ...correctQualifiedNameToIndexedAccessType.ts |  2 +-
+ .../codefixes/disableJsDiagnostics.ts         |  2 +-
+ src/services/codefixes/fixAddMissingMember.ts |  2 +-
+ .../codefixes/fixAddMissingNewOperator.ts     |  2 +-
+ .../fixAddModuleReferTypeMissingTypeof.ts     |  2 +-
+ src/services/codefixes/fixAddVoidToPromise.ts |  4 ++--
+ .../codefixes/fixAwaitInSyncFunction.ts       |  2 +-
+ src/services/codefixes/fixCannotFindModule.ts |  2 +-
+ ...sDoesntImplementInheritedAbstractMember.ts |  2 +-
+ .../fixClassIncorrectlyImplementsInterface.ts |  2 +-
+ .../fixClassSuperMustPrecedeThisAccess.ts     |  2 +-
+ .../fixConstructorForDerivedNeedSuperCall.ts  |  2 +-
+ .../fixEnableExperimentalDecorators.ts        |  2 +-
+ src/services/codefixes/fixEnableJsxFlag.ts    |  2 +-
+ src/services/codefixes/fixExpectedComma.ts    |  2 +-
+ .../fixExtendsInterfaceBecomesImplements.ts   |  2 +-
+ .../fixForgottenThisPropertyAccess.ts         |  2 +-
+ .../codefixes/fixIncorrectNamedTupleSyntax.ts |  2 +-
+ .../codefixes/fixInvalidImportSyntax.ts       |  2 +-
+ .../codefixes/fixInvalidJsxCharacters.ts      |  2 +-
+ src/services/codefixes/fixJSDocTypes.ts       |  2 +-
+ .../codefixes/fixMissingCallParentheses.ts    |  2 +-
+ .../codefixes/fixModuleAndTargetOptions.ts    |  2 +-
+ .../fixNoPropertyAccessFromIndexSignature.ts  |  2 +-
+ src/services/codefixes/fixOverrideModifier.ts |  2 +-
+ .../codefixes/fixPropertyAssignment.ts        |  2 +-
+ .../codefixes/fixReturnTypeInAsyncFunction.ts |  2 +-
+ src/services/codefixes/fixSpelling.ts         |  2 +-
+ .../codefixes/fixStrictClassInitialization.ts |  2 +-
+ .../codefixes/fixUnmatchedParameter.ts        |  2 +-
+ src/services/codefixes/fixUnreachableCode.ts  |  2 +-
+ .../fixUnreferenceableDecoratorMetadata.ts    |  2 +-
+ src/services/codefixes/fixUnusedLabel.ts      |  2 +-
+ src/services/codefixes/generateAccessors.ts   |  2 +-
+ src/services/codefixes/helpers.ts             |  2 +-
+ .../removeAccidentalCallParentheses.ts        |  2 +-
+ .../codefixes/removeUnnecessaryAwait.ts       |  2 +-
+ src/services/codefixes/requireInTs.ts         |  2 +-
+ src/services/codefixes/returnValueCorrect.ts  |  2 +-
+ src/services/codefixes/splitTypeOnlyImport.ts |  2 +-
+ src/services/codefixes/useBigintLiteral.ts    |  2 +-
+ src/services/codefixes/useDefaultImport.ts    |  2 +-
+ src/services/codefixes/wrapJsxInFragment.ts   |  2 +-
+ src/services/completions.ts                   | 10 ++++-----
  src/services/documentRegistry.ts              |  5 ++---
+ src/services/getEditsForFileRename.ts         |  2 +-
+ .../addOrRemoveBracesToArrowFunction.ts       |  2 +-
+ .../convertOverloadListToSingleSignature.ts   |  2 +-
+ .../convertStringOrTemplateLiteral.ts         |  2 +-
+ .../convertToOptionalChainExpression.ts       |  2 +-
+ src/services/refactors/extractSymbol.ts       |  2 +-
+ src/services/refactors/extractType.ts         |  2 +-
+ .../refactors/inferFunctionReturnType.ts      |  2 +-
+ src/services/services.ts                      |  6 ++---
+ src/services/shims.ts                         |  2 +-
+ src/services/stringCompletions.ts             |  2 +-
+ src/services/types.ts                         |  2 +-
+ src/services/utilities.ts                     |  5 +++--
  src/testRunner/_namespaces/FourSlash.ts       |  1 -
  src/testRunner/_namespaces/Playback.ts        |  1 -
  src/testRunner/_namespaces/Utils.ts           |  1 -
@@ -46,17 +128,52 @@ Subject: [PATCH] Remove a bunch of namespace uses
  src/testRunner/_namespaces/vfs.ts             |  1 -
  src/testRunner/_namespaces/vpath.ts           |  1 -
  src/testRunner/compilerRef.ts                 |  2 --
+ src/testRunner/compilerRunner.ts              |  2 +-
  src/testRunner/documentsRef.ts                |  2 --
  src/testRunner/evaluatorRef.ts                |  2 --
  src/testRunner/fakesRef.ts                    |  2 --
  src/testRunner/fourslashRef.ts                |  2 --
+ src/testRunner/fourslashRunner.ts             |  2 +-
  src/testRunner/playbackRef.ts                 |  2 --
- src/testRunner/runner.ts                      |  4 ++--
+ src/testRunner/projectsRunner.ts              |  8 +++----
+ src/testRunner/runner.ts                      |  6 ++---
+ src/testRunner/rwcRunner.ts                   |  2 +-
  src/testRunner/tsconfig.json                  | 10 ---------
+ .../config/configurationExtension.ts          |  4 ++--
+ .../config/convertCompilerOptionsFromJson.ts  |  4 ++--
+ .../config/convertTypeAcquisitionFromJson.ts  |  4 ++--
+ src/testRunner/unittests/config/matchFiles.ts |  4 ++--
+ .../unittests/config/projectReferences.ts     |  4 ++--
+ .../unittests/config/tsconfigParsing.ts       |  4 ++--
+ .../config/tsconfigParsingWatchOptions.ts     |  4 ++--
+ src/testRunner/unittests/printer.ts           |  4 ++--
+ src/testRunner/unittests/programApi.ts        |  6 ++---
+ src/testRunner/unittests/publicApi.ts         |  6 ++---
+ .../unittests/reuseProgramStructure.ts        |  2 +-
+ .../services/convertToAsyncFunction.ts        |  2 +-
+ .../unittests/services/extract/helpers.ts     |  2 +-
+ .../unittests/services/organizeImports.ts     |  2 +-
  .../unittests/services/textChanges.ts         |  4 +++-
- src/testRunner/unittests/tsbuild/publicApi.ts |  4 ++--
- src/testRunner/unittests/tsc/helpers.ts       |  7 +++---
- src/testRunner/unittests/tscWatch/helpers.ts  |  4 ++--
+ src/testRunner/unittests/transform.ts         |  6 ++---
+ .../unittests/tsbuild/amdModulesWithOut.ts    |  2 +-
+ .../unittests/tsbuild/declarationEmit.ts      |  2 +-
+ src/testRunner/unittests/tsbuild/demo.ts      |  2 +-
+ .../unittests/tsbuild/emitDeclarationOnly.ts  |  2 +-
+ .../unittests/tsbuild/emptyFiles.ts           |  2 +-
+ .../unittests/tsbuild/graphOrdering.ts        |  4 ++--
+ src/testRunner/unittests/tsbuild/helpers.ts   |  6 ++---
+ .../inferredTypeFromTransitiveModule.ts       |  2 +-
+ .../unittests/tsbuild/noEmitOnError.ts        |  2 +-
+ src/testRunner/unittests/tsbuild/outFile.ts   |  4 ++--
+ .../unittests/tsbuild/outputPaths.ts          |  2 +-
+ src/testRunner/unittests/tsbuild/publicApi.ts |  8 +++----
+ .../tsbuild/referencesWithRootDirInParent.ts  |  2 +-
+ .../unittests/tsbuild/resolveJsonModule.ts    |  2 +-
+ src/testRunner/unittests/tsbuild/sample.ts    |  4 ++--
+ .../unittests/tsbuild/transitiveReferences.ts |  2 +-
+ src/testRunner/unittests/tsc/helpers.ts       |  9 ++++----
+ src/testRunner/unittests/tsc/incremental.ts   |  2 +-
+ src/testRunner/unittests/tscWatch/helpers.ts  |  8 +++----
  .../unittests/tsserver/cancellationToken.ts   |  2 +-
  .../unittests/tsserver/compileOnSave.ts       |  2 +-
  src/testRunner/unittests/tsserver/helpers.ts  |  2 +-
@@ -69,14 +186,15 @@ Subject: [PATCH] Remove a bunch of namespace uses
  src/testRunner/unittests/tsserver/session.ts  |  2 +-
  .../unittests/tsserver/syntacticServer.ts     |  2 +-
  .../unittests/tsserver/telemetry.ts           |  2 +-
- .../unittests/tsserver/typingsInstaller.ts    |  2 +-
+ .../unittests/tsserver/typingsInstaller.ts    |  6 ++---
  src/testRunner/utilsRef.ts                    |  2 --
  src/testRunner/vfsRef.ts                      |  2 --
  src/testRunner/vpathRef.ts                    |  2 --
- src/tsserver/nodeServer.ts                    |  2 +-
+ src/tsserver/nodeServer.ts                    |  4 ++--
  src/tsserver/webServer.ts                     |  2 +-
+ src/typingsInstallerCore/typingsInstaller.ts  |  2 +-
  src/webServer/webServer.ts                    |  2 +-
- 72 files changed, 127 insertions(+), 182 deletions(-)
+ 190 files changed, 306 insertions(+), 359 deletions(-)
  delete mode 100644 src/testRunner/compilerRef.ts
  delete mode 100644 src/testRunner/documentsRef.ts
  delete mode 100644 src/testRunner/evaluatorRef.ts
@@ -881,8 +999,72 @@ index 1c7d6f7cea..d33388551a 100644
  import { CommandNames } from "../server/session";
  import { DocumentHighlights } from "../services/documentHighlights";
  import { PatternMatchKind } from "../services/patternMatcher";
+diff --git a/src/harness/compilerImpl.ts b/src/harness/compilerImpl.ts
+index 9fc8383e50..03fa404130 100644
+--- a/src/harness/compilerImpl.ts
++++ b/src/harness/compilerImpl.ts
+@@ -11,12 +11,12 @@ import {
+ import {
+     addRelatedInfo, compareDiagnostics, createCompilerDiagnostic, getDeclarationEmitExtensionForPath,
+ } from "../compiler/utilities";
+-import * as collections from "./_namespaces/collections";
+-import * as documents from "./_namespaces/documents";
+-import * as fakes from "./_namespaces/fakes";
+-import * as vfs from "./_namespaces/vfs";
+-import * as vpath from "./_namespaces/vpath";
++import * as collections from "./collectionsImpl";
++import * as documents from "./documentsUtil";
++import * as fakes from "./fakesHosts";
+ import { getSourceMapRecord } from "./sourceMapRecorder";
++import * as vfs from "./vfsUtil";
++import * as vpath from "./vpathUtil";
+ 
+ /**
+  * Test harness compiler functionality.
+diff --git a/src/harness/evaluatorImpl.ts b/src/harness/evaluatorImpl.ts
+index 60b9b2e3d7..26026978ea 100644
+--- a/src/harness/evaluatorImpl.ts
++++ b/src/harness/evaluatorImpl.ts
+@@ -5,11 +5,11 @@ import { formatDiagnostics } from "../compiler/program";
+ import { CompilerOptions, ModuleKind, ScriptTarget } from "../compiler/types";
+ import { getEmitModuleKind } from "../compiler/utilities";
+ import { isExternalModuleNameRelative } from "../compiler/utilitiesPublic";
+-import * as fakes from "./_namespaces/fakes";
+ import * as Harness from "./_namespaces/Harness";
+-import * as vfs from "./_namespaces/vfs";
+-import * as vpath from "./_namespaces/vpath";
+ import { compileFiles } from "./compilerImpl";
++import * as fakes from "./fakesHosts";
++import * as vfs from "./vfsUtil";
++import * as vpath from "./vpathUtil";
+ 
+ declare let Symbol: SymbolConstructor;
+ 
+diff --git a/src/harness/fakesHosts.ts b/src/harness/fakesHosts.ts
+index dffca45fef..45ec821ff4 100644
+--- a/src/harness/fakesHosts.ts
++++ b/src/harness/fakesHosts.ts
+@@ -14,14 +14,14 @@ import { getDefaultLibFileName } from "../compiler/utilitiesPublic";
+ import { createDiagnosticReporter } from "../compiler/watch";
+ import { CreateProgram } from "../compiler/watchPublic";
+ import { getDefaultCompilerOptions } from "../services/services";
+-import * as collections from "./_namespaces/collections";
+-import * as documents from "./_namespaces/documents";
+ import * as Harness from "./_namespaces/Harness";
+ import * as ts from "./_namespaces/ts";
+-import * as vfs from "./_namespaces/vfs";
+-import * as vpath from "./_namespaces/vpath";
++import * as collections from "./collectionsImpl";
++import * as documents from "./documentsUtil";
+ import { assertInvariants } from "./harnessUtils";
+ import { addUTF8ByteOrderMark, removeByteOrderMark } from "./util";
++import * as vfs from "./vfsUtil";
++import * as vpath from "./vpathUtil";
+ 
+ /**
+  * Fake implementations of various compiler dependencies.
 diff --git a/src/harness/fourslashImpl.ts b/src/harness/fourslashImpl.ts
-index ecd804e2ba..8defd6fe50 100644
+index e27c51bee1..d9120c700b 100644
 --- a/src/harness/fourslashImpl.ts
 +++ b/src/harness/fourslashImpl.ts
 @@ -36,14 +36,14 @@ import {
@@ -902,21 +1084,29 @@ index ecd804e2ba..8defd6fe50 100644
  import { transpileModule } from "../services/transpile";
  import {
      ApplicableRefactorInfo, CallHierarchyItem, ClassifiedSpan, ClassifiedSpan2020, CodeFixAction, CompletionEntry,
-@@ -59,13 +59,13 @@ import {
+@@ -59,18 +59,18 @@ import {
      createTextRangeFromSpan, createTextSpanFromRange, documentSpansEqual, getTouchingPropertyName, mapOneOrMany,
      repeatString, textSpansEqual,
  } from "../services/utilities";
+-import * as fakes from "./_namespaces/fakes";
 -import * as FourSlashInterface from "./_namespaces/FourSlashInterface";
  import * as Harness from "./_namespaces/Harness";
  import * as ts from "./_namespaces/ts";
- import * as vfs from "./_namespaces/vfs";
- import * as vpath from "./_namespaces/vpath";
+-import * as vfs from "./_namespaces/vfs";
+-import * as vpath from "./_namespaces/vpath";
  import { SessionClient } from "./client";
- import { ParseConfigHost } from "./fakesHosts";
++import * as fakes from "./fakesHosts";
 +import * as FourSlashInterface from "./fourslashInterfaceImpl";
  import {
      LanguageServiceAdapter, LanguageServiceAdapterHost, NativeLanguageServiceAdapter, ScriptInfo,
      ServerLanguageServiceAdapter, ShimLanguageServiceAdapter,
+ } from "./harnessLanguageService";
+ import { assertDiagnosticsEquals, assertInvariants, assertStructuralEquals, memoize } from "./harnessUtils";
++import * as vfs from "./vfsUtil";
++import * as vpath from "./vpathUtil";
+ 
+ import ArrayOrSingle = FourSlashInterface.ArrayOrSingle;
+ 
 diff --git a/src/harness/fourslashInterfaceImpl.ts b/src/harness/fourslashInterfaceImpl.ts
 index f0fddd78c2..23fcd515b3 100644
 --- a/src/harness/fourslashInterfaceImpl.ts
@@ -940,6 +1130,73 @@ index f0fddd78c2..23fcd515b3 100644
  
  export class Test {
      constructor(private state: FourSlash.TestState) {
+diff --git a/src/harness/harnessIO.ts b/src/harness/harnessIO.ts
+index 4147b0a851..e762354362 100644
+--- a/src/harness/harnessIO.ts
++++ b/src/harness/harnessIO.ts
+@@ -30,18 +30,18 @@ import {
+ import { textSpanEnd } from "../compiler/utilitiesPublic";
+ import { getErrorCountForSummary, getErrorSummaryText, getFilesInErrorForSummary } from "../compiler/watch";
+ import { cloneCompilerOptions } from "../services/utilities";
+-import * as compiler from "./_namespaces/compiler";
+-import * as documents from "./_namespaces/documents";
+-import * as fakes from "./_namespaces/fakes";
+ import * as ts from "./_namespaces/ts";
+-import * as vfs from "./_namespaces/vfs";
+-import * as vpath from "./_namespaces/vpath";
++import * as compiler from "./compilerImpl";
+ import { CompilationResult } from "./compilerImpl";
++import * as documents from "./documentsUtil";
++import * as fakes from "./fakesHosts";
+ import { findUpRoot } from "./findUpDir";
+ import { assertInvariants, canonicalizeForHarness, encodeString, splitContentByNewlines } from "./harnessUtils";
+ import { RunnerBase } from "./runnerbase";
+ import { TypeWriterResult, TypeWriterWalker } from "./typeWriter";
+ import { removeByteOrderMark, removeTestPathPrefixes } from "./util";
++import * as vfs from "./vfsUtil";
++import * as vpath from "./vpathUtil";
+ 
+ export interface IO {
+     newLine(): string;
+diff --git a/src/harness/harnessLanguageService.ts b/src/harness/harnessLanguageService.ts
+index 9a6de62a91..e63cb2310c 100644
+--- a/src/harness/harnessLanguageService.ts
++++ b/src/harness/harnessLanguageService.ts
+@@ -43,15 +43,15 @@ import {
+     TextInsertion, TodoComment, TodoCommentDescriptor,
+ } from "../services/types";
+ import { getSnapshotText } from "../services/utilities";
+-import * as collections from "./_namespaces/collections";
+-import * as fakes from "./_namespaces/fakes";
+ import * as Harness from "./_namespaces/Harness";
+ import * as ts from "./_namespaces/ts";
+-import { server } from "./_namespaces/ts";
+-import * as vfs from "./_namespaces/vfs";
+-import * as vpath from "./_namespaces/vpath";
++import * as server from "./_namespaces/ts.server";
+ import { SessionClient } from "./client";
++import * as collections from "./collectionsImpl";
++import * as fakes from "./fakesHosts";
+ import { byteLength } from "./harnessUtils";
++import * as vfs from "./vfsUtil";
++import * as vpath from "./vpathUtil";
+ 
+ export function makeDefaultProxy(info: PluginCreateInfo): LanguageService {
+     const proxy = Object.create(/*prototype*/ null); // eslint-disable-line no-null/no-null
+diff --git a/src/harness/sourceMapRecorder.ts b/src/harness/sourceMapRecorder.ts
+index be2a051673..b628967724 100644
+--- a/src/harness/sourceMapRecorder.ts
++++ b/src/harness/sourceMapRecorder.ts
+@@ -9,8 +9,8 @@ import {
+ } from "../compiler/sourcemap";
+ import { System } from "../compiler/sys";
+ import { Program, RawSourceMap, SourceFile, SourceMapEmitResult } from "../compiler/types";
+-import * as documents from "./_namespaces/documents";
+ import * as Harness from "./_namespaces/Harness";
++import * as documents from "./documentsUtil";
+ import { removeByteOrderMark } from "./util";
+ 
+ interface SourceMapSpanWithDecodeErrors {
 diff --git a/src/harness/vfsUtil.ts b/src/harness/vfsUtil.ts
 index e8afae1d88..50b2752951 100644
 --- a/src/harness/vfsUtil.ts
@@ -959,6 +1216,32 @@ index e8afae1d88..50b2752951 100644
  
  /**
   * Posix-style path to the TypeScript compiler build outputs (including tsc.js, lib.d.ts, etc.)
+diff --git a/src/harness/vpathUtil.ts b/src/harness/vpathUtil.ts
+index c57d089690..3357eb7035 100644
+--- a/src/harness/vpathUtil.ts
++++ b/src/harness/vpathUtil.ts
+@@ -10,7 +10,7 @@ import {
+     removeTrailingDirectorySeparator as removeTrailingSeparator, resolvePath as resolve,
+ } from "../compiler/path";
+ import { hasJSFileExtension as isJavaScript, hasTSFileExtension as isTypeScript } from "../compiler/utilities";
+-import * as vfs from "./_namespaces/vfs";
++import * as vfs from "./vfsUtil";
+ 
+ export { sep };
+ export { normalizeSeparators };
+diff --git a/src/jsTyping/types.ts b/src/jsTyping/types.ts
+index 8ea6d0b6a5..4bb5db5bbf 100644
+--- a/src/jsTyping/types.ts
++++ b/src/jsTyping/types.ts
+@@ -1,7 +1,7 @@
+ import { MapLike, SortedReadonlyArray } from "../compiler/corePublic";
+ import { DirectoryWatcherCallback, FileWatcher, FileWatcherCallback } from "../compiler/sys";
+ import { CompilerOptions, Path, TypeAcquisition, WatchOptions } from "../compiler/types";
+-import { JsTyping } from "./_namespaces/ts";
++import * as JsTyping from "./jsTyping";
+ import {
+     ActionInvalidate, ActionPackageInstalled, ActionSet, EventBeginInstallTypes, EventEndInstallTypes,
+     EventInitializationFailed, EventTypesRegistry,
 diff --git a/src/server/editorServices.ts b/src/server/editorServices.ts
 index 899f8ffb19..2e6c937517 100644
 --- a/src/server/editorServices.ts
@@ -978,9 +1261,18 @@ index 899f8ffb19..2e6c937517 100644
  import { Session } from "./session";
  import { ServerHost } from "./types";
 diff --git a/src/server/project.ts b/src/server/project.ts
-index d6d1f3591e..c87b12ba19 100644
+index d6d1f3591e..258251de0d 100644
 --- a/src/server/project.ts
 +++ b/src/server/project.ts
+@@ -41,7 +41,7 @@ import {
+     CachedDirectoryStructureHost, closeFileWatcherOf, ConfigFileProgramReloadLevel, DirectoryStructureHost,
+     updateMissingFilePathsWatch,
+ } from "../compiler/watchUtilities";
+-import { JsTyping } from "../jsTyping/_namespaces/ts";
++import * as JsTyping from "../jsTyping/jsTyping";
+ import { DocumentRegistry } from "../services/documentRegistry";
+ import { createCacheableExportInfoMap, ExportInfoMap } from "../services/exportInfoMap";
+ import {
 @@ -54,12 +54,12 @@ import {
  } from "../services/types";
  import { cloneCompilerOptions, isInsideNodeModules } from "../services/utilities";
@@ -1046,8 +1338,883 @@ index cc6ef0db90..741c932ed1 100644
  import { ScriptInfo } from "./scriptInfo";
  import { ServerHost } from "./types";
  import { ITypingsInstaller } from "./typingsCache";
+diff --git a/src/services/codeFixProvider.ts b/src/services/codeFixProvider.ts
+index cc95b94099..7f1020624f 100644
+--- a/src/services/codeFixProvider.ts
++++ b/src/services/codeFixProvider.ts
+@@ -2,8 +2,8 @@ import { arrayFrom, cast, contains, createMultiMap, flatMap, isString, map } fro
+ import { Map, Push } from "../compiler/corePublic";
+ import { Debug } from "../compiler/debug";
+ import { Diagnostic, DiagnosticWithLocation } from "../compiler/types";
+-import { textChanges } from "./_namespaces/ts";
+ import { computeSuggestionDiagnostics } from "./suggestionDiagnostics";
++import * as textChanges from "./textChanges";
+ import {
+     CodeActionCommand, CodeFixAction, CodeFixAllContext, CodeFixContext, CodeFixContextBase, CodeFixRegistration,
+     CombinedCodeActions, FileTextChanges, TextChange,
+diff --git a/src/services/codefixes/addConvertToUnknownForNonOverlappingTypes.ts b/src/services/codefixes/addConvertToUnknownForNonOverlappingTypes.ts
+index 9e41743ebe..7217e016f7 100644
+--- a/src/services/codefixes/addConvertToUnknownForNonOverlappingTypes.ts
++++ b/src/services/codefixes/addConvertToUnknownForNonOverlappingTypes.ts
+@@ -4,8 +4,8 @@ import { isAsExpression, isTypeAssertionExpression } from "../../compiler/factor
+ import { AsExpression, SourceFile, SyntaxKind, TypeAssertion } from "../../compiler/types";
+ import { isInJSFile } from "../../compiler/utilities";
+ import { findAncestor } from "../../compiler/utilitiesPublic";
+-import { textChanges } from "../_namespaces/ts";
+ import { codeFixAll, createCodeFixAction, registerCodeFix } from "../codeFixProvider";
++import * as textChanges from "../textChanges";
+ import { getTokenAtPosition } from "../utilities";
+ 
+ const fixId = "addConvertToUnknownForNonOverlappingTypes";
+diff --git a/src/services/codefixes/addEmptyExportDeclaration.ts b/src/services/codefixes/addEmptyExportDeclaration.ts
+index 689fa8db18..d3624e1d6e 100644
+--- a/src/services/codefixes/addEmptyExportDeclaration.ts
++++ b/src/services/codefixes/addEmptyExportDeclaration.ts
+@@ -1,7 +1,7 @@
+ import { Diagnostics } from "../../compiler/diagnosticInformationMap.generated";
+ import { factory } from "../../compiler/factory/nodeFactory";
+-import { textChanges } from "../_namespaces/ts";
+ import { createCodeFixActionWithoutFixAll, registerCodeFix } from "../codeFixProvider";
++import * as textChanges from "../textChanges";
+ 
+ registerCodeFix({
+     errorCodes: [
+@@ -22,4 +22,4 @@ registerCodeFix({
+         });
+         return [createCodeFixActionWithoutFixAll("addEmptyExportDeclaration", changes, Diagnostics.Add_export_to_make_this_file_into_a_module)];
+     },
+-});
+\ No newline at end of file
++});
+diff --git a/src/services/codefixes/addMissingAsync.ts b/src/services/codefixes/addMissingAsync.ts
+index 71715f5ff5..dc83ba091e 100644
+--- a/src/services/codefixes/addMissingAsync.ts
++++ b/src/services/codefixes/addMissingAsync.ts
+@@ -12,8 +12,8 @@ import {
+ } from "../../compiler/types";
+ import { getSyntacticModifierFlags } from "../../compiler/utilities";
+ import { findAncestor, textSpanEnd } from "../../compiler/utilitiesPublic";
+-import { textChanges } from "../_namespaces/ts";
+ import { codeFixAll, createCodeFixAction, registerCodeFix } from "../codeFixProvider";
++import * as textChanges from "../textChanges";
+ import { CodeFixAllContext, CodeFixContext, FileTextChanges } from "../types";
+ import { createTextSpanFromNode, getSynthesizedDeepClone, getTokenAtPosition, textSpansEqual } from "../utilities";
+ 
+diff --git a/src/services/codefixes/addMissingConst.ts b/src/services/codefixes/addMissingConst.ts
+index 8e8a147096..ac7b9faaf2 100644
+--- a/src/services/codefixes/addMissingConst.ts
++++ b/src/services/codefixes/addMissingConst.ts
+@@ -7,8 +7,8 @@ import {
+ import { Expression, Node, Program, SourceFile, SyntaxKind, TypeChecker } from "../../compiler/types";
+ import { isAssignmentExpression } from "../../compiler/utilities";
+ import { findAncestor, isForInOrOfStatement } from "../../compiler/utilitiesPublic";
+-import { textChanges } from "../_namespaces/ts";
+ import { codeFixAll, createCodeFixAction, registerCodeFix } from "../codeFixProvider";
++import * as textChanges from "../textChanges";
+ import { getTokenAtPosition } from "../utilities";
+ 
+ const fixId = "addMissingConst";
+diff --git a/src/services/codefixes/addMissingDeclareProperty.ts b/src/services/codefixes/addMissingDeclareProperty.ts
+index ec44aafaf3..b96db59202 100644
+--- a/src/services/codefixes/addMissingDeclareProperty.ts
++++ b/src/services/codefixes/addMissingDeclareProperty.ts
+@@ -3,8 +3,8 @@ import { Set } from "../../compiler/corePublic";
+ import { Diagnostics } from "../../compiler/diagnosticInformationMap.generated";
+ import { isIdentifier } from "../../compiler/factory/nodeTests";
+ import { Node, SourceFile, SyntaxKind } from "../../compiler/types";
+-import { textChanges } from "../_namespaces/ts";
+ import { codeFixAll, createCodeFixAction, registerCodeFix } from "../codeFixProvider";
++import * as textChanges from "../textChanges";
+ import { getTokenAtPosition } from "../utilities";
+ 
+ const fixId = "addMissingDeclareProperty";
+diff --git a/src/services/codefixes/addMissingInvocationForDecorator.ts b/src/services/codefixes/addMissingInvocationForDecorator.ts
+index 65a436ca32..e2910a2b44 100644
+--- a/src/services/codefixes/addMissingInvocationForDecorator.ts
++++ b/src/services/codefixes/addMissingInvocationForDecorator.ts
+@@ -4,8 +4,8 @@ import { factory } from "../../compiler/factory/nodeFactory";
+ import { isDecorator } from "../../compiler/factory/nodeTests";
+ import { SourceFile } from "../../compiler/types";
+ import { findAncestor } from "../../compiler/utilitiesPublic";
+-import { textChanges } from "../_namespaces/ts";
+ import { codeFixAll, createCodeFixAction, registerCodeFix } from "../codeFixProvider";
++import * as textChanges from "../textChanges";
+ import { getTokenAtPosition } from "../utilities";
+ 
+ const fixId = "addMissingInvocationForDecorator";
+diff --git a/src/services/codefixes/addNameToNamelessParameter.ts b/src/services/codefixes/addNameToNamelessParameter.ts
+index 6a8a4086a9..7e71ef1618 100644
+--- a/src/services/codefixes/addNameToNamelessParameter.ts
++++ b/src/services/codefixes/addNameToNamelessParameter.ts
+@@ -3,8 +3,8 @@ import { Diagnostics } from "../../compiler/diagnosticInformationMap.generated";
+ import { factory } from "../../compiler/factory/nodeFactory";
+ import { isParameter } from "../../compiler/factory/nodeTests";
+ import { Identifier, SourceFile } from "../../compiler/types";
+-import { textChanges } from "../_namespaces/ts";
+ import { codeFixAll, createCodeFixAction, registerCodeFix } from "../codeFixProvider";
++import * as textChanges from "../textChanges";
+ import { getTokenAtPosition } from "../utilities";
+ 
+ const fixId = "addNameToNamelessParameter";
+diff --git a/src/services/codefixes/addOptionalPropertyUndefined.ts b/src/services/codefixes/addOptionalPropertyUndefined.ts
+index e42a0efd7b..99f9609057 100644
+--- a/src/services/codefixes/addOptionalPropertyUndefined.ts
++++ b/src/services/codefixes/addOptionalPropertyUndefined.ts
+@@ -11,8 +11,8 @@ import {
+ } from "../../compiler/types";
+ import { getSourceFileOfNode } from "../../compiler/utilities";
+ import { isExpression, isFunctionLikeKind } from "../../compiler/utilitiesPublic";
+-import { textChanges } from "../_namespaces/ts";
+ import { createCodeFixActionWithoutFixAll, registerCodeFix } from "../codeFixProvider";
++import * as textChanges from "../textChanges";
+ import { getFixableErrorSpanExpression } from "../utilities";
+ 
+ const addOptionalPropertyUndefined = "addOptionalPropertyUndefined";
+diff --git a/src/services/codefixes/annotateWithTypeFromJSDoc.ts b/src/services/codefixes/annotateWithTypeFromJSDoc.ts
+index bba3bbebe3..a208700600 100644
+--- a/src/services/codefixes/annotateWithTypeFromJSDoc.ts
++++ b/src/services/codefixes/annotateWithTypeFromJSDoc.ts
+@@ -13,8 +13,8 @@ import {
+ import { getJSDocTypeParameterDeclarations, isJSDocIndexSignature } from "../../compiler/utilities";
+ import { getJSDocReturnType, getJSDocType, isFunctionLikeDeclaration } from "../../compiler/utilitiesPublic";
+ import { visitEachChild, visitNode, visitNodes } from "../../compiler/visitorPublic";
+-import { textChanges } from "../_namespaces/ts";
+ import { codeFixAll, createCodeFixAction, registerCodeFix } from "../codeFixProvider";
++import * as textChanges from "../textChanges";
+ import { findChildOfKind, getTokenAtPosition } from "../utilities";
+ 
+ const fixId = "annotateWithTypeFromJSDoc";
+diff --git a/src/services/codefixes/convertConstToLet.ts b/src/services/codefixes/convertConstToLet.ts
+index eccf0af47b..f2032c8a82 100644
+--- a/src/services/codefixes/convertConstToLet.ts
++++ b/src/services/codefixes/convertConstToLet.ts
+@@ -3,8 +3,8 @@ import { Diagnostics } from "../../compiler/diagnosticInformationMap.generated";
+ import { isVariableDeclarationList } from "../../compiler/factory/nodeTests";
+ import { Program, SourceFile, SyntaxKind, TextRange } from "../../compiler/types";
+ import { createRange } from "../../compiler/utilities";
+-import { textChanges } from "../_namespaces/ts";
+ import { createCodeFixAction, registerCodeFix } from "../codeFixProvider";
++import * as textChanges from "../textChanges";
+ import { findChildOfKind, getTokenAtPosition } from "../utilities";
+ 
+ const fixId = "fixConvertConstToLet";
+diff --git a/src/services/codefixes/convertFunctionToEs6Class.ts b/src/services/codefixes/convertFunctionToEs6Class.ts
+index bfee7dcc1b..1d907349dd 100644
+--- a/src/services/codefixes/convertFunctionToEs6Class.ts
++++ b/src/services/codefixes/convertFunctionToEs6Class.ts
+@@ -17,8 +17,8 @@ import { getEmitScriptTarget, isAccessExpression, isSourceFileJS } from "../../c
+ import {
+     getNameOfDeclaration, idText, isFunctionLike, isGetOrSetAccessorDeclaration, isStringLiteralLike, symbolName,
+ } from "../../compiler/utilitiesPublic";
+-import { textChanges } from "../_namespaces/ts";
+ import { codeFixAll, createCodeFixAction, registerCodeFix } from "../codeFixProvider";
++import * as textChanges from "../textChanges";
+ import { CodeFixContext } from "../types";
+ import { copyLeadingComments, getQuotePreference, getTokenAtPosition, QuotePreference } from "../utilities";
+ 
+diff --git a/src/services/codefixes/convertLiteralTypeToMappedType.ts b/src/services/codefixes/convertLiteralTypeToMappedType.ts
+index 32e71f9668..c82ef6ea44 100644
+--- a/src/services/codefixes/convertLiteralTypeToMappedType.ts
++++ b/src/services/codefixes/convertLiteralTypeToMappedType.ts
+@@ -3,8 +3,8 @@ import { Diagnostics } from "../../compiler/diagnosticInformationMap.generated";
+ import { factory } from "../../compiler/factory/nodeFactory";
+ import { isIdentifier, isPropertySignature, isTypeLiteralNode } from "../../compiler/factory/nodeTests";
+ import { SourceFile, TypeLiteralNode, TypeNode } from "../../compiler/types";
+-import { textChanges } from "../_namespaces/ts";
+ import { codeFixAll, createCodeFixAction, registerCodeFix } from "../codeFixProvider";
++import * as textChanges from "../textChanges";
+ import { getTokenAtPosition } from "../utilities";
+ 
+ const fixId = "convertLiteralTypeToMappedType";
+diff --git a/src/services/codefixes/convertToAsyncFunction.ts b/src/services/codefixes/convertToAsyncFunction.ts
+index 7848731ac6..881772720f 100644
+--- a/src/services/codefixes/convertToAsyncFunction.ts
++++ b/src/services/codefixes/convertToAsyncFunction.ts
+@@ -23,11 +23,11 @@ import { forEachReturnStatement, getContainingFunction, getObjectFlags, isInJSFi
+ import {
+     getOriginalNode, idText, isExpression, isFunctionLike, isFunctionLikeDeclaration, isGeneratedIdentifier,
+ } from "../../compiler/utilitiesPublic";
+-import { textChanges } from "../_namespaces/ts";
+ import { codeFixAll, createCodeFixAction, registerCodeFix } from "../codeFixProvider";
+ import {
+     canBeConvertedToAsync, isFixablePromiseHandler, isReturnStatementWithFixablePromiseHandler, returnsPromise,
+ } from "../suggestionDiagnostics";
++import * as textChanges from "../textChanges";
+ import { CodeFixContext } from "../types";
+ import {
+     getSynthesizedDeepClone, getSynthesizedDeepCloneWithReplacements, getTokenAtPosition,
+diff --git a/src/services/codefixes/convertToEsModule.ts b/src/services/codefixes/convertToEsModule.ts
+index 7dd9aeb6a8..687761fd94 100644
+--- a/src/services/codefixes/convertToEsModule.ts
++++ b/src/services/codefixes/convertToEsModule.ts
+@@ -23,8 +23,8 @@ import {
+     copyEntries, createRange, getEmitScriptTarget, getResolvedModule, importFromModuleSpecifier, isNonContextualKeyword,
+     isRequireCall,
+ } from "../../compiler/utilities";
+-import { textChanges } from "../_namespaces/ts";
+ import { createCodeFixActionWithoutFixAll, registerCodeFix } from "../codeFixProvider";
++import * as textChanges from "../textChanges";
+ import {
+     findChildOfKind, getQuotePreference, getSynthesizedDeepClone, getSynthesizedDeepClones,
+     getSynthesizedDeepClonesWithReplacements, getSynthesizedDeepCloneWithReplacements, makeImport, QuotePreference,
+diff --git a/src/services/codefixes/convertToMappedObjectType.ts b/src/services/codefixes/convertToMappedObjectType.ts
+index 88a37592ca..dedbecbf45 100644
+--- a/src/services/codefixes/convertToMappedObjectType.ts
++++ b/src/services/codefixes/convertToMappedObjectType.ts
+@@ -10,8 +10,8 @@ import {
+ } from "../../compiler/types";
+ import { getAllSuperTypeNodes, hasEffectiveReadonlyModifier } from "../../compiler/utilities";
+ import { idText } from "../../compiler/utilitiesPublic";
+-import { textChanges } from "../_namespaces/ts";
+ import { codeFixAll, createCodeFixAction, registerCodeFix } from "../codeFixProvider";
++import * as textChanges from "../textChanges";
+ import { getTokenAtPosition } from "../utilities";
+ 
+ const fixId = "fixConvertToMappedObjectType";
+diff --git a/src/services/codefixes/convertToTypeOnlyExport.ts b/src/services/codefixes/convertToTypeOnlyExport.ts
+index e434c5459f..ee6329fd05 100644
+--- a/src/services/codefixes/convertToTypeOnlyExport.ts
++++ b/src/services/codefixes/convertToTypeOnlyExport.ts
+@@ -6,8 +6,8 @@ import { factory } from "../../compiler/factory/nodeFactory";
+ import { isExportSpecifier } from "../../compiler/factory/nodeTests";
+ import { ExportSpecifier, SourceFile, SyntaxKind, TextSpan } from "../../compiler/types";
+ import { addToSeen } from "../../compiler/utilities";
+-import { textChanges } from "../_namespaces/ts";
+ import { codeFixAll, createCodeFixAction, registerCodeFix } from "../codeFixProvider";
++import * as textChanges from "../textChanges";
+ import { CodeFixContextBase } from "../types";
+ import {
+     createTextSpanFromNode, findDiagnosticForNode, getDiagnosticsWithinSpan, getTokenAtPosition,
+diff --git a/src/services/codefixes/convertToTypeOnlyImport.ts b/src/services/codefixes/convertToTypeOnlyImport.ts
+index 008787736c..f4267d28d7 100644
+--- a/src/services/codefixes/convertToTypeOnlyImport.ts
++++ b/src/services/codefixes/convertToTypeOnlyImport.ts
+@@ -3,8 +3,8 @@ import { Diagnostics } from "../../compiler/diagnosticInformationMap.generated";
+ import { factory } from "../../compiler/factory/nodeFactory";
+ import { isImportDeclaration } from "../../compiler/factory/nodeTests";
+ import { ImportDeclaration, SourceFile, TextSpan } from "../../compiler/types";
+-import { textChanges } from "../_namespaces/ts";
+ import { codeFixAll, createCodeFixAction, registerCodeFix } from "../codeFixProvider";
++import * as textChanges from "../textChanges";
+ import { CodeFixContextBase } from "../types";
+ import { getTokenAtPosition } from "../utilities";
+ 
+diff --git a/src/services/codefixes/correctQualifiedNameToIndexedAccessType.ts b/src/services/codefixes/correctQualifiedNameToIndexedAccessType.ts
+index 5a9de62c8e..1c121d932f 100644
+--- a/src/services/codefixes/correctQualifiedNameToIndexedAccessType.ts
++++ b/src/services/codefixes/correctQualifiedNameToIndexedAccessType.ts
+@@ -4,8 +4,8 @@ import { factory } from "../../compiler/factory/nodeFactory";
+ import { isIdentifier, isQualifiedName } from "../../compiler/factory/nodeTests";
+ import { Identifier, QualifiedName, SourceFile } from "../../compiler/types";
+ import { findAncestor } from "../../compiler/utilitiesPublic";
+-import { textChanges } from "../_namespaces/ts";
+ import { codeFixAll, createCodeFixAction, registerCodeFix } from "../codeFixProvider";
++import * as textChanges from "../textChanges";
+ import { getTokenAtPosition } from "../utilities";
+ 
+ const fixId = "correctQualifiedNameToIndexedAccessType";
+diff --git a/src/services/codefixes/disableJsDiagnostics.ts b/src/services/codefixes/disableJsDiagnostics.ts
+index 80a7e552b2..c5d765e000 100644
+--- a/src/services/codefixes/disableJsDiagnostics.ts
++++ b/src/services/codefixes/disableJsDiagnostics.ts
+@@ -5,10 +5,10 @@ import { getLineAndCharacterOfPosition } from "../../compiler/scanner";
+ import { DiagnosticCategory, SourceFile } from "../../compiler/types";
+ import { isCheckJsEnabledForFile, isInJSFile } from "../../compiler/utilities";
+ import { createTextSpan, createTextSpanFromBounds } from "../../compiler/utilitiesPublic";
+-import { textChanges } from "../_namespaces/ts";
+ import {
+     codeFixAll, createCodeFixAction, createCodeFixActionWithoutFixAll, createFileTextChanges, registerCodeFix,
+ } from "../codeFixProvider";
++import * as textChanges from "../textChanges";
+ import { CodeFixAction } from "../types";
+ import { createTextChange, getNewLineOrDefaultFromHost } from "../utilities";
+ 
+diff --git a/src/services/codefixes/fixAddMissingMember.ts b/src/services/codefixes/fixAddMissingMember.ts
+index cc78ae1973..d4aa80d70c 100644
+--- a/src/services/codefixes/fixAddMissingMember.ts
++++ b/src/services/codefixes/fixAddMissingMember.ts
+@@ -28,10 +28,10 @@ import {
+ import {
+     findAncestor, hasInitializer, idText, isClassLike, isJsxOpeningLikeElement, isMemberName,
+ } from "../../compiler/utilitiesPublic";
+-import { textChanges } from "../_namespaces/ts";
+ import {
+     createCodeFixAction, createCodeFixActionWithoutFixAll, createCombinedCodeActions, eachDiagnostic, registerCodeFix,
+ } from "../codeFixProvider";
++import * as textChanges from "../textChanges";
+ import { CodeFixAction, CodeFixContext, CodeFixContextBase } from "../types";
+ import {
+     getQuotePreference, getTokenAtPosition, QuotePreference, skipConstraint, startsWithUnderscore,
+diff --git a/src/services/codefixes/fixAddMissingNewOperator.ts b/src/services/codefixes/fixAddMissingNewOperator.ts
+index 8b444a638a..9548ffd42b 100644
+--- a/src/services/codefixes/fixAddMissingNewOperator.ts
++++ b/src/services/codefixes/fixAddMissingNewOperator.ts
+@@ -4,8 +4,8 @@ import { factory } from "../../compiler/factory/nodeFactory";
+ import { isCallExpression } from "../../compiler/factory/nodeTests";
+ import { Node, SourceFile, TextSpan } from "../../compiler/types";
+ import { textSpanEnd } from "../../compiler/utilitiesPublic";
+-import { textChanges } from "../_namespaces/ts";
+ import { codeFixAll, createCodeFixAction, registerCodeFix } from "../codeFixProvider";
++import * as textChanges from "../textChanges";
+ import { getTokenAtPosition } from "../utilities";
+ 
+ const fixId = "addMissingNewOperator";
+diff --git a/src/services/codefixes/fixAddModuleReferTypeMissingTypeof.ts b/src/services/codefixes/fixAddModuleReferTypeMissingTypeof.ts
+index f72143702f..f6de9061ee 100644
+--- a/src/services/codefixes/fixAddModuleReferTypeMissingTypeof.ts
++++ b/src/services/codefixes/fixAddModuleReferTypeMissingTypeof.ts
+@@ -2,8 +2,8 @@ import { Debug } from "../../compiler/debug";
+ import { Diagnostics } from "../../compiler/diagnosticInformationMap.generated";
+ import { factory } from "../../compiler/factory/nodeFactory";
+ import { ImportTypeNode, SourceFile, SyntaxKind } from "../../compiler/types";
+-import { textChanges } from "../_namespaces/ts";
+ import { codeFixAll, createCodeFixAction, registerCodeFix } from "../codeFixProvider";
++import * as textChanges from "../textChanges";
+ import { getTokenAtPosition } from "../utilities";
+ 
+ const fixIdAddMissingTypeof = "fixAddModuleReferTypeMissingTypeof";
+diff --git a/src/services/codefixes/fixAddVoidToPromise.ts b/src/services/codefixes/fixAddVoidToPromise.ts
+index 586ede72ff..9be8c97785 100644
+--- a/src/services/codefixes/fixAddVoidToPromise.ts
++++ b/src/services/codefixes/fixAddVoidToPromise.ts
+@@ -12,8 +12,8 @@ import {
+ } from "../../compiler/types";
+ import { isInJSFile } from "../../compiler/utilities";
+ import { getJSDocTypeTag, idText } from "../../compiler/utilitiesPublic";
+-import { textChanges } from "../_namespaces/ts";
+ import { codeFixAll, createCodeFixAction, registerCodeFix } from "../codeFixProvider";
++import * as textChanges from "../textChanges";
+ import { CodeFixAllContext } from "../types";
+ import { getTokenAtPosition } from "../utilities";
+ 
+@@ -96,4 +96,4 @@ function getEffectiveTypeArguments(node: NewExpression) {
+     else {
+         return node.typeArguments;
+     }
+-}
+\ No newline at end of file
++}
+diff --git a/src/services/codefixes/fixAwaitInSyncFunction.ts b/src/services/codefixes/fixAwaitInSyncFunction.ts
+index fd4623224a..88ef669a55 100644
+--- a/src/services/codefixes/fixAwaitInSyncFunction.ts
++++ b/src/services/codefixes/fixAwaitInSyncFunction.ts
+@@ -8,8 +8,8 @@ import {
+     ArrowFunction, FunctionDeclaration, FunctionExpression, MethodDeclaration, Node, SourceFile, SyntaxKind, TypeNode,
+ } from "../../compiler/types";
+ import { addToSeen, getContainingFunction, getEntityNameFromTypeNode } from "../../compiler/utilities";
+-import { textChanges } from "../_namespaces/ts";
+ import { codeFixAll, createCodeFixAction, registerCodeFix } from "../codeFixProvider";
++import * as textChanges from "../textChanges";
+ import { findChildOfKind, getTokenAtPosition } from "../utilities";
+ 
+ const fixId = "fixAwaitInSyncFunction";
+diff --git a/src/services/codefixes/fixCannotFindModule.ts b/src/services/codefixes/fixCannotFindModule.ts
+index 9f8a1ea0b0..28b52b1f39 100644
+--- a/src/services/codefixes/fixCannotFindModule.ts
++++ b/src/services/codefixes/fixCannotFindModule.ts
+@@ -5,7 +5,7 @@ import { isStringLiteral } from "../../compiler/factory/nodeTests";
+ import { getTypesPackageName, parsePackageName } from "../../compiler/moduleNameResolver";
+ import { SourceFile } from "../../compiler/types";
+ import { isExternalModuleNameRelative } from "../../compiler/utilitiesPublic";
+-import { JsTyping } from "../../jsTyping/_namespaces/ts";
++import * as JsTyping from "../../jsTyping/jsTyping";
+ import { codeFixAll, createCodeFixAction, registerCodeFix } from "../codeFixProvider";
+ import { InstallPackageAction, LanguageServiceHost } from "../types";
+ import { getTokenAtPosition } from "../utilities";
+diff --git a/src/services/codefixes/fixClassDoesntImplementInheritedAbstractMember.ts b/src/services/codefixes/fixClassDoesntImplementInheritedAbstractMember.ts
+index c6ac9bcad1..384991c7f8 100644
+--- a/src/services/codefixes/fixClassDoesntImplementInheritedAbstractMember.ts
++++ b/src/services/codefixes/fixClassDoesntImplementInheritedAbstractMember.ts
+@@ -7,8 +7,8 @@ import {
+ } from "../../compiler/types";
+ import { addToSeen, getEffectiveBaseTypeNode, getSyntacticModifierFlags } from "../../compiler/utilities";
+ import { isClassLike } from "../../compiler/utilitiesPublic";
+-import { textChanges } from "../_namespaces/ts";
+ import { codeFixAll, createCodeFixAction, registerCodeFix } from "../codeFixProvider";
++import * as textChanges from "../textChanges";
+ import { getTokenAtPosition } from "../utilities";
+ import { createMissingMemberNodes, TypeConstructionContext } from "./helpers";
+ import { createImportAdder } from "./importFixes";
+diff --git a/src/services/codefixes/fixClassIncorrectlyImplementsInterface.ts b/src/services/codefixes/fixClassIncorrectlyImplementsInterface.ts
+index 2a40140de0..93ff109262 100644
+--- a/src/services/codefixes/fixClassIncorrectlyImplementsInterface.ts
++++ b/src/services/codefixes/fixClassIncorrectlyImplementsInterface.ts
+@@ -12,8 +12,8 @@ import {
+     addToSeen, createSymbolTable, getContainingClass, getEffectiveBaseTypeNode, getEffectiveImplementsTypeNodes,
+     getEffectiveModifierFlags,
+ } from "../../compiler/utilities";
+-import { textChanges } from "../_namespaces/ts";
+ import { codeFixAll, createCodeFixAction, registerCodeFix } from "../codeFixProvider";
++import * as textChanges from "../textChanges";
+ import { CodeFixAction } from "../types";
+ import { getTokenAtPosition } from "../utilities";
+ import { createMissingMemberNodes, getNoopSymbolTrackerWithResolver, TypeConstructionContext } from "./helpers";
+diff --git a/src/services/codefixes/fixClassSuperMustPrecedeThisAccess.ts b/src/services/codefixes/fixClassSuperMustPrecedeThisAccess.ts
+index 045d3c7f0e..140f339e10 100644
+--- a/src/services/codefixes/fixClassSuperMustPrecedeThisAccess.ts
++++ b/src/services/codefixes/fixClassSuperMustPrecedeThisAccess.ts
+@@ -8,8 +8,8 @@ import {
+ } from "../../compiler/types";
+ import { addToSeen, getContainingFunction, isSuperCall } from "../../compiler/utilities";
+ import { isFunctionLike } from "../../compiler/utilitiesPublic";
+-import { textChanges } from "../_namespaces/ts";
+ import { codeFixAll, createCodeFixAction, registerCodeFix } from "../codeFixProvider";
++import * as textChanges from "../textChanges";
+ import { getTokenAtPosition } from "../utilities";
+ 
+ const fixId = "classSuperMustPrecedeThisAccess";
+diff --git a/src/services/codefixes/fixConstructorForDerivedNeedSuperCall.ts b/src/services/codefixes/fixConstructorForDerivedNeedSuperCall.ts
+index d192ca6592..d7dc3300e2 100644
+--- a/src/services/codefixes/fixConstructorForDerivedNeedSuperCall.ts
++++ b/src/services/codefixes/fixConstructorForDerivedNeedSuperCall.ts
+@@ -4,8 +4,8 @@ import { Diagnostics } from "../../compiler/diagnosticInformationMap.generated";
+ import { factory } from "../../compiler/factory/nodeFactory";
+ import { isConstructorDeclaration } from "../../compiler/factory/nodeTests";
+ import { ConstructorDeclaration, SourceFile } from "../../compiler/types";
+-import { textChanges } from "../_namespaces/ts";
+ import { codeFixAll, createCodeFixAction, registerCodeFix } from "../codeFixProvider";
++import * as textChanges from "../textChanges";
+ import { getTokenAtPosition } from "../utilities";
+ 
+ const fixId = "constructorForDerivedNeedSuperCall";
+diff --git a/src/services/codefixes/fixEnableExperimentalDecorators.ts b/src/services/codefixes/fixEnableExperimentalDecorators.ts
+index ef2ce8a349..36e9eade5f 100644
+--- a/src/services/codefixes/fixEnableExperimentalDecorators.ts
++++ b/src/services/codefixes/fixEnableExperimentalDecorators.ts
+@@ -1,8 +1,8 @@
+ import { Diagnostics } from "../../compiler/diagnosticInformationMap.generated";
+ import { factory } from "../../compiler/factory/nodeFactory";
+ import { TsConfigSourceFile } from "../../compiler/types";
+-import { textChanges } from "../_namespaces/ts";
+ import { codeFixAll, createCodeFixActionWithoutFixAll, registerCodeFix } from "../codeFixProvider";
++import * as textChanges from "../textChanges";
+ import { setJsonCompilerOptionValue } from "./helpers";
+ 
+ const fixId = "enableExperimentalDecorators";
+diff --git a/src/services/codefixes/fixEnableJsxFlag.ts b/src/services/codefixes/fixEnableJsxFlag.ts
+index c7a0ec6eec..10be76c768 100644
+--- a/src/services/codefixes/fixEnableJsxFlag.ts
++++ b/src/services/codefixes/fixEnableJsxFlag.ts
+@@ -1,8 +1,8 @@
+ import { Diagnostics } from "../../compiler/diagnosticInformationMap.generated";
+ import { factory } from "../../compiler/factory/nodeFactory";
+ import { TsConfigSourceFile } from "../../compiler/types";
+-import { textChanges } from "../_namespaces/ts";
+ import { codeFixAll, createCodeFixActionWithoutFixAll, registerCodeFix } from "../codeFixProvider";
++import * as textChanges from "../textChanges";
+ import { setJsonCompilerOptionValue } from "./helpers";
+ 
+ const fixID = "fixEnableJsxFlag";
+diff --git a/src/services/codefixes/fixExpectedComma.ts b/src/services/codefixes/fixExpectedComma.ts
+index 42ae9c82f1..f0282bd4b5 100644
+--- a/src/services/codefixes/fixExpectedComma.ts
++++ b/src/services/codefixes/fixExpectedComma.ts
+@@ -2,8 +2,8 @@ import { Diagnostics } from "../../compiler/diagnosticInformationMap.generated";
+ import { factory } from "../../compiler/factory/nodeFactory";
+ import { isArrayLiteralExpression, isObjectLiteralExpression } from "../../compiler/factory/nodeTests";
+ import { Node, SourceFile, SyntaxKind } from "../../compiler/types";
+-import { textChanges } from "../_namespaces/ts";
+ import { codeFixAll, createCodeFixAction, registerCodeFix } from "../codeFixProvider";
++import * as textChanges from "../textChanges";
+ import { getTokenAtPosition } from "../utilities";
+ 
+ const fixId = "fixExpectedComma";
+diff --git a/src/services/codefixes/fixExtendsInterfaceBecomesImplements.ts b/src/services/codefixes/fixExtendsInterfaceBecomesImplements.ts
+index df7e80c737..da289b939d 100644
+--- a/src/services/codefixes/fixExtendsInterfaceBecomesImplements.ts
++++ b/src/services/codefixes/fixExtendsInterfaceBecomesImplements.ts
+@@ -3,8 +3,8 @@ import { factory } from "../../compiler/factory/nodeFactory";
+ import { isWhiteSpaceSingleLine } from "../../compiler/scanner";
+ import { HeritageClause, Node, SourceFile, SyntaxKind } from "../../compiler/types";
+ import { getContainingClass } from "../../compiler/utilities";
+-import { textChanges } from "../_namespaces/ts";
+ import { codeFixAll, createCodeFixAction, registerCodeFix } from "../codeFixProvider";
++import * as textChanges from "../textChanges";
+ import { getTokenAtPosition } from "../utilities";
+ 
+ const fixId = "extendsInterfaceBecomesImplements";
+diff --git a/src/services/codefixes/fixForgottenThisPropertyAccess.ts b/src/services/codefixes/fixForgottenThisPropertyAccess.ts
+index 950487149a..06868e20fb 100644
+--- a/src/services/codefixes/fixForgottenThisPropertyAccess.ts
++++ b/src/services/codefixes/fixForgottenThisPropertyAccess.ts
+@@ -3,8 +3,8 @@ import { factory } from "../../compiler/factory/nodeFactory";
+ import { isIdentifier, isPrivateIdentifier } from "../../compiler/factory/nodeTests";
+ import { Identifier, PrivateIdentifier, SourceFile } from "../../compiler/types";
+ import { getContainingClass } from "../../compiler/utilities";
+-import { textChanges } from "../_namespaces/ts";
+ import { codeFixAll, createCodeFixAction, registerCodeFix } from "../codeFixProvider";
++import * as textChanges from "../textChanges";
+ import { getTokenAtPosition, suppressLeadingAndTrailingTrivia } from "../utilities";
+ 
+ const fixId = "forgottenThisPropertyAccess";
+diff --git a/src/services/codefixes/fixIncorrectNamedTupleSyntax.ts b/src/services/codefixes/fixIncorrectNamedTupleSyntax.ts
+index 0539c9ae9b..bdbd7d14b4 100644
+--- a/src/services/codefixes/fixIncorrectNamedTupleSyntax.ts
++++ b/src/services/codefixes/fixIncorrectNamedTupleSyntax.ts
+@@ -4,8 +4,8 @@ import {
+     NamedTupleMember, OptionalTypeNode, ParenthesizedTypeNode, RestTypeNode, SourceFile, SyntaxKind,
+ } from "../../compiler/types";
+ import { findAncestor } from "../../compiler/utilitiesPublic";
+-import { textChanges } from "../_namespaces/ts";
+ import { createCodeFixAction, registerCodeFix } from "../codeFixProvider";
++import * as textChanges from "../textChanges";
+ import { getTokenAtPosition } from "../utilities";
+ 
+ const fixId = "fixIncorrectNamedTupleSyntax";
+diff --git a/src/services/codefixes/fixInvalidImportSyntax.ts b/src/services/codefixes/fixInvalidImportSyntax.ts
+index 7af24d79b5..9b301b8841 100644
+--- a/src/services/codefixes/fixInvalidImportSyntax.ts
++++ b/src/services/codefixes/fixInvalidImportSyntax.ts
+@@ -9,8 +9,8 @@ import {
+     getEmitModuleKind, getNamespaceDeclarationNode, getSourceFileOfNode, isImportCall,
+ } from "../../compiler/utilities";
+ import { findAncestor, isExpression, isNamedDeclaration } from "../../compiler/utilitiesPublic";
+-import { textChanges } from "../_namespaces/ts";
+ import { createCodeFixActionWithoutFixAll, registerCodeFix } from "../codeFixProvider";
++import * as textChanges from "../textChanges";
+ import { CodeFixAction, CodeFixContext } from "../types";
+ import { getQuotePreference, getTokenAtPosition, makeImport } from "../utilities";
+ 
+diff --git a/src/services/codefixes/fixInvalidJsxCharacters.ts b/src/services/codefixes/fixInvalidJsxCharacters.ts
+index cb768746f7..2f3da3ad72 100644
+--- a/src/services/codefixes/fixInvalidJsxCharacters.ts
++++ b/src/services/codefixes/fixInvalidJsxCharacters.ts
+@@ -1,8 +1,8 @@
+ import { hasProperty } from "../../compiler/core";
+ import { Diagnostics } from "../../compiler/diagnosticInformationMap.generated";
+ import { SourceFile, UserPreferences } from "../../compiler/types";
+-import { textChanges } from "../_namespaces/ts";
+ import { codeFixAll, createCodeFixAction, registerCodeFix } from "../codeFixProvider";
++import * as textChanges from "../textChanges";
+ import { quote } from "../utilities";
+ 
+ const fixIdExpression = "fixInvalidJsxCharacters_expression";
+diff --git a/src/services/codefixes/fixJSDocTypes.ts b/src/services/codefixes/fixJSDocTypes.ts
+index 40a71f599e..592c3933e8 100644
+--- a/src/services/codefixes/fixJSDocTypes.ts
++++ b/src/services/codefixes/fixJSDocTypes.ts
+@@ -6,8 +6,8 @@ import {
+     TypeAliasDeclaration, TypeAssertion, TypeChecker, TypeFlags, TypeNode, VariableDeclaration,
+ } from "../../compiler/types";
+ import { findAncestor } from "../../compiler/utilitiesPublic";
+-import { textChanges } from "../_namespaces/ts";
+ import { codeFixAll, createCodeFixAction, registerCodeFix } from "../codeFixProvider";
++import * as textChanges from "../textChanges";
+ import { CodeFixAction } from "../types";
+ import { getTokenAtPosition } from "../utilities";
+ 
+diff --git a/src/services/codefixes/fixMissingCallParentheses.ts b/src/services/codefixes/fixMissingCallParentheses.ts
+index b62316bd49..36139c8129 100644
+--- a/src/services/codefixes/fixMissingCallParentheses.ts
++++ b/src/services/codefixes/fixMissingCallParentheses.ts
+@@ -1,8 +1,8 @@
+ import { Diagnostics } from "../../compiler/diagnosticInformationMap.generated";
+ import { isIdentifier, isPropertyAccessExpression } from "../../compiler/factory/nodeTests";
+ import { Identifier, PrivateIdentifier, PropertyAccessExpression, SourceFile } from "../../compiler/types";
+-import { textChanges } from "../_namespaces/ts";
+ import { codeFixAll, createCodeFixAction, registerCodeFix } from "../codeFixProvider";
++import * as textChanges from "../textChanges";
+ import { getTokenAtPosition } from "../utilities";
+ 
+ const fixId = "fixMissingCallParentheses";
+diff --git a/src/services/codefixes/fixModuleAndTargetOptions.ts b/src/services/codefixes/fixModuleAndTargetOptions.ts
+index a608b02b87..d952276d1a 100644
+--- a/src/services/codefixes/fixModuleAndTargetOptions.ts
++++ b/src/services/codefixes/fixModuleAndTargetOptions.ts
+@@ -2,8 +2,8 @@ import { Diagnostics } from "../../compiler/diagnosticInformationMap.generated";
+ import { factory } from "../../compiler/factory/nodeFactory";
+ import { Expression, ModuleKind, ScriptTarget } from "../../compiler/types";
+ import { getEmitModuleKind, getEmitScriptTarget, getTsConfigObjectLiteralExpression } from "../../compiler/utilities";
+-import { textChanges } from "../_namespaces/ts";
+ import { createCodeFixActionWithoutFixAll, registerCodeFix } from "../codeFixProvider";
++import * as textChanges from "../textChanges";
+ import { CodeFixAction } from "../types";
+ import { setJsonCompilerOptionValue, setJsonCompilerOptionValues } from "./helpers";
+ 
+diff --git a/src/services/codefixes/fixNoPropertyAccessFromIndexSignature.ts b/src/services/codefixes/fixNoPropertyAccessFromIndexSignature.ts
+index 4046a0f0f2..561b3ea910 100644
+--- a/src/services/codefixes/fixNoPropertyAccessFromIndexSignature.ts
++++ b/src/services/codefixes/fixNoPropertyAccessFromIndexSignature.ts
+@@ -4,8 +4,8 @@ import { factory } from "../../compiler/factory/nodeFactory";
+ import { isPropertyAccessExpression } from "../../compiler/factory/nodeTests";
+ import { PropertyAccessExpression, SourceFile, UserPreferences } from "../../compiler/types";
+ import { isPropertyAccessChain } from "../../compiler/utilitiesPublic";
+-import { textChanges } from "../_namespaces/ts";
+ import { codeFixAll, createCodeFixAction, registerCodeFix } from "../codeFixProvider";
++import * as textChanges from "../textChanges";
+ import { getQuotePreference, getTokenAtPosition, QuotePreference } from "../utilities";
+ 
+ const fixId = "fixNoPropertyAccessFromIndexSignature";
+diff --git a/src/services/codefixes/fixOverrideModifier.ts b/src/services/codefixes/fixOverrideModifier.ts
+index 89def6a354..1fc7324e40 100644
+--- a/src/services/codefixes/fixOverrideModifier.ts
++++ b/src/services/codefixes/fixOverrideModifier.ts
+@@ -12,8 +12,8 @@ import { isSourceFileJS } from "../../compiler/utilities";
+ import {
+     findAncestor, isClassLike, isParameterPropertyDeclaration, ParameterPropertyDeclaration,
+ } from "../../compiler/utilitiesPublic";
+-import { textChanges } from "../_namespaces/ts";
+ import { codeFixAll, createCodeFixActionMaybeFixAll, registerCodeFix } from "../codeFixProvider";
++import * as textChanges from "../textChanges";
+ import { CodeFixAllContext, CodeFixContext } from "../types";
+ import { getTokenAtPosition, isAccessibilityModifier } from "../utilities";
+ 
+diff --git a/src/services/codefixes/fixPropertyAssignment.ts b/src/services/codefixes/fixPropertyAssignment.ts
+index 111d5765a8..2562fadefb 100644
+--- a/src/services/codefixes/fixPropertyAssignment.ts
++++ b/src/services/codefixes/fixPropertyAssignment.ts
+@@ -3,8 +3,8 @@ import { Diagnostics } from "../../compiler/diagnosticInformationMap.generated";
+ import { factory } from "../../compiler/factory/nodeFactory";
+ import { isShorthandPropertyAssignment } from "../../compiler/factory/nodeTests";
+ import { Expression, ShorthandPropertyAssignment, SourceFile } from "../../compiler/types";
+-import { textChanges } from "../_namespaces/ts";
+ import { codeFixAll, createCodeFixAction, registerCodeFix } from "../codeFixProvider";
++import * as textChanges from "../textChanges";
+ import { getTokenAtPosition } from "../utilities";
+ 
+ const fixId = "fixPropertyAssignment";
+diff --git a/src/services/codefixes/fixReturnTypeInAsyncFunction.ts b/src/services/codefixes/fixReturnTypeInAsyncFunction.ts
+index a93483986c..8da72eeb29 100644
+--- a/src/services/codefixes/fixReturnTypeInAsyncFunction.ts
++++ b/src/services/codefixes/fixReturnTypeInAsyncFunction.ts
+@@ -3,8 +3,8 @@ import { factory } from "../../compiler/factory/nodeFactory";
+ import { SourceFile, Type, TypeChecker, TypeNode } from "../../compiler/types";
+ import { isInJSFile } from "../../compiler/utilities";
+ import { findAncestor, isFunctionLikeDeclaration } from "../../compiler/utilitiesPublic";
+-import { textChanges } from "../_namespaces/ts";
+ import { codeFixAll, createCodeFixAction, registerCodeFix } from "../codeFixProvider";
++import * as textChanges from "../textChanges";
+ import { getTokenAtPosition } from "../utilities";
+ 
+ const fixId = "fixReturnTypeInAsyncFunction";
+diff --git a/src/services/codefixes/fixSpelling.ts b/src/services/codefixes/fixSpelling.ts
+index bc4fa812c4..b704bc5d47 100644
+--- a/src/services/codefixes/fixSpelling.ts
++++ b/src/services/codefixes/fixSpelling.ts
+@@ -17,8 +17,8 @@ import {
+     findAncestor, isClassElement, isClassLike, isJsxOpeningLikeElement, isMemberName, isNamedDeclaration,
+     isStringLiteralLike, symbolName,
+ } from "../../compiler/utilitiesPublic";
+-import { textChanges } from "../_namespaces/ts";
+ import { codeFixAll, createCodeFixAction, registerCodeFix } from "../codeFixProvider";
++import * as textChanges from "../textChanges";
+ import { CodeFixContextBase } from "../types";
+ import { getMeaningFromLocation, getTokenAtPosition, SemanticMeaning } from "../utilities";
+ 
+diff --git a/src/services/codefixes/fixStrictClassInitialization.ts b/src/services/codefixes/fixStrictClassInitialization.ts
+index f353db31d4..5ad5221daa 100644
+--- a/src/services/codefixes/fixStrictClassInitialization.ts
++++ b/src/services/codefixes/fixStrictClassInitialization.ts
+@@ -11,8 +11,8 @@ import {
+     getClassLikeDeclarationOfSymbol, getEffectiveTypeAnnotationNode, getFirstConstructorWithBody, hasSyntacticModifier,
+     isInJSFile,
+ } from "../../compiler/utilities";
+-import { textChanges } from "../_namespaces/ts";
+ import { codeFixAll, createCodeFixAction, registerCodeFix } from "../codeFixProvider";
++import * as textChanges from "../textChanges";
+ import { CodeFixAction, CodeFixContext } from "../types";
+ import { getTokenAtPosition, suppressLeadingAndTrailingTrivia } from "../utilities";
+ 
+diff --git a/src/services/codefixes/fixUnmatchedParameter.ts b/src/services/codefixes/fixUnmatchedParameter.ts
+index 4a303a3701..13b34d6488 100644
+--- a/src/services/codefixes/fixUnmatchedParameter.ts
++++ b/src/services/codefixes/fixUnmatchedParameter.ts
+@@ -8,10 +8,10 @@ import {
+ } from "../../compiler/types";
+ import { getHostSignatureFromJSDoc } from "../../compiler/utilities";
+ import { getJSDocTags } from "../../compiler/utilitiesPublic";
+-import { textChanges } from "../_namespaces/ts";
+ import {
+     createCodeFixAction, createCodeFixActionWithoutFixAll, createCombinedCodeActions, eachDiagnostic, registerCodeFix,
+ } from "../codeFixProvider";
++import * as textChanges from "../textChanges";
+ import { CodeFixAction, CodeFixContext } from "../types";
+ import { getTokenAtPosition } from "../utilities";
+ 
+diff --git a/src/services/codefixes/fixUnreachableCode.ts b/src/services/codefixes/fixUnreachableCode.ts
+index 74c94d95e6..d5f16c2321 100644
+--- a/src/services/codefixes/fixUnreachableCode.ts
++++ b/src/services/codefixes/fixUnreachableCode.ts
+@@ -6,8 +6,8 @@ import { isBlock } from "../../compiler/factory/nodeTests";
+ import { IfStatement, SourceFile, SyntaxKind } from "../../compiler/types";
+ import { sliceAfter } from "../../compiler/utilities";
+ import { findAncestor, isStatement } from "../../compiler/utilitiesPublic";
+-import { textChanges } from "../_namespaces/ts";
+ import { codeFixAll, createCodeFixAction, registerCodeFix } from "../codeFixProvider";
++import * as textChanges from "../textChanges";
+ import { getTokenAtPosition } from "../utilities";
+ 
+ const fixId = "fixUnreachableCode";
+diff --git a/src/services/codefixes/fixUnreferenceableDecoratorMetadata.ts b/src/services/codefixes/fixUnreferenceableDecoratorMetadata.ts
+index 7cacbf9fe4..047d60ef02 100644
+--- a/src/services/codefixes/fixUnreferenceableDecoratorMetadata.ts
++++ b/src/services/codefixes/fixUnreferenceableDecoratorMetadata.ts
+@@ -7,9 +7,9 @@ import {
+     ImportClause, ImportEqualsDeclaration, ImportSpecifier, Node, Program, SourceFile, SymbolFlags, SyntaxKind,
+ } from "../../compiler/types";
+ import { forEachImportClauseDeclaration, skipAlias } from "../../compiler/utilities";
+-import { textChanges } from "../_namespaces/ts";
+ import { createCodeFixActionWithoutFixAll, registerCodeFix } from "../codeFixProvider";
+ import { doChangeNamedToNamespaceOrDefault } from "../refactors/convertImport";
++import * as textChanges from "../textChanges";
+ import { CodeFixAction } from "../types";
+ import { getTokenAtPosition } from "../utilities";
+ 
+diff --git a/src/services/codefixes/fixUnusedLabel.ts b/src/services/codefixes/fixUnusedLabel.ts
+index 514933bd33..b961e3edf7 100644
+--- a/src/services/codefixes/fixUnusedLabel.ts
++++ b/src/services/codefixes/fixUnusedLabel.ts
+@@ -4,8 +4,8 @@ import { isLabeledStatement } from "../../compiler/factory/nodeTests";
+ import { skipTrivia } from "../../compiler/scanner";
+ import { SourceFile, SyntaxKind } from "../../compiler/types";
+ import { positionsAreOnSameLine } from "../../compiler/utilities";
+-import { textChanges } from "../_namespaces/ts";
+ import { codeFixAll, createCodeFixAction, registerCodeFix } from "../codeFixProvider";
++import * as textChanges from "../textChanges";
+ import { findChildOfKind, getTokenAtPosition } from "../utilities";
+ 
+ const fixId = "fixUnusedLabel";
+diff --git a/src/services/codefixes/generateAccessors.ts b/src/services/codefixes/generateAccessors.ts
+index e428b180fb..a25e67e279 100644
+--- a/src/services/codefixes/generateAccessors.ts
++++ b/src/services/codefixes/generateAccessors.ts
+@@ -18,8 +18,8 @@ import {
+ import {
+     findAncestor, isClassLike, isFunctionLike, isParameterPropertyDeclaration, ParameterPropertyDeclaration,
+ } from "../../compiler/utilitiesPublic";
+-import { textChanges } from "../_namespaces/ts";
+ import { isRefactorErrorInfo, RefactorErrorInfo } from "../refactors/helpers";
++import * as textChanges from "../textChanges";
+ import { FileTextChanges } from "../types";
+ import {
+     getTokenAtPosition, getUniqueName, nodeOverlapsWithStartEnd, startsWithUnderscore, suppressLeadingAndTrailingTrivia,
+diff --git a/src/services/codefixes/helpers.ts b/src/services/codefixes/helpers.ts
+index f7ec7f4148..73b4bd3e01 100644
+--- a/src/services/codefixes/helpers.ts
++++ b/src/services/codefixes/helpers.ts
+@@ -24,7 +24,7 @@ import {
+ } from "../../compiler/utilities";
+ import { getNameOfDeclaration, idText } from "../../compiler/utilitiesPublic";
+ import { visitEachChild, visitNode } from "../../compiler/visitorPublic";
+-import { textChanges } from "../_namespaces/ts";
++import * as textChanges from "../textChanges";
+ import { CodeFixContextBase, LanguageServiceHost } from "../types";
+ import {
+     getModuleSpecifierResolverHost, getNameForExportedSymbol, getQuotePreference, getSynthesizedDeepClone,
+diff --git a/src/services/codefixes/removeAccidentalCallParentheses.ts b/src/services/codefixes/removeAccidentalCallParentheses.ts
+index eb332bc26e..9e773d14c6 100644
+--- a/src/services/codefixes/removeAccidentalCallParentheses.ts
++++ b/src/services/codefixes/removeAccidentalCallParentheses.ts
+@@ -1,8 +1,8 @@
+ import { Diagnostics } from "../../compiler/diagnosticInformationMap.generated";
+ import { isCallExpression } from "../../compiler/factory/nodeTests";
+ import { findAncestor } from "../../compiler/utilitiesPublic";
+-import { textChanges } from "../_namespaces/ts";
+ import { createCodeFixActionWithoutFixAll, registerCodeFix } from "../codeFixProvider";
++import * as textChanges from "../textChanges";
+ import { getTokenAtPosition } from "../utilities";
+ 
+ const fixId = "removeAccidentalCallParentheses";
+diff --git a/src/services/codefixes/removeUnnecessaryAwait.ts b/src/services/codefixes/removeUnnecessaryAwait.ts
+index 42fc1dda03..64b53b7174 100644
+--- a/src/services/codefixes/removeUnnecessaryAwait.ts
++++ b/src/services/codefixes/removeUnnecessaryAwait.ts
+@@ -3,8 +3,8 @@ import { Diagnostics } from "../../compiler/diagnosticInformationMap.generated";
+ import { isAwaitExpression, isIdentifier, isParenthesizedExpression } from "../../compiler/factory/nodeTests";
+ import { AwaitKeywordToken, Node, SourceFile, SyntaxKind, TextSpan } from "../../compiler/types";
+ import { getLeftmostExpression } from "../../compiler/utilities";
+-import { textChanges } from "../_namespaces/ts";
+ import { codeFixAll, createCodeFixAction, registerCodeFix } from "../codeFixProvider";
++import * as textChanges from "../textChanges";
+ import { findPrecedingToken, getTokenAtPosition } from "../utilities";
+ 
+ const fixId = "removeUnnecessaryAwait";
+diff --git a/src/services/codefixes/requireInTs.ts b/src/services/codefixes/requireInTs.ts
+index 2d7775e862..72ed67d86b 100644
+--- a/src/services/codefixes/requireInTs.ts
++++ b/src/services/codefixes/requireInTs.ts
+@@ -10,8 +10,8 @@ import {
+     VariableStatement,
+ } from "../../compiler/types";
+ import { getAllowSyntheticDefaultImports, isRequireCall } from "../../compiler/utilities";
+-import { textChanges } from "../_namespaces/ts";
+ import { codeFixAll, createCodeFixAction, registerCodeFix } from "../codeFixProvider";
++import * as textChanges from "../textChanges";
+ import { getTokenAtPosition } from "../utilities";
+ 
+ const fixId = "requireInTs";
+diff --git a/src/services/codefixes/returnValueCorrect.ts b/src/services/codefixes/returnValueCorrect.ts
+index 83563f89f4..63b8a6ca8d 100644
+--- a/src/services/codefixes/returnValueCorrect.ts
++++ b/src/services/codefixes/returnValueCorrect.ts
+@@ -12,8 +12,8 @@ import {
+ } from "../../compiler/types";
+ import { createSymbolTable, hasSyntacticModifier, isDeclarationName, isVariableLike } from "../../compiler/utilities";
+ import { findAncestor, isFunctionLikeDeclaration } from "../../compiler/utilitiesPublic";
+-import { textChanges } from "../_namespaces/ts";
+ import { codeFixAll, createCodeFixAction, registerCodeFix } from "../codeFixProvider";
++import * as textChanges from "../textChanges";
+ import { CodeFixContext } from "../types";
+ import {
+     copyComments, getTokenAtPosition, needsParentheses, probablyUsesSemicolons, rangeContainsRange,
+diff --git a/src/services/codefixes/splitTypeOnlyImport.ts b/src/services/codefixes/splitTypeOnlyImport.ts
+index fd40b1a8e7..77d72f0204 100644
+--- a/src/services/codefixes/splitTypeOnlyImport.ts
++++ b/src/services/codefixes/splitTypeOnlyImport.ts
+@@ -4,8 +4,8 @@ import { factory } from "../../compiler/factory/nodeFactory";
+ import { isImportDeclaration } from "../../compiler/factory/nodeTests";
+ import { ImportDeclaration, SourceFile, TextSpan } from "../../compiler/types";
+ import { findAncestor } from "../../compiler/utilitiesPublic";
+-import { textChanges } from "../_namespaces/ts";
+ import { codeFixAll, createCodeFixAction, registerCodeFix } from "../codeFixProvider";
++import * as textChanges from "../textChanges";
+ import { CodeFixContextBase } from "../types";
+ import { getTokenAtPosition } from "../utilities";
+ 
+diff --git a/src/services/codefixes/useBigintLiteral.ts b/src/services/codefixes/useBigintLiteral.ts
+index bc2280500b..973ef3d7e5 100644
+--- a/src/services/codefixes/useBigintLiteral.ts
++++ b/src/services/codefixes/useBigintLiteral.ts
+@@ -3,8 +3,8 @@ import { Diagnostics } from "../../compiler/diagnosticInformationMap.generated";
+ import { factory } from "../../compiler/factory/nodeFactory";
+ import { isNumericLiteral } from "../../compiler/factory/nodeTests";
+ import { SourceFile, TextSpan } from "../../compiler/types";
+-import { textChanges } from "../_namespaces/ts";
+ import { codeFixAll, createCodeFixAction, registerCodeFix } from "../codeFixProvider";
++import * as textChanges from "../textChanges";
+ import { getTokenAtPosition } from "../utilities";
+ 
+ const fixId = "useBigintLiteral";
+diff --git a/src/services/codefixes/useDefaultImport.ts b/src/services/codefixes/useDefaultImport.ts
+index a682f1872f..f572d89907 100644
+--- a/src/services/codefixes/useDefaultImport.ts
++++ b/src/services/codefixes/useDefaultImport.ts
+@@ -3,8 +3,8 @@ import {
+     isExternalModuleReference, isIdentifier, isImportEqualsDeclaration, isNamespaceImport,
+ } from "../../compiler/factory/nodeTests";
+ import { AnyImportSyntax, Expression, Identifier, SourceFile, UserPreferences } from "../../compiler/types";
+-import { textChanges } from "../_namespaces/ts";
+ import { codeFixAll, createCodeFixAction, registerCodeFix } from "../codeFixProvider";
++import * as textChanges from "../textChanges";
+ import { getQuotePreference, getTokenAtPosition, makeImport } from "../utilities";
+ 
+ const fixId = "useDefaultImport";
+diff --git a/src/services/codefixes/wrapJsxInFragment.ts b/src/services/codefixes/wrapJsxInFragment.ts
+index ac7a5883b2..d0b9ddc8fa 100644
+--- a/src/services/codefixes/wrapJsxInFragment.ts
++++ b/src/services/codefixes/wrapJsxInFragment.ts
+@@ -4,8 +4,8 @@ import { isBinaryExpression } from "../../compiler/factory/nodeTests";
+ import { BinaryExpression, JsxChild, Node, SourceFile, SyntaxKind } from "../../compiler/types";
+ import { nodeIsMissing } from "../../compiler/utilities";
+ import { isJsxChild } from "../../compiler/utilitiesPublic";
+-import { textChanges } from "../_namespaces/ts";
+ import { codeFixAll, createCodeFixAction, registerCodeFix } from "../codeFixProvider";
++import * as textChanges from "../textChanges";
+ import { getTokenAtPosition } from "../utilities";
+ 
+ const fixID = "wrapJsxInFragment";
 diff --git a/src/services/completions.ts b/src/services/completions.ts
-index 3164515fdf..2482f591ad 100644
+index 3164515fdf..482cc66484 100644
 --- a/src/services/completions.ts
 +++ b/src/services/completions.ts
 @@ -50,8 +50,7 @@ import {
@@ -1060,7 +2227,26 @@ index 3164515fdf..2482f591ad 100644
  } from "../compiler/utilities";
  import {
      createTextSpanFromBounds, findAncestor, getNameOfDeclaration, hasInitializer, hasType, isAssertionExpression,
-@@ -4176,7 +4175,7 @@ function getApparentProperties(type: Type, node: ObjectLiteralExpression | JsxAt
+@@ -62,8 +61,8 @@ import {
+     isStringLiteralLike, isStringTextContainingNode, isTypeNode, isTypeOnlyImportOrExportDeclaration,
+     isTypeReferenceType, unescapeLeadingUnderscores,
+ } from "../compiler/utilitiesPublic";
+-import { JsTyping } from "../jsTyping/_namespaces/ts";
+-import { formatting, textChanges } from "./_namespaces/ts";
++import * as JsTyping from "../jsTyping/jsTyping";
++import { formatting } from "./_namespaces/ts";
+ import {
+     addNewNodeForMemberSymbol, getNoopSymbolTrackerWithResolver, PreserveOptionalFlags,
+ } from "./codefixes/helpers";
+@@ -80,6 +79,7 @@ import { getNameTable } from "./services";
+ import { getArgumentInfoForCompletions } from "./signatureHelp";
+ import { getStringLiteralCompletionDetails, getStringLiteralCompletions } from "./stringCompletions";
+ import { getSymbolDisplayPartsDocumentationAndSymbolKind, getSymbolKind, getSymbolModifiers } from "./symbolDisplay";
++import * as textChanges from "./textChanges";
+ import {
+     CodeAction, CompletionEntry, CompletionEntryData, CompletionEntryDataAutoImport, CompletionEntryDataResolved,
+     CompletionEntryDataUnresolved, CompletionEntryDetails, CompletionEntryLabelDetails, CompletionInfo,
+@@ -4176,7 +4176,7 @@ function getApparentProperties(type: Type, node: ObjectLiteralExpression | JsxAt
          !(memberType.flags & TypeFlags.Primitive
              || checker.isArrayLikeType(memberType)
              || checker.isTypeInvalidDueToUnionDiscriminant(memberType, node)
@@ -1098,6 +2284,226 @@ index 2dc2d26fe3..72fa96d99e 100644
              str += `${key}: ${compilerOptionValueToString((value as any)[key])}`;
          }
      }
+diff --git a/src/services/getEditsForFileRename.ts b/src/services/getEditsForFileRename.ts
+index 6c2fd16e0d..f24ff91744 100644
+--- a/src/services/getEditsForFileRename.ts
++++ b/src/services/getEditsForFileRename.ts
+@@ -1,4 +1,3 @@
+-import { moduleSpecifiers } from "../compiler/_namespaces/ts";
+ import { getOptionFromName } from "../compiler/commandLineParser";
+ import {
+     createGetCanonicalFileName, emptyArray, endsWith, find, forEach, GetCanonicalFileName, last, mapDefined,
+@@ -9,6 +8,7 @@ import {
+     isArrayLiteralExpression, isObjectLiteralExpression, isPropertyAssignment, isSourceFile, isStringLiteral,
+ } from "../compiler/factory/nodeTests";
+ import { resolveModuleName } from "../compiler/moduleNameResolver";
++import * as moduleSpecifiers from "../compiler/moduleSpecifiers";
+ import {
+     combinePaths, ensurePathIsNonModuleName, getDirectoryPath, getRelativePathFromDirectory, getRelativePathFromFile,
+     normalizePath, pathIsRelative,
+diff --git a/src/services/refactors/addOrRemoveBracesToArrowFunction.ts b/src/services/refactors/addOrRemoveBracesToArrowFunction.ts
+index d7b24c01b0..022b7f5cff 100644
+--- a/src/services/refactors/addOrRemoveBracesToArrowFunction.ts
++++ b/src/services/refactors/addOrRemoveBracesToArrowFunction.ts
+@@ -6,8 +6,8 @@ import { isArrowFunction, isBlock, isReturnStatement } from "../../compiler/fact
+ import { ArrowFunction, ConciseBody, Expression, ReturnStatement, SourceFile, SyntaxKind } from "../../compiler/types";
+ import { getContainingFunction, getLocaleSpecificMessage } from "../../compiler/utilities";
+ import { isExpression } from "../../compiler/utilitiesPublic";
+-import { textChanges } from "../_namespaces/ts";
+ import { registerRefactor } from "../refactorProvider";
++import * as textChanges from "../textChanges";
+ import { ApplicableRefactorInfo, RefactorContext, RefactorEditInfo } from "../types";
+ import {
+     copyLeadingComments, copyTrailingAsLeadingComments, copyTrailingComments, getTokenAtPosition, needsParentheses,
+diff --git a/src/services/refactors/convertOverloadListToSingleSignature.ts b/src/services/refactors/convertOverloadListToSingleSignature.ts
+index ad99096a20..6540b254cf 100644
+--- a/src/services/refactors/convertOverloadListToSingleSignature.ts
++++ b/src/services/refactors/convertOverloadListToSingleSignature.ts
+@@ -14,9 +14,9 @@ import {
+ } from "../../compiler/types";
+ import { getSourceFileOfNode } from "../../compiler/utilities";
+ import { findAncestor, isFunctionLikeDeclaration } from "../../compiler/utilitiesPublic";
+-import { textChanges } from "../_namespaces/ts";
+ import { registerRefactor } from "../refactorProvider";
+ import { displayPartsToString } from "../services";
++import * as textChanges from "../textChanges";
+ import { ApplicableRefactorInfo, RefactorContext, RefactorEditInfo } from "../types";
+ import { getTokenAtPosition } from "../utilities";
+ 
+diff --git a/src/services/refactors/convertStringOrTemplateLiteral.ts b/src/services/refactors/convertStringOrTemplateLiteral.ts
+index f1b262f25c..a49f0c71ca 100644
+--- a/src/services/refactors/convertStringOrTemplateLiteral.ts
++++ b/src/services/refactors/convertStringOrTemplateLiteral.ts
+@@ -13,8 +13,8 @@ import {
+ } from "../../compiler/types";
+ import { getLocaleSpecificMessage, getTextOfNode } from "../../compiler/utilities";
+ import { findAncestor, isStringLiteralLike } from "../../compiler/utilitiesPublic";
+-import { textChanges } from "../_namespaces/ts";
+ import { registerRefactor } from "../refactorProvider";
++import * as textChanges from "../textChanges";
+ import { ApplicableRefactorInfo, RefactorContext, RefactorEditInfo } from "../types";
+ import { copyTrailingAsLeadingComments, copyTrailingComments, getTokenAtPosition } from "../utilities";
+ 
+diff --git a/src/services/refactors/convertToOptionalChainExpression.ts b/src/services/refactors/convertToOptionalChainExpression.ts
+index 068b4b5d9c..0d5a48afb4 100644
+--- a/src/services/refactors/convertToOptionalChainExpression.ts
++++ b/src/services/refactors/convertToOptionalChainExpression.ts
+@@ -15,8 +15,8 @@ import {
+     getLocaleSpecificMessage, getSingleVariableOfVariableStatement, isStringOrNumericLiteralLike, skipParentheses,
+ } from "../../compiler/utilities";
+ import { createTextSpanFromBounds, isOptionalChain } from "../../compiler/utilitiesPublic";
+-import { textChanges } from "../_namespaces/ts";
+ import { registerRefactor } from "../refactorProvider";
++import * as textChanges from "../textChanges";
+ import { ApplicableRefactorInfo, RefactorContext, RefactorEditInfo } from "../types";
+ import { findTokenOnLeftOfPosition, getRefactorContextSpan, getTokenAtPosition } from "../utilities";
+ import { isRefactorErrorInfo, RefactorErrorInfo } from "./helpers";
+diff --git a/src/services/refactors/extractSymbol.ts b/src/services/refactors/extractSymbol.ts
+index 35b438056c..3297eea3d9 100644
+--- a/src/services/refactors/extractSymbol.ts
++++ b/src/services/refactors/extractSymbol.ts
+@@ -40,10 +40,10 @@ import {
+     textSpanEnd,
+ } from "../../compiler/utilitiesPublic";
+ import { visitEachChild, visitNode, visitNodes } from "../../compiler/visitorPublic";
+-import { textChanges } from "../_namespaces/ts";
+ import { typeToAutoImportableTypeNode } from "../codefixes/helpers";
+ import { createImportAdder } from "../codefixes/importFixes";
+ import { registerRefactor } from "../refactorProvider";
++import * as textChanges from "../textChanges";
+ import { ApplicableRefactorInfo, RefactorActionInfo, RefactorContext, RefactorEditInfo } from "../types";
+ import {
+     ANONYMOUS, findFirstNonJsxWhitespaceToken, findTokenOnLeftOfPosition, getParentNodeInSpan, getRefactorContextSpan,
+diff --git a/src/services/refactors/extractType.ts b/src/services/refactors/extractType.ts
+index 77462fb8c7..6385bd6926 100644
+--- a/src/services/refactors/extractType.ts
++++ b/src/services/refactors/extractType.ts
+@@ -20,8 +20,8 @@ import { addToSeen, getLocaleSpecificMessage, isSourceFileJS, isThisIdentifier }
+ import {
+     findAncestor, getEffectiveConstraintOfTypeParameter, isFunctionLike, isStatement, isTypeNode,
+ } from "../../compiler/utilitiesPublic";
+-import { textChanges } from "../_namespaces/ts";
+ import { registerRefactor } from "../refactorProvider";
++import * as textChanges from "../textChanges";
+ import { ApplicableRefactorInfo, RefactorContext, RefactorEditInfo } from "../types";
+ import {
+     createTextRangeFromSpan, getNameFromPropertyName, getRefactorContextSpan, getRenameLocation, getTokenAtPosition,
+diff --git a/src/services/refactors/inferFunctionReturnType.ts b/src/services/refactors/inferFunctionReturnType.ts
+index b519532d45..d3c4f68f0d 100644
+--- a/src/services/refactors/inferFunctionReturnType.ts
++++ b/src/services/refactors/inferFunctionReturnType.ts
+@@ -8,8 +8,8 @@ import {
+ } from "../../compiler/types";
+ import { getLocaleSpecificMessage, isInJSFile } from "../../compiler/utilities";
+ import { findAncestor } from "../../compiler/utilitiesPublic";
+-import { textChanges } from "../_namespaces/ts";
+ import { registerRefactor } from "../refactorProvider";
++import * as textChanges from "../textChanges";
+ import { ApplicableRefactorInfo, RefactorContext, RefactorEditInfo } from "../types";
+ import { findChildOfKind, getTokenAtPosition } from "../utilities";
+ import { isRefactorErrorInfo, RefactorErrorInfo, refactorKindBeginsWith } from "./helpers";
+diff --git a/src/services/services.ts b/src/services/services.ts
+index 2d03cc15cb..0315929482 100644
+--- a/src/services/services.ts
++++ b/src/services/services.ts
+@@ -56,11 +56,11 @@ import {
+     Completions, FindAllReferences, formatting, GoToDefinition, InlayHints, JsDoc, NavigateTo, NavigationBar,
+     OrganizeImports, refactor, Rename, SignatureHelp, SmartSelectionRange,
+ } from "./_namespaces/ts";
+-import { v2020 } from "./_namespaces/ts.classifier";
+ import { spanInSourceFileAtLocation } from "./breakpoints";
+ import {
+     createCallHierarchyItem, getIncomingCalls, getOutgoingCalls, resolveCallHierarchyDeclaration,
+ } from "./callHierarchy";
++import * as classifier2020 from "./classifier2020";
+ import { getAllFixes, getFixes, getSupportedErrorCodes } from "./codeFixProvider";
+ import { DocumentHighlights } from "./documentHighlights";
+ import { createDocumentRegistry, DocumentRegistry } from "./documentRegistry";
+@@ -2067,7 +2067,7 @@ export function createLanguageService(
+ 
+         const responseFormat = format || SemanticClassificationFormat.Original;
+         if (responseFormat === SemanticClassificationFormat.TwentyTwenty) {
+-            return v2020.getSemanticClassifications(program, cancellationToken, getValidSourceFile(fileName), span);
++            return classifier2020.getSemanticClassifications(program, cancellationToken, getValidSourceFile(fileName), span);
+         }
+         else {
+             return ts.getSemanticClassifications(program.getTypeChecker(), cancellationToken, getValidSourceFile(fileName), program.getClassifiableNames(), span);
+@@ -2082,7 +2082,7 @@ export function createLanguageService(
+             return ts.getEncodedSemanticClassifications(program.getTypeChecker(), cancellationToken, getValidSourceFile(fileName), program.getClassifiableNames(), span);
+         }
+         else {
+-            return v2020.getEncodedSemanticClassifications(program, cancellationToken, getValidSourceFile(fileName), span);
++            return classifier2020.getEncodedSemanticClassifications(program, cancellationToken, getValidSourceFile(fileName), span);
+         }
+     }
+ 
+diff --git a/src/services/shims.ts b/src/services/shims.ts
+index 4c693e7ae4..1cc174b757 100644
+--- a/src/services/shims.ts
++++ b/src/services/shims.ts
+@@ -18,7 +18,7 @@ import {
+ } from "../compiler/types";
+ import { extensionFromPath, getFileMatcherPatterns } from "../compiler/utilities";
+ import { createTextChangeRange, createTextSpan } from "../compiler/utilitiesPublic";
+-import { JsTyping } from "../jsTyping/_namespaces/ts";
++import * as JsTyping from "../jsTyping/jsTyping";
+ import { createClassifier } from "./classifier";
+ import { createDocumentRegistry, DocumentRegistry } from "./documentRegistry";
+ import { preProcessFile } from "./preProcess";
+diff --git a/src/services/stringCompletions.ts b/src/services/stringCompletions.ts
+index 44721a379f..013f4c577f 100644
+--- a/src/services/stringCompletions.ts
++++ b/src/services/stringCompletions.ts
+@@ -1,4 +1,3 @@
+-import { moduleSpecifiers } from "../compiler/_namespaces/ts";
+ import { signatureHasRestParameter } from "../compiler/checker";
+ import {
+     compareStringsCaseSensitive, contains, createSortedArray, deduplicate, emptyArray, endsWith,
+@@ -14,6 +13,7 @@ import {
+ import {
+     getEffectiveTypeRoots, getPackageJsonTypesVersionsPaths, unmangleScopedPackageName,
+ } from "../compiler/moduleNameResolver";
++import * as moduleSpecifiers from "../compiler/moduleSpecifiers";
+ import {
+     altDirectorySeparator, combinePaths, comparePaths, containsPath, directorySeparator,
+     ensureTrailingDirectorySeparator, fileExtensionIsOneOf, forEachAncestorDirectory, getBaseFileName, getDirectoryPath,
+diff --git a/src/services/types.ts b/src/services/types.ts
+index c308a20319..13b2ed05f5 100644
+--- a/src/services/types.ts
++++ b/src/services/types.ts
+@@ -10,10 +10,10 @@ import {
+     TextChangeRange, TextRange, TextSpan, UserPreferences,
+ } from "../compiler/types";
+ import { SymlinkCache } from "../compiler/utilities";
+-import { textChanges } from "./_namespaces/ts";
+ import { DocumentHighlights } from "./documentHighlights";
+ import { ExportInfoMap } from "./exportInfoMap";
+ import { SourceMapper } from "./sourcemaps";
++import * as textChanges from "./textChanges";
+ 
+ declare module "../compiler/types" {
+     // Module transform: converted from interface augmentation
+diff --git a/src/services/utilities.ts b/src/services/utilities.ts
+index 0a27ecaa54..023707102d 100644
+--- a/src/services/utilities.ts
++++ b/src/services/utilities.ts
+@@ -81,13 +81,14 @@ import {
+     textSpanContainsTextSpan, textSpanEnd, unescapeLeadingUnderscores,
+ } from "../compiler/utilitiesPublic";
+ import { visitEachChild } from "../compiler/visitorPublic";
+-import { JsTyping } from "../jsTyping/_namespaces/ts";
+-import { formatting, textChanges } from "./_namespaces/ts";
++import * as JsTyping from "../jsTyping/jsTyping";
++import { formatting } from "./_namespaces/ts";
+ import { moduleSymbolToValidIdentifier } from "./codefixes/importFixes";
+ import {
+     compareImportsOrRequireStatements, getImportDeclarationInsertionIndex, importsAreSorted,
+ } from "./organizeImports";
+ import { DisplayPartsSymbolWriter } from "./services";
++import * as textChanges from "./textChanges";
+ import {
+     DocumentSpan, FileTextChanges, FormatCodeSettings, FormattingHost, IScriptSnapshot, JSDocLinkDisplayPart,
+     LanguageServiceHost, PackageJsonDependencyGroup, PackageJsonInfo, RefactorContext, ScriptElementKind,
 diff --git a/src/testRunner/_namespaces/FourSlash.ts b/src/testRunner/_namespaces/FourSlash.ts
 index b314d7d2e2..b81535c48f 100644
 --- a/src/testRunner/_namespaces/FourSlash.ts
@@ -1187,6 +2593,21 @@ index c524071b84..0000000000
 @@ -1,2 +0,0 @@
 -// empty ref to compiler so it can be referenced by unittests
 -export { };
+diff --git a/src/testRunner/compilerRunner.ts b/src/testRunner/compilerRunner.ts
+index 933d8cbbba..90afe100b4 100644
+--- a/src/testRunner/compilerRunner.ts
++++ b/src/testRunner/compilerRunner.ts
+@@ -6,9 +6,9 @@ import { CompilerOptions, Extension } from "../compiler/types";
+ import { CompilationResult } from "../harness/compilerImpl";
+ import { RunnerBase, TestRunnerKind } from "../harness/runnerbase";
+ import { removeTestPathPrefixes, sanitizeTraceResolutionLogEntry } from "../harness/util";
++import * as vpath from "../harness/vpathUtil";
+ import { cloneCompilerOptions } from "../services/utilities";
+ import * as Harness from "./_namespaces/Harness";
+-import * as vpath from "./_namespaces/vpath";
+ 
+ export const enum CompilerTestType {
+     Conformance,
 diff --git a/src/testRunner/documentsRef.ts b/src/testRunner/documentsRef.ts
 deleted file mode 100644
 index e1abbfb2d9..0000000000
@@ -1219,6 +2640,19 @@ index 7436f5ad2d..0000000000
 @@ -1,2 +0,0 @@
 -// empty ref to FourSlash so it can be referenced by unittests
 -export { };
+diff --git a/src/testRunner/fourslashRunner.ts b/src/testRunner/fourslashRunner.ts
+index 37f8c46695..231eaa1572 100644
+--- a/src/testRunner/fourslashRunner.ts
++++ b/src/testRunner/fourslashRunner.ts
+@@ -1,7 +1,7 @@
+ import { Debug } from "../compiler/debug";
+ import { normalizeSlashes } from "../compiler/path";
++import * as FourSlash from "../harness/fourslashImpl";
+ import { RunnerBase, TestRunnerKind } from "../harness/runnerbase";
+-import * as FourSlash from "./_namespaces/FourSlash";
+ import * as Harness from "./_namespaces/Harness";
+ 
+ export class FourSlashRunner extends RunnerBase {
 diff --git a/src/testRunner/playbackRef.ts b/src/testRunner/playbackRef.ts
 deleted file mode 100644
 index 9a46d5740c..0000000000
@@ -1227,16 +2661,39 @@ index 9a46d5740c..0000000000
 @@ -1,2 +0,0 @@
 -// empty ref to Playback so it can be referenced by unittests
 -export { };
+diff --git a/src/testRunner/projectsRunner.ts b/src/testRunner/projectsRunner.ts
+index 8d8eb9ef49..c29a549dbb 100644
+--- a/src/testRunner/projectsRunner.ts
++++ b/src/testRunner/projectsRunner.ts
+@@ -11,13 +11,13 @@ import {
+     Program, SourceFile, SourceMapEmitResult,
+ } from "../compiler/types";
+ import { removeFileExtension } from "../compiler/utilities";
++import * as documents from "../harness/documentsUtil";
++import * as fakes from "../harness/fakesHosts";
+ import { RunnerBase, shardId, shards, TestRunnerKind } from "../harness/runnerbase";
+ import { removeTestPathPrefixes } from "../harness/util";
+-import * as documents from "./_namespaces/documents";
+-import * as fakes from "./_namespaces/fakes";
++import * as vfs from "../harness/vfsUtil";
++import * as vpath from "../harness/vpathUtil";
+ import * as Harness from "./_namespaces/Harness";
+-import * as vfs from "./_namespaces/vfs";
+-import * as vpath from "./_namespaces/vpath";
+ 
+ // Test case is json of below type in tests/cases/project/
+ interface ProjectRunnerTestCase {
 diff --git a/src/testRunner/runner.ts b/src/testRunner/runner.ts
-index d1d9b7fe55..d85e1af7d2 100644
+index d1d9b7fe55..c021412ade 100644
 --- a/src/testRunner/runner.ts
 +++ b/src/testRunner/runner.ts
 @@ -1,13 +1,13 @@
  import { forEach, getUILocale, noop, setUILocale } from "../compiler/core";
  import { Debug } from "../compiler/debug";
++import * as FourSlash from "../harness/fourslashImpl";
  import { RunnerBase, setShardId, setShards, TestRunnerKind } from "../harness/runnerbase";
+-import * as FourSlash from "./_namespaces/FourSlash";
 +import * as vpath from "../harness/vpathUtil";
- import * as FourSlash from "./_namespaces/FourSlash";
  import * as Harness from "./_namespaces/Harness";
 -import { Host } from "./_namespaces/Harness.Parallel";
 -import * as vpath from "./_namespaces/vpath";
@@ -1247,6 +2704,21 @@ index d1d9b7fe55..d85e1af7d2 100644
  import { start } from "./parallel/worker";
  import { ProjectRunner } from "./projectsRunner";
  import { RWCRunner } from "./rwcRunner";
+diff --git a/src/testRunner/rwcRunner.ts b/src/testRunner/rwcRunner.ts
+index f405724a6c..c12093407b 100644
+--- a/src/testRunner/rwcRunner.ts
++++ b/src/testRunner/rwcRunner.ts
+@@ -8,9 +8,9 @@ import { getBaseFileName, getDirectoryPath, normalizeSlashes } from "../compiler
+ import { CompilerOptions, ParseConfigHost, ParsedCommandLine } from "../compiler/types";
+ import { CompilationResult } from "../harness/compilerImpl";
+ import { RunnerBase, TestRunnerKind } from "../harness/runnerbase";
++import * as vpath from "../harness/vpathUtil";
+ import { IoLog, newStyleLogIntoOldStyleLog, wrapIO } from "../loggedIO/loggedIO";
+ import * as Harness from "./_namespaces/Harness";
+-import * as vpath from "./_namespaces/vpath";
+ 
+ // In harness baselines, null is different than undefined. See `generateActual` in `harness.ts`.
+ function runWithIOLog(ioLog: IoLog, fn: (oldIO: Harness.IO) => void) {
 diff --git a/src/testRunner/tsconfig.json b/src/testRunner/tsconfig.json
 index c0e652fdbd..d7b9d0ebc2 100644
 --- a/src/testRunner/tsconfig.json
@@ -1268,6 +2740,225 @@ index c0e652fdbd..d7b9d0ebc2 100644
          "fourslashRunner.ts",
          "compilerRunner.ts",
          "projectsRunner.ts",
+diff --git a/src/testRunner/unittests/config/configurationExtension.ts b/src/testRunner/unittests/config/configurationExtension.ts
+index be5ab1faff..fd2fc5443a 100644
+--- a/src/testRunner/unittests/config/configurationExtension.ts
++++ b/src/testRunner/unittests/config/configurationExtension.ts
+@@ -5,8 +5,8 @@ import { forEach } from "../../../compiler/core";
+ import { combinePaths } from "../../../compiler/path";
+ import { flattenDiagnosticMessageText } from "../../../compiler/program";
+ import { CompilerOptions, Diagnostic, DiagnosticCategory, ModuleKind } from "../../../compiler/types";
+-import * as fakes from "../../_namespaces/fakes";
+-import * as vfs from "../../_namespaces/vfs";
++import * as fakes from "../../../harness/fakesHosts";
++import * as vfs from "../../../harness/vfsUtil";
+ 
+ function createFileSystem(ignoreCase: boolean, cwd: string, root: string) {
+     return new vfs.FileSystem(ignoreCase, {
+diff --git a/src/testRunner/unittests/config/convertCompilerOptionsFromJson.ts b/src/testRunner/unittests/config/convertCompilerOptionsFromJson.ts
+index 2f36f1f57d..9a012ca2ba 100644
+--- a/src/testRunner/unittests/config/convertCompilerOptionsFromJson.ts
++++ b/src/testRunner/unittests/config/convertCompilerOptionsFromJson.ts
+@@ -6,8 +6,8 @@ import { Diagnostics } from "../../../compiler/diagnosticInformationMap.generate
+ import { parseJsonText } from "../../../compiler/parser";
+ import { formatDiagnostic, FormatDiagnosticsHost } from "../../../compiler/program";
+ import { CompilerOptions, Diagnostic, ModuleKind, ParseConfigHost, ScriptTarget } from "../../../compiler/types";
+-import * as fakes from "../../_namespaces/fakes";
+-import * as vfs from "../../_namespaces/vfs";
++import * as fakes from "../../../harness/fakesHosts";
++import * as vfs from "../../../harness/vfsUtil";
+ 
+ describe("unittests:: config:: convertCompilerOptionsFromJson", () => {
+     const formatDiagnosticHost: FormatDiagnosticsHost = {
+diff --git a/src/testRunner/unittests/config/convertTypeAcquisitionFromJson.ts b/src/testRunner/unittests/config/convertTypeAcquisitionFromJson.ts
+index 41fc01bf35..b2250c3049 100644
+--- a/src/testRunner/unittests/config/convertTypeAcquisitionFromJson.ts
++++ b/src/testRunner/unittests/config/convertTypeAcquisitionFromJson.ts
+@@ -5,8 +5,8 @@ import { filter } from "../../../compiler/core";
+ import { Diagnostics } from "../../../compiler/diagnosticInformationMap.generated";
+ import { parseJsonText } from "../../../compiler/parser";
+ import { Diagnostic, ParseConfigHost, TypeAcquisition } from "../../../compiler/types";
+-import * as fakes from "../../_namespaces/fakes";
+-import * as vfs from "../../_namespaces/vfs";
++import * as fakes from "../../../harness/fakesHosts";
++import * as vfs from "../../../harness/vfsUtil";
+ 
+ interface ExpectedResult { typeAcquisition: TypeAcquisition; errors: Diagnostic[]; }
+ describe("unittests:: config:: convertTypeAcquisitionFromJson", () => {
+diff --git a/src/testRunner/unittests/config/matchFiles.ts b/src/testRunner/unittests/config/matchFiles.ts
+index be0dd02c20..1ded49c4b7 100644
+--- a/src/testRunner/unittests/config/matchFiles.ts
++++ b/src/testRunner/unittests/config/matchFiles.ts
+@@ -6,8 +6,8 @@ import {
+     SyntaxKind, WatchDirectoryFlags,
+ } from "../../../compiler/types";
+ import { createCompilerDiagnostic, createFileDiagnostic } from "../../../compiler/utilities";
+-import * as fakes from "../../_namespaces/fakes";
+-import * as vfs from "../../_namespaces/vfs";
++import * as fakes from "../../../harness/fakesHosts";
++import * as vfs from "../../../harness/vfsUtil";
+ 
+ const caseInsensitiveBasePath = "c:/dev/";
+ const caseInsensitiveTsconfigPath = "c:/dev/tsconfig.json";
+diff --git a/src/testRunner/unittests/config/projectReferences.ts b/src/testRunner/unittests/config/projectReferences.ts
+index 9633c72ef7..ef9d2223bc 100644
+--- a/src/testRunner/unittests/config/projectReferences.ts
++++ b/src/testRunner/unittests/config/projectReferences.ts
+@@ -6,9 +6,9 @@ import {
+     createProgram, flattenDiagnosticMessageText, parseConfigHostFromCompilerHostLike,
+ } from "../../../compiler/program";
+ import { CompilerOptions, Diagnostic, DiagnosticMessage, Program, ProjectReference } from "../../../compiler/types";
++import * as fakes from "../../../harness/fakesHosts";
++import * as vfs from "../../../harness/vfsUtil";
+ import { libFile } from "../../../harness/virtualFileSystemWithWatch";
+-import * as fakes from "../../_namespaces/fakes";
+-import * as vfs from "../../_namespaces/vfs";
+ 
+ interface TestProjectSpecification {
+     configFileName?: string;
+diff --git a/src/testRunner/unittests/config/tsconfigParsing.ts b/src/testRunner/unittests/config/tsconfigParsing.ts
+index b91013affa..b2cbfd4223 100644
+--- a/src/testRunner/unittests/config/tsconfigParsing.ts
++++ b/src/testRunner/unittests/config/tsconfigParsing.ts
+@@ -7,8 +7,8 @@ import { parseJsonText } from "../../../compiler/parser";
+ import { sys } from "../../../compiler/sys";
+ import { Diagnostic, ParseConfigHost, WatchDirectoryFlags } from "../../../compiler/types";
+ import { createCompilerDiagnostic } from "../../../compiler/utilities";
+-import * as fakes from "../../_namespaces/fakes";
+-import * as vfs from "../../_namespaces/vfs";
++import * as fakes from "../../../harness/fakesHosts";
++import * as vfs from "../../../harness/vfsUtil";
+ 
+ describe("unittests:: config:: tsconfigParsing:: parseConfigFileTextToJson", () => {
+     function assertParseResult(jsonText: string, expectedConfigObject: { config?: any; error?: Diagnostic[] }) {
+diff --git a/src/testRunner/unittests/config/tsconfigParsingWatchOptions.ts b/src/testRunner/unittests/config/tsconfigParsingWatchOptions.ts
+index 98e900acd5..55556ad0ce 100644
+--- a/src/testRunner/unittests/config/tsconfigParsingWatchOptions.ts
++++ b/src/testRunner/unittests/config/tsconfigParsingWatchOptions.ts
+@@ -5,8 +5,8 @@ import { parseJsonText } from "../../../compiler/parser";
+ import {
+     Diagnostic, PollingWatchKind, SourceFile, WatchDirectoryKind, WatchFileKind, WatchOptions,
+ } from "../../../compiler/types";
+-import * as fakes from "../../_namespaces/fakes";
+-import * as vfs from "../../_namespaces/vfs";
++import * as fakes from "../../../harness/fakesHosts";
++import * as vfs from "../../../harness/vfsUtil";
+ 
+ describe("unittests:: config:: tsconfigParsingWatchOptions:: parseConfigFileTextToJson", () => {
+     function createParseConfigHost(additionalFiles?: vfs.FileSet) {
+diff --git a/src/testRunner/unittests/printer.ts b/src/testRunner/unittests/printer.ts
+index aaa9b4e62b..8b64db486a 100644
+--- a/src/testRunner/unittests/printer.ts
++++ b/src/testRunner/unittests/printer.ts
+@@ -8,9 +8,9 @@ import {
+     Bundle, EmitFlags, EmitHint, NewLineKind, NodeFlags, Printer, PrinterOptions, ScriptKind, ScriptTarget, SourceFile,
+     SyntaxKind,
+ } from "../../compiler/types";
+-import * as fakes from "../_namespaces/fakes";
++import * as fakes from "../../harness/fakesHosts";
++import * as vfs from "../../harness/vfsUtil";
+ import * as Harness from "../_namespaces/Harness";
+-import * as vfs from "../_namespaces/vfs";
+ 
+ describe("unittests:: PrinterAPI", () => {
+     function makePrintsCorrectly(prefix: string) {
+diff --git a/src/testRunner/unittests/programApi.ts b/src/testRunner/unittests/programApi.ts
+index 7de8e431d1..c35e57f765 100644
+--- a/src/testRunner/unittests/programApi.ts
++++ b/src/testRunner/unittests/programApi.ts
+@@ -7,11 +7,11 @@ import {
+     AsExpression, CompilerHost, CompilerOptions, ExpressionStatement, ImportDeclaration, ModuleKind, NewLineKind, Path,
+     Program, ScriptKind, ScriptTarget,
+ } from "../../compiler/types";
++import * as documents from "../../harness/documentsUtil";
++import * as fakes from "../../harness/fakesHosts";
++import * as vfs from "../../harness/vfsUtil";
+ import { emptyOptions } from "../../services/types";
+-import * as documents from "../_namespaces/documents";
+-import * as fakes from "../_namespaces/fakes";
+ import * as Harness from "../_namespaces/Harness";
+-import * as vfs from "../_namespaces/vfs";
+ 
+ function verifyMissingFilePaths(missingPaths: readonly Path[], expected: readonly string[]) {
+     assert.isDefined(missingPaths);
+diff --git a/src/testRunner/unittests/publicApi.ts b/src/testRunner/unittests/publicApi.ts
+index 6b3116f598..352c14a0bd 100644
+--- a/src/testRunner/unittests/publicApi.ts
++++ b/src/testRunner/unittests/publicApi.ts
+@@ -12,11 +12,11 @@ import {
+     getJSDocTags, isPropertyName, supportedLocaleDirectories, validateLocaleAndSetLanguage,
+ } from "../../compiler/utilitiesPublic";
+ import { compileFiles } from "../../harness/compilerImpl";
++import * as documents from "../../harness/documentsUtil";
++import * as fakes from "../../harness/fakesHosts";
++import * as vfs from "../../harness/vfsUtil";
+ import { getDefaultCompilerOptions } from "../../services/services";
+-import * as documents from "../_namespaces/documents";
+-import * as fakes from "../_namespaces/fakes";
+ import * as Harness from "../_namespaces/Harness";
+-import * as vfs from "../_namespaces/vfs";
+ 
+ describe("unittests:: Public APIs", () => {
+     function verifyApi(fileName: string) {
+diff --git a/src/testRunner/unittests/reuseProgramStructure.ts b/src/testRunner/unittests/reuseProgramStructure.ts
+index 61a1a513e8..4c259e0995 100644
+--- a/src/testRunner/unittests/reuseProgramStructure.ts
++++ b/src/testRunner/unittests/reuseProgramStructure.ts
+@@ -19,7 +19,7 @@ import {
+     createWatchCompilerHostOfConfigFile, createWatchCompilerHostOfFilesAndCompilerOptions, parseConfigFileWithSystem,
+ } from "../../compiler/watch";
+ import { createWatchProgram } from "../../compiler/watchPublic";
+-import { TestFSWithWatch } from "../../harness/_namespaces/ts";
++import * as TestFSWithWatch from "../../harness/virtualFileSystemWithWatch";
+ import { createWatchedSystem as createTestSystem, libFile } from "../../harness/virtualFileSystemWithWatch";
+ import { IScriptSnapshot } from "../../services/types";
+ import { checkResolvedModule, createResolvedModule } from "./moduleResolution";
+diff --git a/src/testRunner/unittests/services/convertToAsyncFunction.ts b/src/testRunner/unittests/services/convertToAsyncFunction.ts
+index d1a3d33039..8680dcc467 100644
+--- a/src/testRunner/unittests/services/convertToAsyncFunction.ts
++++ b/src/testRunner/unittests/services/convertToAsyncFunction.ts
+@@ -3,9 +3,9 @@ import { Debug } from "../../../compiler/debug";
+ import { Diagnostics } from "../../../compiler/diagnosticInformationMap.generated";
+ import { Extension, Program } from "../../../compiler/types";
+ import { File } from "../../../harness/virtualFileSystemWithWatch";
+-import { textChanges } from "../../../services/_namespaces/ts";
+ import { getFixes } from "../../../services/codeFixProvider";
+ import { getFormatContext } from "../../../services/formatting/rulesMap";
++import * as textChanges from "../../../services/textChanges";
+ import { CodeFixContext, emptyOptions, testFormatSettings } from "../../../services/types";
+ import * as Harness from "../../_namespaces/Harness";
+ import { createProjectService, createServerHost } from "../tsserver/helpers";
+diff --git a/src/testRunner/unittests/services/extract/helpers.ts b/src/testRunner/unittests/services/extract/helpers.ts
+index 78cd501d95..589aef71d2 100644
+--- a/src/testRunner/unittests/services/extract/helpers.ts
++++ b/src/testRunner/unittests/services/extract/helpers.ts
+@@ -2,11 +2,11 @@ import { find, hasProperty, length, noop, notImplemented, returnFalse } from "..
+ import { ESMap, Map } from "../../../../compiler/corePublic";
+ import { isIdentifierPart } from "../../../../compiler/scanner";
+ import { CharacterCodes, DiagnosticMessage, Extension, Program, ScriptTarget } from "../../../../compiler/types";
+-import { textChanges } from "../../../../services/_namespaces/ts";
+ import { getFormatContext } from "../../../../services/formatting/rulesMap";
+ import {
+     getRangeToExtract, getRefactorActionsToExtractSymbol, getRefactorEditsToExtractSymbol,
+ } from "../../../../services/refactors/extractSymbol";
++import * as textChanges from "../../../../services/textChanges";
+ import { emptyOptions, LanguageServiceHost, RefactorContext, testFormatSettings } from "../../../../services/types";
+ import { createTextSpanFromRange } from "../../../../services/utilities";
+ import * as Harness from "../../../_namespaces/Harness";
+diff --git a/src/testRunner/unittests/services/organizeImports.ts b/src/testRunner/unittests/services/organizeImports.ts
+index 2516191077..121df5c1de 100644
+--- a/src/testRunner/unittests/services/organizeImports.ts
++++ b/src/testRunner/unittests/services/organizeImports.ts
+@@ -7,8 +7,8 @@ import {
+     LiteralLikeNode, NamedExports, NamedImports, NamespaceImport, Node, ScriptKind, ScriptTarget, SyntaxKind,
+ } from "../../../compiler/types";
+ import { File } from "../../../harness/virtualFileSystemWithWatch";
+-import { textChanges } from "../../../services/_namespaces/ts";
+ import { coalesceExports, coalesceImports, compareModuleSpecifiers } from "../../../services/organizeImports";
++import * as textChanges from "../../../services/textChanges";
+ import { emptyOptions, testFormatSettings } from "../../../services/types";
+ import * as Harness from "../../_namespaces/Harness";
+ import { createProjectService, createServerHost } from "../tsserver/helpers";
 diff --git a/src/testRunner/unittests/services/textChanges.ts b/src/testRunner/unittests/services/textChanges.ts
 index 95a6f5ffa5..33915fae23 100644
 --- a/src/testRunner/unittests/services/textChanges.ts
@@ -1290,13 +2981,173 @@ index 95a6f5ffa5..33915fae23 100644
  describe("unittests:: services:: textChanges", () => {
      function findChild(name: string, n: Node) {
          return find(n)!;
+diff --git a/src/testRunner/unittests/transform.ts b/src/testRunner/unittests/transform.ts
+index 0804d2f27a..8f5dfedfc9 100644
+--- a/src/testRunner/unittests/transform.ts
++++ b/src/testRunner/unittests/transform.ts
+@@ -18,13 +18,13 @@ import {
+ } from "../../compiler/types";
+ import { isClassLike, isParameterPropertyDeclaration } from "../../compiler/utilitiesPublic";
+ import { visitEachChild, visitNode } from "../../compiler/visitorPublic";
++import * as documents from "../../harness/documentsUtil";
+ import { evaluateJavaScript } from "../../harness/evaluatorImpl";
++import * as fakes from "../../harness/fakesHosts";
++import * as vfs from "../../harness/vfsUtil";
+ import { transform } from "../../services/transform";
+ import { transpileModule, TranspileOptions } from "../../services/transpile";
+-import * as documents from "../_namespaces/documents";
+-import * as fakes from "../_namespaces/fakes";
+ import * as Harness from "../_namespaces/Harness";
+-import * as vfs from "../_namespaces/vfs";
+ 
+ describe("unittests:: TransformAPI", () => {
+     function replaceUndefinedWithVoid0(context: TransformationContext) {
+diff --git a/src/testRunner/unittests/tsbuild/amdModulesWithOut.ts b/src/testRunner/unittests/tsbuild/amdModulesWithOut.ts
+index 8b838047ae..890c02a7ec 100644
+--- a/src/testRunner/unittests/tsbuild/amdModulesWithOut.ts
++++ b/src/testRunner/unittests/tsbuild/amdModulesWithOut.ts
+@@ -1,5 +1,5 @@
+ import { emptyArray } from "../../../compiler/core";
+-import * as vfs from "../../_namespaces/vfs";
++import * as vfs from "../../../harness/vfsUtil";
+ import { verifyTsc } from "../tsc/helpers";
+ import {
+     addRest, addShebang, addSpread, addTestPrologue, addTripleSlashRef, appendText, enableStrict, loadProjectFromDisk,
+diff --git a/src/testRunner/unittests/tsbuild/declarationEmit.ts b/src/testRunner/unittests/tsbuild/declarationEmit.ts
+index 46d812a77e..57cb0e0ab7 100644
+--- a/src/testRunner/unittests/tsbuild/declarationEmit.ts
++++ b/src/testRunner/unittests/tsbuild/declarationEmit.ts
+@@ -1,5 +1,5 @@
+ import { dedent } from "../../../harness/util";
+-import * as vfs from "../../_namespaces/vfs";
++import * as vfs from "../../../harness/vfsUtil";
+ import { verifyTsc } from "../tsc/helpers";
+ import { loadProjectFromFiles } from "./helpers";
+ 
+diff --git a/src/testRunner/unittests/tsbuild/demo.ts b/src/testRunner/unittests/tsbuild/demo.ts
+index 1e1e0c0ed5..510b49aaf0 100644
+--- a/src/testRunner/unittests/tsbuild/demo.ts
++++ b/src/testRunner/unittests/tsbuild/demo.ts
+@@ -1,4 +1,4 @@
+-import * as vfs from "../../_namespaces/vfs";
++import * as vfs from "../../../harness/vfsUtil";
+ import { verifyTsc } from "../tsc/helpers";
+ import { loadProjectFromDisk, prependText, replaceText } from "./helpers";
+ 
+diff --git a/src/testRunner/unittests/tsbuild/emitDeclarationOnly.ts b/src/testRunner/unittests/tsbuild/emitDeclarationOnly.ts
+index 46fcfd2e2e..b4c9630376 100644
+--- a/src/testRunner/unittests/tsbuild/emitDeclarationOnly.ts
++++ b/src/testRunner/unittests/tsbuild/emitDeclarationOnly.ts
+@@ -1,4 +1,4 @@
+-import * as vfs from "../../_namespaces/vfs";
++import * as vfs from "../../../harness/vfsUtil";
+ import { loadProjectFromDisk, replaceText, verifyTscWithEdits } from "./helpers";
+ 
+ describe("unittests:: tsbuild:: on project with emitDeclarationOnly set to true", () => {
+diff --git a/src/testRunner/unittests/tsbuild/emptyFiles.ts b/src/testRunner/unittests/tsbuild/emptyFiles.ts
+index c740cdf741..a2875b40b1 100644
+--- a/src/testRunner/unittests/tsbuild/emptyFiles.ts
++++ b/src/testRunner/unittests/tsbuild/emptyFiles.ts
+@@ -1,4 +1,4 @@
+-import * as vfs from "../../_namespaces/vfs";
++import * as vfs from "../../../harness/vfsUtil";
+ import { verifyTsc } from "../tsc/helpers";
+ import { loadProjectFromDisk } from "./helpers";
+ 
+diff --git a/src/testRunner/unittests/tsbuild/graphOrdering.ts b/src/testRunner/unittests/tsbuild/graphOrdering.ts
+index c7fca754d2..878328202b 100644
+--- a/src/testRunner/unittests/tsbuild/graphOrdering.ts
++++ b/src/testRunner/unittests/tsbuild/graphOrdering.ts
+@@ -2,8 +2,8 @@ import {
+     createSolutionBuilder, getBuildOrderFromAnyBuildOrder, isCircularBuildOrder,
+ } from "../../../compiler/tsbuildPublic";
+ import { ResolvedConfigFileName } from "../../../compiler/types";
+-import * as fakes from "../../_namespaces/fakes";
+-import * as vfs from "../../_namespaces/vfs";
++import * as fakes from "../../../harness/fakesHosts";
++import * as vfs from "../../../harness/vfsUtil";
+ 
+ describe("unittests:: tsbuild - graph-ordering", () => {
+     let host: fakes.SolutionBuilderHost | undefined;
+diff --git a/src/testRunner/unittests/tsbuild/helpers.ts b/src/testRunner/unittests/tsbuild/helpers.ts
+index 2c5480b2b5..0e7464f144 100644
+--- a/src/testRunner/unittests/tsbuild/helpers.ts
++++ b/src/testRunner/unittests/tsbuild/helpers.ts
+@@ -20,13 +20,13 @@ import {
+ } from "../../../compiler/types";
+ import { outFile } from "../../../compiler/utilities";
+ import { isBuild } from "../../../executeCommandLine/executeCommandLine";
++import * as fakes from "../../../harness/fakesHosts";
+ import { getSourceMapRecordWithSystem } from "../../../harness/sourceMapRecorder";
++import * as vfs from "../../../harness/vfsUtil";
+ import { libFile } from "../../../harness/virtualFileSystemWithWatch";
+-import * as fakes from "../../_namespaces/fakes";
++import * as vpath from "../../../harness/vpathUtil";
+ import * as Harness from "../../_namespaces/Harness";
+ import * as ts from "../../_namespaces/ts";
+-import * as vfs from "../../_namespaces/vfs";
+-import * as vpath from "../../_namespaces/vpath";
+ import { testTscCompile, TestTscCompile, TscCompileSystem, verifyTscBaseline } from "../tsc/helpers";
+ import { WatchedSystem } from "../tscWatch/helpers";
+ 
+diff --git a/src/testRunner/unittests/tsbuild/inferredTypeFromTransitiveModule.ts b/src/testRunner/unittests/tsbuild/inferredTypeFromTransitiveModule.ts
+index 993f6f492b..0a66eda391 100644
+--- a/src/testRunner/unittests/tsbuild/inferredTypeFromTransitiveModule.ts
++++ b/src/testRunner/unittests/tsbuild/inferredTypeFromTransitiveModule.ts
+@@ -1,4 +1,4 @@
+-import * as vfs from "../../_namespaces/vfs";
++import * as vfs from "../../../harness/vfsUtil";
+ import { appendText, loadProjectFromDisk, replaceText, verifyTscWithEdits } from "./helpers";
+ 
+ describe("unittests:: tsbuild:: inferredTypeFromTransitiveModule::", () => {
+diff --git a/src/testRunner/unittests/tsbuild/noEmitOnError.ts b/src/testRunner/unittests/tsbuild/noEmitOnError.ts
+index 54a8ee9b57..2bdf920272 100644
+--- a/src/testRunner/unittests/tsbuild/noEmitOnError.ts
++++ b/src/testRunner/unittests/tsbuild/noEmitOnError.ts
+@@ -1,4 +1,4 @@
+-import * as vfs from "../../_namespaces/vfs";
++import * as vfs from "../../../harness/vfsUtil";
+ import { noChangeRun, noChangeWithExportsDiscrepancyRun } from "../tsc/helpers";
+ import { loadProjectFromDisk, verifyTscWithEdits } from "./helpers";
+ 
+diff --git a/src/testRunner/unittests/tsbuild/outFile.ts b/src/testRunner/unittests/tsbuild/outFile.ts
+index 84dbe1e5b6..0fe584273f 100644
+--- a/src/testRunner/unittests/tsbuild/outFile.ts
++++ b/src/testRunner/unittests/tsbuild/outFile.ts
+@@ -1,6 +1,6 @@
+ import { createSolutionBuilder } from "../../../compiler/tsbuildPublic";
+-import * as fakes from "../../_namespaces/fakes";
+-import * as vfs from "../../_namespaces/vfs";
++import * as fakes from "../../../harness/fakesHosts";
++import * as vfs from "../../../harness/vfsUtil";
+ import {
+     createSolutionBuilderHostForBaseline, noChangeOnlyRuns, testTscCompileLike, TscCompileSystem, verifyTsc,
+     verifyTscCompileLike,
+diff --git a/src/testRunner/unittests/tsbuild/outputPaths.ts b/src/testRunner/unittests/tsbuild/outputPaths.ts
+index 9c8c427c5f..4c74f08cd2 100644
+--- a/src/testRunner/unittests/tsbuild/outputPaths.ts
++++ b/src/testRunner/unittests/tsbuild/outputPaths.ts
+@@ -1,7 +1,7 @@
+ import { noop } from "../../../compiler/core";
+ import { getOutputFileNames } from "../../../compiler/emitter";
+ import { parseConfigFileWithSystem } from "../../../compiler/watch";
+-import * as fakes from "../../_namespaces/fakes";
++import * as fakes from "../../../harness/fakesHosts";
+ import { noChangeRun, TscCompileSystem } from "../tsc/helpers";
+ import { loadProjectFromFiles, TestTscEdit, verifyTscWithEdits, VerifyTscWithEditsInput } from "./helpers";
+ 
 diff --git a/src/testRunner/unittests/tsbuild/publicApi.ts b/src/testRunner/unittests/tsbuild/publicApi.ts
-index 55b004f3e1..c5bf2c3afc 100644
+index 9257772ade..a993634789 100644
 --- a/src/testRunner/unittests/tsbuild/publicApi.ts
 +++ b/src/testRunner/unittests/tsbuild/publicApi.ts
-@@ -13,7 +13,7 @@ import { createDiagnosticReporter, getErrorSummaryText } from "../../../compiler
- import { patchHostForBuildInfoReadWrite, System } from "../../../harness/fakesHosts";
- import * as vfs from "../../_namespaces/vfs";
+@@ -10,10 +10,10 @@ import {
+ } from "../../../compiler/types";
+ import { visitEachChild } from "../../../compiler/visitorPublic";
+ import { createDiagnosticReporter, getErrorSummaryText } from "../../../compiler/watch";
+-import * as fakes from "../../_namespaces/fakes";
+-import * as vfs from "../../_namespaces/vfs";
++import * as fakes from "../../../harness/fakesHosts";
++import * as vfs from "../../../harness/vfsUtil";
  import { commandLineCallbacks, TscCompileSystem, verifyTscBaseline } from "../tsc/helpers";
 -import { baselinePrograms } from "../tscWatch/helpers";
 +import { baselineAllPrograms } from "../tscWatch/helpers";
@@ -1312,24 +3163,74 @@ index 55b004f3e1..c5bf2c3afc 100644
          sys.write(baseline.join("\n"));
          fs.makeReadonly();
          sys.baseLine = () => {
+diff --git a/src/testRunner/unittests/tsbuild/referencesWithRootDirInParent.ts b/src/testRunner/unittests/tsbuild/referencesWithRootDirInParent.ts
+index fb98b55a4c..5f9c27e2d7 100644
+--- a/src/testRunner/unittests/tsbuild/referencesWithRootDirInParent.ts
++++ b/src/testRunner/unittests/tsbuild/referencesWithRootDirInParent.ts
+@@ -1,4 +1,4 @@
+-import * as vfs from "../../_namespaces/vfs";
++import * as vfs from "../../../harness/vfsUtil";
+ import { verifyTsc } from "../tsc/helpers";
+ import { loadProjectFromDisk, replaceText } from "./helpers";
+ 
+diff --git a/src/testRunner/unittests/tsbuild/resolveJsonModule.ts b/src/testRunner/unittests/tsbuild/resolveJsonModule.ts
+index 199155b625..caad7eaca9 100644
+--- a/src/testRunner/unittests/tsbuild/resolveJsonModule.ts
++++ b/src/testRunner/unittests/tsbuild/resolveJsonModule.ts
+@@ -1,4 +1,4 @@
+-import * as vfs from "../../_namespaces/vfs";
++import * as vfs from "../../../harness/vfsUtil";
+ import { noChangeOnlyRuns, verifyTsc } from "../tsc/helpers";
+ import { loadProjectFromDisk, replaceText, verifyTscWithEdits } from "./helpers";
+ 
+diff --git a/src/testRunner/unittests/tsbuild/sample.ts b/src/testRunner/unittests/tsbuild/sample.ts
+index 072ada266e..86c06e08b0 100644
+--- a/src/testRunner/unittests/tsbuild/sample.ts
++++ b/src/testRunner/unittests/tsbuild/sample.ts
+@@ -1,12 +1,12 @@
+ import { createAbstractBuilder } from "../../../compiler/builderPublic";
+ import { UpToDateStatusType } from "../../../compiler/tsbuild";
+ import { createSolutionBuilder, ResolvedConfigFilePath } from "../../../compiler/tsbuildPublic";
++import * as fakes from "../../../harness/fakesHosts";
++import * as vfs from "../../../harness/vfsUtil";
+ import {
+     changeToHostTrackingWrittenFiles, getTsBuildProjectFilePath, TestServerHost,
+ } from "../../../harness/virtualFileSystemWithWatch";
+-import * as fakes from "../../_namespaces/fakes";
+ import * as Harness from "../../_namespaces/Harness";
+-import * as vfs from "../../_namespaces/vfs";
+ import {
+     createSolutionBuilderHostForBaseline, noChangeOnlyRuns, noChangeRun, testTscCompileLike, TscCompileSystem,
+     verifyTsc, verifyTscCompileLike,
+diff --git a/src/testRunner/unittests/tsbuild/transitiveReferences.ts b/src/testRunner/unittests/tsbuild/transitiveReferences.ts
+index 5af2565981..7d18eb4305 100644
+--- a/src/testRunner/unittests/tsbuild/transitiveReferences.ts
++++ b/src/testRunner/unittests/tsbuild/transitiveReferences.ts
+@@ -1,4 +1,4 @@
+-import * as vfs from "../../_namespaces/vfs";
++import * as vfs from "../../../harness/vfsUtil";
+ import { verifyTsc } from "../tsc/helpers";
+ import { loadProjectFromDisk } from "./helpers";
+ 
 diff --git a/src/testRunner/unittests/tsc/helpers.ts b/src/testRunner/unittests/tsc/helpers.ts
-index 7be3052ac6..a0bf785006 100644
+index 69b901e5dd..078c301610 100644
 --- a/src/testRunner/unittests/tsc/helpers.ts
 +++ b/src/testRunner/unittests/tsc/helpers.ts
-@@ -9,12 +9,11 @@ import {
+@@ -9,12 +9,11 @@ import { createDiagnosticReporter, isBuilderProgram } from "../../../compiler/wa
+ import {
      executeCommandLine, ExecuteCommandLineCallbacks, isBuild,
  } from "../../../executeCommandLine/executeCommandLine";
- import { patchHostForBuildInfoReadWrite, patchHostForBuildInfoWrite, System } from "../../../harness/fakesHosts";
+-import * as fakes from "../../_namespaces/fakes";
++import * as fakes from "../../../harness/fakesHosts";
 +import * as vfs from "../../../harness/vfsUtil";
  import * as Harness from "../../_namespaces/Harness";
- import * as ts from "../../_namespaces/ts";
 -import { tscWatch } from "../../_namespaces/ts";
 -import * as vfs from "../../_namespaces/vfs";
  import { baselineBuildInfo, generateSourceMapBaselineFiles, TestTscEdit, toPathWithSystem } from "../tsbuild/helpers";
 -import { WatchedSystem } from "../tscWatch/helpers";
 +import { baselineAllPrograms, WatchedSystem } from "../tscWatch/helpers";
  
- export type TscCompileSystem = System & {
+ export type TscCompileSystem = fakes.System & {
      writtenFiles: Set<Path>;
 @@ -210,7 +209,7 @@ export function testTscCompile(input: TestTscCompile) {
          const { baselineSourceMap, baselineReadFileCalls, baselinePrograms, baselineDependencies } = input;
@@ -1340,10 +3241,40 @@ index 7be3052ac6..a0bf785006 100644
              sys.write(baseline.join("\n"));
          }
          if (baselineReadFileCalls) {
+diff --git a/src/testRunner/unittests/tsc/incremental.ts b/src/testRunner/unittests/tsc/incremental.ts
+index 3235a22eaf..94af3b4231 100644
+--- a/src/testRunner/unittests/tsc/incremental.ts
++++ b/src/testRunner/unittests/tsc/incremental.ts
+@@ -2,7 +2,7 @@ import { hasProperty } from "../../../compiler/core";
+ import { CompilerOptions } from "../../../compiler/types";
+ import { getEmitDeclarations } from "../../../compiler/utilities";
+ import { dedent } from "../../../harness/util";
+-import * as vfs from "../../_namespaces/vfs";
++import * as vfs from "../../../harness/vfsUtil";
+ import {
+     appendText, libContent, loadProjectFromDisk, loadProjectFromFiles, prependText, replaceText, TestTscEdit,
+     verifyTscWithEdits,
 diff --git a/src/testRunner/unittests/tscWatch/helpers.ts b/src/testRunner/unittests/tscWatch/helpers.ts
-index b24019abc9..512b585f77 100644
+index c61098889d..454b7d9008 100644
 --- a/src/testRunner/unittests/tscWatch/helpers.ts
 +++ b/src/testRunner/unittests/tscWatch/helpers.ts
+@@ -20,14 +20,14 @@ import { WatchCompilerHost, WatchOfConfigFile, WatchOfFilesAndCompilerOptions }
+ import {
+     executeCommandLine, ExecuteCommandLineCallbacks, isBuild,
+ } from "../../../executeCommandLine/executeCommandLine";
+-import { TestFSWithWatch } from "../../../harness/_namespaces/ts";
++import * as fakes from "../../../harness/fakesHosts";
++import * as TestFSWithWatch from "../../../harness/virtualFileSystemWithWatch";
+ import {
+     changeToHostTrackingWrittenFiles, checkArray, checkOutputContains, checkOutputDoesNotContain,
+     checkWatchedDirectories, checkWatchedDirectoriesDetailed, checkWatchedFiles, checkWatchedFilesDetailed,
+     createWatchedSystem, FileOrFolderOrSymLink, libFile, TestServerHost as WatchedSystem,
+     TestServerHostCreationParameters, TestServerHostTrackingWrittenFiles,
+ } from "../../../harness/virtualFileSystemWithWatch";
+-import * as fakes from "../../_namespaces/fakes";
+ import * as Harness from "../../_namespaces/Harness";
+ import * as ts from "../../_namespaces/ts";
+ import { generateSourceMapBaselineFiles } from "../tsbuild/helpers";
 @@ -335,7 +335,7 @@ export interface WatchBaseline extends BaselineBase, TscWatchCheckOptions {
  export function watchBaseline({ baseline, getPrograms, oldPrograms, sys, oldSnap, baselineSourceMap, baselineDependencies }: WatchBaseline) {
      if (baselineSourceMap) generateSourceMapBaselineFiles(sys);
@@ -1521,11 +3452,17 @@ index 2adb39d201..6438df4d1f 100644
  
  describe("unittests:: tsserver:: project telemetry", () => {
 diff --git a/src/testRunner/unittests/tsserver/typingsInstaller.ts b/src/testRunner/unittests/tsserver/typingsInstaller.ts
-index b139f2a600..4c04f05656 100644
+index b139f2a600..dc53a54bd4 100644
 --- a/src/testRunner/unittests/tsserver/typingsInstaller.ts
 +++ b/src/testRunner/unittests/tsserver/typingsInstaller.ts
-@@ -9,9 +9,9 @@ import { TestFSWithWatch } from "../../../harness/_namespaces/ts";
- import { JsTyping } from "../../../jsTyping/_namespaces/ts";
+@@ -5,13 +5,13 @@ import { Version } from "../../../compiler/semver";
+ import {
+     JsxEmit, ModuleKind, ModuleResolutionKind, Path, ScriptKind, ScriptTarget, TypeAcquisition,
+ } from "../../../compiler/types";
+-import { TestFSWithWatch } from "../../../harness/_namespaces/ts";
+-import { JsTyping } from "../../../jsTyping/_namespaces/ts";
++import * as TestFSWithWatch from "../../../harness/virtualFileSystemWithWatch";
++import * as JsTyping from "../../../jsTyping/jsTyping";
  import { EventBeginInstallTypes, EventEndInstallTypes } from "../../../jsTyping/shared";
  import { BeginInstallTypes, EndInstallTypes, InvalidateCachedTypings, SetTypings } from "../../../jsTyping/types";
 -import { protocol } from "../../../server/_namespaces/ts.server";
@@ -1560,9 +3497,18 @@ index 13cb846ee5..0000000000
 -// empty ref to vpath so it can be referenced by unittests
 -export { };
 diff --git a/src/tsserver/nodeServer.ts b/src/tsserver/nodeServer.ts
-index 8c8263c202..ea620d9194 100644
+index 8c8263c202..5c581ca296 100644
 --- a/src/tsserver/nodeServer.ts
 +++ b/src/tsserver/nodeServer.ts
+@@ -9,7 +9,7 @@ import { CharacterCodes, TypeAcquisition, WatchFileKind, WatchOptions } from "..
+ import { stripQuotes } from "../compiler/utilities";
+ import { validateLocaleAndSetLanguage } from "../compiler/utilitiesPublic";
+ import { noopFileWatcher } from "../compiler/watch";
+-import { JsTyping } from "../jsTyping/_namespaces/ts";
++import * as JsTyping from "../jsTyping/jsTyping";
+ import {
+     ActionInvalidate, ActionPackageInstalled, ActionSet, Arguments, EventBeginInstallTypes, EventEndInstallTypes,
+     EventInitializationFailed, EventTypesRegistry, findArgument, hasArgument,
 @@ -18,9 +18,9 @@ import {
      BeginInstallTypes, EndInstallTypes, InitializationFailedResponse, InstallPackageRequest, InvalidateCachedTypings,
      PackageInstalledResponse, SetTypings, TypesRegistryResponse, TypingInstallerRequestUnion,
@@ -1586,6 +3532,19 @@ index 4aa2a072f1..d5cd5aeea6 100644
  import { setSys, sys } from "../compiler/sys";
  import { validateLocaleAndSetLanguage } from "../compiler/utilitiesPublic";
  import { findArgument } from "../jsTyping/shared";
+diff --git a/src/typingsInstallerCore/typingsInstaller.ts b/src/typingsInstallerCore/typingsInstaller.ts
+index 8f658dda69..5e1324e802 100644
+--- a/src/typingsInstallerCore/typingsInstaller.ts
++++ b/src/typingsInstallerCore/typingsInstaller.ts
+@@ -12,7 +12,7 @@ import { FileWatcher, PollingInterval } from "../compiler/sys";
+ import { Extension, ModuleResolutionKind, Path, WatchDirectoryFlags, WatchOptions } from "../compiler/types";
+ import { clearMap, closeFileWatcher, copyEntries } from "../compiler/utilities";
+ import { getWatchFactory, WatchFactory, WatchFactoryHost, WatchLogLevel } from "../compiler/watchUtilities";
+-import { JsTyping } from "../jsTyping/_namespaces/ts";
++import * as JsTyping from "../jsTyping/jsTyping";
+ import { ActionInvalidate, ActionSet, EventBeginInstallTypes, EventEndInstallTypes } from "../jsTyping/shared";
+ import {
+     BeginInstallTypes, CloseProject, DiscoverTypings, EndInstallTypes, InstallTypingHost, InvalidateCachedTypings,
 diff --git a/src/webServer/webServer.ts b/src/webServer/webServer.ts
 index a248c8253c..5a6b7d6f2c 100644
 --- a/src/webServer/webServer.ts

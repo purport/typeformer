@@ -62,11 +62,16 @@ async function runMorph(name, description) {
     });
 }
 
+async function noopStep() {
+    await $`node ${path.join(__dirname, "lib", "morph")} noop`;
+}
+
 async function applyPatches() {
     // Regenerate patches by removing the patches dir then running:
     //     rm ~/work/typeformer/patches2/*
     //     git format-patch -o ~/work/typeformer/patches2 --no-numbered --no-base --zero-commit HEAD^{"/CONVERSION STEP"}
-    await $`git am --3way --whitespace=nowarn --quoted-cr=nowarn --keep-cr ${__dirname}/patches/*.patch`;
+    // TODO: Move patches2 to patches.
+    await $`git am --3way --whitespace=nowarn --quoted-cr=nowarn --keep-cr ${__dirname}/patches2/*.patch`;
 }
 
 // This totally wipes the repo and starts from scratch.
@@ -124,5 +129,8 @@ and "ts.Symbol", we have just "Node" and "Symbol".
 `
 );
 
-// await applyPatches();
-// await generateDiagnostics();
+await applyPatches();
+
+// Make sure what we get back from our new diagnostics script still compiles.
+await generateDiagnostics();
+await noopStep();

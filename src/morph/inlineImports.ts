@@ -167,7 +167,9 @@ export function inlineImports(project: Project): void {
                     if (
                         newPath &&
                         // Special cases; these were originally written fully-qualified, but we have no idea
-                        // at this point because the explicitify step made everything explicit.
+                        // at this point because the explicitify step made everything explicit. We'll just
+                        // try and massage these by hand into * imports or something.
+                        // TODO: Can we do better? Maybe we should make them all direct imports?
                         !newPath.endsWith("protocol.ts") &&
                         !newPath.endsWith("performance.ts") &&
                         !newPath.endsWith("moduleSpecifiers.ts") &&
@@ -184,6 +186,7 @@ export function inlineImports(project: Project): void {
                         !newPath.endsWith("goToDefinition.ts") &&
                         !newPath.endsWith("formatting.ts") &&
                         !newPath.endsWith("textChanges.ts") &&
+                        !newPath.endsWith("fakesHosts.ts") &&
                         addSyntheticImport(newPath.replace(/(\.d)?\.ts$/, ""), foreignName, localName)
                     ) {
                         if (nodeToRemove) {
