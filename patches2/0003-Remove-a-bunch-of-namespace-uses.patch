@@ -2720,7 +2720,7 @@ index f405724a6c..c12093407b 100644
  // In harness baselines, null is different than undefined. See `generateActual` in `harness.ts`.
  function runWithIOLog(ioLog: IoLog, fn: (oldIO: Harness.IO) => void) {
 diff --git a/src/testRunner/tsconfig.json b/src/testRunner/tsconfig.json
-index c0e652fdbd..d7b9d0ebc2 100644
+index a9943c0266..8ff4761d23 100644
 --- a/src/testRunner/tsconfig.json
 +++ b/src/testRunner/tsconfig.json
 @@ -27,16 +27,6 @@

@@ -621,10 +621,11 @@ export function stripNamespaces(project: Project): void {
                                 // e.g. ../../built/local
                                 const relativeToBuilt = FileUtils.getRelativePathTo(dir, builtLocal);
 
+                                // TODO: figure out why we emit to a subdir; point to the built dir for now instead.
                                 // e.g. ../../built/local/compiler
-                                const outDir = FileUtils.pathJoin(relativeToBuilt, projectPath);
+                                // const outDir = FileUtils.pathJoin(relativeToBuilt, projectPath);
 
-                                writer.quote(outDir);
+                                writer.quote(relativeToBuilt);
                             },
                         });
                 }
