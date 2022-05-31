@@ -1,0 +1,339 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Jake Bailey <5341706+jakebailey@users.noreply.github.com>
+Date: Tue, 31 May 2022 16:16:20 -0700
+Subject: [PATCH] Bad attempt to solve some cycles (not complete)
+
+inlineImports does not preserve evaluation order,
+instead preferring to format the imports how a user would.
+This causes the evaluation order to change and some
+cycles to cause problems.
+---
+ Gulpfile.js                |   6 ++-
+ src/compiler/corePublic.ts | 106 ++++++++++++++++++-------------------
+ src/compiler/debug.ts      |  52 +++++++++---------
+ src/compiler/semver.ts     |  13 ++++-
+ 4 files changed, 95 insertions(+), 82 deletions(-)
+
+diff --git a/Gulpfile.js b/Gulpfile.js
+index b16a4cf507..32c789a18c 100644
+--- a/Gulpfile.js
++++ b/Gulpfile.js
+@@ -127,6 +127,7 @@ const localPreBuild = parallel(generateLibs, series(buildScripts, generateDiagno
+ const preBuild = cmdLineOptions.lkg ? lkgPreBuild : localPreBuild;
+ 
+ const buildServices = (() => {
++    // TODO(jakebailey): fix this for modules
+     return cb => { console.log("!!!TODO!!! buildServices"); cb(); };
+ 
+     // build typescriptServices.out.js
+@@ -253,6 +254,7 @@ task("watch-min").flags = {
+ };
+ 
+ const buildLssl = (() => {
++    // TODO(jakebailey): fix this for modules
+     return cb => { console.log("!!!TODO!!! buildLssl"); cb(); };
+ 
+     // build tsserverlibrary.out.js
+@@ -449,7 +451,7 @@ preTest.displayName = "preTest";
+ const postTest = (done) => cmdLineOptions.lint ? lint(done) : done();
+ 
+ const runTests = () => runConsoleTests(testRunner, "mocha-fivemat-progress-reporter", /*runInParallel*/ false, /*watchMode*/ false);
+-task("runtests", series(/*preBuild, preTest,*/ runTests /*, postTest*/)); // !!!TODO!!!
++task("runtests", series(/*preBuild, preTest,*/ runTests /*, postTest*/)); // TODO(jakebailey): fix this for modules
+ task("runtests").description = "Runs the tests using the built run.js file.";
+ task("runtests").flags = {
+     "-t --tests=<regex>": "Pattern for tests to run.",
+@@ -469,7 +471,7 @@ task("runtests").flags = {
+ };
+ 
+ const runTestsParallel = () => runConsoleTests(testRunner, "min", /*runInParallel*/ cmdLineOptions.workers > 1, /*watchMode*/ false);
+-task("runtests-parallel", series(/*preBuild, preTest,*/ runTestsParallel /*, postTest*/)); // !!!TODO!!!
++task("runtests-parallel", series(/*preBuild, preTest,*/ runTestsParallel /*, postTest*/)); // TODO(jakebailey): fix this for modules
+ task("runtests-parallel").description = "Runs all the tests in parallel using the built run.js file.";
+ task("runtests-parallel").flags = {
+     "   --no-lint": "disables lint.",
+diff --git a/src/compiler/corePublic.ts b/src/compiler/corePublic.ts
+index abc1f5549d..b3b0d3c314 100644
+--- a/src/compiler/corePublic.ts
++++ b/src/compiler/corePublic.ts
+@@ -1,6 +1,6 @@
+-import { ShimCollections } from "../shims/collectionShims";
+-import { getIterator } from "./core";
+-import { MatchingKeys } from "./types";
++// import { ShimCollections } from "../shims/collectionShims";
++// import { getIterator } from "./core";
++// import { MatchingKeys } from "./types";
+ 
+ // WARNING: The script `configurePrerelease.ts` uses a regexp to parse out these values.
+ // If changing the text in this section, be sure to test `configurePrerelease` too.
+@@ -115,56 +115,56 @@ export const enum Comparison {
+     GreaterThan = 1
+ }
+ 
+-/* @internal */
+-namespace NativeCollections {
+-    declare const self: any;
+-
+-    const globals = typeof globalThis !== "undefined" ? globalThis :
+-              typeof global !== "undefined" ? global :
+-              typeof self !== "undefined" ? self :
+-              undefined;
+-
+-    /**
+-     * Returns the native Map implementation if it is available and compatible (i.e. supports iteration).
+-     */
+-    export function tryGetNativeMap(): MapConstructor | undefined {
+-        // Internet Explorer's Map doesn't support iteration, so don't use it.
+-        const gMap = globals?.Map;
+-        // eslint-disable-next-line no-in-operator
+-        return typeof gMap !== "undefined" && "entries" in gMap.prototype && new gMap([[0, 0]]).size === 1 ? gMap : undefined;
+-    }
+-
+-    /**
+-     * Returns the native Set implementation if it is available and compatible (i.e. supports iteration).
+-     */
+-    export function tryGetNativeSet(): SetConstructor | undefined {
+-        // Internet Explorer's Set doesn't support iteration, so don't use it.
+-        const gSet = globals?.Set;
+-        // eslint-disable-next-line no-in-operator
+-        return typeof gSet !== "undefined" && "entries" in gSet.prototype && new gSet([0]).size === 1 ? gSet : undefined;
+-    }
+-}
++// /* @internal */
++// namespace NativeCollections {
++//     declare const self: any;
++
++//     const globals = typeof globalThis !== "undefined" ? globalThis :
++//               typeof global !== "undefined" ? global :
++//               typeof self !== "undefined" ? self :
++//               undefined;
++
++//     /**
++//      * Returns the native Map implementation if it is available and compatible (i.e. supports iteration).
++//      */
++//     export function tryGetNativeMap(): MapConstructor | undefined {
++//         // Internet Explorer's Map doesn't support iteration, so don't use it.
++//         const gMap = globals?.Map;
++//         // eslint-disable-next-line no-in-operator
++//         return typeof gMap !== "undefined" && "entries" in gMap.prototype && new gMap([[0, 0]]).size === 1 ? gMap : undefined;
++//     }
++
++//     /**
++//      * Returns the native Set implementation if it is available and compatible (i.e. supports iteration).
++//      */
++//     export function tryGetNativeSet(): SetConstructor | undefined {
++//         // Internet Explorer's Set doesn't support iteration, so don't use it.
++//         const gSet = globals?.Set;
++//         // eslint-disable-next-line no-in-operator
++//         return typeof gSet !== "undefined" && "entries" in gSet.prototype && new gSet([0]).size === 1 ? gSet : undefined;
++//     }
++// }
+ 
+ /* @internal */
+-export const Map = getCollectionImplementation("Map", "tryGetNativeMap", "createMapShim");
+-/* @internal */
+-export const Set = getCollectionImplementation("Set", "tryGetNativeSet", "createSetShim");
+-
++export const Map: MapConstructor = globalThis.Map; // TODO(jakebailey): fix this for modules
+ /* @internal */
+-type GetIteratorCallback = <I extends readonly any[] | ReadonlySet<any> | ReadonlyESMap<any, any> | undefined>(iterable: I) => Iterator<
+-    I extends ReadonlyESMap<infer K, infer V> ? [K, V] :
+-    I extends ReadonlySet<infer T> ? T :
+-    I extends readonly (infer T)[] ? T :
+-    I extends undefined ? undefined :
+-    never>;
+-
+-/* @internal */
+-function getCollectionImplementation<
+-    K1 extends MatchingKeys<typeof NativeCollections, () => any>,
+-    K2 extends MatchingKeys<typeof ShimCollections, (getIterator?: GetIteratorCallback) => ReturnType<(typeof NativeCollections)[K1]>>
+->(name: string, nativeFactory: K1, shimFactory: K2): NonNullable<ReturnType<(typeof NativeCollections)[K1]>> {
+-    // NOTE: ts.ShimCollections will be defined for typescriptServices.js but not for tsc.js, so we must test for it.
+-    const constructor = NativeCollections[nativeFactory]() ?? ShimCollections?.[shimFactory](getIterator);
+-    if (constructor) return constructor as NonNullable<ReturnType<(typeof NativeCollections)[K1]>>;
+-    throw new Error(`TypeScript requires an environment that provides a compatible native ${name} implementation.`);
+-}
++export const Set: SetConstructor = globalThis.Set as any; // TODO(jakebailey): fix this for modules
++
++// /* @internal */
++// type GetIteratorCallback = <I extends readonly any[] | ReadonlySet<any> | ReadonlyESMap<any, any> | undefined>(iterable: I) => Iterator<
++//     I extends ReadonlyESMap<infer K, infer V> ? [K, V] :
++//     I extends ReadonlySet<infer T> ? T :
++//     I extends readonly (infer T)[] ? T :
++//     I extends undefined ? undefined :
++//     never>;
++
++// /* @internal */
++// function getCollectionImplementation<
++//     K1 extends MatchingKeys<typeof NativeCollections, () => any>,
++//     K2 extends MatchingKeys<typeof ShimCollections, (getIterator?: GetIteratorCallback) => ReturnType<(typeof NativeCollections)[K1]>>
++// >(name: string, nativeFactory: K1, shimFactory: K2): NonNullable<ReturnType<(typeof NativeCollections)[K1]>> {
++//     // NOTE: ts.ShimCollections will be defined for typescriptServices.js but not for tsc.js, so we must test for it.
++//     const constructor = NativeCollections[nativeFactory]() ?? ShimCollections?.[shimFactory](getIterator);
++//     if (constructor) return constructor as NonNullable<ReturnType<(typeof NativeCollections)[K1]>>;
++//     throw new Error(`TypeScript requires an environment that provides a compatible native ${name} implementation.`);
++// }
+diff --git a/src/compiler/debug.ts b/src/compiler/debug.ts
+index bc0dde4f05..577bad3ee8 100644
+--- a/src/compiler/debug.ts
++++ b/src/compiler/debug.ts
+@@ -1,4 +1,4 @@
+-import * as ts from "./_namespaces/ts";
++// import * as ts from "./_namespaces/ts";
+ import {
+     AnyFunction, AssertionLevel, compareValues, every, getOwnKeys, hasProperty, map, noop, stableSort,
+ } from "./core";
+@@ -12,14 +12,15 @@ import {
+     isThisTypeNode, isTupleTypeNode, isTypeLiteralNode, isTypeOperatorNode, isTypeParameterDeclaration,
+     isTypePredicateNode, isTypeQueryNode, isTypeReferenceNode, isUnionTypeNode,
+ } from "./factory/nodeTests";
+-import { getDirectoryPath, resolvePath } from "./path";
++// import { getDirectoryPath, resolvePath } from "./path";
+ import { Version } from "./semver";
+-import { sys } from "./sys";
++// import { sys } from "./sys";
+ import {
+     BigIntLiteralType, EmitFlags, FlowFlags, FlowNode, FlowNodeBase, IntrinsicType, LiteralType, MatchingKeys,
+-    ModifierFlags, Node, NodeArray, NodeFlags, ObjectFlags, ObjectType, RequireResult, Signature, SignatureFlags,
++    ModifierFlags, Node, NodeArray, NodeFlags, ObjectFlags, ObjectType, Signature, SignatureFlags,
+     SnippetKind, Symbol, SymbolFlags, SyntaxKind, TransformFlags, Type, TypeFlags,
+ } from "./types";
++import * as types from "./types";
+ import {
+     formatStringFromArgs, getEffectiveModifierFlagsNoCache, getEmitFlags, getSourceFileOfNode,
+     getSourceTextOfNodeFromSourceFile, nodeIsSynthesized, objectAllocator,
+@@ -368,53 +369,53 @@ export namespace Debug {
+     }
+ 
+     export function formatSyntaxKind(kind: SyntaxKind | undefined): string {
+-        return formatEnum(kind, (ts as any).SyntaxKind, /*isFlags*/ false);
++        return formatEnum(kind, (types as any).SyntaxKind, /*isFlags*/ false);
+     }
+ 
+     export function formatSnippetKind(kind: SnippetKind | undefined): string {
+-        return formatEnum(kind, (ts as any).SnippetKind, /*isFlags*/ false);
++        return formatEnum(kind, (types as any).SnippetKind, /*isFlags*/ false);
+     }
+ 
+     export function formatNodeFlags(flags: NodeFlags | undefined): string {
+-        return formatEnum(flags, (ts as any).NodeFlags, /*isFlags*/ true);
++        return formatEnum(flags, (types as any).NodeFlags, /*isFlags*/ true);
+     }
+ 
+     export function formatModifierFlags(flags: ModifierFlags | undefined): string {
+-        return formatEnum(flags, (ts as any).ModifierFlags, /*isFlags*/ true);
++        return formatEnum(flags, (types as any).ModifierFlags, /*isFlags*/ true);
+     }
+ 
+     export function formatTransformFlags(flags: TransformFlags | undefined): string {
+-        return formatEnum(flags, (ts as any).TransformFlags, /*isFlags*/ true);
++        return formatEnum(flags, (types as any).TransformFlags, /*isFlags*/ true);
+     }
+ 
+     export function formatEmitFlags(flags: EmitFlags | undefined): string {
+-        return formatEnum(flags, (ts as any).EmitFlags, /*isFlags*/ true);
++        return formatEnum(flags, (types as any).EmitFlags, /*isFlags*/ true);
+     }
+ 
+     export function formatSymbolFlags(flags: SymbolFlags | undefined): string {
+-        return formatEnum(flags, (ts as any).SymbolFlags, /*isFlags*/ true);
++        return formatEnum(flags, (types as any).SymbolFlags, /*isFlags*/ true);
+     }
+ 
+     export function formatTypeFlags(flags: TypeFlags | undefined): string {
+-        return formatEnum(flags, (ts as any).TypeFlags, /*isFlags*/ true);
++        return formatEnum(flags, (types as any).TypeFlags, /*isFlags*/ true);
+     }
+ 
+     export function formatSignatureFlags(flags: SignatureFlags | undefined): string {
+-        return formatEnum(flags, (ts as any).SignatureFlags, /*isFlags*/ true);
++        return formatEnum(flags, (types as any).SignatureFlags, /*isFlags*/ true);
+     }
+ 
+     export function formatObjectFlags(flags: ObjectFlags | undefined): string {
+-        return formatEnum(flags, (ts as any).ObjectFlags, /*isFlags*/ true);
++        return formatEnum(flags, (types as any).ObjectFlags, /*isFlags*/ true);
+     }
+ 
+     export function formatFlowFlags(flags: FlowFlags | undefined): string {
+-        return formatEnum(flags, (ts as any).FlowFlags, /*isFlags*/ true);
++        return formatEnum(flags, (types as any).FlowFlags, /*isFlags*/ true);
+     }
+ 
+     let isDebugInfoEnabled = false;
+ 
+     interface ExtendedDebugModule {
+-        init(_ts: typeof ts): void;
++        init(_ts: any/* typeof ts */): void; // TODO(jakebailey): fix this for modules
+         formatControlFlowGraph(flowNode: FlowNode): string;
+     }
+ 
+@@ -461,7 +462,7 @@ export namespace Debug {
+                         return `${flowHeader}${remainingFlags ? ` (${formatFlowFlags(remainingFlags)})`: ""}`;
+                     }
+                 },
+-                __debugFlowFlags: { get(this: FlowNodeBase) { return formatEnum(this.flags, (ts as any).FlowFlags, /*isFlags*/ true); } },
++                __debugFlowFlags: { get(this: FlowNodeBase) { return formatEnum(this.flags, (types as any).FlowFlags, /*isFlags*/ true); } },
+                 __debugToString: { value(this: FlowNodeBase) { return formatControlFlowGraph(this); } }
+             });
+         }
+@@ -698,14 +699,15 @@ export namespace Debug {
+ 
+         // attempt to load extended debugging information
+         try {
+-            if (sys && sys.require) {
+-                const basePath = getDirectoryPath(resolvePath(sys.getExecutingFilePath()));
+-                const result = sys.require(basePath, "./compiler-debug") as RequireResult<ExtendedDebugModule>;
+-                if (!result.error) {
+-                    result.module.init(ts);
+-                    extendedDebugModule = result.module;
+-                }
+-            }
++            // TODO(jakebailey): fix this for modules
++            // if (sys && sys.require) {
++            //     const basePath = getDirectoryPath(resolvePath(sys.getExecutingFilePath()));
++            //     const result = sys.require(basePath, "./compiler-debug") as RequireResult<ExtendedDebugModule>;
++            //     if (!result.error) {
++            //         result.module.init(ts);
++            //         extendedDebugModule = result.module;
++            //     }
++            // }
+         }
+         catch {
+             // do nothing
+diff --git a/src/compiler/semver.ts b/src/compiler/semver.ts
+index 409a42593b..ecbbdb44b1 100644
+--- a/src/compiler/semver.ts
++++ b/src/compiler/semver.ts
+@@ -33,7 +33,7 @@ const numericIdentifierRegExp = /^(0|[1-9]\d*)$/;
+  * Describes a precise semantic version number, https://semver.org
+  */
+ export class Version {
+-    static readonly zero = new Version(0, 0, 0);
++    static readonly zero = new Version();
+ 
+     readonly major: number;
+     readonly minor: number;
+@@ -41,9 +41,18 @@ export class Version {
+     readonly prerelease: readonly string[];
+     readonly build: readonly string[];
+ 
++    constructor();
+     constructor(text: string);
+     constructor(major: number, minor?: number, patch?: number, prerelease?: string, build?: string);
+-    constructor(major: number | string, minor = 0, patch = 0, prerelease = "", build = "") {
++    constructor(major?: number | string, minor = 0, patch = 0, prerelease = "", build = "") {
++        if (major === undefined) {
++            // HACK: constructor for Version.zero which does not use Debug.
++            // TODO(jakebailey): fix this for modules
++            this.major = this.minor = this.patch = 0;
++            this.prerelease = this.build = emptyArray;
++            return;
++        }
++
+         if (typeof major === "string") {
+             const result = Debug.checkDefined(tryParseComponents(major), "Invalid version");
+             ({ major, minor, patch, prerelease, build } = result);
+-- 
+2.36.1
+
