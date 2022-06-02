@@ -18,7 +18,7 @@ const steps = new Map<string, Step>([
     ["formatImports", formatImports],
 ]);
 
-export function runStep(stepName: string): number {
+export function runStep(stepName: string, check: boolean): number {
     const step = steps.get(stepName);
     if (!step) {
         console.error(`Unknown step ${stepName}`);
@@ -40,15 +40,17 @@ export function runStep(stepName: string): number {
     log(stepName);
     indentLog(() => step(project));
 
-    log("checking");
-    const diagnostics = project.getPreEmitDiagnostics();
-    if (diagnostics.length > 0) {
-        if (diagnostics.length < 100) {
-            console.error(project.formatDiagnosticsWithColorAndContext(diagnostics));
-        } else {
-            console.error("way too many diagnostics; open the repo instead");
+    if (check) {
+        log("checking");
+        const diagnostics = project.getPreEmitDiagnostics();
+        if (diagnostics.length > 0) {
+            if (diagnostics.length < 100) {
+                console.error(project.formatDiagnosticsWithColorAndContext(diagnostics));
+            } else {
+                console.error("way too many diagnostics; open the repo instead");
+            }
+            return 1;
         }
-        return 1;
     }
 
     log("saving");
