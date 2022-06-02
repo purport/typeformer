@@ -62,6 +62,8 @@ export function formatImports(sourceFile: SourceFile) {
                 maxExportNamesPerLine: 0,
                 maxNamesPerWrappedLine: 0,
             },
+            sortRules: "none", // evaluation order :(
+            // keepUnused: [".*"], // we may have to keep these to fix evaluation order too.
             formatExports: false,
             quoteMark: "double",
             eol: "CRLF",

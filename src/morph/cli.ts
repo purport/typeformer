@@ -10,7 +10,8 @@ export class MorphCommand extends Command {
     name = Option.String();
 
     async execute() {
+        // Do this lazily to avoid loading all of TS for every invocation of the tool.
         const morph = await import("./index.js");
-        morph.runStep(this.name);
+        return morph.runStep(this.name);
     }
 }

@@ -18,7 +18,7 @@ const steps = new Map<string, Step>([
     ["formatImports", formatImports],
 ]);
 
-export function runStep(stepName: string) {
+export function runStep(stepName: string): number {
     const step = steps.get(stepName);
     if (!step) {
         console.error(`Unknown step ${stepName}`);
@@ -53,4 +53,5 @@ export function runStep(stepName: string) {
 
     log("saving");
     project.saveSync();
+    return 0;
 }

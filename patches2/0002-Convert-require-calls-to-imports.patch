@@ -93,7 +93,7 @@ index c7cbb8d3ec..641d173456 100644
  function instrumentForRecording(fn: string, tscPath: string) {
      instrument(tscPath, `
 diff --git a/src/testRunner/externalCompileRunner.ts b/src/testRunner/externalCompileRunner.ts
-index d0ca9a09d1..d7741d1bd3 100644
+index daa33366e6..08e017c3a6 100644
 --- a/src/testRunner/externalCompileRunner.ts
 +++ b/src/testRunner/externalCompileRunner.ts
 @@ -1,3 +1,7 @@
@@ -101,12 +101,12 @@ index d0ca9a09d1..d7741d1bd3 100644
 +import * as fs from "fs";
 +import * as path from "path";
 +
- import { compareStringsCaseSensitive, compareValues, flatten, stringContains } from "../compiler/core";
- import { Debug } from "../compiler/debug";
- import { comparePathsCaseSensitive } from "../compiler/path";
-@@ -6,10 +10,6 @@ import { RunnerBase, TestRunnerKind } from "../harness/runnerbase";
- import * as Harness from "./_namespaces/Harness";
+ import { RunnerBase, TestRunnerKind } from "../harness/runnerbase";
  import { isWorker } from "./runner";
+ import { Debug } from "../compiler/debug";
+@@ -6,10 +10,6 @@ import { compareStringsCaseSensitive, compareValues, flatten, stringContains } f
+ import { comparePathsCaseSensitive } from "../compiler/path";
+ import * as Harness from "./_namespaces/Harness";
  
 -const fs: typeof import("fs") = require("fs");
 -const path: typeof import("path") = require("path");
@@ -116,18 +116,18 @@ index d0ca9a09d1..d7741d1bd3 100644
      stdout: Buffer;
      stderr: Buffer;
 diff --git a/src/testRunner/unittests/services/languageService.ts b/src/testRunner/unittests/services/languageService.ts
-index 845d0cd53b..da25b7ecd0 100644
+index 5fa0deab79..2308a31acf 100644
 --- a/src/testRunner/unittests/services/languageService.ts
 +++ b/src/testRunner/unittests/services/languageService.ts
 @@ -1,3 +1,5 @@
 +import { expect } from "chai";
 +
- import { getParsedCommandLineOfConfigFile } from "../../../compiler/commandLineParser";
+ import { LanguageServiceHost, ScriptSnapshot } from "../../../services/types";
+ import { getDefaultCompilerOptions, getDefaultLibFilePath } from "../../../services/services";
  import { emptyArray, noop, returnTrue } from "../../../compiler/core";
- import { Map } from "../../../compiler/corePublic";
-@@ -9,8 +11,6 @@ import * as ts from "../../_namespaces/ts";
- import { projectRoot } from "../tscWatch/helpers";
- import { createServerHost, libFile } from "../tsserver/helpers";
+@@ -9,8 +11,6 @@ import { projectRoot } from "../tscWatch/helpers";
+ import { getParsedCommandLineOfConfigFile } from "../../../compiler/commandLineParser";
+ import * as ts from "../../_namespaces/ts";
  
 -const _chai: typeof import("chai") = require("chai");
 -const expect: typeof _chai.expect = _chai.expect;
@@ -135,18 +135,18 @@ index 845d0cd53b..da25b7ecd0 100644
      const files: {[index: string]: string} = {
          "foo.ts": `import Vue from "./vue";
 diff --git a/src/testRunner/unittests/tsserver/session.ts b/src/testRunner/unittests/tsserver/session.ts
-index b4c4c6540f..95cf0a202a 100644
+index 864f12cf25..ca61e4159c 100644
 --- a/src/testRunner/unittests/tsserver/session.ts
 +++ b/src/testRunner/unittests/tsserver/session.ts
 @@ -1,3 +1,5 @@
 +import { expect } from "chai";
 +
+ import { FileWatcher } from "../../../compiler/sys";
  import { AnyFunction, noop, returnUndefined } from "../../../compiler/core";
- import { Map, version } from "../../../compiler/corePublic";
- import { Debug } from "../../../compiler/debug";
-@@ -17,8 +19,6 @@ import { FileTextChanges, IndentStyle } from "../../../services/types";
+ import { ServerHost } from "../../../server/types";
+@@ -17,8 +19,6 @@ import { Debug } from "../../../compiler/debug";
+ import { ProjectService } from "../../../server/editorServices";
  import * as Harness from "../../_namespaces/Harness";
- import { createHasErrorMessageLogger, nullLogger } from "./helpers";
  
 -const _chai: typeof import("chai") = require("chai");
 -const expect: typeof _chai.expect = _chai.expect;
@@ -154,19 +154,19 @@ index b4c4c6540f..95cf0a202a 100644
  const noopFileWatcher: FileWatcher = { close: noop };
  const mockHost: ServerHost = {
 diff --git a/src/typingsInstaller/nodeTypingsInstaller.ts b/src/typingsInstaller/nodeTypingsInstaller.ts
-index 1320a9a8a5..eb8feab955 100644
+index 4b8103c5b5..0501f1bc16 100644
 --- a/src/typingsInstaller/nodeTypingsInstaller.ts
 +++ b/src/typingsInstaller/nodeTypingsInstaller.ts
 @@ -1,3 +1,6 @@
 +import * as fs from "fs";
 +import * as path from "path";
 +
- import { createGetCanonicalFileName, getEntries, stringContains } from "../compiler/core";
- import { ESMap, Map, MapLike, version } from "../compiler/corePublic";
- import { Debug } from "../compiler/debug";
-@@ -14,16 +17,6 @@ import {
-     installNpmPackages, Log, RequestCompletedAction, TypingsInstaller,
+ import {
+     Log, RequestCompletedAction, TypingsInstaller, installNpmPackages,
  } from "../typingsInstallerCore/typingsInstaller";
+@@ -14,16 +17,6 @@ import { createGetCanonicalFileName, getEntries, stringContains } from "../compi
+ import { combinePaths, forEachAncestorDirectory, getDirectoryPath, normalizeSlashes, toPath } from "../compiler/path";
+ import { Debug } from "../compiler/debug";
  
 -const fs: {
 -    appendFileSync(file: string, content: string): void

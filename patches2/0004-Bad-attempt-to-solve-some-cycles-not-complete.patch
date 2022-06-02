@@ -10,9 +10,9 @@ cycles to cause problems.
 ---
  Gulpfile.js                |   6 ++-
  src/compiler/corePublic.ts | 106 ++++++++++++++++++-------------------
- src/compiler/debug.ts      |  52 +++++++++---------
+ src/compiler/debug.ts      |  49 +++++++++--------
  src/compiler/semver.ts     |  13 ++++-
- 4 files changed, 95 insertions(+), 82 deletions(-)
+ 4 files changed, 92 insertions(+), 82 deletions(-)
 
 diff --git a/Gulpfile.js b/Gulpfile.js
 index b16a4cf507..32c789a18c 100644
@@ -53,13 +53,13 @@ index b16a4cf507..32c789a18c 100644
  task("runtests-parallel").flags = {
      "   --no-lint": "disables lint.",
 diff --git a/src/compiler/corePublic.ts b/src/compiler/corePublic.ts
-index abc1f5549d..b3b0d3c314 100644
+index f396ef061e..b3b0d3c314 100644
 --- a/src/compiler/corePublic.ts
 +++ b/src/compiler/corePublic.ts
 @@ -1,6 +1,6 @@
+-import { MatchingKeys } from "./types";
 -import { ShimCollections } from "../shims/collectionShims";
 -import { getIterator } from "./core";
--import { MatchingKeys } from "./types";
 +// import { ShimCollections } from "../shims/collectionShims";
 +// import { getIterator } from "./core";
 +// import { MatchingKeys } from "./types";
@@ -174,24 +174,11 @@ index abc1f5549d..b3b0d3c314 100644
 +//     throw new Error(`TypeScript requires an environment that provides a compatible native ${name} implementation.`);
 +// }
 diff --git a/src/compiler/debug.ts b/src/compiler/debug.ts
-index bc0dde4f05..577bad3ee8 100644
+index e53dfd726f..1bb2f5c3cc 100644
 --- a/src/compiler/debug.ts
 +++ b/src/compiler/debug.ts
-@@ -1,4 +1,4 @@
--import * as ts from "./_namespaces/ts";
-+// import * as ts from "./_namespaces/ts";
- import {
-     AnyFunction, AssertionLevel, compareValues, every, getOwnKeys, hasProperty, map, noop, stableSort,
+@@ -4,9 +4,10 @@ import {
  } from "./core";
-@@ -12,14 +12,15 @@ import {
-     isThisTypeNode, isTupleTypeNode, isTypeLiteralNode, isTypeOperatorNode, isTypeParameterDeclaration,
-     isTypePredicateNode, isTypeQueryNode, isTypeReferenceNode, isUnionTypeNode,
- } from "./factory/nodeTests";
--import { getDirectoryPath, resolvePath } from "./path";
-+// import { getDirectoryPath, resolvePath } from "./path";
- import { Version } from "./semver";
--import { sys } from "./sys";
-+// import { sys } from "./sys";
  import {
      BigIntLiteralType, EmitFlags, FlowFlags, FlowNode, FlowNodeBase, IntrinsicType, LiteralType, MatchingKeys,
 -    ModifierFlags, Node, NodeArray, NodeFlags, ObjectFlags, ObjectType, RequireResult, Signature, SignatureFlags,
@@ -199,10 +186,20 @@ index bc0dde4f05..577bad3ee8 100644
      SnippetKind, Symbol, SymbolFlags, SyntaxKind, TransformFlags, Type, TypeFlags,
  } from "./types";
 +import * as types from "./types";
+ import { version } from "./corePublic";
  import {
-     formatStringFromArgs, getEffectiveModifierFlagsNoCache, getEmitFlags, getSourceFileOfNode,
-     getSourceTextOfNodeFromSourceFile, nodeIsSynthesized, objectAllocator,
-@@ -368,53 +369,53 @@ export namespace Debug {
+     getParseTreeNode, idText, isGeneratedIdentifier, isParseTreeNode, symbolName, unescapeLeadingUnderscores,
+@@ -24,9 +25,6 @@ import {
+     isSetAccessorDeclaration, isStringLiteral, isThisTypeNode, isTupleTypeNode, isTypeLiteralNode, isTypeOperatorNode,
+     isTypeParameterDeclaration, isTypePredicateNode, isTypeQueryNode, isTypeReferenceNode, isUnionTypeNode,
+ } from "./factory/nodeTests";
+-import { sys } from "./sys";
+-import { getDirectoryPath, resolvePath } from "./path";
+-import * as ts from "./_namespaces/ts";
+ 
+ /* @internal */
+ export enum LogLevel {
+@@ -368,53 +366,53 @@ export namespace Debug {
      }
  
      export function formatSyntaxKind(kind: SyntaxKind | undefined): string {
@@ -268,7 +265,7 @@ index bc0dde4f05..577bad3ee8 100644
          formatControlFlowGraph(flowNode: FlowNode): string;
      }
  
-@@ -461,7 +462,7 @@ export namespace Debug {
+@@ -461,7 +459,7 @@ export namespace Debug {
                          return `${flowHeader}${remainingFlags ? ` (${formatFlowFlags(remainingFlags)})`: ""}`;
                      }
                  },
@@ -277,7 +274,7 @@ index bc0dde4f05..577bad3ee8 100644
                  __debugToString: { value(this: FlowNodeBase) { return formatControlFlowGraph(this); } }
              });
          }
-@@ -698,14 +699,15 @@ export namespace Debug {
+@@ -698,14 +696,15 @@ export namespace Debug {
  
          // attempt to load extended debugging information
          try {
@@ -302,7 +299,7 @@ index bc0dde4f05..577bad3ee8 100644
          catch {
              // do nothing
 diff --git a/src/compiler/semver.ts b/src/compiler/semver.ts
-index 409a42593b..ecbbdb44b1 100644
+index 8e8cc4a8fb..65c4193d12 100644
 --- a/src/compiler/semver.ts
 +++ b/src/compiler/semver.ts
 @@ -33,7 +33,7 @@ const numericIdentifierRegExp = /^(0|[1-9]\d*)$/;
