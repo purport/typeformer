@@ -5,6 +5,7 @@ import { readFileSync } from "fs";
 import { CreateStackCommand } from "./createStack.js";
 import { MorphCommand } from "./morph/cli.js";
 import { RunTransformCommand } from "./runTransform.js";
+import { SavePatchesCommand } from "./savePatches.js";
 
 // Ensure we're in the typescript repo.
 const packageJson = readFileSync("package.json", { encoding: "utf-8" });
@@ -19,5 +20,6 @@ cli.register(Builtins.HelpCommand);
 cli.register(RunTransformCommand);
 cli.register(MorphCommand);
 cli.register(CreateStackCommand);
+cli.register(SavePatchesCommand);
 
 cli.runExit(process.argv.slice(2));

@@ -5,3 +5,5 @@ import { fileURLToPath } from "url";
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 export const packageRoot = path.resolve(__dirname, "..");
+
+export const patchesDir = path.resolve(packageRoot, "patches");

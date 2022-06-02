@@ -3,7 +3,7 @@ import { performance } from "perf_hooks";
 import prettyMs from "pretty-ms";
 import { $, os } from "zx";
 
-import { packageRoot } from "./utilities.js";
+import { packageRoot, patchesDir } from "./utilities.js";
 
 export class RunTransformCommand extends Command {
     static paths = [["run"], ["run-transform"]];
@@ -125,9 +125,6 @@ async function noopStep() {
 }
 
 async function applyPatches() {
-    // Regenerate patches by removing the patches dir then running:
-    //     rm ~/work/typeformer/patches2/*
-    //     git format-patch -o ~/work/typeformer/patches2 --no-numbered --no-base --zero-commit HEAD^{"/CONVERSION STEP"}
-    // TODO: Move patches2 to patches.
-    await $`git am --3way --whitespace=nowarn --quoted-cr=nowarn --keep-cr ${packageRoot}/patches2/*.patch`;
+    // Regenerate patches by running `save-patches`.
+    await $`git am --3way --whitespace=nowarn --quoted-cr=nowarn --keep-cr ${patchesDir}/*.patch`;
 }
