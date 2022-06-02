@@ -168,8 +168,13 @@ function createNamespaceFileSet(fs: FileSystemHost, projectRootMapper: ProjectRo
     };
 }
 
-function createConfigDependencySet(fs: FileSystemHost, projectRootMapper: ProjectRootMapper) {
-    const configDeps = new Map<StandardizedFilePath, Set<StandardizedFilePath> | undefined>();
+interface SimpleConfig {
+    references: Set<StandardizedFilePath> | undefined;
+    files: StandardizedFilePath[] | undefined;
+}
+
+function createConfigFileSet(fs: FileSystemHost, projectRootMapper: ProjectRootMapper) {
+    const configs = new Map<StandardizedFilePath, SimpleConfig>();
 
     return {
         add(sourceFile: SourceFile) {
@@ -177,11 +182,11 @@ function createConfigDependencySet(fs: FileSystemHost, projectRootMapper: Projec
             const configFilePath = projectRootMapper.getTsConfigPath(sourceFilePath);
             const projRootDir = FileUtils.getDirPath(configFilePath);
 
-            if (configDeps.has(configFilePath)) {
+            if (configs.has(configFilePath)) {
                 return;
             }
 
-            const config: { references?: { path: string }[] } = ts.readConfigFile(
+            const config: { references?: { path: string }[]; files?: string[] } = ts.readConfigFile(
                 configFilePath,
                 fs.readFileSync
             ).config;
@@ -190,9 +195,16 @@ function createConfigDependencySet(fs: FileSystemHost, projectRootMapper: Projec
                 ? new Set(config.references.map((r) => FileUtils.getStandardizedAbsolutePath(fs, r.path, projRootDir)))
                 : undefined;
 
-            configDeps.set(configFilePath, refSet);
+            const files = config.files
+                ? config.files.map((p) => FileUtils.getStandardizedAbsolutePath(fs, p, projRootDir))
+                : undefined;
+
+            configs.set(configFilePath, {
+                references: refSet,
+                files: files,
+            });
         },
-        get: configDeps.get.bind(configDeps),
+        getConfig: configs.get.bind(configs),
     };
 }
 
@@ -205,7 +217,7 @@ export function stripNamespaces(project: Project): void {
     // Tracks newly added namespace files.
     const newNamespaceFiles = createNamespaceFileSet(fs, projectRootMapper);
     // Tracks which configs reference which other configs.
-    const configDependencySet = createConfigDependencySet(fs, projectRootMapper);
+    const configFileSet = createConfigFileSet(fs, projectRootMapper);
 
     const checker = project.getTypeChecker();
     const compilerProgram = project.getProgram().compilerObject;
@@ -230,7 +242,7 @@ export function stripNamespaces(project: Project): void {
 
     log("collecting references to used namespaces");
     for (const sourceFile of getTsSourceFiles(project)) {
-        configDependencySet.add(sourceFile);
+        configFileSet.add(sourceFile);
 
         sourceFile.forEachDescendant(collectReferencedNamespaces);
 
@@ -301,7 +313,13 @@ export function stripNamespaces(project: Project): void {
         const reexportStatements: (ExportDeclarationStructure | ImportDeclarationStructure)[] = [];
         const associatedConfig = newNamespaceFiles.findAssociatedConfig(filename);
 
-        const dependentPaths = configDependencySet.get(associatedConfig);
+        // TODO(jakebailey): Use ordering from references list in tsconfig.json
+        const simpleConfig = configFileSet.getConfig(associatedConfig);
+        assert(simpleConfig);
+
+        const { references: dependentPaths, files: filesList } = simpleConfig;
+        assert(filesList);
+
         dependentPaths?.forEach((requiredProjectPath) => {
             // Reexport namespace contributions of other projects listed in tsconfig,
             // e.g., in services, export everything from compiler too.
@@ -319,7 +337,8 @@ export function stripNamespaces(project: Project): void {
         });
 
         // Reexport everything in this namespace.
-        reexports.forEach((exportingPath) => {
+        const reexportsSorted = Array.from(reexports).sort((a, b) => filesList.indexOf(a) - filesList.indexOf(b));
+        reexportsSorted.forEach((exportingPath) => {
             reexportStatements.push({
                 kind: StructureKind.ExportDeclaration,
                 moduleSpecifier: getTsStyleRelativePath(filename, exportingPath).replace(/\.ts$/, ""),
@@ -581,6 +600,10 @@ export function stripNamespaces(project: Project): void {
 
     log("cleaning up imports");
     for (const sourceFile of getTsSourceFiles(project)) {
+        if (newNamespaceFiles.has(sourceFile.getFilePath())) {
+            continue;
+        }
+
         formatImports(sourceFile);
     }
 

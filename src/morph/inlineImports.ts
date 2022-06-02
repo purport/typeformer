@@ -281,6 +281,9 @@ export function inlineImports(project: Project): void {
 
     log("cleaning up imports");
     for (const sourceFile of getTsSourceFiles(project)) {
+        if (isNamespaceBarrel(sourceFile)) {
+            continue;
+        }
         formatImports(sourceFile);
     }
 }
