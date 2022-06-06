@@ -11,4 +11,4 @@ $ node /path/to/typeformer
 
 To view its usage / subcommands.
 
-This package requires Node 14+ and Linux.
+This package requires Node 14+, and has only been tested on Linux.

@@ -1,6 +1,7 @@
 import { Command } from "clipanion";
-import { $ } from "zx";
+import { globbySync } from "globby";
 
+import { runWithOutput as run } from "./exec.js";
 import { patchesDir } from "./utilities.js";
 
 export class SavePatchesCommand extends Command {
@@ -11,7 +12,16 @@ export class SavePatchesCommand extends Command {
     });
 
     async execute() {
-        await $`rm ${patchesDir}/*.patch`;
-        await $`git format-patch -o ${patchesDir} --no-numbered --no-base --zero-commit HEAD^{"/CONVERSION STEP"}`;
+        await run("rm", ...globbySync(`${patchesDir}/*.patch`));
+        await run(
+            "git",
+            "format-patch",
+            "-o",
+            patchesDir,
+            "--no-numbered",
+            "--no-base",
+            "--zero-commit",
+            'HEAD^{"/CONVERSION STEP"}'
+        );
     }
 }

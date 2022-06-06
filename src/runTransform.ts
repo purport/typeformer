@@ -1,8 +1,9 @@
 import { Command, Option } from "clipanion";
+import { globbySync } from "globby";
 import { performance } from "perf_hooks";
 import prettyMs from "pretty-ms";
-import { $, os } from "zx";
 
+import { getMergeBase, runNode, runWithOutput as run } from "./exec.js";
 import { packageRoot, patchesDir } from "./utilities.js";
 
 export class RunTransformCommand extends Command {
@@ -17,15 +18,12 @@ export class RunTransformCommand extends Command {
     });
 
     async execute() {
-        if (os.platform() === "win32") {
-            throw new Error("This script doesn't work on Windows, sorry.");
-        }
-
         if (this.reset) {
-            await $`git restore --staged .`; // Unstage all changes.
-            await $`git restore .`; // Undoo all changes.
-            await $`git clean -fd`; // Remove any potentially new files.
-            await $`git reset --hard $(git merge-base HEAD main)`; // Reset back to the merge base.
+            await run("git", "restore", "--staged", "."); // Unstage all changes.
+            await run("git", "restore", "."); // Undoo all changes.
+            await run("git", "clean", "-fd"); // Remove any potentially new files.
+            const mergeBase = await getMergeBase(run);
+            await run("git", "reset", "--hard", mergeBase); // Reset back to the merge base.
         }
 
         await generateDiagnostics();
@@ -37,7 +35,8 @@ This change causes problems for project loading
 (even though it really shouldn't); revert it for now.
 `,
             async () => {
-                await $`git revert --no-edit 55e2e15aa37e685b7adcc61dd3091a2d9c7773a1 && git reset HEAD^`;
+                await run("git", "revert", "--no-edit", "55e2e15aa37e685b7adcc61dd3091a2d9c7773a1");
+                await run("git", "reset", "HEAD^");
             }
         );
 
@@ -89,8 +88,8 @@ and "ts.Symbol", we have just "Node" and "Symbol".
 }
 
 async function generateDiagnostics() {
-    await $`rm -f src/compiler/diagnosticInformationMap.generated.ts`;
-    await $`npx gulp generate-diagnostics`;
+    await run("rm", "-f", "src/compiler/diagnosticInformationMap.generated.ts");
+    await run("npx", "gulp", "generate-diagnostics");
 }
 
 function reformatParagraphs(s: string) {
@@ -109,22 +108,31 @@ function reformatParagraphs(s: string) {
 
 async function runAndCommit(message: string, fn: () => Promise<any>) {
     await fn();
-    await $`git add . && git commit --quiet -m ${reformatParagraphs(message)}`;
+    await run("git", "add", ".");
+    await run("git", "commit", "--quiet", "-m", reformatParagraphs(message));
 }
 
 async function runMorph(name: string, description: string) {
     await runAndCommit(`CONVERSION STEP - ${name}\n\n${description}`, async () => {
         const before = performance.now();
-        await $`node ${packageRoot} morph ${name}`;
+        await runNode(packageRoot, "morph", name);
         console.log(`took ${prettyMs(performance.now() - before)}`);
     });
 }
 
 async function noopStep() {
-    await $`node ${packageRoot} morph noop`;
+    await runNode(packageRoot, "morph", "noop");
 }
 
 async function applyPatches() {
     // Regenerate patches by running `save-patches`.
-    await $`git am --3way --whitespace=nowarn --quoted-cr=nowarn --keep-cr ${patchesDir}/*.patch`;
+    await run(
+        "git",
+        "am",
+        "--3way",
+        "--whitespace=nowarn",
+        "--quoted-cr=nowarn",
+        "--keep-cr",
+        ...globbySync(`${patchesDir}/*.patch`) // git am doesn't accept a regular directory, only a "Maildir" (which is something different)
+    );
 }

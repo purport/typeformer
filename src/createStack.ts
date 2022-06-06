@@ -1,8 +1,8 @@
-import assert from "assert";
 import { Command, Option } from "clipanion";
-import { $, cd, os, question, quiet } from "zx";
+import * as readline from "readline";
+import which from "which";
 
-import * as zxHacks from "./zxHacks.js";
+import { cd, getMergeBase, runHidden, runNoOutput as run } from "./exec.js";
 
 export class CreateStackCommand extends Command {
     static paths = [["create-stack"]];
@@ -17,16 +17,10 @@ export class CreateStackCommand extends Command {
     });
 
     async execute() {
-        if (os.platform() === "win32") {
-            throw new Error("This script doesn't work on Windows, sorry.");
-        }
-
-        zxHacks.setHideOutput(true);
-
         // Make sure we have the gh tool.
-        await quiet($`gh --version`);
+        await which("gh");
 
-        const mergeBase = await getMergeBase();
+        const mergeBase = await getMergeBase(run);
         const plan = await getPlan(mergeBase);
 
         console.log();
@@ -36,10 +30,7 @@ export class CreateStackCommand extends Command {
         }
         console.log();
 
-        const ok = await question("Ready? (y/N) ", {
-            choices: ["y", "n"],
-        });
-
+        const ok = await question("Ready? (y/N) ");
         if (ok !== "y") {
             process.exit(1);
         }
@@ -51,17 +42,21 @@ export class CreateStackCommand extends Command {
 
         for (const step of plan) {
             if (!step.previousBranch) {
-                await $`git worktree remove --force ${worktree} || true`;
-                await $`git worktree add -B ${step.branch} ${worktree} ${mergeBase}`;
+                try {
+                    await run("git", "worktree", "remove", "--force", worktree);
+                } catch {
+                    // OK
+                }
+                await run("git", "worktree", "add", "-B", step.branch, worktree, mergeBase);
                 cd(worktree);
             } else {
-                await $`git switch -C ${step.branch} ${step.previousBranch}`;
+                await run("git", "switch", "-C", step.branch, step.previousBranch);
             }
 
-            await $`git cherry-pick ${step.commit}`;
-            await $`git push --force -u origin HEAD`;
+            await run("git", "cherry-pick", step.commit);
+            await run("git", "push", "--force", "-u", "origin", "HEAD");
 
-            let { stdout: fullMessage } = await $`git show -s --format=%B ${step.commit}`;
+            let { stdout: fullMessage } = await run("git", "show", "-s", "--format=%B", step.commit);
             fullMessage = fullMessage.replace(/\r/g, "");
             fullMessage = fullMessage.slice(fullMessage.indexOf("\n\n")).trim();
 
@@ -84,32 +79,56 @@ export class CreateStackCommand extends Command {
 
             let created = true;
             try {
-                await quiet(
-                    $`gh pr create -R ${this.repoName} --draft --base ${step.prBase} --head ${step.branch} --title ${step.message} --body ${body}`
+                await runHidden(
+                    "gh",
+                    "pr",
+                    "create",
+                    "-R",
+                    this.repoName,
+                    "--draft",
+                    "--base",
+                    step.prBase,
+                    "--head",
+                    step.branch,
+                    "--title",
+                    step.message,
+                    "--body",
+                    body
                 );
             } catch {
                 created = false;
-                await quiet($`gh pr edit ${step.branch} -R ${this.repoName} --title ${step.message} --body ${body}`);
+                await runHidden(
+                    "gh",
+                    "pr",
+                    "edit",
+                    step.branch,
+                    "-R",
+                    this.repoName,
+                    "--title",
+                    step.message,
+                    "--body",
+                    body
+                );
             }
 
-            const { stdout: prList } = await $`gh pr list -R ${this.repoName} --head ${step.branch} --json url`;
+            const { stdout: prList } = await run(
+                "gh",
+                "pr",
+                "list",
+                "-R",
+                this.repoName,
+                "--head",
+                step.branch,
+                "--json",
+                "url"
+            );
             console.log(`${created ? "Created" : "Updated"} ${JSON.parse(prList)[0].url}`);
         }
 
         cd(pwd);
 
-        await $`git worktree remove --force ${worktree}`;
+        await run("git", "worktree", "remove", "--force", worktree);
     }
-}
-
-async function getMergeBase() {
-    const { stdout } = await $`git merge-base --all HEAD main`;
-
-    const lines = stdout.trim().split(/\r?\n/);
-    assert(lines.length === 1);
-    const mergeBase = lines[0].trim();
-    assert(mergeBase);
-    return mergeBase;
 }
 
 interface Step {
@@ -122,7 +141,7 @@ interface Step {
 }
 
 async function getPlan(mergeBase: string): Promise<Step[]> {
-    const { stdout } = await $`git log --oneline --reverse ${mergeBase}..HEAD`;
+    const { stdout } = await run("git", "log", "--oneline", "--reverse", `${mergeBase}..HEAD`);
 
     return stdout
         .trim()
@@ -142,11 +161,21 @@ async function getPlan(mergeBase: string): Promise<Step[]> {
                 commit, // Commit to cherry pick
                 prBase: first ? "main" : branchName(humanIndex - 1), // Branch to send PR to
                 message, // Message
-                nextBranch: last ? undefined : branchName(humanIndex + 1), // Branch to send PR to
+                nextBranch: last ? undefined : branchName(humanIndex + 1), // Next branch in stack (for linking)
             };
         });
 
     function branchName(i: number) {
         return `transform-stack-commit-${i}`;
     }
+}
+
+function question(query: string): Promise<string> {
+    const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
+    return new Promise((resolve) => {
+        rl.question(query, (answer) => {
+            rl.close();
+            resolve(answer);
+        });
+    });
 }
