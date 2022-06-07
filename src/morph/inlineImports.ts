@@ -199,7 +199,8 @@ export function inlineImports(project: Project): void {
                 //     import * as performance from "./_namespaces/ts.performance.ts
                 //
                 // Moreover, we need to special case all of the namespaces the TS codebase canonically writes
-                // fully-qualified, e.g. `ts.performance`, the `protocol` namespace, and loads more in `Harness`.
+                // fully-qualified, e.g. `ts.performance`, the `protocol` namespace, and many more in `Harness`.
+                // This info was lost during explicitify, when we made everything fully-qualified.
 
                 const newPath = getTsStyleRelativePath(
                     sourceFile.getFilePath(),
