@@ -241,6 +241,9 @@ export function inlineImports(project: Project): void {
             return true;
         }
 
+        // TODO: can we place these imports right next to the existing namespace imports, rather than at the bottom?
+        // If we eliminate unused imports, the ordering will change, which is not good. Or, write our own import organizer,
+        // but that's probably slow within ts-morph.
         const imports: OptionalKind<ImportDeclarationStructure>[] = [];
         syntheticImports.forEach((importNames, specifier) => {
             imports.push({
