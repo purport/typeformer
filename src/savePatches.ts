@@ -12,7 +12,11 @@ export class SavePatchesCommand extends Command {
     });
 
     async execute() {
-        await run("rm", ...globbySync(`${patchesDir}/*.patch`));
+        const patches = globbySync(`${patchesDir}/*.patch`);
+        if (patches.length > 0) {
+            await run("rm", ...patches);
+        }
+
         await run(
             "git",
             "format-patch",
@@ -21,7 +25,7 @@ export class SavePatchesCommand extends Command {
             "--no-numbered",
             "--no-base",
             "--zero-commit",
-            'HEAD^{"/CONVERSION STEP"}'
+            "HEAD^{/CONVERSION STEP}"
         );
     }
 }

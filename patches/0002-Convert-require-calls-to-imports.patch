@@ -4,16 +4,16 @@ Date: Thu, 26 May 2022 17:00:27 -0700
 Subject: [PATCH] Convert require calls to imports
 
 ---
- src/cancellationToken/cancellationToken.ts    |  2 +-
- src/harness/findUpDir.ts                      |  4 ++--
- src/harness/harnessGlobals.ts                 | 22 ++++++++-----------
- src/instrumenter/instrumenter.ts              |  4 ++--
- src/testRunner/externalCompileRunner.ts       |  8 +++----
- .../unittests/services/languageService.ts     |  4 ++--
- src/testRunner/unittests/tsserver/session.ts  |  4 ++--
- src/typingsInstaller/nodeTypingsInstaller.ts  | 13 +++--------
- src/watchGuard/watchGuard.ts                  |  3 ++-
- 9 files changed, 27 insertions(+), 37 deletions(-)
+ src/cancellationToken/cancellationToken.ts     |  2 +-
+ src/harness/findUpDir.ts                       |  4 ++--
+ src/harness/harnessGlobals.ts                  | 18 ++++++++----------
+ src/instrumenter/instrumenter.ts               |  4 ++--
+ src/testRunner/externalCompileRunner.ts        |  8 ++++----
+ .../unittests/services/languageService.ts      |  4 ++--
+ src/testRunner/unittests/tsserver/session.ts   |  4 ++--
+ src/typingsInstaller/nodeTypingsInstaller.ts   | 13 +++----------
+ src/watchGuard/watchGuard.ts                   |  3 ++-
+ 9 files changed, 26 insertions(+), 34 deletions(-)
 
 diff --git a/src/cancellationToken/cancellationToken.ts b/src/cancellationToken/cancellationToken.ts
 index aaa19750b8..57c82e7522 100644
@@ -40,10 +40,10 @@ index 3a43a5c691..1df1706e41 100644
  // search directories upward to avoid hard-wired paths based on the
  // build tree (same as scripts/build/findUpDir.js)
 diff --git a/src/harness/harnessGlobals.ts b/src/harness/harnessGlobals.ts
-index d14535814e..d8d9b308db 100644
+index 37f6468b4b..6db907bf9e 100644
 --- a/src/harness/harnessGlobals.ts
 +++ b/src/harness/harnessGlobals.ts
-@@ -1,19 +1,15 @@
+@@ -1,19 +1,17 @@
 -import { isArray } from "./_namespaces/ts";
 +import * as chai from "chai";
  
@@ -56,24 +56,23 @@ index d14535814e..d8d9b308db 100644
      // Module transform: converted from ambient declaration
 -    var assert: typeof _chai.assert;
 +    var assert: typeof chai.assert;
+ }
+ declare global {
+     // Module transform: converted from ambient declaration
+-    var expect: typeof _chai.expect;
 +    var expect: typeof chai.expect;
  }
--declare global {
--    // Module transform: converted from ambient declaration
--    var expect: typeof _chai.expect;
--}
 -var _chai: typeof import("chai") = require("chai");
--assert = _chai.assert;
-+
+-globalThis.assert = _chai.assert;
 +globalThis.assert = chai.assert;
  {
      // chai's builtin `assert.isFalse` is featureful but slow - we don't use those features,
      // so we'll just overwrite it as an alterative to migrating a bunch of code off of chai
-@@ -39,7 +35,7 @@ assert = _chai.assert;
+@@ -39,7 +37,7 @@ globalThis.assert = _chai.assert;
          }
      };
  }
--expect = _chai.expect;
+-globalThis.expect = _chai.expect;
 -/* eslint-enable no-var */
 +globalThis.expect = chai.expect;
 +
@@ -94,7 +93,7 @@ index c7cbb8d3ec..641d173456 100644
  function instrumentForRecording(fn: string, tscPath: string) {
      instrument(tscPath, `
 diff --git a/src/testRunner/externalCompileRunner.ts b/src/testRunner/externalCompileRunner.ts
-index b63793b9f9..29f9bb5565 100644
+index 5c4f8604a2..7ada0bb822 100644
 --- a/src/testRunner/externalCompileRunner.ts
 +++ b/src/testRunner/externalCompileRunner.ts
 @@ -1,12 +1,12 @@
@@ -102,10 +101,10 @@ index b63793b9f9..29f9bb5565 100644
 +import * as fs from "fs";
 +import * as path from "path";
 +
+ import { Baseline, IO, isWorker, RunnerBase, TestRunnerKind } from "./_namespaces/Harness";
  import {
-     Debug, Version, flatten, comparePathsCaseSensitive, compareValues, compareStringsCaseSensitive, stringContains,
+     comparePathsCaseSensitive, compareStringsCaseSensitive, compareValues, Debug, flatten, stringContains, Version,
  } from "./_namespaces/ts";
- import * as Harness from "./_namespaces/Harness";
  
 -const fs: typeof import("fs") = require("fs");
 -const path: typeof import("path") = require("path");
@@ -115,16 +114,17 @@ index b63793b9f9..29f9bb5565 100644
      stdout: Buffer;
      stderr: Buffer;
 diff --git a/src/testRunner/unittests/services/languageService.ts b/src/testRunner/unittests/services/languageService.ts
-index 86f0f51973..22291a2f56 100644
+index 14b042d5fc..ca5755be96 100644
 --- a/src/testRunner/unittests/services/languageService.ts
 +++ b/src/testRunner/unittests/services/languageService.ts
-@@ -1,11 +1,11 @@
+@@ -1,3 +1,5 @@
 +import { expect } from "chai";
 +
  import {
-     ScriptSnapshot, getDefaultLibFilePath, emptyArray, Map, projectSystem, LanguageServiceHost, returnTrue,
-     getDefaultCompilerOptions, Program, TestFSWithWatch, tscWatch, getParsedCommandLineOfConfigFile, noop,
- } from "../../_namespaces/ts";
+     emptyArray, getDefaultCompilerOptions, getDefaultLibFilePath, getParsedCommandLineOfConfigFile, LanguageServiceHost,
+     Map, noop, Program, returnTrue, ScriptSnapshot,
+@@ -7,8 +9,6 @@ import { File } from "../../../harness/_namespaces/ts.TestFSWithWatch";
+ import { projectRoot } from "../../_namespaces/ts.tscWatch";
  import * as ts from "../../_namespaces/ts";
  
 -const _chai: typeof import("chai") = require("chai");
@@ -133,35 +133,37 @@ index 86f0f51973..22291a2f56 100644
      const files: {[index: string]: string} = {
          "foo.ts": `import Vue from "./vue";
 diff --git a/src/testRunner/unittests/tsserver/session.ts b/src/testRunner/unittests/tsserver/session.ts
-index dc4fc6b86e..e7418b0eff 100644
+index 675a6a5a71..0c8019e9da 100644
 --- a/src/testRunner/unittests/tsserver/session.ts
 +++ b/src/testRunner/unittests/tsserver/session.ts
 @@ -1,3 +1,5 @@
 +import { expect } from "chai";
 +
  import {
-     FileWatcher, noop, server, returnUndefined, projectSystem, AnyFunction, IndentStyle, ModuleKind, ScriptTarget,
-     JsxEmit, NewLineKind, ModuleResolutionKind, CompilerOptions, version, Debug, Map, FileTextChanges,
-@@ -5,8 +7,6 @@ import {
- import * as Harness from "../../_namespaces/Harness";
- import * as Utils from "../../_namespaces/Utils";
+     AnyFunction, CompilerOptions, Debug, FileTextChanges, FileWatcher, Map, noop, returnUndefined, version,
+ } from "../../_namespaces/ts";
+@@ -15,8 +17,6 @@ import { byteLength } from "../../_namespaces/Utils";
+ import { createHasErrorMessageLogger, nullLogger } from "../../_namespaces/ts.projectSystem";
+ import * as ts from "../../_namespaces/ts";
  
 -const _chai: typeof import("chai") = require("chai");
 -const expect: typeof _chai.expect = _chai.expect;
  let lastWrittenToHost: string;
  const noopFileWatcher: FileWatcher = { close: noop };
- const mockHost: server.ServerHost = {
+ const mockHost: ServerHost = {
 diff --git a/src/typingsInstaller/nodeTypingsInstaller.ts b/src/typingsInstaller/nodeTypingsInstaller.ts
-index 11aa7cac12..25ea8e4723 100644
+index aae6b44b45..f043e44a18 100644
 --- a/src/typingsInstaller/nodeTypingsInstaller.ts
 +++ b/src/typingsInstaller/nodeTypingsInstaller.ts
-@@ -1,18 +1,11 @@
+@@ -1,3 +1,6 @@
 +import * as fs from "fs";
 +import * as path from "path";
 +
  import {
-     server, sys, MapLike, ESMap, Map, getEntries, combinePaths, normalizeSlashes, toPath, createGetCanonicalFileName,
-     stringContains, Debug, version, forEachAncestorDirectory, getDirectoryPath,
+     installNpmPackages, Log, RequestCompletedAction, TypingsInstaller,
+ } from "./_namespaces/ts.server.typingsInstaller";
+@@ -11,16 +14,6 @@ import {
+     MapLike, normalizeSlashes, stringContains, sys, toPath, version,
  } from "./_namespaces/ts";
  
 -const fs: {
@@ -174,7 +176,7 @@ index 11aa7cac12..25ea8e4723 100644
 -    basename(path: string, extension?: string): string;
 -} = require("path");
 -
- class FileLog implements server.typingsInstaller.Log {
+ class FileLog implements Log {
      constructor(private logFile: string | undefined) {
      }
 diff --git a/src/watchGuard/watchGuard.ts b/src/watchGuard/watchGuard.ts

@@ -1,8 +1,14 @@
 import { FileUtils } from "@ts-morph/common";
-import assert from "assert";
-import { FileSystemHost, ImportDeclarationStructure, OptionalKind, Project, SourceFile, Symbol, ts } from "ts-morph";
+import { ImportDeclarationStructure, OptionalKind, Project, ts } from "ts-morph";
 
-import { formatImports, getTsSourceFiles, getTsStyleRelativePath, isNamespaceBarrel, log } from "./utilities.js";
+import {
+    formatImports,
+    getTsSourceFiles,
+    getTsStyleRelativePath,
+    isNamespaceBarrel,
+    log,
+    namespacesDirName,
+} from "./utilities.js";
 
 // These are names which are already declared in the global scope, but TS
 // has redeclared one way or another. If we don't allow these to be shadowed,
@@ -38,115 +44,190 @@ export function inlineImports(project: Project): void {
 
         sourceFile.transform((traversal) => {
             const node = traversal.currentNode;
-            if (ts.isImportDeclaration(node)) {
-                return node;
+
+            const replacement = tryReplace(node, traversal.factory);
+            if (replacement) {
+                if (replacement.nodeToRemove) {
+                    nodesToRemove.push(sourceFile._getNodeFromCompilerNode(replacement.nodeToRemove));
+                }
+                return replacement.node;
             }
 
-            let s: ts.Symbol | undefined; // This is the symbol on the RHS (in the old typeformer, this was the LHS).
-            let foreignName: string | undefined; // The name as it's declared in another file.
-            let localName: string | undefined; // The name as it's used locally. Usually identical.
-            let substituteNode: ts.Node | undefined; // The node to return to the transform caller, usually the RHS (removing the namespace)
-            let checkShadowed = true; // True if we should check to see if we're going to shadow first.
-            let nodeToRemove: RemovableNode | undefined; // A node to remove if we end up replacing the current node. Needed because ts-morph doesn't let you return undefined.
+            return traversal.visitChildren();
+        });
 
-            // TODO(jakebailey): The below stuff works fine if we want to import everything directly from their
-            // declarations, but that seems to cause major execution order problems. I need to rewrite this to
-            // be more like the old typeformer, where I check dotted paths biggest to smallest looking for
-            // what resolves to a barrel file, then import the rhs from that instead.
+        function tryReplace(
+            node: ts.Node,
+            factory: ts.NodeFactory
+        ): { node: ts.Node; nodeToRemove?: ts.Statement } | undefined {
+            if (ts.isImportDeclaration(node)) {
+                // Stop recursing by "replacing" this node with itself.
+                return { node };
+            }
+
+            interface Replacement {
+                lhsSymbol: ts.Symbol | undefined; // Symbol for the namespace, e.g. the LHS.
+                rhsSymbol: ts.Symbol | undefined; // Symbol to check for shadowing in the current scope. Undefined to skip shadow checking.
+                skipShadowCheck?: boolean; // True if we can ignore shadowed names.
+                localName: string; // Local name for the incoming symbol.
+                foreignName?: string; // Name of the symbol in the namespace, if different than the local name.
+                node: ts.Node; // Node to return the the transform's caller; usually the RHS node.
+                nodeToRemove?: ts.Statement; // Node to remove if replacement succeeds.
+            }
+
+            let replacement: Replacement | undefined;
 
             if (
                 ts.isImportEqualsDeclaration(node) &&
                 ts.isQualifiedName(node.moduleReference) &&
                 !ts.isModuleBlock(node.parent) // You can't do "export { something }" in a namespace.
             ) {
-                checkShadowed = false;
-                s = checker.getSymbolAtLocation(node.moduleReference);
-                localName = ts.idText(node.name);
-                foreignName = ts.idText(node.moduleReference.right); // TODO: is this right?
+                let substitute: ts.Node;
+                let nodeToRemove: ts.Statement | undefined;
 
+                const localName = ts.idText(node.name);
                 if (ts.hasSyntacticModifier(node, ts.ModifierFlags.Export)) {
-                    // export import name = ...;
+                    // export import name = ts.foo.bar;
                     //     ->
-                    // import { bar as name } from '...'
+                    // import { bar as name } from "./_namespaces/ts.foo.ts";
                     // export { name };
 
-                    substituteNode = traversal.factory.createExportDeclaration(
+                    substitute = factory.createExportDeclaration(
                         undefined,
                         undefined,
                         false,
-                        traversal.factory.createNamedExports([
-                            traversal.factory.createExportSpecifier(false, undefined, localName),
-                        ])
+                        factory.createNamedExports([factory.createExportSpecifier(false, undefined, localName)])
                     );
                 } else {
-                    // import name = ts.Foo.bar;
+                    // import name = ts.foo.bar;
                     //     ->
-                    // import { bar as name } from '...'
+                    // import { bar as name } from "./_namespaces/ts.foo.ts";
 
                     // We can't return `undefined` in ts-morph's transform API, so just leave as-is and remove later.
-                    substituteNode = node;
-                    nodeToRemove = sourceFile._getNodeFromCompilerNode(node);
+                    substitute = node;
+                    nodeToRemove = node;
                 }
+
+                replacement = {
+                    lhsSymbol: checker.getSymbolAtLocation(node.moduleReference.left),
+                    rhsSymbol: checker.getSymbolAtLocation(node.moduleReference.right),
+                    skipShadowCheck: true,
+                    localName,
+                    foreignName: ts.idText(node.moduleReference.right),
+                    node: substitute,
+                    nodeToRemove,
+                };
             } else if (ts.isQualifiedName(node)) {
                 if (ts.isImportEqualsDeclaration(node.parent) && node.parent.moduleReference === node) {
-                    return node; // Can't elide the namespace part of an import assignment
+                    // We're the RHS of a "import name = ts.foo.bar;". If the above step didn't work,
+                    // we shouldn't try to replace anything in the assignment as this will just break it.
+                    // So, stop recursing.
+                    return { node };
                 }
-                // s = checker.getSymbolAtLocation(isQualifiedName(node.left) ? node.left.right : node.left);
-                s = checker.getSymbolAtLocation(node);
-                foreignName = ts.idText(node.right);
-                localName = foreignName;
-                substituteNode = node.right;
+
+                // Qualified names, i.e. a dotted name in type space.
+                //
+                // const x: ts.foo.bar;
+                //     ->
+                // import { bar } from "./_namespaces/ts.foo.ts";
+                // const x: bar;
+
+                replacement = {
+                    lhsSymbol: checker.getSymbolAtLocation(node.left),
+                    rhsSymbol: checker.getSymbolAtLocation(node.right),
+                    localName: ts.idText(node.right),
+                    node: node.right,
+                };
             } else if (
                 ts.isPropertyAccessExpression(node) &&
                 (ts.isIdentifier(node.expression) || ts.isPropertyAccessExpression(node.expression)) &&
                 !ts.isPrivateIdentifier(node.name)
             ) {
-                // technically should handle parenthesis, casts, etc - maybe not needed, though
-                // s = checker.getSymbolAtLocation(isPropertyAccessExpression(node.expression) ? node.expression.name : node.expression);
-                s = checker.getSymbolAtLocation(node);
-                foreignName = ts.idText(node.name);
-                localName = foreignName;
-                substituteNode = node.name;
+                // Property access, i.e. a dotted name in expression space.
+                //
+                // ts.foo.bar();
+                //     ->
+                // import { bar } from "./_namespaces/ts.foo.ts";
+                // bar();
+
+                replacement = {
+                    lhsSymbol: checker.getSymbolAtLocation(node.expression),
+                    rhsSymbol: checker.getSymbolAtLocation(node.name),
+                    localName: ts.idText(node.name),
+                    node: node.name,
+                };
             }
 
-            if (s) {
-                assert(localName);
-                assert(foreignName);
-                assert(substituteNode);
+            if (!replacement || !replacement.lhsSymbol || !replacement.rhsSymbol) {
+                return undefined;
+            }
 
-                const bareName = checkShadowed ? findSymbolInScope(checker, localName, s, node) : undefined;
+            replacement.lhsSymbol = ts.skipAlias(replacement.lhsSymbol, checker);
+            replacement.rhsSymbol = ts.skipAlias(replacement.rhsSymbol, checker);
 
-                if (bareName) {
-                    // Name resolved to something; if this is the symbol we're looking for, use it directly.
-                    if (bareName === s) {
-                        if (nodeToRemove) {
-                            nodesToRemove.push(nodeToRemove);
-                        }
-                        return substituteNode;
-                    }
-                } else {
-                    // Name did not resolve to anything; replace with an import.
+            const maybeNamespaceBarrel = replacement.lhsSymbol.valueDeclaration;
+            if (
+                !maybeNamespaceBarrel ||
+                !ts.isSourceFile(maybeNamespaceBarrel) ||
+                maybeNamespaceBarrel.isDeclarationFile
+            ) {
+                return undefined;
+            }
 
-                    // const newPath = importDirectly(fs, sourceFile, s);
-                    const newPath = importFromBarrel(checker, node.getSourceFile(), s);
+            const foundSymbol = !replacement.skipShadowCheck
+                ? findSymbolInScope(checker, replacement.localName, replacement.rhsSymbol, node)
+                : undefined;
 
-                    if (newPath && addSyntheticImport(newPath.replace(/(\.d)?\.ts$/, ""), foreignName, localName)) {
-                        if (nodeToRemove) {
-                            nodesToRemove.push(nodeToRemove);
-                        }
-                        return substituteNode;
-                    }
+            // Name resolved to something; if this is the symbol we're looking for, use it directly.
+            if (foundSymbol) {
+                if (foundSymbol === replacement.rhsSymbol) {
+                    return replacement;
+                }
+                // Otherwise, we'd shadow, so don't replace.
+                return undefined;
+            }
+
+            // Name didn't resolve; see if the LHS is a namespace barrel and try to import from it.
+            const barrelDecl = replacement.lhsSymbol.valueDeclaration;
+            if (barrelDecl && ts.isSourceFile(barrelDecl) && barrelDecl.fileName.includes(namespacesDirName)) {
+                // TODO: if rhsSymbol matches this same check, we are about to write:
+                //
+                //     import { performance } from "./_namespaces/ts.ts"
+                //
+                // When we should probably write:
+                //
+                //     import * as performance from "./_namespaces/ts.performance.ts
+                //
+                // Moreover, we need to special case all of the namespaces the TS codebase canonically writes
+                // fully-qualified, e.g. `ts.performance`, the `protocol` namespace, and loads more in `Harness`.
+
+                const newPath = getTsStyleRelativePath(
+                    sourceFile.getFilePath(),
+                    FileUtils.getStandardizedAbsolutePath(fs, barrelDecl.fileName)
+                );
+
+                if (
+                    tryAddImport(
+                        newPath.replace(/(\.d)?\.ts$/, ""),
+                        replacement.foreignName ?? replacement.localName,
+                        replacement.localName
+                    )
+                ) {
+                    return replacement;
                 }
             }
-            return traversal.visitChildren();
-        });
+
+            return undefined;
+        }
 
         for (const node of nodesToRemove) {
             node.remove();
         }
 
-        // TODO: can we be smarter and pick the imports which minimizes the number of leftover namespace uses?
-        function addSyntheticImport(specifier: string, foreignName: string, localName: string) {
+        // We don't actually need to be very smart here about prioritizing specific names; the TS codebase
+        // doesn't seem to have too many of these cases, solving them by having some "canonical" namespaces
+        // which are always fully qualified, like `protocol` or `performance`.
+        function tryAddImport(specifier: string, foreignName: string, localName: string) {
             if (
                 Array.from(syntheticImports.entries()).some(([spec, set]) => spec !== specifier && set.has(localName))
             ) {
@@ -182,107 +263,15 @@ export function inlineImports(project: Project): void {
     }
 }
 
-function getNamespaceImports(statements: readonly ts.Statement[]) {
-    return statements.filter(
-        (s) =>
-            ts.isImportDeclaration(s) &&
-            !!s.importClause &&
-            !!s.importClause.namedBindings &&
-            ts.isNamespaceImport(s.importClause.namedBindings)
-    ) as (ts.ImportDeclaration & { importClause: ts.ImportClause & { namedBindings: ts.NamespaceImport } })[];
-}
-
-function importFromBarrel(checker: ts.TypeChecker, sourceFile: ts.SourceFile, s: ts.Symbol): string | undefined {
-    const sDecls = s.declarations;
-    if (!sDecls) {
-        return undefined;
-    }
-
-    const namespaceImports = getNamespaceImports(sourceFile.statements);
-    for (const i of namespaceImports) {
-        const barrelName = i.importClause.namedBindings.name;
-        if (barrelName.text !== "ts") {
-            // Namespaces other than ts seem to always be fully qualified in the original codebase.
-            continue;
-        }
-
-        const moduleSymbol = checker.getSymbolAtLocation(i.moduleSpecifier);
-        assert(moduleSymbol);
-        if (!(moduleSymbol.flags & ts.SymbolFlags.Module)) {
-            continue;
-        }
-
-        if (checker.getExportsOfModule(moduleSymbol).includes(s)) {
-            return (i.moduleSpecifier as ts.StringLiteral).text;
-        }
-    }
-
-    return undefined;
-}
-
-function importDirectly(fs: FileSystemHost, sourceFile: SourceFile, s: ts.Symbol) {
-    const declPaths = s.declarations
-        ?.filter((d) => {
-            const otherFile = d.getSourceFile();
-            if (otherFile === sourceFile.compilerNode || otherFile.isDeclarationFile) {
-                return false;
-            }
-
-            const moduleSymbol = otherFile.symbol;
-            if (!(moduleSymbol.flags & ts.SymbolFlags.Module)) {
-                return false;
-            }
-
-            return moduleSymbol.exports && ts.forEachEntry(moduleSymbol.exports, (s) => s === d.symbol);
-        })
-        .map((d) =>
-            getTsStyleRelativePath(
-                sourceFile.getFilePath(),
-                FileUtils.getStandardizedAbsolutePath(fs, d.getSourceFile().fileName)
-            )
-        )
-        .sort();
-
-    const newPath = declPaths?.[0];
-    if (
-        newPath &&
-        // Special cases; these were originally written fully-qualified, but we have no idea
-        // at this point because the explicitify step made everything explicit. We'll just
-        // try and massage these by hand into * imports or something.
-        // TODO: Can we do better? Maybe we should make them all direct imports?
-        !newPath.endsWith("protocol.ts") &&
-        !newPath.endsWith("performance.ts") &&
-        !newPath.endsWith("moduleSpecifiers.ts") &&
-        !newPath.endsWith("vpathUtil.ts") &&
-        !newPath.endsWith("documentsUtil.ts") &&
-        !newPath.endsWith("collectionsImpl.ts") &&
-        !newPath.endsWith("vfsUtil.ts") &&
-        !newPath.endsWith("fakes.ts") &&
-        !newPath.endsWith("harnessIO.ts") &&
-        !newPath.endsWith("jsTyping.ts") &&
-        !newPath.endsWith("fourslashImpl.ts") &&
-        !newPath.endsWith("fourslashInterfaceImpl.ts") &&
-        !newPath.endsWith("findAllReferences.ts") &&
-        !newPath.endsWith("goToDefinition.ts") &&
-        !newPath.endsWith("formatting.ts") &&
-        !newPath.endsWith("textChanges.ts") &&
-        !newPath.endsWith("fakesHosts.ts")
-    ) {
-        return newPath;
-    }
-
-    return undefined;
-}
-
 function findSymbolInScope(
     checker: ts.TypeChecker,
     name: string,
     s: ts.Symbol,
     location: ts.Node
 ): ts.Symbol | undefined {
-    s = ts.skipAlias(s, checker);
+    // s = ts.skipAlias(s, checker);
 
-    let meaning: ts.SymbolFlags = ts.SymbolFlags.Namespace;
+    let meaning = ts.SymbolFlags.Namespace;
     if (s.flags & ts.SymbolFlags.Value) {
         meaning |= ts.SymbolFlags.Value;
     }

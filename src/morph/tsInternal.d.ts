@@ -69,7 +69,9 @@ declare module "ts-morph" {
 
     interface Node {
         // Until https://github.com/dsherret/ts-morph/issues/1256 is fixed and released.
-        _getNodeFromCompilerNode<LocalCompilerNodeType extends ts.Node = ts.Node>(compilerNode: LocalCompilerNodeType);
+        _getNodeFromCompilerNode<LocalCompilerNodeType extends ts.Node = ts.Node>(
+            compilerNode: LocalCompilerNodeType
+        ): CompilerNodeToWrappedType<LocalCompilerNodeType>;
         _getNodeFromCompilerNodeIfExists<LocalCompilerNodeType extends ts.Node = ts.Node>(
             compilerNode: LocalCompilerNodeType | undefined
         ): CompilerNodeToWrappedType<LocalCompilerNodeType> | undefined;

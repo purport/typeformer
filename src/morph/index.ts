@@ -40,6 +40,8 @@ export function runStep(stepName: string, check: boolean): number {
     log(stepName);
     indentLog(() => step(project));
 
+    let exitCode = 0;
+
     if (check) {
         log("checking");
         const diagnostics = project.getPreEmitDiagnostics();
@@ -49,11 +51,11 @@ export function runStep(stepName: string, check: boolean): number {
             } else {
                 console.error("way too many diagnostics; open the repo instead");
             }
-            return 1;
+            exitCode = 1;
         }
     }
 
     log("saving");
     project.saveSync();
-    return 0;
+    return exitCode;
 }

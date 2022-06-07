@@ -62,7 +62,9 @@ export function formatImports(sourceFile: SourceFile) {
                 maxExportNamesPerLine: 0,
                 maxNamesPerWrappedLine: 0,
             },
-            sortRules: "none", // evaluation order :(
+            sortRules: {
+                paths: "none", // evaluation order :(
+            },
             // keepUnused: [".*"], // we may have to keep these to fix evaluation order too.
             formatExports: false,
             quoteMark: "double",
@@ -81,6 +83,8 @@ export function formatImports(sourceFile: SourceFile) {
     }
 }
 
+// TODO: we may have to move these up into the project dirs again, in which
+// this way to identify namespaces will not work correctly.
 export const namespacesDirName = "_namespaces";
 
 export function isNamespaceBarrel(sourceFile: SourceFile): boolean {
