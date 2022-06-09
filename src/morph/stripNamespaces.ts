@@ -56,7 +56,7 @@ function skipDownToNamespaceBody(statement: ModuleDeclaration) {
     return { body, nsNameParts };
 }
 
-function createReferencedNamespaceSet() {
+function createTopLevelNamespacesToImportSet() {
     const referencedNamespaces = new Map<StandardizedFilePath, Set<string>>();
 
     return {
@@ -135,30 +135,41 @@ function createNamespaceFileSet(fs: FileSystemHost, projectRootMapper: ProjectRo
         return s;
     }
 
-    return {
-        addFileToNamespace(sourceFile: SourceFile, nsPath: NamespaceNameParts) {
-            const sourceFilePath = sourceFile.getFilePath();
-            const configFilePath = projectRootMapper.getTsConfigPath(sourceFilePath);
-            const projRootDir = FileUtils.getDirPath(configFilePath);
-            const namespacesRoot = FileUtils.pathJoin(projRootDir, namespacesDirName);
+    function addNamespaceFile(sourceFile: SourceFile, nsPath: NamespaceNameParts, addFileToNamespace: boolean) {
+        const sourceFilePath = sourceFile.getFilePath();
+        const configFilePath = projectRootMapper.getTsConfigPath(sourceFilePath);
+        const projRootDir = FileUtils.getDirPath(configFilePath);
+        const namespacesRoot = FileUtils.pathJoin(projRootDir, namespacesDirName);
 
-            // Shouldn't be required, but if we don't have a real directory on disk, we fail
-            // to perform the walk to add the tsconfigs to the project later.
-            fs.mkdirSync(namespacesRoot);
+        // Shouldn't be required, but if we don't have a real directory on disk, we fail
+        // to perform the walk to add the tsconfigs to the project later.
+        fs.mkdirSync(namespacesRoot);
 
-            const nsFilePath = FileUtils.pathJoin(namespacesRoot, namespacePartsToFilename(nsPath));
+        const nsFilePath = FileUtils.pathJoin(namespacesRoot, namespacePartsToFilename(nsPath));
+        const inner = getOrCreate({
+            namespaceFilePath: nsFilePath,
+            configFilePath,
+        });
+
+        if (addFileToNamespace) {
+            inner.add(sourceFilePath);
+        }
+
+        for (let i = 1; i < nsPath.length; i++) {
+            const parentNsFile = FileUtils.pathJoin(namespacesRoot, namespacePartsToFilename(nsPath.slice(0, i)));
             getOrCreate({
-                namespaceFilePath: nsFilePath,
+                namespaceFilePath: parentNsFile,
                 configFilePath,
-            }).add(sourceFilePath);
+            });
+        }
+    }
 
-            for (let i = 1; i < nsPath.length; i++) {
-                const parentNsFile = FileUtils.pathJoin(namespacesRoot, namespacePartsToFilename(nsPath.slice(0, i)));
-                getOrCreate({
-                    namespaceFilePath: parentNsFile,
-                    configFilePath,
-                });
-            }
+    return {
+        ensureNamespaceFileExists(sourceFile: SourceFile, nsPath: NamespaceNameParts) {
+            addNamespaceFile(sourceFile, nsPath, /*addFileToNamespace*/ false);
+        },
+        addFileToNamespace(sourceFile: SourceFile, nsPath: NamespaceNameParts) {
+            addNamespaceFile(sourceFile, nsPath, /*addFileToNamespace*/ true);
         },
         has: newNamespaceFiles.has.bind(newNamespaceFiles),
         forEach: newNamespaceFiles.forEach.bind(newNamespaceFiles),
@@ -211,7 +222,7 @@ function createConfigFileSet(fs: FileSystemHost, projectRootMapper: ProjectRootM
 export function stripNamespaces(project: Project): void {
     const fs = project.getFileSystem();
     // Tracks which namespaces each source file uses.
-    const referencedNamespaceSet = createReferencedNamespaceSet();
+    const topLevelNamespacesToImport = createTopLevelNamespacesToImportSet();
     // Gets the project config path for a file (since we are loading this as one project)
     const projectRootMapper = createProjectRootMapper(fs);
     // Tracks newly added namespace files.
@@ -242,6 +253,10 @@ export function stripNamespaces(project: Project): void {
 
     log("collecting references to used namespaces");
     for (const sourceFile of getTsSourceFiles(project)) {
+        // if (sourceFile.getFilePath().endsWith("tsserver/session.ts")) {
+        //     debugger;
+        // }
+
         configFileSet.add(sourceFile);
 
         sourceFile.forEachDescendant(collectReferencedNamespaces);
@@ -261,8 +276,9 @@ export function stripNamespaces(project: Project): void {
                 // Post-explicitify, is this even needed? If it's local, we'll fix it up,
                 // otherwise, we're going to explicitly say which namespace and the
                 // identifier check will add it.
-                referencedNamespaceSet.add(sourceFile, nsNameParts[0]);
+                topLevelNamespacesToImport.add(sourceFile, nsNameParts[0]);
 
+                // Add this file to this namespace.
                 newNamespaceFiles.addFileToNamespace(sourceFile, nsNameParts);
 
                 // We just skipped all of the namespace name parts, now go walk the body.
@@ -270,20 +286,18 @@ export function stripNamespaces(project: Project): void {
                 return;
             }
 
+            // In the property access or qualified name "ts.server.protocol.Message", we
+            // want to check each identifier in that name; we'll do this by walking the tree,
+            // so just skip anything that's not an identifier. Also, if we just reference
+            // "ts", we will see just an identifier too.
             if (!Node.isIdentifier(node)) {
                 return;
             }
 
             const parent = node.getParentOrThrow();
+
+            // If we're our own declaration, skip; we already reference ourselves.
             if (ts.getNameOfDeclaration(parent.compilerNode as ts.Declaration) === node.compilerNode) {
-                return;
-            }
-
-            if (Node.isPropertyAccessExpression(parent) && parent.getNameNode().compilerNode === node.compilerNode) {
-                return;
-            }
-
-            if (Node.isQualifiedName(parent) && parent.getRight().compilerNode === node.compilerNode) {
                 return;
             }
 
@@ -292,7 +306,9 @@ export function stripNamespaces(project: Project): void {
             if (
                 decls &&
                 // Must be a namespace.
-                decls.some((d) => Node.isModuleDeclaration(d) && !!(d.getFlags() & ts.NodeFlags.Namespace)) &&
+                // TS special case: no part of the namespace can be not a namespace (e.g. no merged interfaces)
+                !decls.some((d) => !Node.isModuleDeclaration(d) || !(d.getFlags() & ts.NodeFlags.Namespace)) &&
+                // decls.some((d) => Node.isModuleDeclaration(d) && !!(d.getFlags() & ts.NodeFlags.Namespace)) &&
                 // external to the current file
                 decls.some((d) => d.getSourceFile() !== sourceFile) &&
                 // that are not from the `lib`
@@ -302,15 +318,51 @@ export function stripNamespaces(project: Project): void {
                 // and nothing that's a class (we can't faithfully repreoduce class/ns merges anyway, so it's easy to toss these)
                 !decls.some((d) => d.getKind() === ts.SyntaxKind.ClassDeclaration)
             ) {
-                const nsName = checker.compilerObject.symbolToString(sym.compilerSymbol);
-                referencedNamespaceSet.add(sourceFile, nsName);
+                const nsName = checker.getFullyQualifiedName(sym);
+
+                const isNestedNamespace = !decls.some((d) => !(d.getFlags() & ts.NodeFlags.NestedNamespace));
+                if (!isNestedNamespace) {
+                    // If this isn't a nested namespace, then verify that it's declared directly in
+                    // a source file, so we don't accidentally create barrel files for code like:
+                    //
+                    // namespace ts {
+                    //     export namespace ShimCollections { ... }
+                    // }
+                    if (decls.some((d) => !d.getParentOrThrow().isKind(ts.SyntaxKind.SourceFile))) {
+                        return;
+                    }
+                }
+
+                const isRHS =
+                    (Node.isPropertyAccessExpression(parent) &&
+                        parent.getNameNode().compilerNode === node.compilerNode) ||
+                    (Node.isQualifiedName(parent) && parent.getRight().compilerNode === node.compilerNode);
+
+                if (!isRHS) {
+                    // We're on the left side of a property access expression or qualified name, e.g.
+                    // in "ts.server.protocol.Message", we are in "ts". Add this to the list of top-level
+                    // namespaces to import. (We want to import ts, not "ts.server" or something, as ts will
+                    // reexport the server namespace).
+                    topLevelNamespacesToImport.add(sourceFile, nsName);
+                }
+
+                // We do this in addition to at each namespace declaration because there can be a case where
+                // a namespace is used in one project (like ts.server.protocol), but that project doesn't add
+                // anything to that namespace, so it's not recorded. Make sure we do note this so we always
+                // get a namespace barrel file (even if that file will be a single reexport).
+                // TODO: this is broken due to projects that reference a namespace more than once via
+                // other projects they depend on, e.g. this error:
+                //     src/loggedIO/_namespaces/ts.server.ts:6:1 - error TS2308:
+                //         Module "../../server/_namespaces/ts.server" has already exported a member named 'protocol'.
+                //         Consider explicitly re-exporting to resolve the ambiguity.
+                // newNamespaceFiles.ensureNamespaceFileExists(sourceFile, nsName.split("."));
             }
         }
     }
 
     log("creating files for fake namespaces");
     newNamespaceFiles.forEach((reexports, filename) => {
-        const reexportStatements: (ExportDeclarationStructure | ImportDeclarationStructure)[] = [];
+        const statements: (ExportDeclarationStructure | ImportDeclarationStructure)[] = [];
         const associatedConfig = newNamespaceFiles.findAssociatedConfig(filename);
 
         // TODO(jakebailey): Use ordering from references list in tsconfig.json
@@ -329,7 +381,7 @@ export function stripNamespaces(project: Project): void {
                 FileUtils.getBaseName(filename)
             );
             if (newNamespaceFiles.has(nsFileName)) {
-                reexportStatements.push({
+                statements.push({
                     kind: StructureKind.ExportDeclaration,
                     moduleSpecifier: getTsStyleRelativePath(filename, nsFileName).replace(/\.ts$/, ""),
                 });
@@ -339,7 +391,7 @@ export function stripNamespaces(project: Project): void {
         // Reexport everything in this namespace.
         const reexportsSorted = Array.from(reexports).sort((a, b) => filesList.indexOf(a) - filesList.indexOf(b));
         reexportsSorted.forEach((exportingPath) => {
-            reexportStatements.push({
+            statements.push({
                 kind: StructureKind.ExportDeclaration,
                 moduleSpecifier: getTsStyleRelativePath(filename, exportingPath).replace(/\.ts$/, ""),
             });
@@ -363,13 +415,13 @@ export function stripNamespaces(project: Project): void {
                     .split(".");
                 const otherNSParent = partsOther.slice(0, partsOther.length - 1).join(".");
                 if (otherNSParent && otherNSParent === currentNSName) {
-                    reexportStatements.push({
+                    statements.push({
                         kind: StructureKind.ImportDeclaration,
                         namespaceImport: partsOther[partsOther.length - 1],
                         moduleSpecifier: getTsStyleRelativePath(filename, otherFilename).replace(/\.ts$/, ""),
                     });
 
-                    reexportStatements.push({
+                    statements.push({
                         kind: StructureKind.ExportDeclaration,
                         namedExports: [
                             {
@@ -382,9 +434,11 @@ export function stripNamespaces(project: Project): void {
             }
         });
 
+        assert(statements.length > 0, `${filename} is empty`);
+
         const structure: SourceFileStructure = {
             kind: StructureKind.SourceFile,
-            statements: reexportStatements,
+            statements: statements,
         };
 
         const sourceFile = project.createSourceFile(filename, structure);
@@ -428,6 +482,9 @@ export function stripNamespaces(project: Project): void {
                     continue;
                 }
 
+                // TODO: rather than carrying @internal down to each declaration, emit the comment in the barrel
+                // files. Direct importing is not supported for external consumers, so if api-extractor can handle
+                // a @internal comment on `export * from "..."`, then this is superior to having it many many times.
                 const isNamespaceInternal = isInternalDeclaration(statement, sourceFile);
                 statement.getStatements().forEach((s) => visitStatementWithinNamespace(s, isNamespaceInternal));
                 continue;
@@ -575,7 +632,7 @@ export function stripNamespaces(project: Project): void {
             continue;
         }
 
-        const referenced = referencedNamespaceSet.get(sourceFile);
+        const referenced = topLevelNamespacesToImport.get(sourceFile);
         if (!referenced) {
             continue;
         }

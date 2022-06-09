@@ -2,12 +2,12 @@ import { FileUtils } from "@ts-morph/common";
 import { ImportDeclarationStructure, OptionalKind, Project, ts } from "ts-morph";
 
 import {
+    filenameIsNamespaceBarrel,
     formatImports,
     getTsSourceFiles,
     getTsStyleRelativePath,
     isNamespaceBarrel,
     log,
-    namespacesDirName,
 } from "./utilities.js";
 
 // These are names which are already declared in the global scope, but TS
@@ -25,10 +25,6 @@ const redeclaredGlobals = new Set([
     "Iterator",
 ]);
 
-interface RemovableNode {
-    remove(): void;
-}
-
 export function inlineImports(project: Project): void {
     const fs = project.getFileSystem();
     const checker = project.getTypeChecker().compilerObject;
@@ -39,8 +35,53 @@ export function inlineImports(project: Project): void {
             continue;
         }
 
-        const syntheticImports = new Map<string, Map<string, string>>();
-        const nodesToRemove: RemovableNode[] = [];
+        // These structures are written to be easy to check by localName, not by specifier.
+        // We reorganize them later.
+
+        // localName -> moduleSpecifier
+        const starImports = new Map<string, string>();
+
+        // localName -> { moduleSpecifier, foreignName }
+        const namedImports = new Map<string, { moduleSpecifier: string; foreignName: string }>();
+
+        function filenameToSpecifier(filename: string): string {
+            return getTsStyleRelativePath(
+                sourceFile.getFilePath(),
+                FileUtils.getStandardizedAbsolutePath(fs, filename)
+            ).replace(/(\.d)?\.ts$/, "");
+        }
+
+        function tryAddStarImport(filename: string, localName: string): boolean {
+            const moduleSpecifier = filenameToSpecifier(filename);
+            if (namedImports.has(localName)) {
+                return false;
+            }
+
+            const existing = starImports.get(localName);
+            if (existing) {
+                return existing === moduleSpecifier;
+            }
+
+            starImports.set(localName, moduleSpecifier);
+            return true;
+        }
+
+        function tryAddNamedImport(filename: string, localName: string, foreignName: string): boolean {
+            const moduleSpecifier = filenameToSpecifier(filename);
+            if (starImports.has(localName)) {
+                return false;
+            }
+
+            const existing = namedImports.get(localName);
+            if (existing) {
+                return existing.moduleSpecifier === moduleSpecifier && existing.foreignName === foreignName;
+            }
+
+            namedImports.set(localName, { moduleSpecifier, foreignName });
+            return true;
+        }
+
+        const nodesToRemove: { remove(): void }[] = [];
 
         sourceFile.transform((traversal) => {
             const node = traversal.currentNode;
@@ -187,31 +228,42 @@ export function inlineImports(project: Project): void {
                 return undefined;
             }
 
-            // Name didn't resolve; see if the LHS is a namespace barrel and try to import from it.
-            const barrelDecl = replacement.lhsSymbol.valueDeclaration;
-            if (barrelDecl && ts.isSourceFile(barrelDecl) && barrelDecl.fileName.includes(namespacesDirName)) {
-                // TODO: if rhsSymbol matches this same check, we are about to write:
-                //
-                //     import { performance } from "./_namespaces/ts.ts"
-                //
-                // When we should probably write:
-                //
-                //     import * as performance from "./_namespaces/ts.performance.ts
-                //
-                // Moreover, we need to special case all of the namespaces the TS codebase canonically writes
-                // fully-qualified, e.g. `ts.performance`, the `protocol` namespace, and many more in `Harness`.
-                // This info was lost during explicitify, when we made everything fully-qualified.
+            // We didn't find any variable that shadows this use; try importing.
 
-                const newPath = getTsStyleRelativePath(
-                    sourceFile.getFilePath(),
-                    FileUtils.getStandardizedAbsolutePath(fs, barrelDecl.fileName)
-                );
+            // Try to write:
+            //
+            //     import * as performance from "./_namespaces/ts.performance.ts
+            //
+            // Instead of writing the less-cool:
+            //
+            //     import { performance } from "./_namespaces/ts.ts"
+            //
+            const rhsDecl = replacement.rhsSymbol.valueDeclaration;
+            if (
+                rhsDecl &&
+                ts.isSourceFile(rhsDecl) &&
+                filenameIsNamespaceBarrel(rhsDecl.fileName) &&
+                !replacement.foreignName
+            ) {
+                // TODO: we need to special case all of the things that were already explicit
+                // before the explicitify step.
+                if (tryAddStarImport(rhsDecl.fileName, replacement.localName)) {
+                    return replacement;
+                }
+            }
 
+            // Try writing:
+            //
+            //     import { bar } from "./_namespaces/ts.foo.ts"
+            const lhsDecl = replacement.lhsSymbol.valueDeclaration;
+            if (lhsDecl && ts.isSourceFile(lhsDecl) && filenameIsNamespaceBarrel(lhsDecl.fileName)) {
+                // TODO: we need to special case all of the things that were already explicit
+                // before the explicitify step.
                 if (
-                    tryAddImport(
-                        newPath.replace(/(\.d)?\.ts$/, ""),
-                        replacement.foreignName ?? replacement.localName,
-                        replacement.localName
+                    tryAddNamedImport(
+                        lhsDecl.fileName,
+                        replacement.localName,
+                        replacement.foreignName ?? replacement.localName
                     )
                 ) {
                     return replacement;
@@ -225,37 +277,58 @@ export function inlineImports(project: Project): void {
             node.remove();
         }
 
-        // We don't actually need to be very smart here about prioritizing specific names; the TS codebase
-        // doesn't seem to have too many of these cases, solving them by having some "canonical" namespaces
-        // which are always fully qualified, like `protocol` or `performance`.
-        function tryAddImport(specifier: string, foreignName: string, localName: string) {
-            if (
-                Array.from(syntheticImports.entries()).some(([spec, set]) => spec !== specifier && set.has(localName))
-            ) {
-                // Import name already taken by a different import - gotta leave the second instance explicit
-                return false;
-            }
-            const synthMap = syntheticImports.get(specifier) || new Map();
-            syntheticImports.set(specifier, synthMap);
-            synthMap.set(localName, foreignName);
-            return true;
-        }
-
         // TODO: can we place these imports right next to the existing namespace imports, rather than at the bottom?
         // If we eliminate unused imports, the ordering will change, which is not good. Or, write our own import organizer,
         // but that's probably slow within ts-morph.
+
+        const newImports = new Map</*moduleSpecifier*/ string, { localName: string; foreignName: string }[]>();
+        namedImports.forEach(({ moduleSpecifier, foreignName }, localName) => {
+            let arr = newImports.get(moduleSpecifier);
+            if (!arr) {
+                arr = [];
+                newImports.set(moduleSpecifier, arr);
+            }
+            arr.push({ localName, foreignName });
+        });
+
         const imports: OptionalKind<ImportDeclarationStructure>[] = [];
-        syntheticImports.forEach((importNames, specifier) => {
+
+        starImports.forEach((moduleSpecifier, localName) => {
             imports.push({
-                namedImports: Array.from(importNames.entries()).map(([localName, foreignName]) => ({
-                    name: foreignName,
-                    alias: foreignName !== localName ? localName : undefined,
-                })),
-                moduleSpecifier: specifier,
+                namespaceImport: localName,
+                moduleSpecifier,
             });
         });
 
-        sourceFile.insertImportDeclarations(0, imports);
+        newImports.forEach((namedImports, moduleSpecifier) => {
+            imports.push({
+                namedImports: namedImports.map(({ localName, foreignName }) => {
+                    if (localName === foreignName) {
+                        return {
+                            name: localName,
+                        };
+                    } else {
+                        return {
+                            name: foreignName,
+                            alias: localName,
+                        };
+                    }
+                }),
+                moduleSpecifier,
+            });
+        });
+
+        // TODO: this inserts them on the top, when they should be going underneath the existing imports.
+        // Is it safe to just find the index of the last import declaration?
+        // sourceFile.insertImportDeclarations(0, imports);
+
+        const exitingImports = sourceFile.getImportDeclarations();
+        let insertIndex = 0;
+        if (exitingImports.length > 0) {
+            const last = exitingImports[exitingImports.length - 1];
+            insertIndex = last.getChildIndex() + 1;
+        }
+        sourceFile.insertImportDeclarations(insertIndex, imports);
     }
 
     log("cleaning up imports");

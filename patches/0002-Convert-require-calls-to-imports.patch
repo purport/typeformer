@@ -133,18 +133,18 @@ index 14b042d5fc..ca5755be96 100644
      const files: {[index: string]: string} = {
          "foo.ts": `import Vue from "./vue";
 diff --git a/src/testRunner/unittests/tsserver/session.ts b/src/testRunner/unittests/tsserver/session.ts
-index 675a6a5a71..0c8019e9da 100644
+index cb54f81d40..6cb22553e8 100644
 --- a/src/testRunner/unittests/tsserver/session.ts
 +++ b/src/testRunner/unittests/tsserver/session.ts
 @@ -1,3 +1,5 @@
 +import { expect } from "chai";
 +
+ import * as ts from "../../_namespaces/ts";
  import {
      AnyFunction, CompilerOptions, Debug, FileTextChanges, FileWatcher, Map, noop, returnUndefined, version,
- } from "../../_namespaces/ts";
-@@ -15,8 +17,6 @@ import { byteLength } from "../../_namespaces/Utils";
+@@ -15,8 +17,6 @@ import {
+ import { byteLength } from "../../_namespaces/Utils";
  import { createHasErrorMessageLogger, nullLogger } from "../../_namespaces/ts.projectSystem";
- import * as ts from "../../_namespaces/ts";
  
 -const _chai: typeof import("chai") = require("chai");
 -const expect: typeof _chai.expect = _chai.expect;

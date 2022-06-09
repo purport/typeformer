@@ -82,11 +82,15 @@ export function formatImports(sourceFile: SourceFile) {
         }
     }
 }
-
-// TODO: we may have to move these up into the project dirs again, in which
-// this way to identify namespaces will not work correctly.
 export const namespacesDirName = "_namespaces";
 
+export function filenameIsNamespaceBarrel(filename: string): boolean {
+    // Gross but sufficient.
+    // TODO: we may have to move these up into the project dirs again, in which
+    // this way to identify namespaces will not work correctly.
+    return filename.includes(namespacesDirName);
+}
+
 export function isNamespaceBarrel(sourceFile: SourceFile): boolean {
-    return sourceFile.getFilePath().includes(namespacesDirName);
+    return filenameIsNamespaceBarrel(sourceFile.getFilePath());
 }

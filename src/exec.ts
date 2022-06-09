@@ -1,11 +1,28 @@
 import assert from "assert";
 import chalk from "chalk";
-import { execa, execaNode, ExecaSyncError } from "execa";
+import { execa, ExecaChildProcess, execaNode, ExecaSyncError } from "execa";
 import { quote } from "shell-quote";
 
-export async function runWithOutput(cmd: string, ...args: string[]) {
+export function runWithOutput(cmd: string, ...args: string[]) {
     printCommand(cmd, args);
-    const subprocess = execa(cmd, args);
+    return runAndPipeOutput(execa(cmd, args));
+}
+
+export function runNoOutput(cmd: string, ...args: string[]) {
+    printCommand(cmd, args);
+    return execa(cmd, args);
+}
+
+export function runHidden(cmd: string, ...args: string[]) {
+    return execa(cmd, args);
+}
+
+export function runNode(scriptPath: string, ...args: string[]) {
+    printCommand("node", [scriptPath, ...args]);
+    return runAndPipeOutput(execaNode(scriptPath, args));
+}
+
+async function runAndPipeOutput<T>(subprocess: ExecaChildProcess<T>) {
     subprocess.stdout?.pipe(process.stdout);
     subprocess.stderr?.pipe(process.stderr);
 
@@ -20,20 +37,6 @@ export async function runWithOutput(cmd: string, ...args: string[]) {
         }
         throw e;
     }
-}
-
-export function runNoOutput(cmd: string, ...args: string[]) {
-    printCommand(cmd, args);
-    return execa(cmd, args);
-}
-
-export function runHidden(cmd: string, ...args: string[]) {
-    return execa(cmd, args);
-}
-
-export function runNode(scriptPath: string, ...args: string[]) {
-    printCommand("node", [scriptPath, ...args]);
-    return execaNode(scriptPath, args);
 }
 
 export function cd(path: string) {
