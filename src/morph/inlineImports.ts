@@ -417,9 +417,15 @@ type ExplicitRules = [
 
 // This is a best-effort set of rules to replicate which files explicitly
 // access which namespaces.
+//
+// This is truly outrageous and we should really consider fixing this mess
+// in the final codebase.
+//
 // TODO: we should be able to simplify the currentSourceFileTests by checking
 // which namespace barrel each file is exported through, but doing so breaks
 // ts-morph.
+// TODO: this doesn't help when a file does a partially-explicit access. We need
+// the RHS/LHS checks for that (deleted in WIP).
 const explicitRules: ExplicitRules[] = [
     [true, /ts\.performance\.ts/, true],
     [true, /ts\.moduleSpecifiers\.ts/, true],
@@ -433,7 +439,15 @@ const explicitRules: ExplicitRules[] = [
     [true, /ts\.SignatureHelp\.ts/, true],
     [true, /ts\.JsDoc\.ts/, true],
     [true, /ts\.SymbolDisplay\.ts/, true],
-    [not(/completions/), /ts\.Completions\.ts/, true],
+    [true, /ts\.Rename\.ts/, true],
+    [true, /ts\.BreakpointResolver\.ts/, true],
+    [true, /ts\.SmartSelectionRange\.ts/, true],
+    [true, /ts\.InlayHints\.ts/, true],
+    [true, /ts\.CallHierarchy\.ts/, true],
+    [true, /ts\.OutliningElementsCollector\.ts/, true],
+    [true, /ts\.classifier\.ts/, true],
+    [true, /ts\.classifier\.v2020\.ts/, true],
+    [not(/[Cc]ompletions/), /ts\.Completions\.ts/, true],
     [true, /ts\.Completions\.StringCompletions\.ts/, true],
     [true, /ts\.server\.protocol\.ts/, true],
     [true, /vpath\.ts/, true],
@@ -443,13 +457,28 @@ const explicitRules: ExplicitRules[] = [
     [true, /documents\.ts/, true],
     [true, /fakes\.ts/, true],
     [true, /compiler\.ts/, true],
+    [true, /project\.ts/, true],
     [true, /FourSlash\.ts/, true],
     [true, /FourSlashInterface\.ts/, true],
+    [true, /Harness\.Parallel\.Host\.ts/, true],
+    [true, /Playback\.ts/, true],
+    [true, /RWC\.ts/, true],
     [true, /JsTyping\./, true],
     [/harness\/client\.ts/, /ts\./, false],
     [/loggedIO/, /ts\./, true],
+    [/tsc/, /ts\./, true],
     [/virtualFileSystemWithWatch/, /ts\./, false],
     [/harness/, /ts\./, true],
+    [/testRunner\/unittests/, /ts\./, true],
+    [/testRunner\/unittests/, /evaluator\.ts/, true],
+    [/testRunner/, /ts\./, true],
+    [
+        /testRunner\/(compilerRunner|externalCompileRunner|fourslashRunner|runner|test262Runner)/,
+        /Harness\.Parallel/,
+        true,
+    ],
+    [/testRunner\/(compilerRunner|externalCompileRunner|fourslashRunner|runner|test262Runner)/, /Harness/, false],
+    [/testRunner\/parallel/, /Harness/, false],
     [not(/harness/), /Harness/, true],
     [
         and(

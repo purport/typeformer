@@ -79,11 +79,11 @@ and "ts.Symbol", we have just "Node" and "Symbol".
 `
         );
 
-        // await applyPatches();
+        await applyPatches();
 
-        // // Make sure what we get back from our new diagnostics script still compiles.
-        // await generateDiagnostics();
-        // await noopStep();
+        // Make sure what we get back from our new diagnostics script still compiles.
+        await generateDiagnostics();
+        await noopStep();
     }
 }
 
