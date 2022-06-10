@@ -1,5 +1,6 @@
-import { FileUtils } from "@ts-morph/common";
-import { ImportDeclarationStructure, OptionalKind, Project, ts } from "ts-morph";
+import { FileUtils, StandardizedFilePath } from "@ts-morph/common";
+import assert from "assert";
+import { ImportDeclarationStructure, OptionalKind, Project, SourceFile, ts } from "ts-morph";
 
 import {
     filenameIsNamespaceBarrel,
@@ -9,21 +10,6 @@ import {
     isNamespaceBarrel,
     log,
 } from "./utilities.js";
-
-// These are names which are already declared in the global scope, but TS
-// has redeclared one way or another. If we don't allow these to be shadowed,
-// we end up with ts.Symbol, ts.Node, ts.Set, etc, all over the codebase.
-const redeclaredGlobals = new Set([
-    "Symbol",
-    "Node",
-    "Map",
-    "MapConstructor",
-    "ReadonlyMap",
-    "Set",
-    "SetConstructor",
-    "ReadonlySet",
-    "Iterator",
-]);
 
 export function inlineImports(project: Project): void {
     const fs = project.getFileSystem();
@@ -243,7 +229,11 @@ export function inlineImports(project: Project): void {
                 rhsDecl &&
                 ts.isSourceFile(rhsDecl) &&
                 filenameIsNamespaceBarrel(rhsDecl.fileName) &&
-                !replacement.foreignName
+                !replacement.foreignName &&
+                !shouldKeepExplicit(
+                    sourceFile.getFilePath(),
+                    FileUtils.getStandardizedAbsolutePath(fs, rhsDecl.fileName)
+                )
             ) {
                 // TODO: we need to special case all of the things that were already explicit
                 // before the explicitify step.
@@ -256,7 +246,15 @@ export function inlineImports(project: Project): void {
             //
             //     import { bar } from "./_namespaces/ts.foo.ts"
             const lhsDecl = replacement.lhsSymbol.valueDeclaration;
-            if (lhsDecl && ts.isSourceFile(lhsDecl) && filenameIsNamespaceBarrel(lhsDecl.fileName)) {
+            if (
+                lhsDecl &&
+                ts.isSourceFile(lhsDecl) &&
+                filenameIsNamespaceBarrel(lhsDecl.fileName) &&
+                !shouldKeepExplicit(
+                    sourceFile.getFilePath(),
+                    FileUtils.getStandardizedAbsolutePath(fs, lhsDecl.fileName)
+                )
+            ) {
                 // TODO: we need to special case all of the things that were already explicit
                 // before the explicitify step.
                 if (
@@ -340,6 +338,21 @@ export function inlineImports(project: Project): void {
     }
 }
 
+// These are names which are already declared in the global scope, but TS
+// has redeclared one way or another. If we don't allow these to be shadowed,
+// we end up with ts.Symbol, ts.Node, ts.Set, etc, all over the codebase.
+const redeclaredGlobals = new Set([
+    "Symbol",
+    "Node",
+    "Map",
+    "MapConstructor",
+    "ReadonlyMap",
+    "Set",
+    "SetConstructor",
+    "ReadonlySet",
+    "Iterator",
+]);
+
 function findSymbolInScope(
     checker: ts.TypeChecker,
     name: string,
@@ -358,4 +371,113 @@ function findSymbolInScope(
 
     const shouldExcludeGlobals = redeclaredGlobals.has(name);
     return checker.resolveName(name, location, meaning, shouldExcludeGlobals);
+}
+
+interface Testable {
+    test(s: string): boolean;
+}
+
+function not(t: Testable): Testable {
+    return {
+        test: (s) => !t.test(s),
+    };
+}
+
+function and(...ts: Testable[]): Testable {
+    return {
+        test: (s) => {
+            for (const t of ts) {
+                if (!t.test(s)) {
+                    return false;
+                }
+            }
+            return true;
+        },
+    };
+}
+
+function or(...ts: Testable[]): Testable {
+    return {
+        test: (s) => {
+            for (const t of ts) {
+                if (t.test(s)) {
+                    return true;
+                }
+            }
+            return false;
+        },
+    };
+}
+
+type ExplicitRules = [
+    currentSourceFileTest: Testable | true,
+    namespaceFileTest: Testable | true,
+    keepExplicit: boolean
+];
+
+// This is a best-effort set of rules to replicate which files explicitly
+// access which namespaces.
+// TODO: we should be able to simplify the currentSourceFileTests by checking
+// which namespace barrel each file is exported through, but doing so breaks
+// ts-morph.
+const explicitRules: ExplicitRules[] = [
+    [true, /ts\.performance\.ts/, true],
+    [true, /ts\.moduleSpecifiers\.ts/, true],
+    [not(/formatting/), /ts\.formatting\.ts/, true],
+    [true, /ts\.textChanges\.ts/, true],
+    [not(/refactor/), /ts\.refactor\.ts/, true],
+    [not(/codefix/), /ts\.codefix\.ts/, true],
+    [not(/goToDefinition/), /ts\.GoToDefinition\.ts/, true],
+    [not(/findAllReferences/), /ts\.FindAllReferences\.ts/, true],
+    [true, /ts\.OrganizeImports\.ts/, true],
+    [true, /ts\.SignatureHelp\.ts/, true],
+    [true, /ts\.JsDoc\.ts/, true],
+    [true, /ts\.SymbolDisplay\.ts/, true],
+    [not(/completions/), /ts\.Completions\.ts/, true],
+    [true, /ts\.Completions\.StringCompletions\.ts/, true],
+    [true, /ts\.server\.protocol\.ts/, true],
+    [true, /vpath\.ts/, true],
+    [true, /vfs\.ts/, true],
+    [true, /Utils\.ts/, true],
+    [true, /collections\.ts/, true],
+    [true, /documents\.ts/, true],
+    [true, /fakes\.ts/, true],
+    [true, /compiler\.ts/, true],
+    [true, /FourSlash\.ts/, true],
+    [true, /FourSlashInterface\.ts/, true],
+    [true, /JsTyping\./, true],
+    [/harness\/client\.ts/, /ts\./, false],
+    [/loggedIO/, /ts\./, true],
+    [/virtualFileSystemWithWatch/, /ts\./, false],
+    [/harness/, /ts\./, true],
+    [not(/harness/), /Harness/, true],
+    [
+        and(
+            /harness/,
+            or(
+                /fakesHosts/,
+                /evaluatorImpl/,
+                /documentsUtil/,
+                /fourslashImpl/,
+                /compilerImpl/,
+                /harnessUtils/,
+                /vfsUtil/,
+                /virtualFileSystemWithWatch/
+            )
+        ),
+        /Harness/,
+        true,
+    ],
+];
+
+function shouldKeepExplicit(sourceFilePath: StandardizedFilePath, namespaceFilePath: StandardizedFilePath): boolean {
+    for (const [currentSourceFileTest, namespaceFileTest, keepExplicit] of explicitRules) {
+        const a = currentSourceFileTest === true || currentSourceFileTest.test(sourceFilePath);
+        const b = namespaceFileTest === true || namespaceFileTest.test(namespaceFilePath);
+        if (a && b) {
+            return keepExplicit;
+        }
+    }
+
+    return false;
 }
