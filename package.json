@@ -16,23 +16,23 @@
         "clipanion": "^3.2.0-rc.11",
         "execa": "^6.1.0",
         "format-imports": "^3.0.12",
-        "globby": "^13.1.1",
+        "globby": "^13.1.2",
         "pretty-ms": "^8.0.0",
         "shell-quote": "^1.7.3",
         "ts-morph": "^15.1.0",
-        "typescript": "^4.7.3",
+        "typescript": "^4.7.4",
         "which": "^2.0.2"
     },
     "devDependencies": {
-        "@tsconfig/node14": "^1.0.1",
-        "@types/node": "^14.18.20",
+        "@tsconfig/node14": "^1.0.3",
+        "@types/node": "^14.18.22",
         "@types/shell-quote": "^1.7.1",
         "@types/which": "^2.0.1",
-        "@typescript-eslint/eslint-plugin": "^5.27.1",
-        "@typescript-eslint/parser": "^5.27.1",
-        "eslint": "^8.17.0",
+        "@typescript-eslint/eslint-plugin": "^5.31.0",
+        "@typescript-eslint/parser": "^5.31.0",
+        "eslint": "^8.20.0",
         "eslint-config-prettier": "^8.5.0",
         "eslint-plugin-simple-import-sort": "^7.0.0",
-        "prettier": "2.6.2"
+        "prettier": "2.7.1"
     }
 }
