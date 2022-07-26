@@ -1,0 +1,18 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Jake Bailey <5341706+jakebailey@users.noreply.github.com>
+Date: Tue, 26 Jul 2022 15:48:47 -0700
+Subject: [PATCH] Explicitly reference ts namespace in tsserverlibrary
+
+---
+ src/tsserverlibrary/tsserverlibrary.ts | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/src/tsserverlibrary/tsserverlibrary.ts b/src/tsserverlibrary/tsserverlibrary.ts
+index e69de29bb2..1153398b18 100644
+--- a/src/tsserverlibrary/tsserverlibrary.ts
++++ b/src/tsserverlibrary/tsserverlibrary.ts
+@@ -0,0 +1 @@
++namespace ts.server {} // empty ts module so the module migration script knows this file depends on the `ts` project namespace
+-- 
+2.37.1
+
