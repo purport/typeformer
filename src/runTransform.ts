@@ -4,7 +4,7 @@ import { performance } from "perf_hooks";
 import prettyMs from "pretty-ms";
 
 import { getMergeBase, runNode, runWithOutput as run } from "./exec.js";
-import { packageRoot, patchesDir } from "./utilities.js";
+import { afterPatchesDir, beforePatchesDir, packageRoot } from "./utilities.js";
 
 export class RunTransformCommand extends Command {
     static paths = [["run"], ["run-transform"]];
@@ -26,19 +26,11 @@ export class RunTransformCommand extends Command {
             await run("git", "reset", "--hard", mergeBase); // Reset back to the merge base.
         }
 
+        await applyPatches(beforePatchesDir);
+
+        // Verify that we can process the code.
         await generateDiagnostics();
-
-        await runAndCommit(
-            `Undo webworker change
-
-This change causes problems for project loading
-(even though it really shouldn't); revert it for now.
-`,
-            async () => {
-                await run("git", "revert", "--no-edit", "55e2e15aa37e685b7adcc61dd3091a2d9c7773a1");
-                await run("git", "reset", "HEAD^");
-            }
-        );
+        await noopStep();
 
         await runMorph(
             "unindent",
@@ -79,7 +71,7 @@ and "ts.Symbol", we have just "Node" and "Symbol".
 `
         );
 
-        await applyPatches();
+        await applyPatches(afterPatchesDir);
 
         // Make sure what we get back from our new diagnostics script still compiles.
         await generateDiagnostics();
@@ -124,7 +116,7 @@ async function noopStep() {
     await runNode(packageRoot, "morph", "noop");
 }
 
-async function applyPatches() {
+async function applyPatches(patchDir: string) {
     // Regenerate patches by running `save-patches`.
     await run(
         "git",
@@ -133,6 +125,6 @@ async function applyPatches() {
         "--whitespace=nowarn",
         "--quoted-cr=nowarn",
         "--keep-cr",
-        ...globbySync(`${patchesDir}/*.patch`) // git am doesn't accept a regular directory, only a "Maildir" (which is something different)
+        ...globbySync(`${patchDir}/*.patch`) // git am doesn't accept a regular directory, only a "Maildir" (which is something different)
     );
 }

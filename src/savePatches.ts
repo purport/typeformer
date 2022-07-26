@@ -1,31 +1,60 @@
-import { Command } from "clipanion";
-import { globbySync } from "globby";
+import { Command, Option } from "clipanion";
+import { globby } from "globby";
 
-import { runWithOutput as run } from "./exec.js";
-import { patchesDir } from "./utilities.js";
+import { getMergeBase, runWithOutput as run } from "./exec.js";
+import { afterPatchesDir, beforePatchesDir } from "./utilities.js";
 
 export class SavePatchesCommand extends Command {
     static paths = [["save-patches"]];
+
+    before = Option.Boolean(`--before`);
+    after = Option.Boolean(`--after`);
 
     static usage = Command.Usage({
         description: "Saves commits after the conversion steps back into the typeformer's patches.",
     });
 
     async execute() {
-        const patches = globbySync(`${patchesDir}/*.patch`);
-        if (patches.length > 0) {
-            await run("rm", ...patches);
+        if (!this.before && !this.after) {
+            throw new Error("Must provide --before and/or --after.");
         }
 
-        await run(
-            "git",
-            "format-patch",
-            "-o",
-            patchesDir,
-            "--no-numbered",
-            "--no-base",
-            "--zero-commit",
-            "HEAD^{/CONVERSION STEP}"
-        );
+        if (this.before) {
+            const mergeBase = await getMergeBase(run);
+
+            const beforePatches = await globby(`${beforePatchesDir}/*.patch`);
+            if (beforePatches.length > 0) {
+                await run("rm", ...beforePatches);
+            }
+
+            await run(
+                "git",
+                "format-patch",
+                "-o",
+                beforePatchesDir,
+                "--no-numbered",
+                "--no-base",
+                "--zero-commit",
+                `${mergeBase}..:/!-CONVERSION STEP`
+            );
+        }
+
+        if (this.after) {
+            const afterPatches = await globby(`${afterPatchesDir}/*.patch`);
+            if (afterPatches.length > 0) {
+                await run("rm", ...afterPatches);
+            }
+
+            await run(
+                "git",
+                "format-patch",
+                "-o",
+                afterPatchesDir,
+                "--no-numbered",
+                "--no-base",
+                "--zero-commit",
+                "HEAD^{/CONVERSION STEP}"
+            );
+        }
     }
 }
