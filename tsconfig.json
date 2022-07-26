@@ -4,7 +4,8 @@
         "incremental": true,
         "outDir": "./dist",
         "sourceMap": true,
-        "module": "Node16" // Technically node14+ but that's okay. NodeNext would be a moving target.
+        "module": "Node16", // Technically node14+ but that's okay. NodeNext would be a moving target.
+        "moduleResolution": "Node16"
     },
     "include": ["src/**/*.ts"]
 }
