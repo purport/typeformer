@@ -8,7 +8,7 @@ Subject: [PATCH] Make processDiagnosticMessages generate a module
  1 file changed, 18 insertions(+), 17 deletions(-)
 
 diff --git a/scripts/processDiagnosticMessages.ts b/scripts/processDiagnosticMessages.ts
-index fd5f825b84..2da6988844 100644
+index 0ddc27b06f..62701c4f4b 100644
 --- a/scripts/processDiagnosticMessages.ts
 +++ b/scripts/processDiagnosticMessages.ts
 @@ -38,10 +38,7 @@ function main(): void {
@@ -70,5 +70,5 @@ index fd5f825b84..2da6988844 100644
  
  function buildDiagnosticMessageOutput(messageTable: InputDiagnosticMessageTable): string {
 -- 
-2.36.1
+2.37.1
 

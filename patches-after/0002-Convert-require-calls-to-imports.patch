@@ -93,7 +93,7 @@ index c7cbb8d3ec..641d173456 100644
  function instrumentForRecording(fn: string, tscPath: string) {
      instrument(tscPath, `
 diff --git a/src/testRunner/externalCompileRunner.ts b/src/testRunner/externalCompileRunner.ts
-index 054975246a..be28aedff7 100644
+index 93c9cce362..766b939ab4 100644
 --- a/src/testRunner/externalCompileRunner.ts
 +++ b/src/testRunner/externalCompileRunner.ts
 @@ -1,10 +1,10 @@
@@ -112,7 +112,7 @@ index 054975246a..be28aedff7 100644
      stdout: Buffer;
      stderr: Buffer;
 diff --git a/src/testRunner/unittests/services/languageService.ts b/src/testRunner/unittests/services/languageService.ts
-index 57595ce0af..4b7445e8fb 100644
+index 53631ce5bf..27b75cadfe 100644
 --- a/src/testRunner/unittests/services/languageService.ts
 +++ b/src/testRunner/unittests/services/languageService.ts
 @@ -1,7 +1,7 @@
@@ -187,5 +187,5 @@ index 3835540d9c..b66338f42e 100644
  // is to guard against crashes that cannot be intercepted with protected blocks and
  // code in tsserver already can handle normal cases, like non-existing folders.
 -- 
-2.36.1
+2.37.1
 
