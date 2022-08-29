@@ -1,25 +1,29 @@
 From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Jake Bailey <5341706+jakebailey@users.noreply.github.com>
 Date: Fri, 26 Aug 2022 15:42:34 -0700
-Subject: [PATCH] Some building
+Subject: [PATCH] Get test suites running
 
 ---
  Gulpfile.js                                   |   8 +-
  src/compiler/sys.ts                           |   9 +-
  src/server/_namespaces/ts.server.ts           |   4 +-
+ src/testRunner/_namespaces/Harness.ts         |   8 +-
+ src/testRunner/_namespaces/tests.ts           | 178 +++++++++++++
  .../_namespaces/ts.projectSystem.ts           |  66 -----
  src/testRunner/_namespaces/ts.server.ts       |   1 -
  src/testRunner/_namespaces/ts.textStorage.ts  |   2 +-
- src/testRunner/_namespaces/ts.ts              | 263 +++++++++++++-----
+ src/testRunner/_namespaces/ts.ts              |  83 +-----
  src/testRunner/_namespaces/ts.tscWatch.ts     |  25 --
- src/testRunner/tsconfig.json                  |   1 +
- src/testRunner/unittests/helpers.ts           | 241 ++++++++++++++++
- src/testRunner/unittests/moduleResolution.ts  |  30 +-
- .../unittests/reuseProgramStructure.ts        | 211 +-------------
+ src/testRunner/parallel/host.ts               |   2 +-
+ src/testRunner/tsconfig.json                  |   4 +-
+ src/testRunner/unittests/helpers.ts           | 241 ++++++++++++++++++
+ src/testRunner/unittests/moduleResolution.ts  |  30 +--
+ .../unittests/reuseProgramStructure.ts        | 211 +--------------
  .../unittests/tsserver/dynamicFiles.ts        |   6 +-
  src/testRunner/unittests/tsserver/helpers.ts  |  12 +
  .../unittests/tsserver/projectReferences.ts   |   8 +-
- 15 files changed, 461 insertions(+), 426 deletions(-)
+ 18 files changed, 468 insertions(+), 430 deletions(-)
+ create mode 100644 src/testRunner/_namespaces/tests.ts
  create mode 100644 src/testRunner/unittests/helpers.ts
 
 diff --git a/Gulpfile.js b/Gulpfile.js
@@ -94,197 +98,33 @@ index 66e9ce997b..91d9a909ae 100644
  export * from "../scriptVersionCache";
 -import * as protocol from "./ts.server.protocol";
 -export { protocol };
-diff --git a/src/testRunner/_namespaces/ts.projectSystem.ts b/src/testRunner/_namespaces/ts.projectSystem.ts
-index 4803844399..2723fee96d 100644
---- a/src/testRunner/_namespaces/ts.projectSystem.ts
-+++ b/src/testRunner/_namespaces/ts.projectSystem.ts
-@@ -1,69 +1,3 @@
- /* Generated file to emulate the ts.projectSystem namespace. */
+diff --git a/src/testRunner/_namespaces/Harness.ts b/src/testRunner/_namespaces/Harness.ts
+index eeef44fbd7..31b1959492 100644
+--- a/src/testRunner/_namespaces/Harness.ts
++++ b/src/testRunner/_namespaces/Harness.ts
+@@ -2,10 +2,14 @@
  
- export * from "../unittests/tsserver/helpers";
--export * from "../unittests/tsserver/applyChangesToOpenFiles";
--export * from "../unittests/tsserver/autoImportProvider";
--export * from "../unittests/tsserver/auxiliaryProject";
--export * from "../unittests/tsserver/cachingFileSystemInformation";
--export * from "../unittests/tsserver/cancellationToken";
--export * from "../unittests/tsserver/compileOnSave";
--export * from "../unittests/tsserver/completions";
--export * from "../unittests/tsserver/completionsIncomplete";
--export * from "../unittests/tsserver/configFileSearch";
--export * from "../unittests/tsserver/configuredProjects";
--export * from "../unittests/tsserver/declarationFileMaps";
--export * from "../unittests/tsserver/documentRegistry";
--export * from "../unittests/tsserver/duplicatePackages";
--export * from "../unittests/tsserver/dynamicFiles";
--export * from "../unittests/tsserver/events/largeFileReferenced";
--export * from "../unittests/tsserver/events/projectLanguageServiceState";
--export * from "../unittests/tsserver/events/projectLoading";
--export * from "../unittests/tsserver/events/projectUpdatedInBackground";
--export * from "../unittests/tsserver/exportMapCache";
--export * from "../unittests/tsserver/externalProjects";
--export * from "../unittests/tsserver/forceConsistentCasingInFileNames";
--export * from "../unittests/tsserver/formatSettings";
--export * from "../unittests/tsserver/getApplicableRefactors";
--export * from "../unittests/tsserver/getEditsForFileRename";
--export * from "../unittests/tsserver/getExportReferences";
--export * from "../unittests/tsserver/getFileReferences";
--export * from "../unittests/tsserver/importHelpers";
--export * from "../unittests/tsserver/inlayHints";
--export * from "../unittests/tsserver/inferredProjects";
--export * from "../unittests/tsserver/jsdocTag";
--export * from "../unittests/tsserver/languageService";
--export * from "../unittests/tsserver/maxNodeModuleJsDepth";
--export * from "../unittests/tsserver/metadataInResponse";
--export * from "../unittests/tsserver/moduleResolution";
--export * from "../unittests/tsserver/moduleSpecifierCache";
--export * from "../unittests/tsserver/navTo";
--export * from "../unittests/tsserver/occurences";
--export * from "../unittests/tsserver/openFile";
--export * from "../unittests/tsserver/packageJsonInfo";
--export * from "../unittests/tsserver/partialSemanticServer";
--export * from "../unittests/tsserver/plugins";
--export * from "../unittests/tsserver/projectErrors";
--export * from "../unittests/tsserver/projectReferenceCompileOnSave";
--export * from "../unittests/tsserver/projectReferenceErrors";
--export * from "../unittests/tsserver/projectReferences";
--export * from "../unittests/tsserver/projectReferencesSourcemap";
--export * from "../unittests/tsserver/projects";
--export * from "../unittests/tsserver/projectsWithReferences";
--export * from "../unittests/tsserver/refactors";
--export * from "../unittests/tsserver/reload";
--export * from "../unittests/tsserver/reloadProjects";
--export * from "../unittests/tsserver/rename";
--export * from "../unittests/tsserver/resolutionCache";
--export * from "../unittests/tsserver/skipLibCheck";
--export * from "../unittests/tsserver/smartSelection";
--export * from "../unittests/tsserver/symlinkCache";
--export * from "../unittests/tsserver/symLinks";
--export * from "../unittests/tsserver/syntacticServer";
--export * from "../unittests/tsserver/syntaxOperations";
--export * from "../unittests/tsserver/telemetry";
--export * from "../unittests/tsserver/typeAquisition";
--export * from "../unittests/tsserver/typeOnlyImportChains";
--export * from "../unittests/tsserver/typeReferenceDirectives";
--export * from "../unittests/tsserver/typingsInstaller";
--export * from "../unittests/tsserver/watchEnvironment";
--export * from "../unittests/tsserver/webServer";
-diff --git a/src/testRunner/_namespaces/ts.server.ts b/src/testRunner/_namespaces/ts.server.ts
-index 55f4afed9d..225d9d4e6a 100644
---- a/src/testRunner/_namespaces/ts.server.ts
-+++ b/src/testRunner/_namespaces/ts.server.ts
-@@ -6,4 +6,3 @@ export * from "../../webServer/_namespaces/ts.server";
- export * from "../../typingsInstallerCore/_namespaces/ts.server";
- export * from "../../harness/_namespaces/ts.server";
- export * from "../../loggedIO/_namespaces/ts.server";
--export * from "../unittests/tsserver/session";
-diff --git a/src/testRunner/_namespaces/ts.textStorage.ts b/src/testRunner/_namespaces/ts.textStorage.ts
-index 1243be98ae..5e49478c4d 100644
---- a/src/testRunner/_namespaces/ts.textStorage.ts
-+++ b/src/testRunner/_namespaces/ts.textStorage.ts
-@@ -1,3 +1,3 @@
- /* Generated file to emulate the ts.textStorage namespace. */
- 
--export * from "../unittests/tsserver/textStorage";
-+export {};
-diff --git a/src/testRunner/_namespaces/ts.ts b/src/testRunner/_namespaces/ts.ts
-index bc8b00ea69..6e871b2e05 100644
---- a/src/testRunner/_namespaces/ts.ts
-+++ b/src/testRunner/_namespaces/ts.ts
-@@ -10,86 +10,195 @@ export * from "../../typingsInstallerCore/_namespaces/ts";
- export * from "../../deprecatedCompat/_namespaces/ts";
- export * from "../../harness/_namespaces/ts";
- export * from "../../loggedIO/_namespaces/ts";
--export * from "../unittests/services/extract/helpers";
--export * from "../unittests/tsbuild/helpers";
--export * from "../unittests/tsc/helpers";
--export * from "../unittests/asserts";
--export * from "../unittests/base64";
--export * from "../unittests/builder";
--export * from "../unittests/comments";
--export * from "../unittests/compilerCore";
--export * from "../unittests/convertToBase64";
--export * from "../unittests/customTransforms";
--export * from "../unittests/factory";
--export * from "../unittests/incrementalParser";
--export * from "../unittests/jsDocParsing";
--export * from "../unittests/jsonParserRecovery";
--export * from "../unittests/moduleResolution";
--export * from "../unittests/parsePseudoBigInt";
--export * from "../unittests/printer";
--export * from "../unittests/programApi";
--export * from "../unittests/reuseProgramStructure";
--export * from "../unittests/semver";
--export * from "../unittests/transform";
--export * from "../unittests/config/commandLineParsing";
--export * from "../unittests/config/configurationExtension";
--export * from "../unittests/config/convertCompilerOptionsFromJson";
--export * from "../unittests/config/convertTypeAcquisitionFromJson";
--export * from "../unittests/config/initializeTSConfig";
--export * from "../unittests/config/matchFiles";
--export * from "../unittests/config/projectReferences";
--export * from "../unittests/config/showConfig";
--export * from "../unittests/config/tsconfigParsing";
--export * from "../unittests/config/tsconfigParsingWatchOptions";
--export * from "../unittests/services/cancellableLanguageServiceOperations";
--export * from "../unittests/services/convertToAsyncFunction";
--export * from "../unittests/services/extract/constants";
--export * from "../unittests/services/extract/functions";
--export * from "../unittests/services/extract/symbolWalker";
--export * from "../unittests/services/extract/ranges";
--export * from "../unittests/services/hostNewLineSupport";
--export * from "../unittests/services/languageService";
--export * from "../unittests/services/organizeImports";
--export * from "../unittests/services/textChanges";
--export * from "../unittests/services/transpile";
--export * from "../unittests/tsbuild/amdModulesWithOut";
--export * from "../unittests/tsbuild/clean";
--export * from "../unittests/tsbuild/configFileErrors";
--export * from "../unittests/tsbuild/configFileExtends";
--export * from "../unittests/tsbuild/containerOnlyReferenced";
--export * from "../unittests/tsbuild/declarationEmit";
--export * from "../unittests/tsbuild/demo";
--export * from "../unittests/tsbuild/emitDeclarationOnly";
--export * from "../unittests/tsbuild/emptyFiles";
--export * from "../unittests/tsbuild/exitCodeOnBogusFile";
--export * from "../unittests/tsbuild/graphOrdering";
--export * from "../unittests/tsbuild/inferredTypeFromTransitiveModule";
--export * from "../unittests/tsbuild/javascriptProjectEmit";
--export * from "../unittests/tsbuild/lateBoundSymbol";
--export * from "../unittests/tsbuild/moduleSpecifiers";
--export * from "../unittests/tsbuild/noEmitOnError";
--export * from "../unittests/tsbuild/outFile";
--export * from "../unittests/tsbuild/outputPaths";
--export * from "../unittests/tsbuild/publicApi";
--export * from "../unittests/tsbuild/referencesWithRootDirInParent";
--export * from "../unittests/tsbuild/resolveJsonModule";
--export * from "../unittests/tsbuild/sample";
--export * from "../unittests/tsbuild/transitiveReferences";
--export * from "../unittests/tsc/composite";
--export * from "../unittests/tsc/declarationEmit";
--export * from "../unittests/tsc/forceConsistentCasingInFileNames";
--export * from "../unittests/tsc/incremental";
--export * from "../unittests/tsc/listFilesOnly";
--export * from "../unittests/tsc/projectReferences";
--export * from "../unittests/tsc/redirect";
--export * from "../unittests/tsc/runWithoutArgs";
--export * from "../unittests/tsserver/versionCache";
--export * from "../unittests/debugDeprecation";
- import * as tscWatch from "./ts.tscWatch";
- export { tscWatch };
--import * as projectSystem from "./ts.projectSystem";
--export { projectSystem };
- import * as server from "./ts.server";
- export { server };
-+import * as projectSystem from "./ts.projectSystem";
-+export { projectSystem };
- import * as textStorage from "./ts.textStorage";
- export { textStorage };
-+export * from "../unittests/helpers";
-+export * from "../unittests/services/extract/helpers";
-+export * from "../unittests/tsbuild/helpers";
-+export * from "../unittests/tsc/helpers";
+ export * from "../../harness/_namespaces/Harness";
+ export * from "../../loggedIO/_namespaces/Harness";
 +
++import * as Parallel from "./Harness.Parallel";
++export { Parallel };
 +
+ export * from "../fourslashRunner";
+ export * from "../compilerRunner";
+ export * from "../externalCompileRunner";
+ export * from "../test262Runner";
+ export * from "../runner";
+-import * as Parallel from "./Harness.Parallel";
+-export { Parallel };
++
++import "./tests";
+diff --git a/src/testRunner/_namespaces/tests.ts b/src/testRunner/_namespaces/tests.ts
+new file mode 100644
+index 0000000000..9f94a82bbc
+--- /dev/null
++++ b/src/testRunner/_namespaces/tests.ts
+@@ -0,0 +1,178 @@
 +// Tests
 +
 +// ts
@@ -463,6 +303,195 @@ index bc8b00ea69..6e871b2e05 100644
 +import "../unittests/tsserver/typingsInstaller";
 +import "../unittests/tsserver/watchEnvironment";
 +import "../unittests/tsserver/webServer";
+diff --git a/src/testRunner/_namespaces/ts.projectSystem.ts b/src/testRunner/_namespaces/ts.projectSystem.ts
+index 4803844399..2723fee96d 100644
+--- a/src/testRunner/_namespaces/ts.projectSystem.ts
++++ b/src/testRunner/_namespaces/ts.projectSystem.ts
+@@ -1,69 +1,3 @@
+ /* Generated file to emulate the ts.projectSystem namespace. */
+ 
+ export * from "../unittests/tsserver/helpers";
+-export * from "../unittests/tsserver/applyChangesToOpenFiles";
+-export * from "../unittests/tsserver/autoImportProvider";
+-export * from "../unittests/tsserver/auxiliaryProject";
+-export * from "../unittests/tsserver/cachingFileSystemInformation";
+-export * from "../unittests/tsserver/cancellationToken";
+-export * from "../unittests/tsserver/compileOnSave";
+-export * from "../unittests/tsserver/completions";
+-export * from "../unittests/tsserver/completionsIncomplete";
+-export * from "../unittests/tsserver/configFileSearch";
+-export * from "../unittests/tsserver/configuredProjects";
+-export * from "../unittests/tsserver/declarationFileMaps";
+-export * from "../unittests/tsserver/documentRegistry";
+-export * from "../unittests/tsserver/duplicatePackages";
+-export * from "../unittests/tsserver/dynamicFiles";
+-export * from "../unittests/tsserver/events/largeFileReferenced";
+-export * from "../unittests/tsserver/events/projectLanguageServiceState";
+-export * from "../unittests/tsserver/events/projectLoading";
+-export * from "../unittests/tsserver/events/projectUpdatedInBackground";
+-export * from "../unittests/tsserver/exportMapCache";
+-export * from "../unittests/tsserver/externalProjects";
+-export * from "../unittests/tsserver/forceConsistentCasingInFileNames";
+-export * from "../unittests/tsserver/formatSettings";
+-export * from "../unittests/tsserver/getApplicableRefactors";
+-export * from "../unittests/tsserver/getEditsForFileRename";
+-export * from "../unittests/tsserver/getExportReferences";
+-export * from "../unittests/tsserver/getFileReferences";
+-export * from "../unittests/tsserver/importHelpers";
+-export * from "../unittests/tsserver/inlayHints";
+-export * from "../unittests/tsserver/inferredProjects";
+-export * from "../unittests/tsserver/jsdocTag";
+-export * from "../unittests/tsserver/languageService";
+-export * from "../unittests/tsserver/maxNodeModuleJsDepth";
+-export * from "../unittests/tsserver/metadataInResponse";
+-export * from "../unittests/tsserver/moduleResolution";
+-export * from "../unittests/tsserver/moduleSpecifierCache";
+-export * from "../unittests/tsserver/navTo";
+-export * from "../unittests/tsserver/occurences";
+-export * from "../unittests/tsserver/openFile";
+-export * from "../unittests/tsserver/packageJsonInfo";
+-export * from "../unittests/tsserver/partialSemanticServer";
+-export * from "../unittests/tsserver/plugins";
+-export * from "../unittests/tsserver/projectErrors";
+-export * from "../unittests/tsserver/projectReferenceCompileOnSave";
+-export * from "../unittests/tsserver/projectReferenceErrors";
+-export * from "../unittests/tsserver/projectReferences";
+-export * from "../unittests/tsserver/projectReferencesSourcemap";
+-export * from "../unittests/tsserver/projects";
+-export * from "../unittests/tsserver/projectsWithReferences";
+-export * from "../unittests/tsserver/refactors";
+-export * from "../unittests/tsserver/reload";
+-export * from "../unittests/tsserver/reloadProjects";
+-export * from "../unittests/tsserver/rename";
+-export * from "../unittests/tsserver/resolutionCache";
+-export * from "../unittests/tsserver/skipLibCheck";
+-export * from "../unittests/tsserver/smartSelection";
+-export * from "../unittests/tsserver/symlinkCache";
+-export * from "../unittests/tsserver/symLinks";
+-export * from "../unittests/tsserver/syntacticServer";
+-export * from "../unittests/tsserver/syntaxOperations";
+-export * from "../unittests/tsserver/telemetry";
+-export * from "../unittests/tsserver/typeAquisition";
+-export * from "../unittests/tsserver/typeOnlyImportChains";
+-export * from "../unittests/tsserver/typeReferenceDirectives";
+-export * from "../unittests/tsserver/typingsInstaller";
+-export * from "../unittests/tsserver/watchEnvironment";
+-export * from "../unittests/tsserver/webServer";
+diff --git a/src/testRunner/_namespaces/ts.server.ts b/src/testRunner/_namespaces/ts.server.ts
+index 55f4afed9d..225d9d4e6a 100644
+--- a/src/testRunner/_namespaces/ts.server.ts
++++ b/src/testRunner/_namespaces/ts.server.ts
+@@ -6,4 +6,3 @@ export * from "../../webServer/_namespaces/ts.server";
+ export * from "../../typingsInstallerCore/_namespaces/ts.server";
+ export * from "../../harness/_namespaces/ts.server";
+ export * from "../../loggedIO/_namespaces/ts.server";
+-export * from "../unittests/tsserver/session";
+diff --git a/src/testRunner/_namespaces/ts.textStorage.ts b/src/testRunner/_namespaces/ts.textStorage.ts
+index 1243be98ae..5e49478c4d 100644
+--- a/src/testRunner/_namespaces/ts.textStorage.ts
++++ b/src/testRunner/_namespaces/ts.textStorage.ts
+@@ -1,3 +1,3 @@
+ /* Generated file to emulate the ts.textStorage namespace. */
+ 
+-export * from "../unittests/tsserver/textStorage";
++export {};
+diff --git a/src/testRunner/_namespaces/ts.ts b/src/testRunner/_namespaces/ts.ts
+index bc8b00ea69..060d53dcda 100644
+--- a/src/testRunner/_namespaces/ts.ts
++++ b/src/testRunner/_namespaces/ts.ts
+@@ -10,86 +10,15 @@ export * from "../../typingsInstallerCore/_namespaces/ts";
+ export * from "../../deprecatedCompat/_namespaces/ts";
+ export * from "../../harness/_namespaces/ts";
+ export * from "../../loggedIO/_namespaces/ts";
+-export * from "../unittests/services/extract/helpers";
+-export * from "../unittests/tsbuild/helpers";
+-export * from "../unittests/tsc/helpers";
+-export * from "../unittests/asserts";
+-export * from "../unittests/base64";
+-export * from "../unittests/builder";
+-export * from "../unittests/comments";
+-export * from "../unittests/compilerCore";
+-export * from "../unittests/convertToBase64";
+-export * from "../unittests/customTransforms";
+-export * from "../unittests/factory";
+-export * from "../unittests/incrementalParser";
+-export * from "../unittests/jsDocParsing";
+-export * from "../unittests/jsonParserRecovery";
+-export * from "../unittests/moduleResolution";
+-export * from "../unittests/parsePseudoBigInt";
+-export * from "../unittests/printer";
+-export * from "../unittests/programApi";
+-export * from "../unittests/reuseProgramStructure";
+-export * from "../unittests/semver";
+-export * from "../unittests/transform";
+-export * from "../unittests/config/commandLineParsing";
+-export * from "../unittests/config/configurationExtension";
+-export * from "../unittests/config/convertCompilerOptionsFromJson";
+-export * from "../unittests/config/convertTypeAcquisitionFromJson";
+-export * from "../unittests/config/initializeTSConfig";
+-export * from "../unittests/config/matchFiles";
+-export * from "../unittests/config/projectReferences";
+-export * from "../unittests/config/showConfig";
+-export * from "../unittests/config/tsconfigParsing";
+-export * from "../unittests/config/tsconfigParsingWatchOptions";
+-export * from "../unittests/services/cancellableLanguageServiceOperations";
+-export * from "../unittests/services/convertToAsyncFunction";
+-export * from "../unittests/services/extract/constants";
+-export * from "../unittests/services/extract/functions";
+-export * from "../unittests/services/extract/symbolWalker";
+-export * from "../unittests/services/extract/ranges";
+-export * from "../unittests/services/hostNewLineSupport";
+-export * from "../unittests/services/languageService";
+-export * from "../unittests/services/organizeImports";
+-export * from "../unittests/services/textChanges";
+-export * from "../unittests/services/transpile";
+-export * from "../unittests/tsbuild/amdModulesWithOut";
+-export * from "../unittests/tsbuild/clean";
+-export * from "../unittests/tsbuild/configFileErrors";
+-export * from "../unittests/tsbuild/configFileExtends";
+-export * from "../unittests/tsbuild/containerOnlyReferenced";
+-export * from "../unittests/tsbuild/declarationEmit";
+-export * from "../unittests/tsbuild/demo";
+-export * from "../unittests/tsbuild/emitDeclarationOnly";
+-export * from "../unittests/tsbuild/emptyFiles";
+-export * from "../unittests/tsbuild/exitCodeOnBogusFile";
+-export * from "../unittests/tsbuild/graphOrdering";
+-export * from "../unittests/tsbuild/inferredTypeFromTransitiveModule";
+-export * from "../unittests/tsbuild/javascriptProjectEmit";
+-export * from "../unittests/tsbuild/lateBoundSymbol";
+-export * from "../unittests/tsbuild/moduleSpecifiers";
+-export * from "../unittests/tsbuild/noEmitOnError";
+-export * from "../unittests/tsbuild/outFile";
+-export * from "../unittests/tsbuild/outputPaths";
+-export * from "../unittests/tsbuild/publicApi";
+-export * from "../unittests/tsbuild/referencesWithRootDirInParent";
+-export * from "../unittests/tsbuild/resolveJsonModule";
+-export * from "../unittests/tsbuild/sample";
+-export * from "../unittests/tsbuild/transitiveReferences";
+-export * from "../unittests/tsc/composite";
+-export * from "../unittests/tsc/declarationEmit";
+-export * from "../unittests/tsc/forceConsistentCasingInFileNames";
+-export * from "../unittests/tsc/incremental";
+-export * from "../unittests/tsc/listFilesOnly";
+-export * from "../unittests/tsc/projectReferences";
+-export * from "../unittests/tsc/redirect";
+-export * from "../unittests/tsc/runWithoutArgs";
+-export * from "../unittests/tsserver/versionCache";
+-export * from "../unittests/debugDeprecation";
+ import * as tscWatch from "./ts.tscWatch";
+ export { tscWatch };
+-import * as projectSystem from "./ts.projectSystem";
+-export { projectSystem };
+ import * as server from "./ts.server";
+ export { server };
++import * as projectSystem from "./ts.projectSystem";
++export { projectSystem };
+ import * as textStorage from "./ts.textStorage";
+ export { textStorage };
++export * from "../unittests/helpers";
++export * from "../unittests/services/extract/helpers";
++export * from "../unittests/tsbuild/helpers";
++export * from "../unittests/tsc/helpers";
 diff --git a/src/testRunner/_namespaces/ts.tscWatch.ts b/src/testRunner/_namespaces/ts.tscWatch.ts
 index 3220ae1aa9..aaa9390cb9 100644
 --- a/src/testRunner/_namespaces/ts.tscWatch.ts
@@ -496,8 +525,21 @@ index 3220ae1aa9..aaa9390cb9 100644
 -export * from "../unittests/tscWatch/sourceOfProjectReferenceRedirect";
 -export * from "../unittests/tscWatch/watchApi";
 -export * from "../unittests/tscWatch/watchEnvironment";
+diff --git a/src/testRunner/parallel/host.ts b/src/testRunner/parallel/host.ts
+index a424aa8581..233c1d9bbf 100644
+--- a/src/testRunner/parallel/host.ts
++++ b/src/testRunner/parallel/host.ts
+@@ -263,7 +263,7 @@ export function start() {
+             const configPath = ts.combinePaths(taskConfigsFolder, `task-config${i}.json`);
+             IO.writeFile(configPath, JSON.stringify(config));
+             const worker: Worker = {
+-                process: fork(__filename, [`--config="${configPath}"`], { stdio: ["pipe", "pipe", "pipe", "ipc"] }),
++                process: fork(process.argv[1], [`--config="${configPath}"`], { stdio: ["pipe", "pipe", "pipe", "ipc"] }),
+                 accumulatedOutput: "",
+                 currentTasks: undefined,
+                 timer: undefined
 diff --git a/src/testRunner/tsconfig.json b/src/testRunner/tsconfig.json
-index 28daa7b1a0..abb47026e6 100644
+index 28daa7b1a0..dfa0802111 100644
 --- a/src/testRunner/tsconfig.json
 +++ b/src/testRunner/tsconfig.json
 @@ -50,6 +50,7 @@
@@ -508,6 +550,15 @@ index 28daa7b1a0..abb47026e6 100644
          "unittests/services/extract/helpers.ts",
          "unittests/tsbuild/helpers.ts",
          "unittests/tsc/helpers.ts",
+@@ -259,6 +260,7 @@
+         "_namespaces/ts.tscWatch.ts",
+         "_namespaces/ts.projectSystem.ts",
+         "_namespaces/ts.server.ts",
+-        "_namespaces/ts.textStorage.ts"
++        "_namespaces/ts.textStorage.ts",
++        "_namespaces/tests.ts"
+     ]
+ }
 diff --git a/src/testRunner/unittests/helpers.ts b/src/testRunner/unittests/helpers.ts
 new file mode 100644
 index 0000000000..e81f4fafcf
