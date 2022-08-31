@@ -4,17 +4,18 @@ Date: Fri, 26 Aug 2022 15:42:34 -0700
 Subject: [PATCH] Get test suites running
 
 ---
- Gulpfile.js                                   |   8 +-
+ Gulpfile.js                                   |  10 +-
  src/compiler/sys.ts                           |   9 +-
  src/server/_namespaces/ts.server.ts           |   4 +-
- src/testRunner/_namespaces/Harness.ts         |   8 +-
- src/testRunner/_namespaces/tests.ts           | 178 +++++++++++++
+ src/testRunner/_namespaces/Harness.ts         |   6 +-
+ src/testRunner/_namespaces/tests.ts           | 186 ++++++++++++++
  .../_namespaces/ts.projectSystem.ts           |  66 -----
  src/testRunner/_namespaces/ts.server.ts       |   1 -
  src/testRunner/_namespaces/ts.textStorage.ts  |   2 +-
  src/testRunner/_namespaces/ts.ts              |  83 +-----
  src/testRunner/_namespaces/ts.tscWatch.ts     |  25 --
  src/testRunner/parallel/host.ts               |   2 +-
+ src/testRunner/runner.ts                      |   3 +
  src/testRunner/tsconfig.json                  |   4 +-
  src/testRunner/unittests/helpers.ts           | 241 ++++++++++++++++++
  src/testRunner/unittests/moduleResolution.ts  |  30 +--
@@ -22,14 +23,23 @@ Subject: [PATCH] Get test suites running
  .../unittests/tsserver/dynamicFiles.ts        |   6 +-
  src/testRunner/unittests/tsserver/helpers.ts  |  12 +
  .../unittests/tsserver/projectReferences.ts   |   8 +-
- 18 files changed, 468 insertions(+), 430 deletions(-)
+ 19 files changed, 478 insertions(+), 431 deletions(-)
  create mode 100644 src/testRunner/_namespaces/tests.ts
  create mode 100644 src/testRunner/unittests/helpers.ts
 
 diff --git a/Gulpfile.js b/Gulpfile.js
-index 9eb06af3f6..b03d76957f 100644
+index 9eb06af3f6..f270c47ff9 100644
 --- a/Gulpfile.js
 +++ b/Gulpfile.js
+@@ -19,7 +19,7 @@ const cmdLineOptions = require("./scripts/build/options");
+ const copyright = "CopyrightNotice.txt";
+ const cleanTasks = [];
+ 
+-const testRunner = "./built/local/testRunner/_namespaces/Harness.js"
++const testRunner = "./built/local/testRunner/runner.js"
+ 
+ const buildScripts = () => buildProject("scripts");
+ task("scripts", buildScripts);
 @@ -94,6 +94,10 @@ const localize = async () => {
      }
  };
@@ -99,10 +109,10 @@ index 66e9ce997b..91d9a909ae 100644
 -import * as protocol from "./ts.server.protocol";
 -export { protocol };
 diff --git a/src/testRunner/_namespaces/Harness.ts b/src/testRunner/_namespaces/Harness.ts
-index eeef44fbd7..31b1959492 100644
+index eeef44fbd7..caf03e950a 100644
 --- a/src/testRunner/_namespaces/Harness.ts
 +++ b/src/testRunner/_namespaces/Harness.ts
-@@ -2,10 +2,14 @@
+@@ -2,10 +2,12 @@
  
  export * from "../../harness/_namespaces/Harness";
  export * from "../../loggedIO/_namespaces/Harness";
@@ -117,17 +127,14 @@ index eeef44fbd7..31b1959492 100644
  export * from "../runner";
 -import * as Parallel from "./Harness.Parallel";
 -export { Parallel };
-+
-+import "./tests";
 diff --git a/src/testRunner/_namespaces/tests.ts b/src/testRunner/_namespaces/tests.ts
 new file mode 100644
-index 0000000000..9f94a82bbc
+index 0000000000..035dc6d6f1
 --- /dev/null
 +++ b/src/testRunner/_namespaces/tests.ts
-@@ -0,0 +1,178 @@
-+// Tests
+@@ -0,0 +1,186 @@
++// Tests; see tsconfig.json list
 +
-+// ts
 +import "../unittests/asserts";
 +import "../unittests/base64";
 +import "../unittests/builder";
@@ -141,8 +148,10 @@ index 0000000000..9f94a82bbc
 +import "../unittests/jsonParserRecovery";
 +import "../unittests/moduleResolution";
 +import "../unittests/parsePseudoBigInt";
++import "../unittests/paths";
 +import "../unittests/printer";
 +import "../unittests/programApi";
++import "../unittests/publicApi";
 +import "../unittests/reuseProgramStructure";
 +import "../unittests/semver";
 +import "../unittests/transform";
@@ -156,8 +165,23 @@ index 0000000000..9f94a82bbc
 +import "../unittests/config/showConfig";
 +import "../unittests/config/tsconfigParsing";
 +import "../unittests/config/tsconfigParsingWatchOptions";
++import "../unittests/evaluation/arraySpread";
++import "../unittests/evaluation/asyncArrow";
++import "../unittests/evaluation/asyncGenerator";
++import "../unittests/evaluation/awaiter";
++import "../unittests/evaluation/destructuring";
++import "../unittests/evaluation/externalModules";
++import "../unittests/evaluation/forAwaitOf";
++import "../unittests/evaluation/forOf";
++import "../unittests/evaluation/optionalCall";
++import "../unittests/evaluation/objectRest";
++import "../unittests/evaluation/superInStaticInitializer";
++import "../unittests/evaluation/templateLiteral";
++import "../unittests/evaluation/updateExpressionInModule";
 +import "../unittests/services/cancellableLanguageServiceOperations";
++import "../unittests/services/colorization";
 +import "../unittests/services/convertToAsyncFunction";
++import "../unittests/services/documentRegistry";
 +import "../unittests/services/extract/constants";
 +import "../unittests/services/extract/functions";
 +import "../unittests/services/extract/symbolWalker";
@@ -165,6 +189,8 @@ index 0000000000..9f94a82bbc
 +import "../unittests/services/hostNewLineSupport";
 +import "../unittests/services/languageService";
 +import "../unittests/services/organizeImports";
++import "../unittests/services/patternMatcher";
++import "../unittests/services/preProcessFile";
 +import "../unittests/services/textChanges";
 +import "../unittests/services/transpile";
 +import "../unittests/tsbuild/amdModulesWithOut";
@@ -181,6 +207,7 @@ index 0000000000..9f94a82bbc
 +import "../unittests/tsbuild/inferredTypeFromTransitiveModule";
 +import "../unittests/tsbuild/javascriptProjectEmit";
 +import "../unittests/tsbuild/lateBoundSymbol";
++import "../unittests/tsbuild/moduleResolution";
 +import "../unittests/tsbuild/moduleSpecifiers";
 +import "../unittests/tsbuild/noEmitOnError";
 +import "../unittests/tsbuild/outFile";
@@ -190,19 +217,6 @@ index 0000000000..9f94a82bbc
 +import "../unittests/tsbuild/resolveJsonModule";
 +import "../unittests/tsbuild/sample";
 +import "../unittests/tsbuild/transitiveReferences";
-+import "../unittests/tsc/composite";
-+import "../unittests/tsc/declarationEmit";
-+import "../unittests/tsc/forceConsistentCasingInFileNames";
-+import "../unittests/tsc/incremental";
-+import "../unittests/tsc/listFilesOnly";
-+import "../unittests/tsc/projectReferences";
-+import "../unittests/tsc/redirect";
-+import "../unittests/tsc/runWithoutArgs";
-+import "../unittests/tsserver/versionCache";
-+import "../unittests/debugDeprecation";
-+
-+// ts.tscWatch
-+import "../unittests/tsbuild/moduleResolution";
 +import "../unittests/tsbuildWatch/configFileErrors";
 +import "../unittests/tsbuildWatch/demo";
 +import "../unittests/tsbuildWatch/moduleResolution";
@@ -214,6 +228,14 @@ index 0000000000..9f94a82bbc
 +import "../unittests/tsbuildWatch/reexport";
 +import "../unittests/tsbuildWatch/watchEnvironment";
 +import "../unittests/tsc/cancellationToken";
++import "../unittests/tsc/composite";
++import "../unittests/tsc/declarationEmit";
++import "../unittests/tsc/forceConsistentCasingInFileNames";
++import "../unittests/tsc/incremental";
++import "../unittests/tsc/listFilesOnly";
++import "../unittests/tsc/projectReferences";
++import "../unittests/tsc/redirect";
++import "../unittests/tsc/runWithoutArgs";
 +import "../unittests/tscWatch/consoleClearing";
 +import "../unittests/tscWatch/emit";
 +import "../unittests/tscWatch/nodeNextWatch";
@@ -227,16 +249,6 @@ index 0000000000..9f94a82bbc
 +import "../unittests/tscWatch/sourceOfProjectReferenceRedirect";
 +import "../unittests/tscWatch/watchApi";
 +import "../unittests/tscWatch/watchEnvironment";
-+
-+// ts.textStorage
-+
-+import "../unittests/tsserver/textStorage";
-+
-+// ts.server
-+import "../unittests/tsserver/session";
-+
-+// ts.projectSystem
-+
 +import "../unittests/tsserver/applyChangesToOpenFiles";
 +import "../unittests/tsserver/autoImportProvider";
 +import "../unittests/tsserver/auxiliaryProject";
@@ -290,19 +302,23 @@ index 0000000000..9f94a82bbc
 +import "../unittests/tsserver/reloadProjects";
 +import "../unittests/tsserver/rename";
 +import "../unittests/tsserver/resolutionCache";
++import "../unittests/tsserver/session";
 +import "../unittests/tsserver/skipLibCheck";
 +import "../unittests/tsserver/smartSelection";
 +import "../unittests/tsserver/symlinkCache";
 +import "../unittests/tsserver/symLinks";
 +import "../unittests/tsserver/syntacticServer";
 +import "../unittests/tsserver/syntaxOperations";
++import "../unittests/tsserver/textStorage";
 +import "../unittests/tsserver/telemetry";
 +import "../unittests/tsserver/typeAquisition";
 +import "../unittests/tsserver/typeOnlyImportChains";
 +import "../unittests/tsserver/typeReferenceDirectives";
 +import "../unittests/tsserver/typingsInstaller";
++import "../unittests/tsserver/versionCache";
 +import "../unittests/tsserver/watchEnvironment";
 +import "../unittests/tsserver/webServer";
++import "../unittests/debugDeprecation";
 diff --git a/src/testRunner/_namespaces/ts.projectSystem.ts b/src/testRunner/_namespaces/ts.projectSystem.ts
 index 4803844399..2723fee96d 100644
 --- a/src/testRunner/_namespaces/ts.projectSystem.ts
@@ -538,6 +554,17 @@ index a424aa8581..233c1d9bbf 100644
                  accumulatedOutput: "",
                  currentTasks: undefined,
                  timer: undefined
+diff --git a/src/testRunner/runner.ts b/src/testRunner/runner.ts
+index ff59c4e752..afce965527 100644
+--- a/src/testRunner/runner.ts
++++ b/src/testRunner/runner.ts
+@@ -291,3 +291,6 @@ function startTestEnvironment() {
+ }
+ 
+ startTestEnvironment();
++
++// This brings in all of the unittests.
++import "./_namespaces/tests";
 diff --git a/src/testRunner/tsconfig.json b/src/testRunner/tsconfig.json
 index 28daa7b1a0..dfa0802111 100644
 --- a/src/testRunner/tsconfig.json
