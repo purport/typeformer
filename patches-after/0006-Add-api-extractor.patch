@@ -1,0 +1,1291 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Jake Bailey <5341706+jakebailey@users.noreply.github.com>
+Date: Fri, 2 Sep 2022 16:39:54 -0700
+Subject: [PATCH] Add api-extractor
+
+---
+ .gitignore                        |   1 +
+ package-lock.json                 | 559 ++++++++++++++++++++++++++++++
+ package.json                      |   1 +
+ scripts/apiExtractor.ts           |  14 +
+ src/api-extractor-base.json       | 414 ++++++++++++++++++++++
+ src/typescript/api-extractor.json |  59 ++++
+ src/typescript/typescript.ts      |   3 +-
+ 7 files changed, 1049 insertions(+), 2 deletions(-)
+ create mode 100644 scripts/apiExtractor.ts
+ create mode 100644 src/api-extractor-base.json
+ create mode 100644 src/typescript/api-extractor.json
+
+diff --git a/.gitignore b/.gitignore
+index cdf20ba5a2..4e8d7e0186 100644
+--- a/.gitignore
++++ b/.gitignore
+@@ -41,6 +41,7 @@ scripts/eslint/built/
+ scripts/debug.bat
+ scripts/run.bat
+ scripts/word2md.js
++scripts/apiExtractor.js
+ scripts/buildProtocol.js
+ scripts/ior.js
+ scripts/configurePrerelease.js
+diff --git a/package-lock.json b/package-lock.json
+index 82355f16ef..2469446263 100644
+--- a/package-lock.json
++++ b/package-lock.json
+@@ -13,6 +13,7 @@
+                 "tsserver": "bin/tsserver"
+             },
+             "devDependencies": {
++                "@microsoft/api-extractor": "^7.30.0",
+                 "@octokit/rest": "latest",
+                 "@types/async": "latest",
+                 "@types/chai": "latest",
+@@ -263,6 +264,96 @@
+             "integrity": "sha512-ZnQMnLV4e7hDlUvw8H+U8ASL02SS2Gn6+9Ac3wGGLIe7+je2AeAOxPY+izIPJDfFDb7eDjev0Us8MO1iFRN8hA==",
+             "dev": true
+         },
++        "node_modules/@microsoft/api-extractor": {
++            "version": "7.30.0",
++            "resolved": "https://registry.npmjs.org/@microsoft/api-extractor/-/api-extractor-7.30.0.tgz",
++            "integrity": "sha512-XmtvrW74SzGvv59cjNC6+TE13XbIm4qrKKZtveoFRNbKdyTR4eIqnLmPvh1fgfolSF+iKfXlHHsQJpcgwdNztA==",
++            "dev": true,
++            "dependencies": {
++                "@microsoft/api-extractor-model": "7.24.0",
++                "@microsoft/tsdoc": "0.14.1",
++                "@microsoft/tsdoc-config": "~0.16.1",
++                "@rushstack/node-core-library": "3.51.1",
++                "@rushstack/rig-package": "0.3.14",
++                "@rushstack/ts-command-line": "4.12.2",
++                "colors": "~1.2.1",
++                "lodash": "~4.17.15",
++                "resolve": "~1.17.0",
++                "semver": "~7.3.0",
++                "source-map": "~0.6.1",
++                "typescript": "~4.7.4"
++            },
++            "bin": {
++                "api-extractor": "bin/api-extractor"
++            }
++        },
++        "node_modules/@microsoft/api-extractor-model": {
++            "version": "7.24.0",
++            "resolved": "https://registry.npmjs.org/@microsoft/api-extractor-model/-/api-extractor-model-7.24.0.tgz",
++            "integrity": "sha512-lFzF5h+quTyVB7eaKJkqrbQRDGSkrHzXyF8iMVvHdlaNrodGeyhtQeBFDuRVvBXTW2ILBiOV6ZWwUM1eGKcD+A==",
++            "dev": true,
++            "dependencies": {
++                "@microsoft/tsdoc": "0.14.1",
++                "@microsoft/tsdoc-config": "~0.16.1",
++                "@rushstack/node-core-library": "3.51.1"
++            }
++        },
++        "node_modules/@microsoft/api-extractor/node_modules/resolve": {
++            "version": "1.17.0",
++            "resolved": "https://registry.npmjs.org/resolve/-/resolve-1.17.0.tgz",
++            "integrity": "sha512-ic+7JYiV8Vi2yzQGFWOkiZD5Z9z7O2Zhm9XMaTxdJExKasieFCr+yXZ/WmXsckHiKl12ar0y6XiXDx3m4RHn1w==",
++            "dev": true,
++            "dependencies": {
++                "path-parse": "^1.0.6"
++            },
++            "funding": {
++                "url": "https://github.com/sponsors/ljharb"
++            }
++        },
++        "node_modules/@microsoft/api-extractor/node_modules/typescript": {
++            "version": "4.7.4",
++            "resolved": "https://registry.npmjs.org/typescript/-/typescript-4.7.4.tgz",
++            "integrity": "sha512-C0WQT0gezHuw6AdY1M2jxUO83Rjf0HP7Sk1DtXj6j1EwkQNZrHAg2XPWlq62oqEhYvONq5pkC2Y9oPljWToLmQ==",
++            "dev": true,
++            "bin": {
++                "tsc": "bin/tsc",
++                "tsserver": "bin/tsserver"
++            },
++            "engines": {
++                "node": ">=4.2.0"
++            }
++        },
++        "node_modules/@microsoft/tsdoc": {
++            "version": "0.14.1",
++            "resolved": "https://registry.npmjs.org/@microsoft/tsdoc/-/tsdoc-0.14.1.tgz",
++            "integrity": "sha512-6Wci+Tp3CgPt/B9B0a3J4s3yMgLNSku6w5TV6mN+61C71UqsRBv2FUibBf3tPGlNxebgPHMEUzKpb1ggE8KCKw==",
++            "dev": true
++        },
++        "node_modules/@microsoft/tsdoc-config": {
++            "version": "0.16.1",
++            "resolved": "https://registry.npmjs.org/@microsoft/tsdoc-config/-/tsdoc-config-0.16.1.tgz",
++            "integrity": "sha512-2RqkwiD4uN6MLnHFljqBlZIXlt/SaUT6cuogU1w2ARw4nKuuppSmR0+s+NC+7kXBQykd9zzu0P4HtBpZT5zBpQ==",
++            "dev": true,
++            "dependencies": {
++                "@microsoft/tsdoc": "0.14.1",
++                "ajv": "~6.12.6",
++                "jju": "~1.4.0",
++                "resolve": "~1.19.0"
++            }
++        },
++        "node_modules/@microsoft/tsdoc-config/node_modules/resolve": {
++            "version": "1.19.0",
++            "resolved": "https://registry.npmjs.org/resolve/-/resolve-1.19.0.tgz",
++            "integrity": "sha512-rArEXAgsBG4UgRGcynxWIWKFvh/XZCcS8UJdHhwy91zwAvCZIbcs+vAbflgBnNjYMs/i/i+/Ux6IZhML1yPvxg==",
++            "dev": true,
++            "dependencies": {
++                "is-core-module": "^2.1.0",
++                "path-parse": "^1.0.6"
++            },
++            "funding": {
++                "url": "https://github.com/sponsors/ljharb"
++            }
++        },
+         "node_modules/@nodelib/fs.scandir": {
+             "version": "2.1.5",
+             "resolved": "https://registry.npmjs.org/@nodelib/fs.scandir/-/fs.scandir-2.1.5.tgz",
+@@ -457,6 +548,121 @@
+                 "@octokit/openapi-types": "^13.4.0"
+             }
+         },
++        "node_modules/@rushstack/node-core-library": {
++            "version": "3.51.1",
++            "resolved": "https://registry.npmjs.org/@rushstack/node-core-library/-/node-core-library-3.51.1.tgz",
++            "integrity": "sha512-xLoUztvGpaT5CphDexDPt2WbBx8D68VS5tYOkwfr98p90y0f/wepgXlTA/q5MUeZGGucASiXKp5ysdD+GPYf9A==",
++            "dev": true,
++            "dependencies": {
++                "@types/node": "12.20.24",
++                "colors": "~1.2.1",
++                "fs-extra": "~7.0.1",
++                "import-lazy": "~4.0.0",
++                "jju": "~1.4.0",
++                "resolve": "~1.17.0",
++                "semver": "~7.3.0",
++                "z-schema": "~5.0.2"
++            }
++        },
++        "node_modules/@rushstack/node-core-library/node_modules/@types/node": {
++            "version": "12.20.24",
++            "resolved": "https://registry.npmjs.org/@types/node/-/node-12.20.24.tgz",
++            "integrity": "sha512-yxDeaQIAJlMav7fH5AQqPH1u8YIuhYJXYBzxaQ4PifsU0GDO38MSdmEDeRlIxrKbC6NbEaaEHDanWb+y30U8SQ==",
++            "dev": true
++        },
++        "node_modules/@rushstack/node-core-library/node_modules/fs-extra": {
++            "version": "7.0.1",
++            "resolved": "https://registry.npmjs.org/fs-extra/-/fs-extra-7.0.1.tgz",
++            "integrity": "sha512-YJDaCJZEnBmcbw13fvdAM9AwNOJwOzrE4pqMqBq5nFiEqXUqHwlK4B+3pUw6JNvfSPtX05xFHtYy/1ni01eGCw==",
++            "dev": true,
++            "dependencies": {
++                "graceful-fs": "^4.1.2",
++                "jsonfile": "^4.0.0",
++                "universalify": "^0.1.0"
++            },
++            "engines": {
++                "node": ">=6 <7 || >=8"
++            }
++        },
++        "node_modules/@rushstack/node-core-library/node_modules/jsonfile": {
++            "version": "4.0.0",
++            "resolved": "https://registry.npmjs.org/jsonfile/-/jsonfile-4.0.0.tgz",
++            "integrity": "sha512-m6F1R3z8jjlf2imQHS2Qez5sjKWQzbuuhuJ/FKYFRZvPE3PuHcSMVZzfsLhGVOkfd20obL5SWEBew5ShlquNxg==",
++            "dev": true,
++            "optionalDependencies": {
++                "graceful-fs": "^4.1.6"
++            }
++        },
++        "node_modules/@rushstack/node-core-library/node_modules/resolve": {
++            "version": "1.17.0",
++            "resolved": "https://registry.npmjs.org/resolve/-/resolve-1.17.0.tgz",
++            "integrity": "sha512-ic+7JYiV8Vi2yzQGFWOkiZD5Z9z7O2Zhm9XMaTxdJExKasieFCr+yXZ/WmXsckHiKl12ar0y6XiXDx3m4RHn1w==",
++            "dev": true,
++            "dependencies": {
++                "path-parse": "^1.0.6"
++            },
++            "funding": {
++                "url": "https://github.com/sponsors/ljharb"
++            }
++        },
++        "node_modules/@rushstack/node-core-library/node_modules/universalify": {
++            "version": "0.1.2",
++            "resolved": "https://registry.npmjs.org/universalify/-/universalify-0.1.2.tgz",
++            "integrity": "sha512-rBJeI5CXAlmy1pV+617WB9J63U6XcazHHF2f2dbJix4XzpUF0RS3Zbj0FGIOCAva5P/d/GBOYaACQ1w+0azUkg==",
++            "dev": true,
++            "engines": {
++                "node": ">= 4.0.0"
++            }
++        },
++        "node_modules/@rushstack/rig-package": {
++            "version": "0.3.14",
++            "resolved": "https://registry.npmjs.org/@rushstack/rig-package/-/rig-package-0.3.14.tgz",
++            "integrity": "sha512-Ic9EN3kWJCK6iOxEDtwED9nrM146zCDrQaUxbeGOF+q/VLZ/HNHPw+aLqrqmTl0ZT66Sf75Qk6OG+rySjTorvQ==",
++            "dev": true,
++            "dependencies": {
++                "resolve": "~1.17.0",
++                "strip-json-comments": "~3.1.1"
++            }
++        },
++        "node_modules/@rushstack/rig-package/node_modules/resolve": {
++            "version": "1.17.0",
++            "resolved": "https://registry.npmjs.org/resolve/-/resolve-1.17.0.tgz",
++            "integrity": "sha512-ic+7JYiV8Vi2yzQGFWOkiZD5Z9z7O2Zhm9XMaTxdJExKasieFCr+yXZ/WmXsckHiKl12ar0y6XiXDx3m4RHn1w==",
++            "dev": true,
++            "dependencies": {
++                "path-parse": "^1.0.6"
++            },
++            "funding": {
++                "url": "https://github.com/sponsors/ljharb"
++            }
++        },
++        "node_modules/@rushstack/ts-command-line": {
++            "version": "4.12.2",
++            "resolved": "https://registry.npmjs.org/@rushstack/ts-command-line/-/ts-command-line-4.12.2.tgz",
++            "integrity": "sha512-poBtnumLuWmwmhCEkVAgynWgtnF9Kygekxyp4qtQUSbBrkuyPQTL85c8Cva1YfoUpOdOXxezMAkUt0n5SNKGqw==",
++            "dev": true,
++            "dependencies": {
++                "@types/argparse": "1.0.38",
++                "argparse": "~1.0.9",
++                "colors": "~1.2.1",
++                "string-argv": "~0.3.1"
++            }
++        },
++        "node_modules/@rushstack/ts-command-line/node_modules/argparse": {
++            "version": "1.0.10",
++            "resolved": "https://registry.npmjs.org/argparse/-/argparse-1.0.10.tgz",
++            "integrity": "sha512-o5Roy6tNG4SL/FOkCAN6RzjiakZS25RLYFrcMttJqbdd8BWrnA+fGz57iN5Pb06pvBGvl5gQ0B48dJlslXvoTg==",
++            "dev": true,
++            "dependencies": {
++                "sprintf-js": "~1.0.2"
++            }
++        },
++        "node_modules/@types/argparse": {
++            "version": "1.0.38",
++            "resolved": "https://registry.npmjs.org/@types/argparse/-/argparse-1.0.38.tgz",
++            "integrity": "sha512-ebDJ9b0e702Yr7pWgB0jzm+CX4Srzz8RcXtLJDJB+BSccqMa36uyH/zUsSYao5+BD1ytv3k3rPYCq4mAE1hsXA==",
++            "dev": true
++        },
+         "node_modules/@types/async": {
+             "version": "3.2.15",
+             "resolved": "https://registry.npmjs.org/@types/async/-/async-3.2.15.tgz",
+@@ -1814,6 +2020,15 @@
+                 "color-support": "bin.js"
+             }
+         },
++        "node_modules/colors": {
++            "version": "1.2.5",
++            "resolved": "https://registry.npmjs.org/colors/-/colors-1.2.5.tgz",
++            "integrity": "sha512-erNRLao/Y3Fv54qUa0LBB+//Uf3YwMUmdJinN20yMXm9zdKKqH9wt7R9IIVZ+K7ShzfpLV/Zg8+VyrBJYB4lpg==",
++            "dev": true,
++            "engines": {
++                "node": ">=0.1.90"
++            }
++        },
+         "node_modules/combined-stream": {
+             "version": "1.0.8",
+             "resolved": "https://registry.npmjs.org/combined-stream/-/combined-stream-1.0.8.tgz",
+@@ -1826,6 +2041,13 @@
+                 "node": ">= 0.8"
+             }
+         },
++        "node_modules/commander": {
++            "version": "2.20.3",
++            "resolved": "https://registry.npmjs.org/commander/-/commander-2.20.3.tgz",
++            "integrity": "sha512-GpVkmM8vF2vQUkj2LvZmD35JxeJOLCwJ9cUkugyk2nuhbv3+mJvpLYYt+0+USMxE+oj+ey/lJEnhZw75x/OMcQ==",
++            "dev": true,
++            "optional": true
++        },
+         "node_modules/comment-parser": {
+             "version": "1.3.1",
+             "resolved": "https://registry.npmjs.org/comment-parser/-/comment-parser-1.3.1.tgz",
+@@ -4424,6 +4646,15 @@
+                 "url": "https://github.com/sponsors/sindresorhus"
+             }
+         },
++        "node_modules/import-lazy": {
++            "version": "4.0.0",
++            "resolved": "https://registry.npmjs.org/import-lazy/-/import-lazy-4.0.0.tgz",
++            "integrity": "sha512-rKtvo6a868b5Hu3heneU+L4yEQ4jYKLtjpnPeUdK7h0yzXGmyBTypknlkCvHFBqfX9YlorEiMM6Dnq/5atfHkw==",
++            "dev": true,
++            "engines": {
++                "node": ">=8"
++            }
++        },
+         "node_modules/imurmurhash": {
+             "version": "0.1.4",
+             "resolved": "https://registry.npmjs.org/imurmurhash/-/imurmurhash-0.1.4.tgz",
+@@ -4969,6 +5200,12 @@
+                 "node": ">=0.10.0"
+             }
+         },
++        "node_modules/jju": {
++            "version": "1.4.0",
++            "resolved": "https://registry.npmjs.org/jju/-/jju-1.4.0.tgz",
++            "integrity": "sha512-8wb9Yw966OSxApiCt0K3yNJL8pnNeIv+OEq2YMidz4FKP6nonSRoOXc80iXY4JaN2FC11B9qsNmDsm+ZOfMROA==",
++            "dev": true
++        },
+         "node_modules/js-yaml": {
+             "version": "4.1.0",
+             "resolved": "https://registry.npmjs.org/js-yaml/-/js-yaml-4.1.0.tgz",
+@@ -5183,6 +5420,24 @@
+                 "url": "https://github.com/sponsors/sindresorhus"
+             }
+         },
++        "node_modules/lodash": {
++            "version": "4.17.21",
++            "resolved": "https://registry.npmjs.org/lodash/-/lodash-4.17.21.tgz",
++            "integrity": "sha512-v2kDEe57lecTulaDIuNTPy3Ry4gLGJ6Z1O3vE1krgXZNrsQ+LFTGHVxVjcXPs17LhbZVGedAJv8XZ1tvj5FvSg==",
++            "dev": true
++        },
++        "node_modules/lodash.get": {
++            "version": "4.4.2",
++            "resolved": "https://registry.npmjs.org/lodash.get/-/lodash.get-4.4.2.tgz",
++            "integrity": "sha512-z+Uw/vLuy6gQe8cfaFWD7p0wVv8fJl3mbzXh33RS+0oW2wvUqiRXiQ69gLWSLpgB5/6sU+r6BlQR0MBILadqTQ==",
++            "dev": true
++        },
++        "node_modules/lodash.isequal": {
++            "version": "4.5.0",
++            "resolved": "https://registry.npmjs.org/lodash.isequal/-/lodash.isequal-4.5.0.tgz",
++            "integrity": "sha512-pDo3lu8Jhfjqls6GkMgpahsF9kCyayhgykjyLMNFTKWrpVdAQtYyB4muAMWozBB4ig/dtWAmsMxLEI8wuz+DYQ==",
++            "dev": true
++        },
+         "node_modules/lodash.merge": {
+             "version": "4.6.2",
+             "resolved": "https://registry.npmjs.org/lodash.merge/-/lodash.merge-4.6.2.tgz",
+@@ -7485,6 +7740,12 @@
+                 "node": ">=0.10.0"
+             }
+         },
++        "node_modules/sprintf-js": {
++            "version": "1.0.3",
++            "resolved": "https://registry.npmjs.org/sprintf-js/-/sprintf-js-1.0.3.tgz",
++            "integrity": "sha512-D9cPgkvLlV3t3IzL0D0YLvGA9Ahk4PcvVwUbN0dSGr1aP0Nrt4AEnTUbuGvquEC0mA64Gqt1fzirlRs5ibXx8g==",
++            "dev": true
++        },
+         "node_modules/stack-trace": {
+             "version": "0.0.10",
+             "resolved": "https://registry.npmjs.org/stack-trace/-/stack-trace-0.0.10.tgz",
+@@ -7638,6 +7899,15 @@
+                 "safe-buffer": "~5.1.0"
+             }
+         },
++        "node_modules/string-argv": {
++            "version": "0.3.1",
++            "resolved": "https://registry.npmjs.org/string-argv/-/string-argv-0.3.1.tgz",
++            "integrity": "sha512-a1uQGz7IyVy9YwhqjZIZu1c8JO8dNIe20xBmSS6qu9kv++k3JGzCVmprbNN5Kn+BgzD5E7YYwg1CcjuJMRNsvg==",
++            "dev": true,
++            "engines": {
++                "node": ">=0.6.19"
++            }
++        },
+         "node_modules/string-width": {
+             "version": "1.0.2",
+             "resolved": "https://registry.npmjs.org/string-width/-/string-width-1.0.2.tgz",
+@@ -8263,6 +8533,15 @@
+                 "spdx-expression-parse": "^3.0.0"
+             }
+         },
++        "node_modules/validator": {
++            "version": "13.7.0",
++            "resolved": "https://registry.npmjs.org/validator/-/validator-13.7.0.tgz",
++            "integrity": "sha512-nYXQLCBkpJ8X6ltALua9dRrZDHVYxjJ1wgskNt1lH9fzGjs3tgojGSCBjmEPwkWS1y29+DrizMTW19Pr9uB2nw==",
++            "dev": true,
++            "engines": {
++                "node": ">= 0.10"
++            }
++        },
+         "node_modules/value-or-function": {
+             "version": "3.0.0",
+             "resolved": "https://registry.npmjs.org/value-or-function/-/value-or-function-3.0.0.tgz",
+@@ -8588,6 +8867,26 @@
+             "funding": {
+                 "url": "https://github.com/sponsors/sindresorhus"
+             }
++        },
++        "node_modules/z-schema": {
++            "version": "5.0.4",
++            "resolved": "https://registry.npmjs.org/z-schema/-/z-schema-5.0.4.tgz",
++            "integrity": "sha512-gm/lx3hDzJNcLwseIeQVm1UcwhWIKpSB4NqH89pTBtFns4k/HDHudsICtvG05Bvw/Mv3jMyk700y5dadueLHdA==",
++            "dev": true,
++            "dependencies": {
++                "lodash.get": "^4.4.2",
++                "lodash.isequal": "^4.5.0",
++                "validator": "^13.7.0"
++            },
++            "bin": {
++                "z-schema": "bin/z-schema"
++            },
++            "engines": {
++                "node": ">=8.0.0"
++            },
++            "optionalDependencies": {
++                "commander": "^2.20.3"
++            }
+         }
+     },
+     "dependencies": {
+@@ -8745,6 +9044,84 @@
+             "integrity": "sha512-ZnQMnLV4e7hDlUvw8H+U8ASL02SS2Gn6+9Ac3wGGLIe7+je2AeAOxPY+izIPJDfFDb7eDjev0Us8MO1iFRN8hA==",
+             "dev": true
+         },
++        "@microsoft/api-extractor": {
++            "version": "7.30.0",
++            "resolved": "https://registry.npmjs.org/@microsoft/api-extractor/-/api-extractor-7.30.0.tgz",
++            "integrity": "sha512-XmtvrW74SzGvv59cjNC6+TE13XbIm4qrKKZtveoFRNbKdyTR4eIqnLmPvh1fgfolSF+iKfXlHHsQJpcgwdNztA==",
++            "dev": true,
++            "requires": {
++                "@microsoft/api-extractor-model": "7.24.0",
++                "@microsoft/tsdoc": "0.14.1",
++                "@microsoft/tsdoc-config": "~0.16.1",
++                "@rushstack/node-core-library": "3.51.1",
++                "@rushstack/rig-package": "0.3.14",
++                "@rushstack/ts-command-line": "4.12.2",
++                "colors": "~1.2.1",
++                "lodash": "~4.17.15",
++                "resolve": "~1.17.0",
++                "semver": "~7.3.0",
++                "source-map": "~0.6.1",
++                "typescript": "~4.7.4"
++            },
++            "dependencies": {
++                "resolve": {
++                    "version": "1.17.0",
++                    "resolved": "https://registry.npmjs.org/resolve/-/resolve-1.17.0.tgz",
++                    "integrity": "sha512-ic+7JYiV8Vi2yzQGFWOkiZD5Z9z7O2Zhm9XMaTxdJExKasieFCr+yXZ/WmXsckHiKl12ar0y6XiXDx3m4RHn1w==",
++                    "dev": true,
++                    "requires": {
++                        "path-parse": "^1.0.6"
++                    }
++                },
++                "typescript": {
++                    "version": "4.7.4",
++                    "resolved": "https://registry.npmjs.org/typescript/-/typescript-4.7.4.tgz",
++                    "integrity": "sha512-C0WQT0gezHuw6AdY1M2jxUO83Rjf0HP7Sk1DtXj6j1EwkQNZrHAg2XPWlq62oqEhYvONq5pkC2Y9oPljWToLmQ==",
++                    "dev": true
++                }
++            }
++        },
++        "@microsoft/api-extractor-model": {
++            "version": "7.24.0",
++            "resolved": "https://registry.npmjs.org/@microsoft/api-extractor-model/-/api-extractor-model-7.24.0.tgz",
++            "integrity": "sha512-lFzF5h+quTyVB7eaKJkqrbQRDGSkrHzXyF8iMVvHdlaNrodGeyhtQeBFDuRVvBXTW2ILBiOV6ZWwUM1eGKcD+A==",
++            "dev": true,
++            "requires": {
++                "@microsoft/tsdoc": "0.14.1",
++                "@microsoft/tsdoc-config": "~0.16.1",
++                "@rushstack/node-core-library": "3.51.1"
++            }
++        },
++        "@microsoft/tsdoc": {
++            "version": "0.14.1",
++            "resolved": "https://registry.npmjs.org/@microsoft/tsdoc/-/tsdoc-0.14.1.tgz",
++            "integrity": "sha512-6Wci+Tp3CgPt/B9B0a3J4s3yMgLNSku6w5TV6mN+61C71UqsRBv2FUibBf3tPGlNxebgPHMEUzKpb1ggE8KCKw==",
++            "dev": true
++        },
++        "@microsoft/tsdoc-config": {
++            "version": "0.16.1",
++            "resolved": "https://registry.npmjs.org/@microsoft/tsdoc-config/-/tsdoc-config-0.16.1.tgz",
++            "integrity": "sha512-2RqkwiD4uN6MLnHFljqBlZIXlt/SaUT6cuogU1w2ARw4nKuuppSmR0+s+NC+7kXBQykd9zzu0P4HtBpZT5zBpQ==",
++            "dev": true,
++            "requires": {
++                "@microsoft/tsdoc": "0.14.1",
++                "ajv": "~6.12.6",
++                "jju": "~1.4.0",
++                "resolve": "~1.19.0"
++            },
++            "dependencies": {
++                "resolve": {
++                    "version": "1.19.0",
++                    "resolved": "https://registry.npmjs.org/resolve/-/resolve-1.19.0.tgz",
++                    "integrity": "sha512-rArEXAgsBG4UgRGcynxWIWKFvh/XZCcS8UJdHhwy91zwAvCZIbcs+vAbflgBnNjYMs/i/i+/Ux6IZhML1yPvxg==",
++                    "dev": true,
++                    "requires": {
++                        "is-core-module": "^2.1.0",
++                        "path-parse": "^1.0.6"
++                    }
++                }
++            }
++        },
+         "@nodelib/fs.scandir": {
+             "version": "2.1.5",
+             "resolved": "https://registry.npmjs.org/@nodelib/fs.scandir/-/fs.scandir-2.1.5.tgz",
+@@ -8895,6 +9272,115 @@
+                 "@octokit/openapi-types": "^13.4.0"
+             }
+         },
++        "@rushstack/node-core-library": {
++            "version": "3.51.1",
++            "resolved": "https://registry.npmjs.org/@rushstack/node-core-library/-/node-core-library-3.51.1.tgz",
++            "integrity": "sha512-xLoUztvGpaT5CphDexDPt2WbBx8D68VS5tYOkwfr98p90y0f/wepgXlTA/q5MUeZGGucASiXKp5ysdD+GPYf9A==",
++            "dev": true,
++            "requires": {
++                "@types/node": "12.20.24",
++                "colors": "~1.2.1",
++                "fs-extra": "~7.0.1",
++                "import-lazy": "~4.0.0",
++                "jju": "~1.4.0",
++                "resolve": "~1.17.0",
++                "semver": "~7.3.0",
++                "z-schema": "~5.0.2"
++            },
++            "dependencies": {
++                "@types/node": {
++                    "version": "12.20.24",
++                    "resolved": "https://registry.npmjs.org/@types/node/-/node-12.20.24.tgz",
++                    "integrity": "sha512-yxDeaQIAJlMav7fH5AQqPH1u8YIuhYJXYBzxaQ4PifsU0GDO38MSdmEDeRlIxrKbC6NbEaaEHDanWb+y30U8SQ==",
++                    "dev": true
++                },
++                "fs-extra": {
++                    "version": "7.0.1",
++                    "resolved": "https://registry.npmjs.org/fs-extra/-/fs-extra-7.0.1.tgz",
++                    "integrity": "sha512-YJDaCJZEnBmcbw13fvdAM9AwNOJwOzrE4pqMqBq5nFiEqXUqHwlK4B+3pUw6JNvfSPtX05xFHtYy/1ni01eGCw==",
++                    "dev": true,
++                    "requires": {
++                        "graceful-fs": "^4.1.2",
++                        "jsonfile": "^4.0.0",
++                        "universalify": "^0.1.0"
++                    }
++                },
++                "jsonfile": {
++                    "version": "4.0.0",
++                    "resolved": "https://registry.npmjs.org/jsonfile/-/jsonfile-4.0.0.tgz",
++                    "integrity": "sha512-m6F1R3z8jjlf2imQHS2Qez5sjKWQzbuuhuJ/FKYFRZvPE3PuHcSMVZzfsLhGVOkfd20obL5SWEBew5ShlquNxg==",
++                    "dev": true,
++                    "requires": {
++                        "graceful-fs": "^4.1.6"
++                    }
++                },
++                "resolve": {
++                    "version": "1.17.0",
++                    "resolved": "https://registry.npmjs.org/resolve/-/resolve-1.17.0.tgz",
++                    "integrity": "sha512-ic+7JYiV8Vi2yzQGFWOkiZD5Z9z7O2Zhm9XMaTxdJExKasieFCr+yXZ/WmXsckHiKl12ar0y6XiXDx3m4RHn1w==",
++                    "dev": true,
++                    "requires": {
++                        "path-parse": "^1.0.6"
++                    }
++                },
++                "universalify": {
++                    "version": "0.1.2",
++                    "resolved": "https://registry.npmjs.org/universalify/-/universalify-0.1.2.tgz",
++                    "integrity": "sha512-rBJeI5CXAlmy1pV+617WB9J63U6XcazHHF2f2dbJix4XzpUF0RS3Zbj0FGIOCAva5P/d/GBOYaACQ1w+0azUkg==",
++                    "dev": true
++                }
++            }
++        },
++        "@rushstack/rig-package": {
++            "version": "0.3.14",
++            "resolved": "https://registry.npmjs.org/@rushstack/rig-package/-/rig-package-0.3.14.tgz",
++            "integrity": "sha512-Ic9EN3kWJCK6iOxEDtwED9nrM146zCDrQaUxbeGOF+q/VLZ/HNHPw+aLqrqmTl0ZT66Sf75Qk6OG+rySjTorvQ==",
++            "dev": true,
++            "requires": {
++                "resolve": "~1.17.0",
++                "strip-json-comments": "~3.1.1"
++            },
++            "dependencies": {
++                "resolve": {
++                    "version": "1.17.0",
++                    "resolved": "https://registry.npmjs.org/resolve/-/resolve-1.17.0.tgz",
++                    "integrity": "sha512-ic+7JYiV8Vi2yzQGFWOkiZD5Z9z7O2Zhm9XMaTxdJExKasieFCr+yXZ/WmXsckHiKl12ar0y6XiXDx3m4RHn1w==",
++                    "dev": true,
++                    "requires": {
++                        "path-parse": "^1.0.6"
++                    }
++                }
++            }
++        },
++        "@rushstack/ts-command-line": {
++            "version": "4.12.2",
++            "resolved": "https://registry.npmjs.org/@rushstack/ts-command-line/-/ts-command-line-4.12.2.tgz",
++            "integrity": "sha512-poBtnumLuWmwmhCEkVAgynWgtnF9Kygekxyp4qtQUSbBrkuyPQTL85c8Cva1YfoUpOdOXxezMAkUt0n5SNKGqw==",
++            "dev": true,
++            "requires": {
++                "@types/argparse": "1.0.38",
++                "argparse": "~1.0.9",
++                "colors": "~1.2.1",
++                "string-argv": "~0.3.1"
++            },
++            "dependencies": {
++                "argparse": {
++                    "version": "1.0.10",
++                    "resolved": "https://registry.npmjs.org/argparse/-/argparse-1.0.10.tgz",
++                    "integrity": "sha512-o5Roy6tNG4SL/FOkCAN6RzjiakZS25RLYFrcMttJqbdd8BWrnA+fGz57iN5Pb06pvBGvl5gQ0B48dJlslXvoTg==",
++                    "dev": true,
++                    "requires": {
++                        "sprintf-js": "~1.0.2"
++                    }
++                }
++            }
++        },
++        "@types/argparse": {
++            "version": "1.0.38",
++            "resolved": "https://registry.npmjs.org/@types/argparse/-/argparse-1.0.38.tgz",
++            "integrity": "sha512-ebDJ9b0e702Yr7pWgB0jzm+CX4Srzz8RcXtLJDJB+BSccqMa36uyH/zUsSYao5+BD1ytv3k3rPYCq4mAE1hsXA==",
++            "dev": true
++        },
+         "@types/async": {
+             "version": "3.2.15",
+             "resolved": "https://registry.npmjs.org/@types/async/-/async-3.2.15.tgz",
+@@ -9949,6 +10435,12 @@
+             "integrity": "sha512-qiBjkpbMLO/HL68y+lh4q0/O1MZFj2RX6X/KmMa3+gJD3z+WwI1ZzDHysvqHGS3mP6mznPckpXmw1nI9cJjyRg==",
+             "dev": true
+         },
++        "colors": {
++            "version": "1.2.5",
++            "resolved": "https://registry.npmjs.org/colors/-/colors-1.2.5.tgz",
++            "integrity": "sha512-erNRLao/Y3Fv54qUa0LBB+//Uf3YwMUmdJinN20yMXm9zdKKqH9wt7R9IIVZ+K7ShzfpLV/Zg8+VyrBJYB4lpg==",
++            "dev": true
++        },
+         "combined-stream": {
+             "version": "1.0.8",
+             "resolved": "https://registry.npmjs.org/combined-stream/-/combined-stream-1.0.8.tgz",
+@@ -9958,6 +10450,13 @@
+                 "delayed-stream": "~1.0.0"
+             }
+         },
++        "commander": {
++            "version": "2.20.3",
++            "resolved": "https://registry.npmjs.org/commander/-/commander-2.20.3.tgz",
++            "integrity": "sha512-GpVkmM8vF2vQUkj2LvZmD35JxeJOLCwJ9cUkugyk2nuhbv3+mJvpLYYt+0+USMxE+oj+ey/lJEnhZw75x/OMcQ==",
++            "dev": true,
++            "optional": true
++        },
+         "comment-parser": {
+             "version": "1.3.1",
+             "resolved": "https://registry.npmjs.org/comment-parser/-/comment-parser-1.3.1.tgz",
+@@ -12059,6 +12558,12 @@
+                 "resolve-from": "^4.0.0"
+             }
+         },
++        "import-lazy": {
++            "version": "4.0.0",
++            "resolved": "https://registry.npmjs.org/import-lazy/-/import-lazy-4.0.0.tgz",
++            "integrity": "sha512-rKtvo6a868b5Hu3heneU+L4yEQ4jYKLtjpnPeUdK7h0yzXGmyBTypknlkCvHFBqfX9YlorEiMM6Dnq/5atfHkw==",
++            "dev": true
++        },
+         "imurmurhash": {
+             "version": "0.1.4",
+             "resolved": "https://registry.npmjs.org/imurmurhash/-/imurmurhash-0.1.4.tgz",
+@@ -12456,6 +12961,12 @@
+             "integrity": "sha512-WhB9zCku7EGTj/HQQRz5aUQEUeoQZH2bWcltRErOpymJ4boYE6wL9Tbr23krRPSZ+C5zqNSrSw+Cc7sZZ4b7vg==",
+             "dev": true
+         },
++        "jju": {
++            "version": "1.4.0",
++            "resolved": "https://registry.npmjs.org/jju/-/jju-1.4.0.tgz",
++            "integrity": "sha512-8wb9Yw966OSxApiCt0K3yNJL8pnNeIv+OEq2YMidz4FKP6nonSRoOXc80iXY4JaN2FC11B9qsNmDsm+ZOfMROA==",
++            "dev": true
++        },
+         "js-yaml": {
+             "version": "4.1.0",
+             "resolved": "https://registry.npmjs.org/js-yaml/-/js-yaml-4.1.0.tgz",
+@@ -12627,6 +13138,24 @@
+                 "p-locate": "^5.0.0"
+             }
+         },
++        "lodash": {
++            "version": "4.17.21",
++            "resolved": "https://registry.npmjs.org/lodash/-/lodash-4.17.21.tgz",
++            "integrity": "sha512-v2kDEe57lecTulaDIuNTPy3Ry4gLGJ6Z1O3vE1krgXZNrsQ+LFTGHVxVjcXPs17LhbZVGedAJv8XZ1tvj5FvSg==",
++            "dev": true
++        },
++        "lodash.get": {
++            "version": "4.4.2",
++            "resolved": "https://registry.npmjs.org/lodash.get/-/lodash.get-4.4.2.tgz",
++            "integrity": "sha512-z+Uw/vLuy6gQe8cfaFWD7p0wVv8fJl3mbzXh33RS+0oW2wvUqiRXiQ69gLWSLpgB5/6sU+r6BlQR0MBILadqTQ==",
++            "dev": true
++        },
++        "lodash.isequal": {
++            "version": "4.5.0",
++            "resolved": "https://registry.npmjs.org/lodash.isequal/-/lodash.isequal-4.5.0.tgz",
++            "integrity": "sha512-pDo3lu8Jhfjqls6GkMgpahsF9kCyayhgykjyLMNFTKWrpVdAQtYyB4muAMWozBB4ig/dtWAmsMxLEI8wuz+DYQ==",
++            "dev": true
++        },
+         "lodash.merge": {
+             "version": "4.6.2",
+             "resolved": "https://registry.npmjs.org/lodash.merge/-/lodash.merge-4.6.2.tgz",
+@@ -14400,6 +14929,12 @@
+                 }
+             }
+         },
++        "sprintf-js": {
++            "version": "1.0.3",
++            "resolved": "https://registry.npmjs.org/sprintf-js/-/sprintf-js-1.0.3.tgz",
++            "integrity": "sha512-D9cPgkvLlV3t3IzL0D0YLvGA9Ahk4PcvVwUbN0dSGr1aP0Nrt4AEnTUbuGvquEC0mA64Gqt1fzirlRs5ibXx8g==",
++            "dev": true
++        },
+         "stack-trace": {
+             "version": "0.0.10",
+             "resolved": "https://registry.npmjs.org/stack-trace/-/stack-trace-0.0.10.tgz",
+@@ -14534,6 +15069,12 @@
+                 "safe-buffer": "~5.1.0"
+             }
+         },
++        "string-argv": {
++            "version": "0.3.1",
++            "resolved": "https://registry.npmjs.org/string-argv/-/string-argv-0.3.1.tgz",
++            "integrity": "sha512-a1uQGz7IyVy9YwhqjZIZu1c8JO8dNIe20xBmSS6qu9kv++k3JGzCVmprbNN5Kn+BgzD5E7YYwg1CcjuJMRNsvg==",
++            "dev": true
++        },
+         "string-width": {
+             "version": "1.0.2",
+             "resolved": "https://registry.npmjs.org/string-width/-/string-width-1.0.2.tgz",
+@@ -15035,6 +15576,12 @@
+                 "spdx-expression-parse": "^3.0.0"
+             }
+         },
++        "validator": {
++            "version": "13.7.0",
++            "resolved": "https://registry.npmjs.org/validator/-/validator-13.7.0.tgz",
++            "integrity": "sha512-nYXQLCBkpJ8X6ltALua9dRrZDHVYxjJ1wgskNt1lH9fzGjs3tgojGSCBjmEPwkWS1y29+DrizMTW19Pr9uB2nw==",
++            "dev": true
++        },
+         "value-or-function": {
+             "version": "3.0.0",
+             "resolved": "https://registry.npmjs.org/value-or-function/-/value-or-function-3.0.0.tgz",
+@@ -15299,6 +15846,18 @@
+             "resolved": "https://registry.npmjs.org/yocto-queue/-/yocto-queue-0.1.0.tgz",
+             "integrity": "sha512-rVksvsnNCdJ/ohGc6xgPwyN8eheCxsiLM8mxuE/t/mOVqJewPuO1miLpTHQiRgTKCLexL4MeAFVagts7HmNZ2Q==",
+             "dev": true
++        },
++        "z-schema": {
++            "version": "5.0.4",
++            "resolved": "https://registry.npmjs.org/z-schema/-/z-schema-5.0.4.tgz",
++            "integrity": "sha512-gm/lx3hDzJNcLwseIeQVm1UcwhWIKpSB4NqH89pTBtFns4k/HDHudsICtvG05Bvw/Mv3jMyk700y5dadueLHdA==",
++            "dev": true,
++            "requires": {
++                "commander": "^2.20.3",
++                "lodash.get": "^4.4.2",
++                "lodash.isequal": "^4.5.0",
++                "validator": "^13.7.0"
++            }
+         }
+     }
+ }
+diff --git a/package.json b/package.json
+index da018f3c42..9906a79d62 100644
+--- a/package.json
++++ b/package.json
+@@ -39,6 +39,7 @@
+         "!**/.gitattributes"
+     ],
+     "devDependencies": {
++        "@microsoft/api-extractor": "^7.30.0",
+         "@octokit/rest": "latest",
+         "@types/async": "latest",
+         "@types/chai": "latest",
+diff --git a/scripts/apiExtractor.ts b/scripts/apiExtractor.ts
+new file mode 100644
+index 0000000000..ac2b0d9ce7
+--- /dev/null
++++ b/scripts/apiExtractor.ts
+@@ -0,0 +1,14 @@
++import * as path from 'path';
++import {
++  Extractor,
++  ExtractorConfig,
++  ExtractorResult
++} from '@microsoft/api-extractor';
++
++const packageRoot = path.resolve(__dirname, "..");
++
++// TODO(jakebailey): call api extractor for:
++//   - src/typescript
++//   - src/typescriptServices
++//   - src/tsserverlibrary
++// Then in the output, replace const enum with "enum".
+diff --git a/src/api-extractor-base.json b/src/api-extractor-base.json
+new file mode 100644
+index 0000000000..dbc6360d5a
+--- /dev/null
++++ b/src/api-extractor-base.json
+@@ -0,0 +1,414 @@
++/**
++ * Config file for API Extractor.  For more info, please visit: https://api-extractor.com
++ */
++ {
++    "$schema": "https://developer.microsoft.com/json-schemas/api-extractor/v7/api-extractor.schema.json",
++  
++    /**
++     * Optionally specifies another JSON config file that this file extends from.  This provides a way for
++     * standard settings to be shared across multiple projects.
++     *
++     * If the path starts with "./" or "../", the path is resolved relative to the folder of the file that contains
++     * the "extends" field.  Otherwise, the first path segment is interpreted as an NPM package name, and will be
++     * resolved using NodeJS require().
++     *
++     * SUPPORTED TOKENS: none
++     * DEFAULT VALUE: ""
++     */
++    // "extends": "./shared/api-extractor-base.json"
++    // "extends": "my-package/include/api-extractor-base.json"
++  
++    /**
++     * Determines the "<projectFolder>" token that can be used with other config file settings.  The project folder
++     * typically contains the tsconfig.json and package.json config files, but the path is user-defined.
++     *
++     * The path is resolved relative to the folder of the config file that contains the setting.
++     *
++     * The default value for "projectFolder" is the token "<lookup>", which means the folder is determined by traversing
++     * parent folders, starting from the folder containing api-extractor.json, and stopping at the first folder
++     * that contains a tsconfig.json file.  If a tsconfig.json file cannot be found in this way, then an error
++     * will be reported.
++     *
++     * SUPPORTED TOKENS: <lookup>
++     * DEFAULT VALUE: "<lookup>"
++     */
++    "projectFolder": "..",
++  
++    /**
++     * (REQUIRED) Specifies the .d.ts file to be used as the starting point for analysis.  API Extractor
++     * analyzes the symbols exported by this module.
++     *
++     * The file extension must be ".d.ts" and not ".ts".
++     *
++     * The path is resolved relative to the folder of the config file that contains the setting; to change this,
++     * prepend a folder token such as "<projectFolder>".
++     *
++     * SUPPORTED TOKENS: <projectFolder>, <packageName>, <unscopedPackageName>
++     */
++    "mainEntryPointFilePath": "<projectFolder>/lib/index.d.ts",
++  
++    /**
++     * A list of NPM package names whose exports should be treated as part of this package.
++     *
++     * For example, suppose that Webpack is used to generate a distributed bundle for the project "library1",
++     * and another NPM package "library2" is embedded in this bundle.  Some types from library2 may become part
++     * of the exported API for library1, but by default API Extractor would generate a .d.ts rollup that explicitly
++     * imports library2.  To avoid this, we can specify:
++     *
++     *   "bundledPackages": [ "library2" ],
++     *
++     * This would direct API Extractor to embed those types directly in the .d.ts rollup, as if they had been
++     * local files for library1.
++     */
++    "bundledPackages": [],
++  
++    /**
++     * Specifies what type of newlines API Extractor should use when writing output files.  By default, the output files
++     * will be written with Windows-style newlines.  To use POSIX-style newlines, specify "lf" instead.
++     * To use the OS's default newline kind, specify "os".
++     *
++     * DEFAULT VALUE: "crlf"
++     */
++    "newlineKind": "crlf",
++  
++    /**
++     * Set to true when invoking API Extractor's test harness. When `testMode` is true, the `toolVersion` field in the
++     * .api.json file is assigned an empty string to prevent spurious diffs in output files tracked for tests.
++     *
++     * DEFAULT VALUE: "false"
++     */
++    // "testMode": false,
++  
++    /**
++     * Specifies how API Extractor sorts members of an enum when generating the .api.json file. By default, the output
++     * files will be sorted alphabetically, which is "by-name". To keep the ordering in the source code, specify
++     * "preserve".
++     *
++     * DEFAULT VALUE: "by-name"
++     */
++    "enumMemberOrder": "preserve",
++  
++    /**
++     * Determines how the TypeScript compiler engine will be invoked by API Extractor.
++     */
++    "compiler": {
++      /**
++       * Specifies the path to the tsconfig.json file to be used by API Extractor when analyzing the project.
++       *
++       * The path is resolved relative to the folder of the config file that contains the setting; to change this,
++       * prepend a folder token such as "<projectFolder>".
++       *
++       * Note: This setting will be ignored if "overrideTsconfig" is used.
++       *
++       * SUPPORTED TOKENS: <projectFolder>, <packageName>, <unscopedPackageName>
++       * DEFAULT VALUE: "<projectFolder>/tsconfig.json"
++       */
++      // "tsconfigFilePath": "<projectFolder>/tsconfig.json",
++      /**
++       * Provides a compiler configuration that will be used instead of reading the tsconfig.json file from disk.
++       * The object must conform to the TypeScript tsconfig schema:
++       *
++       * http://json.schemastore.org/tsconfig
++       *
++       * If omitted, then the tsconfig.json file will be read from the "projectFolder".
++       *
++       * DEFAULT VALUE: no overrideTsconfig section
++       */
++      // "overrideTsconfig": {
++      //   . . .
++      // }
++      /**
++       * This option causes the compiler to be invoked with the --skipLibCheck option. This option is not recommended
++       * and may cause API Extractor to produce incomplete or incorrect declarations, but it may be required when
++       * dependencies contain declarations that are incompatible with the TypeScript engine that API Extractor uses
++       * for its analysis.  Where possible, the underlying issue should be fixed rather than relying on skipLibCheck.
++       *
++       * DEFAULT VALUE: false
++       */
++      // "skipLibCheck": true,
++    },
++  
++    /**
++     * Configures how the API report file (*.api.md) will be generated.
++     */
++    "apiReport": {
++      /**
++       * (REQUIRED) Whether to generate an API report.
++       */
++    //   "enabled": true
++      "enabled": false
++  
++      /**
++       * The filename for the API report files.  It will be combined with "reportFolder" or "reportTempFolder" to produce
++       * a full file path.
++       *
++       * The file extension should be ".api.md", and the string should not contain a path separator such as "\" or "/".
++       *
++       * SUPPORTED TOKENS: <packageName>, <unscopedPackageName>
++       * DEFAULT VALUE: "<unscopedPackageName>.api.md"
++       */
++      // "reportFileName": "<unscopedPackageName>.api.md",
++  
++      /**
++       * Specifies the folder where the API report file is written.  The file name portion is determined by
++       * the "reportFileName" setting.
++       *
++       * The API report file is normally tracked by Git.  Changes to it can be used to trigger a branch policy,
++       * e.g. for an API review.
++       *
++       * The path is resolved relative to the folder of the config file that contains the setting; to change this,
++       * prepend a folder token such as "<projectFolder>".
++       *
++       * SUPPORTED TOKENS: <projectFolder>, <packageName>, <unscopedPackageName>
++       * DEFAULT VALUE: "<projectFolder>/temp/"
++       */
++      // "reportFolder": "<projectFolder>/temp/",
++  
++      /**
++       * Specifies the folder where the temporary report file is written.  The file name portion is determined by
++       * the "reportFileName" setting.
++       *
++       * After the temporary file is written to disk, it is compared with the file in the "reportFolder".
++       * If they are different, a production build will fail.
++       *
++       * The path is resolved relative to the folder of the config file that contains the setting; to change this,
++       * prepend a folder token such as "<projectFolder>".
++       *
++       * SUPPORTED TOKENS: <projectFolder>, <packageName>, <unscopedPackageName>
++       * DEFAULT VALUE: "<projectFolder>/temp/"
++       */
++      // "reportTempFolder": "<projectFolder>/temp/",
++  
++      /**
++       * Whether "forgotten exports" should be included in the API report file. Forgotten exports are declarations
++       * flagged with `ae-forgotten-export` warnings. See https://api-extractor.com/pages/messages/ae-forgotten-export/ to
++       * learn more.
++       *
++       * DEFAULT VALUE: "false"
++       */
++      // "includeForgottenExports": false
++    },
++  
++    /**
++     * Configures how the doc model file (*.api.json) will be generated.
++     */
++    "docModel": {
++      /**
++       * (REQUIRED) Whether to generate a doc model file.
++       */
++    //   "enabled": true
++      "enabled": false
++  
++      /**
++       * The output path for the doc model file.  The file extension should be ".api.json".
++       *
++       * The path is resolved relative to the folder of the config file that contains the setting; to change this,
++       * prepend a folder token such as "<projectFolder>".
++       *
++       * SUPPORTED TOKENS: <projectFolder>, <packageName>, <unscopedPackageName>
++       * DEFAULT VALUE: "<projectFolder>/temp/<unscopedPackageName>.api.json"
++       */
++      // "apiJsonFilePath": "<projectFolder>/temp/<unscopedPackageName>.api.json",
++  
++      /**
++       * Whether "forgotten exports" should be included in the doc model file. Forgotten exports are declarations
++       * flagged with `ae-forgotten-export` warnings. See https://api-extractor.com/pages/messages/ae-forgotten-export/ to
++       * learn more.
++       *
++       * DEFAULT VALUE: "false"
++       */
++      // "includeForgottenExports": false
++    },
++  
++    /**
++     * Configures how the .d.ts rollup file will be generated.
++     */
++    "dtsRollup": {
++      /**
++       * (REQUIRED) Whether to generate the .d.ts rollup file.
++       */
++      "enabled": true,
++  
++      /**
++       * Specifies the output path for a .d.ts rollup file to be generated without any trimming.
++       * This file will include all declarations that are exported by the main entry point.
++       *
++       * If the path is an empty string, then this file will not be written.
++       *
++       * The path is resolved relative to the folder of the config file that contains the setting; to change this,
++       * prepend a folder token such as "<projectFolder>".
++       *
++       * SUPPORTED TOKENS: <projectFolder>, <packageName>, <unscopedPackageName>
++       * DEFAULT VALUE: "<projectFolder>/dist/<unscopedPackageName>.d.ts"
++       */
++      "untrimmedFilePath": "",
++  
++      /**
++       * Specifies the output path for a .d.ts rollup file to be generated with trimming for an "alpha" release.
++       * This file will include only declarations that are marked as "@public", "@beta", or "@alpha".
++       *
++       * The path is resolved relative to the folder of the config file that contains the setting; to change this,
++       * prepend a folder token such as "<projectFolder>".
++       *
++       * SUPPORTED TOKENS: <projectFolder>, <packageName>, <unscopedPackageName>
++       * DEFAULT VALUE: ""
++       */
++      "alphaTrimmedFilePath": "",
++  
++      /**
++       * Specifies the output path for a .d.ts rollup file to be generated with trimming for a "beta" release.
++       * This file will include only declarations that are marked as "@public" or "@beta".
++       *
++       * The path is resolved relative to the folder of the config file that contains the setting; to change this,
++       * prepend a folder token such as "<projectFolder>".
++       *
++       * SUPPORTED TOKENS: <projectFolder>, <packageName>, <unscopedPackageName>
++       * DEFAULT VALUE: ""
++       */
++      "betaTrimmedFilePath": "",
++  
++      /**
++       * Specifies the output path for a .d.ts rollup file to be generated with trimming for a "public" release.
++       * This file will include only declarations that are marked as "@public".
++       *
++       * If the path is an empty string, then this file will not be written.
++       *
++       * The path is resolved relative to the folder of the config file that contains the setting; to change this,
++       * prepend a folder token such as "<projectFolder>".
++       *
++       * SUPPORTED TOKENS: <projectFolder>, <packageName>, <unscopedPackageName>
++       * DEFAULT VALUE: ""
++       */
++      "publicTrimmedFilePath": ""
++  
++      /**
++       * When a declaration is trimmed, by default it will be replaced by a code comment such as
++       * "Excluded from this release type: exampleMember".  Set "omitTrimmingComments" to true to remove the
++       * declaration completely.
++       *
++       * DEFAULT VALUE: false
++       */
++      // "omitTrimmingComments": true
++    },
++  
++    /**
++     * Configures how the tsdoc-metadata.json file will be generated.
++     */
++    "tsdocMetadata": {
++      /**
++       * Whether to generate the tsdoc-metadata.json file.
++       *
++       * DEFAULT VALUE: true
++       */
++      "enabled": false
++      /**
++       * Specifies where the TSDoc metadata file should be written.
++       *
++       * The path is resolved relative to the folder of the config file that contains the setting; to change this,
++       * prepend a folder token such as "<projectFolder>".
++       *
++       * The default value is "<lookup>", which causes the path to be automatically inferred from the "tsdocMetadata",
++       * "typings" or "main" fields of the project's package.json.  If none of these fields are set, the lookup
++       * falls back to "tsdoc-metadata.json" in the package folder.
++       *
++       * SUPPORTED TOKENS: <projectFolder>, <packageName>, <unscopedPackageName>
++       * DEFAULT VALUE: "<lookup>"
++       */
++      // "tsdocMetadataFilePath": "<projectFolder>/dist/tsdoc-metadata.json"
++    },
++  
++    /**
++     * Configures how API Extractor reports error and warning messages produced during analysis.
++     *
++     * There are three sources of messages:  compiler messages, API Extractor messages, and TSDoc messages.
++     */
++    "messages": {
++      /**
++       * Configures handling of diagnostic messages reported by the TypeScript compiler engine while analyzing
++       * the input .d.ts files.
++       *
++       * TypeScript message identifiers start with "TS" followed by an integer.  For example: "TS2551"
++       *
++       * DEFAULT VALUE:  A single "default" entry with logLevel=warning.
++       */
++      "compilerMessageReporting": {
++        /**
++         * Configures the default routing for messages that don't match an explicit rule in this table.
++         */
++        "default": {
++          /**
++           * Specifies whether the message should be written to the the tool's output log.  Note that
++           * the "addToApiReportFile" property may supersede this option.
++           *
++           * Possible values: "error", "warning", "none"
++           *
++           * Errors cause the build to fail and return a nonzero exit code.  Warnings cause a production build fail
++           * and return a nonzero exit code.  For a non-production build (e.g. when "api-extractor run" includes
++           * the "--local" option), the warning is displayed but the build will not fail.
++           *
++           * DEFAULT VALUE: "warning"
++           */
++          "logLevel": "warning"
++  
++          /**
++           * When addToApiReportFile is true:  If API Extractor is configured to write an API report file (.api.md),
++           * then the message will be written inside that file; otherwise, the message is instead logged according to
++           * the "logLevel" option.
++           *
++           * DEFAULT VALUE: false
++           */
++          // "addToApiReportFile": false
++        }
++  
++        // "TS2551": {
++        //   "logLevel": "warning",
++        //   "addToApiReportFile": true
++        // },
++        //
++        // . . .
++      },
++  
++      /**
++       * Configures handling of messages reported by API Extractor during its analysis.
++       *
++       * API Extractor message identifiers start with "ae-".  For example: "ae-extra-release-tag"
++       *
++       * DEFAULT VALUE: See api-extractor-defaults.json for the complete table of extractorMessageReporting mappings
++       */
++      "extractorMessageReporting": {
++        "default": {
++          "logLevel": "warning"
++          // "addToApiReportFile": false
++        }
++  
++        // "ae-extra-release-tag": {
++        //   "logLevel": "warning",
++        //   "addToApiReportFile": true
++        // },
++        //
++        // . . .
++      },
++  
++      /**
++       * Configures handling of messages reported by the TSDoc parser when analyzing code comments.
++       *
++       * TSDoc message identifiers start with "tsdoc-".  For example: "tsdoc-link-tag-unescaped-text"
++       *
++       * DEFAULT VALUE:  A single "default" entry with logLevel=warning.
++       */
++      "tsdocMessageReporting": {
++        "default": {
++          "logLevel": "warning"
++          // "addToApiReportFile": false
++        }
++  
++        // "tsdoc-link-tag-unescaped-text": {
++        //   "logLevel": "warning",
++        //   "addToApiReportFile": true
++        // },
++        //
++        // . . .
++      }
++    }
++  }
++  
+\ No newline at end of file
+diff --git a/src/typescript/api-extractor.json b/src/typescript/api-extractor.json
+new file mode 100644
+index 0000000000..44979b5524
+--- /dev/null
++++ b/src/typescript/api-extractor.json
+@@ -0,0 +1,59 @@
++/**
++ * Config file for API Extractor.  For more info, please visit: https://api-extractor.com
++ */
++ {
++    "$schema": "https://developer.microsoft.com/json-schemas/api-extractor/v7/api-extractor.schema.json",
++  
++    /**
++     * Optionally specifies another JSON config file that this file extends from.  This provides a way for
++     * standard settings to be shared across multiple projects.
++     *
++     * If the path starts with "./" or "../", the path is resolved relative to the folder of the file that contains
++     * the "extends" field.  Otherwise, the first path segment is interpreted as an NPM package name, and will be
++     * resolved using NodeJS require().
++     *
++     * SUPPORTED TOKENS: none
++     * DEFAULT VALUE: ""
++     */
++    "extends": "../api-extractor-base.json",
++
++    /**
++     * Determines how the TypeScript compiler engine will be invoked by API Extractor.
++     */
++     "compiler": {
++      /**
++       * Specifies the path to the tsconfig.json file to be used by API Extractor when analyzing the project.
++       *
++       * The path is resolved relative to the folder of the config file that contains the setting; to change this,
++       * prepend a folder token such as "<projectFolder>".
++       *
++       * Note: This setting will be ignored if "overrideTsconfig" is used.
++       *
++       * SUPPORTED TOKENS: <projectFolder>, <packageName>, <unscopedPackageName>
++       * DEFAULT VALUE: "<projectFolder>/tsconfig.json"
++       */
++      "tsconfigFilePath": "./tsconfig.json"
++    },
++  
++    /**
++     * (REQUIRED) Specifies the .d.ts file to be used as the starting point for analysis.  API Extractor
++     * analyzes the symbols exported by this module.
++     *
++     * The file extension must be ".d.ts" and not ".ts".
++     *
++     * The path is resolved relative to the folder of the config file that contains the setting; to change this,
++     * prepend a folder token such as "<projectFolder>".
++     *
++     * SUPPORTED TOKENS: <projectFolder>, <packageName>, <unscopedPackageName>
++     */
++    "mainEntryPointFilePath": "<projectFolder>/built/local/typescript/typescript.d.ts",
++
++    "dtsRollup": {
++      /**
++       * (REQUIRED) Whether to generate the .d.ts rollup file.
++       */
++      "enabled": true,
++      "publicTrimmedFilePath": "<projectFolder>/built/local/typescript.d.ts"
++    }
++  }
++  
+\ No newline at end of file
+diff --git a/src/typescript/typescript.ts b/src/typescript/typescript.ts
+index c9862f6a73..dd5007e2d0 100644
+--- a/src/typescript/typescript.ts
++++ b/src/typescript/typescript.ts
+@@ -1,4 +1,3 @@
+-import * as ts from "./_namespaces/ts";
+ import { Debug, LogLevel } from "./_namespaces/ts";
+ 
+ // TODO(jakebailey): replace const enum with enum in d.ts
+@@ -18,4 +17,4 @@ if (typeof console !== "undefined") {
+     };
+ }
+ 
+-export = ts;
++export * from "./_namespaces/ts";
+-- 
+2.37.1
+
