@@ -20,13 +20,17 @@ export class RunTransformCommand extends Command {
     async execute() {
         if (this.reset) {
             await run("git", "restore", "--staged", "."); // Unstage all changes.
-            await run("git", "restore", "."); // Undoo all changes.
+            await run("git", "restore", "."); // Undo all changes.
             await run("git", "clean", "-fd"); // Remove any potentially new files.
             const mergeBase = await getMergeBase(run);
             await run("git", "reset", "--hard", mergeBase); // Reset back to the merge base.
         }
 
+        await run("npm", "ci");
+
         await applyPatches(beforePatchesDir);
+
+        await run("npm", "ci");
 
         // Verify that we can process the code.
         await generateDiagnostics();
@@ -72,6 +76,8 @@ and "ts.Symbol", we have just "Node" and "Symbol".
         );
 
         await applyPatches(afterPatchesDir);
+
+        await run("npm", "ci");
 
         // Make sure what we get back from our new diagnostics script still compiles.
         await generateDiagnostics();

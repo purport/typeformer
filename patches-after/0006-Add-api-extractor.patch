@@ -29,7 +29,7 @@ index cdf20ba5a2..4e8d7e0186 100644
  scripts/ior.js
  scripts/configurePrerelease.js
 diff --git a/package-lock.json b/package-lock.json
-index 82355f16ef..2469446263 100644
+index dd15f7a18a..94ca995848 100644
 --- a/package-lock.json
 +++ b/package-lock.json
 @@ -13,6 +13,7 @@
@@ -138,7 +138,7 @@ index 82355f16ef..2469446263 100644
              "version": "2.1.5",
              "resolved": "https://registry.npmjs.org/@nodelib/fs.scandir/-/fs.scandir-2.1.5.tgz",
 @@ -457,6 +548,121 @@
-                 "@octokit/openapi-types": "^13.4.0"
+                 "@octokit/openapi-types": "^13.6.0"
              }
          },
 +        "node_modules/@rushstack/node-core-library": {
@@ -501,7 +501,7 @@ index 82355f16ef..2469446263 100644
              "version": "2.1.5",
              "resolved": "https://registry.npmjs.org/@nodelib/fs.scandir/-/fs.scandir-2.1.5.tgz",
 @@ -8895,6 +9272,115 @@
-                 "@octokit/openapi-types": "^13.4.0"
+                 "@octokit/openapi-types": "^13.6.0"
              }
          },
 +        "@rushstack/node-core-library": {
