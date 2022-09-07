@@ -40,7 +40,7 @@ index 3a43a5c691..1df1706e41 100644
  // search directories upward to avoid hard-wired paths based on the
  // build tree (same as scripts/build/findUpDir.js)
 diff --git a/src/harness/harnessGlobals.ts b/src/harness/harnessGlobals.ts
-index 97c363e95f..ce8249680d 100644
+index 97c363e95f..9de9537181 100644
 --- a/src/harness/harnessGlobals.ts
 +++ b/src/harness/harnessGlobals.ts
 @@ -1,19 +1,17 @@
@@ -55,12 +55,12 @@ index 97c363e95f..ce8249680d 100644
  declare global {
      // Module transform: converted from ambient declaration
 -    var assert: typeof _chai.assert;
-+    var assert: typeof chai.assert;
++    var assert: typeof chai.assert; // eslint-disable-line no-var
  }
  declare global {
      // Module transform: converted from ambient declaration
 -    var expect: typeof _chai.expect;
-+    var expect: typeof chai.expect;
++    var expect: typeof chai.expect; // eslint-disable-line no-var
  }
 -var _chai: typeof import("chai") = require("chai");
 -globalThis.assert = _chai.assert;

@@ -7,11 +7,11 @@ Subject: [PATCH] Add api-extractor
  .gitignore                        |   1 +
  package-lock.json                 | 559 ++++++++++++++++++++++++++++++
  package.json                      |   1 +
- scripts/apiExtractor.ts           |  14 +
+ scripts/apiExtractor.ts           |  15 +
  src/api-extractor-base.json       | 414 ++++++++++++++++++++++
  src/typescript/api-extractor.json |  59 ++++
  src/typescript/typescript.ts      |   3 +-
- 7 files changed, 1049 insertions(+), 2 deletions(-)
+ 7 files changed, 1050 insertions(+), 2 deletions(-)
  create mode 100644 scripts/apiExtractor.ts
  create mode 100644 src/api-extractor-base.json
  create mode 100644 src/typescript/api-extractor.json
@@ -766,16 +766,16 @@ index da018f3c42..9906a79d62 100644
          "@types/chai": "latest",
 diff --git a/scripts/apiExtractor.ts b/scripts/apiExtractor.ts
 new file mode 100644
-index 0000000000..ac2b0d9ce7
+index 0000000000..d9d29be0cc
 --- /dev/null
 +++ b/scripts/apiExtractor.ts
-@@ -0,0 +1,14 @@
-+import * as path from 'path';
+@@ -0,0 +1,15 @@
++import * as path from "path";
 +import {
 +  Extractor,
 +  ExtractorConfig,
 +  ExtractorResult
-+} from '@microsoft/api-extractor';
++} from "@microsoft/api-extractor";
 +
 +const packageRoot = path.resolve(__dirname, "..");
 +
@@ -784,6 +784,7 @@ index 0000000000..ac2b0d9ce7
 +//   - src/typescriptServices
 +//   - src/tsserverlibrary
 +// Then in the output, replace const enum with "enum".
++// Also apply copyright header, as api-extractor won't.
 diff --git a/src/api-extractor-base.json b/src/api-extractor-base.json
 new file mode 100644
 index 0000000000..dbc6360d5a

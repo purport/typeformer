@@ -7425,7 +7425,7 @@ index 4d948b5b75..013e32553c 100644
 +/** @internal */
  export type TypingInstallerResponseUnion = SetTypings | InvalidateCachedTypings | TypesRegistryResponse | PackageInstalledResponse | InstallTypes | InitializationFailedResponse;
 diff --git a/src/server/editorServices.ts b/src/server/editorServices.ts
-index 899759fce3..0824a76b82 100644
+index 78b7a20d9a..48b762ef16 100644
 --- a/src/server/editorServices.ts
 +++ b/src/server/editorServices.ts
 @@ -35,7 +35,7 @@ import {
@@ -9741,7 +9741,7 @@ index aa160e17d2..25c77fe3d4 100644
          if (this.sourceMapFilePath && !isString(this.sourceMapFilePath)) {
              closeFileWatcherOf(this.sourceMapFilePath);
 diff --git a/src/server/session.ts b/src/server/session.ts
-index e28017ab24..7046133a20 100644
+index b8c177adce..25a59e866a 100644
 --- a/src/server/session.ts
 +++ b/src/server/session.ts
 @@ -3531,7 +3531,7 @@ export interface HandlerResponse {
@@ -10257,7 +10257,7 @@ index 26790a88df..cba7b6e51a 100644
  
  export interface DefinitionInfoAndBoundSpan {
 diff --git a/src/services/utilities.ts b/src/services/utilities.ts
-index 1f4a950a3b..d3752d76b1 100644
+index 34a36bed90..80830847ef 100644
 --- a/src/services/utilities.ts
 +++ b/src/services/utilities.ts
 @@ -60,7 +60,7 @@ import {

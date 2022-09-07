@@ -1,0 +1,88 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Jake Bailey <5341706+jakebailey@users.noreply.github.com>
+Date: Wed, 7 Sep 2022 15:13:55 -0700
+Subject: [PATCH] Make current state lint-clean
+
+---
+ src/server/editorServices.ts    | 2 +-
+ src/server/session.ts           | 2 +-
+ src/services/utilities.ts       | 4 ++--
+ src/testRunner/parallel/host.ts | 7 +++----
+ 4 files changed, 7 insertions(+), 8 deletions(-)
+
+diff --git a/src/server/editorServices.ts b/src/server/editorServices.ts
+index 899759fce3..78b7a20d9a 100644
+--- a/src/server/editorServices.ts
++++ b/src/server/editorServices.ts
+@@ -2076,7 +2076,7 @@ export class ProjectService {
+             configFileName: configFileName(),
+             projectType: project instanceof ExternalProject ? "external" : "configured",
+             languageServiceEnabled: project.languageServiceEnabled,
+-            version: version, // eslint-disable-line @typescript-eslint/no-unnecessary-qualifier
++            version,
+         };
+         this.eventHandler({ eventName: ProjectInfoTelemetryEvent, data });
+ 
+diff --git a/src/server/session.ts b/src/server/session.ts
+index e28017ab24..b8c177adce 100644
+--- a/src/server/session.ts
++++ b/src/server/session.ts
+@@ -2953,7 +2953,7 @@ export class Session<TMessage = string> implements EventSender {
+ 
+     private handlers = new Map(getEntries<(request: protocol.Request) => HandlerResponse>({
+         [CommandNames.Status]: () => {
+-            const response: protocol.StatusResponseBody = { version: version }; // eslint-disable-line @typescript-eslint/no-unnecessary-qualifier
++            const response: protocol.StatusResponseBody = { version };
+             return this.requiredResponse(response);
+         },
+         [CommandNames.OpenExternalProject]: (request: protocol.OpenExternalProjectRequest) => {
+diff --git a/src/services/utilities.ts b/src/services/utilities.ts
+index 1f4a950a3b..34a36bed90 100644
+--- a/src/services/utilities.ts
++++ b/src/services/utilities.ts
+@@ -75,8 +75,8 @@ declare global {
+ declare global {
+     // Module transform: converted from ambient declaration
+     /** @internal */
+-    var Promise: PromiseConstructor;
+-} // eslint-disable-line no-var
++    var Promise: PromiseConstructor; // eslint-disable-line no-var
++}
+ 
+ // These utilities are common to multiple language service features.
+ //#region
+diff --git a/src/testRunner/parallel/host.ts b/src/testRunner/parallel/host.ts
+index a424aa8581..0b64fba829 100644
+--- a/src/testRunner/parallel/host.ts
++++ b/src/testRunner/parallel/host.ts
+@@ -249,7 +249,7 @@ export function start() {
+         let totalPassing = 0;
+         const startDate = new Date();
+ 
+-        const progressBars = new ProgressBars({ noColors: noColors }); // eslint-disable-line @typescript-eslint/no-unnecessary-qualifier
++        const progressBars = new ProgressBars({ noColors });
+         const progressUpdateInterval = 1 / progressBars._options.width;
+         let nextProgress = progressUpdateInterval;
+ 
+@@ -259,7 +259,7 @@ export function start() {
+         let closedWorkers = 0;
+         for (let i = 0; i < workerCount; i++) {
+             // TODO: Just send the config over the IPC channel or in the command line arguments
+-            const config: TestConfig = { light: lightMode, listenForWork: true, runUnitTests: runUnitTests, stackTraceLimit: stackTraceLimit, timeout: globalTimeout }; // eslint-disable-line @typescript-eslint/no-unnecessary-qualifier
++            const config: TestConfig = { light: lightMode, listenForWork: true, runUnitTests, stackTraceLimit, timeout: globalTimeout };
+             const configPath = ts.combinePaths(taskConfigsFolder, `task-config${i}.json`);
+             IO.writeFile(configPath, JSON.stringify(config));
+             const worker: Worker = {
+@@ -558,8 +558,7 @@ export function start() {
+                 failedTestReporter = new FailedTestReporter(replayRunner, {
+                     reporterOptions: {
+                         file: path.resolve(".failed-tests"),
+-                        keepFailed: keepFailed // eslint-disable-line @typescript-eslint/no-unnecessary-qualifier
+- // eslint-disable-line @typescript-eslint/no-unnecessary-qualifier
++                        keepFailed,
+                     }
+                 });
+             }
+-- 
+2.37.1
+

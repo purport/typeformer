@@ -4,43 +4,49 @@ Date: Tue, 31 May 2022 11:00:25 -0700
 Subject: [PATCH] Add TODOs in Gulpfile
 
 ---
- Gulpfile.js | 20 ++++++++++++++------
- 1 file changed, 14 insertions(+), 6 deletions(-)
+ Gulpfile.js | 26 ++++++++++++++++++++------
+ 1 file changed, 20 insertions(+), 6 deletions(-)
 
 diff --git a/Gulpfile.js b/Gulpfile.js
-index 7f527a93a0..9eb06af3f6 100644
+index 7f527a93a0..bb329dc69f 100644
 --- a/Gulpfile.js
 +++ b/Gulpfile.js
 @@ -19,6 +19,8 @@ const cmdLineOptions = require("./scripts/build/options");
  const copyright = "CopyrightNotice.txt";
  const cleanTasks = [];
  
-+const testRunner = "./built/local/testRunner/_namespaces/Harness.js"
++const testRunner = "./built/local/testRunner/_namespaces/Harness.js";
 +
  const buildScripts = () => buildProject("scripts");
  task("scripts", buildScripts);
  task("scripts").description = "Builds files in the 'scripts' folder.";
-@@ -119,6 +121,9 @@ const localPreBuild = parallel(generateLibs, series(buildScripts, generateDiagno
+@@ -119,6 +121,12 @@ const localPreBuild = parallel(generateLibs, series(buildScripts, generateDiagno
  const preBuild = cmdLineOptions.lkg ? lkgPreBuild : localPreBuild;
  
  const buildServices = (() => {
 +    // TODO(jakebailey): fix this for modules
-+    return cb => { console.log("!!!TODO!!! buildServices"); cb(); };
++    return cb => {
++        console.log("!!!TODO!!! buildServices");
++        cb();
++    };
 +
      // build typescriptServices.out.js
      const buildTypescriptServicesOut = () => buildProject("src/typescriptServices/tsconfig.json", cmdLineOptions);
  
-@@ -252,6 +257,9 @@ task("watch-min").flags = {
+@@ -252,6 +260,12 @@ task("watch-min").flags = {
  };
  
  const buildLssl = (() => {
 +    // TODO(jakebailey): fix this for modules
-+    return cb => { console.log("!!!TODO!!! buildLssl"); cb(); };
++    return cb => {
++        console.log("!!!TODO!!! buildLssl");
++        cb();
++    };
 +
      // build tsserverlibrary.out.js
      const buildServerLibraryOut = () => buildProject("src/tsserverlibrary/tsconfig.json", cmdLineOptions);
  
-@@ -429,8 +437,8 @@ preTest.displayName = "preTest";
+@@ -429,8 +443,8 @@ preTest.displayName = "preTest";
  
  const postTest = (done) => cmdLineOptions.lint ? lint() : done();
  
@@ -51,7 +57,7 @@ index 7f527a93a0..9eb06af3f6 100644
  task("runtests").description = "Runs the tests using the built run.js file.";
  task("runtests").flags = {
      "-t --tests=<regex>": "Pattern for tests to run.",
-@@ -449,8 +457,8 @@ task("runtests").flags = {
+@@ -449,8 +463,8 @@ task("runtests").flags = {
      "   --shardId": "1-based ID of this shard (default: 1)",
  };
  
@@ -62,7 +68,7 @@ index 7f527a93a0..9eb06af3f6 100644
  task("runtests-parallel").description = "Runs all the tests in parallel using the built run.js file.";
  task("runtests-parallel").flags = {
      "   --no-lint": "disables lint.",
-@@ -599,10 +607,10 @@ task("publish-nightly").description = "Runs `npm publish --tag next` to create a
+@@ -599,10 +613,10 @@ task("publish-nightly").description = "Runs `npm publish --tag next` to create a
  // write some kind of trigger file that indicates build completion that we could listen for instead.
  const watchRuntests = () => watch(["built/local/*.js", "tests/cases/**/*.ts", "tests/cases/**/tsconfig.json"], { delay: 5000 }, async () => {
      if (cmdLineOptions.tests || cmdLineOptions.failed) {

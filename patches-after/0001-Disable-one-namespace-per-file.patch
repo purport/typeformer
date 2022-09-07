@@ -1,0 +1,26 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Jake Bailey <5341706+jakebailey@users.noreply.github.com>
+Date: Wed, 7 Sep 2022 15:09:39 -0700
+Subject: [PATCH] Disable one-namespace-per-file
+
+---
+ .eslintrc.json | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/.eslintrc.json b/.eslintrc.json
+index 789725d782..ff4de93430 100644
+--- a/.eslintrc.json
++++ b/.eslintrc.json
+@@ -94,7 +94,8 @@
+         "local/simple-indent": "error",
+         "local/debug-assert": "error",
+         "local/no-keywords": "error",
+-        "local/one-namespace-per-file": "error",
++        // TOOD(jakebailey): delete; no longer relavent after modules.
++        // "local/one-namespace-per-file": "error",
+ 
+         // eslint-plugin-import
+         "import/no-extraneous-dependencies": ["error", { "optionalDependencies": false }],
+-- 
+2.37.1
+
