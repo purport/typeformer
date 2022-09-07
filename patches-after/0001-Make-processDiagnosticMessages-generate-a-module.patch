@@ -8,7 +8,7 @@ Subject: [PATCH] Make processDiagnosticMessages generate a module
  1 file changed, 18 insertions(+), 17 deletions(-)
 
 diff --git a/scripts/processDiagnosticMessages.ts b/scripts/processDiagnosticMessages.ts
-index 0ddc27b06f..62701c4f4b 100644
+index 0ddc27b06f..29e66d656b 100644
 --- a/scripts/processDiagnosticMessages.ts
 +++ b/scripts/processDiagnosticMessages.ts
 @@ -38,10 +38,7 @@ function main(): void {
@@ -48,7 +48,7 @@ index 0ddc27b06f..62701c4f4b 100644
 +        "    return { code, category, key, message, reportsUnnecessary, elidedInCompatabilityPyramid, reportsDeprecated };",
 +        "}",
 +        "",
-+        "/* @internal */",
++        "/** @internal */",
 +        "export const Diagnostics = {",
 +    ];
      messageTable.forEach(({ code, category, reportsUnnecessary, elidedInCompatabilityPyramid, reportsDeprecated }, name) => {

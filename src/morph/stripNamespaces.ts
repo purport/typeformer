@@ -525,7 +525,7 @@ export function stripNamespaces(project: Project): void {
                             targetFilename.replace(/(\.d)?\.ts$/, "") as StandardizedFilePath
                         );
                         writer
-                            .conditionalWriteLine(needsInternal, "/* @internal */")
+                            .conditionalWriteLine(needsInternal, "/** @internal */")
                             .write("declare module ")
                             .quote(name)
                             .write(" ")
@@ -542,7 +542,7 @@ export function stripNamespaces(project: Project): void {
             if (needsInternal) {
                 const originalText = statement.getText(true);
                 statement.replaceWithText((writer) => {
-                    writer.writeLine("/* @internal */");
+                    writer.writeLine("/** @internal */");
                     writer.write(originalText);
                 }, project.createWriter());
             }
@@ -571,7 +571,7 @@ export function stripNamespaces(project: Project): void {
                         writer.write("declare global").block(() => {
                             writer
                                 .writeLine("// Module transform: converted from ambient declaration")
-                                .conditionalWriteLine(isInternal, "/* @internal */")
+                                .conditionalWriteLine(isInternal, "/** @internal */")
                                 .write(originalText);
                         });
                     });

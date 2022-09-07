@@ -5,7 +5,6 @@ Subject: [PATCH] Overhaul tsconfigs to output to the right locations
 
 ---
  src/cancellationToken/tsconfig.json          | 10 ++--------
- src/compiler/core.ts                         |  4 ++--
  src/compiler/tsconfig.json                   |  2 +-
  src/compiler/tsconfig.release.json           | 10 ----------
  src/debug/tsconfig.json                      |  6 ++----
@@ -34,7 +33,7 @@ Subject: [PATCH] Overhaul tsconfigs to output to the right locations
  src/typingsInstallerCore/tsconfig.json       |  2 +-
  src/watchGuard/tsconfig.json                 |  6 ++----
  src/webServer/tsconfig.json                  |  4 +---
- 30 files changed, 40 insertions(+), 119 deletions(-)
+ 29 files changed, 38 insertions(+), 117 deletions(-)
  delete mode 100644 src/compiler/tsconfig.release.json
  delete mode 100644 src/executeCommandLine/tsconfig.release.json
  delete mode 100644 src/tsc/tsconfig.release.json
@@ -61,28 +60,6 @@ index 6d27fe45cf..76eca8f56c 100644
          "module": "commonjs",
          "types": [
              "node"
-diff --git a/src/compiler/core.ts b/src/compiler/core.ts
-index fffc5330c9..090680a35b 100644
---- a/src/compiler/core.ts
-+++ b/src/compiler/core.ts
-@@ -231,7 +231,7 @@ export function findIndex<T>(array: readonly T[] | undefined, predicate: (elemen
-     return -1;
- }
- 
--/* @internal */
-+/** @internal */
- export function findLastIndex<T>(array: readonly T[] | undefined, predicate: (element: T, index: number) => boolean, startIndex?: number): number {
-     if (array === undefined) return -1;
-     for (let i = startIndex ?? array.length - 1; i >= 0; i--) {
-@@ -242,7 +242,7 @@ export function findLastIndex<T>(array: readonly T[] | undefined, predicate: (el
-     return -1;
- }
- 
--/* @internal */
-+/** @internal */
- /**
-  * Returns the first truthy result of `callback`, or else fails.
-  * This is like `forEach`, but never returns undefined.
 diff --git a/src/compiler/tsconfig.json b/src/compiler/tsconfig.json
 index df2979bb39..3aa3f85519 100644
 --- a/src/compiler/tsconfig.json

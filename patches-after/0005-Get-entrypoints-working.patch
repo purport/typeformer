@@ -81,7 +81,7 @@ index a8ae1655e8..f53ccfb4d8 100644
      ]
  }
 diff --git a/src/tsserver/nodeServer.ts b/src/tsserver/nodeServer.ts
-index b1bd6740d3..1c84362247 100644
+index 2f642f1293..7a93b0f594 100644
 --- a/src/tsserver/nodeServer.ts
 +++ b/src/tsserver/nodeServer.ts
 @@ -539,7 +539,8 @@ function startNodeSession(options: StartSessionOptions, logger: Logger, cancella
