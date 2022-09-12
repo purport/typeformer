@@ -37,7 +37,7 @@ index e28017ab24..b8c177adce 100644
          },
          [CommandNames.OpenExternalProject]: (request: protocol.OpenExternalProjectRequest) => {
 diff --git a/src/services/utilities.ts b/src/services/utilities.ts
-index 1f4a950a3b..34a36bed90 100644
+index e863b33dbc..098e371166 100644
 --- a/src/services/utilities.ts
 +++ b/src/services/utilities.ts
 @@ -75,8 +75,8 @@ declare global {

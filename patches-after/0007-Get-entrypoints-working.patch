@@ -20,7 +20,7 @@ Subject: [PATCH] Get entrypoints working
  create mode 100644 src/typescript/typescript.ts
 
 diff --git a/Gulpfile.js b/Gulpfile.js
-index 674ada1dfa..52dec7101a 100644
+index 7f65318d68..bb87b72a89 100644
 --- a/Gulpfile.js
 +++ b/Gulpfile.js
 @@ -166,12 +166,12 @@ const buildServices = (() => {
@@ -81,10 +81,10 @@ index a8ae1655e8..f53ccfb4d8 100644
      ]
  }
 diff --git a/src/tsserver/nodeServer.ts b/src/tsserver/nodeServer.ts
-index 2f642f1293..7a93b0f594 100644
+index 7be2e3c49e..9ea213f134 100644
 --- a/src/tsserver/nodeServer.ts
 +++ b/src/tsserver/nodeServer.ts
-@@ -539,7 +539,8 @@ function startNodeSession(options: StartSessionOptions, logger: Logger, cancella
+@@ -525,7 +525,8 @@ function startNodeSession(options: StartSessionOptions, logger: Logger, cancella
                  }
              }
  

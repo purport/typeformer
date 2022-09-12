@@ -8,7 +8,7 @@ Subject: [PATCH] Disable one-namespace-per-file
  1 file changed, 2 insertions(+), 1 deletion(-)
 
 diff --git a/.eslintrc.json b/.eslintrc.json
-index 789725d782..ff4de93430 100644
+index 2ea9622d72..114e47e238 100644
 --- a/.eslintrc.json
 +++ b/.eslintrc.json
 @@ -94,7 +94,8 @@

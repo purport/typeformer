@@ -8,7 +8,7 @@ Subject: [PATCH] Add TODOs in Gulpfile
  1 file changed, 20 insertions(+), 6 deletions(-)
 
 diff --git a/Gulpfile.js b/Gulpfile.js
-index 7f527a93a0..bb329dc69f 100644
+index 5f4f365915..7adec32385 100644
 --- a/Gulpfile.js
 +++ b/Gulpfile.js
 @@ -19,6 +19,8 @@ const cmdLineOptions = require("./scripts/build/options");
@@ -46,29 +46,29 @@ index 7f527a93a0..bb329dc69f 100644
      // build tsserverlibrary.out.js
      const buildServerLibraryOut = () => buildProject("src/tsserverlibrary/tsconfig.json", cmdLineOptions);
  
-@@ -429,8 +443,8 @@ preTest.displayName = "preTest";
- 
- const postTest = (done) => cmdLineOptions.lint ? lint() : done();
+@@ -424,8 +438,8 @@ task("watch-local").flags = {
+ const preTest = parallel(buildTsc, buildTests, buildServices, buildLssl);
+ preTest.displayName = "preTest";
  
 -const runTests = () => runConsoleTests("built/local/run.js", "mocha-fivemat-progress-reporter", /*runInParallel*/ false, /*watchMode*/ false);
--task("runtests", series(preBuild, preTest, runTests, postTest));
+-task("runtests", series(preBuild, preTest, runTests));
 +const runTests = () => runConsoleTests(testRunner, "mocha-fivemat-progress-reporter", /*runInParallel*/ false, /*watchMode*/ false);
-+task("runtests", series(/*preBuild, preTest,*/ runTests /*, postTest*/)); // TODO(jakebailey): fix this for modules
++task("runtests", series(/*preBuild, preTest,*/ runTests)); // TODO(jakebailey): fix this for modules
  task("runtests").description = "Runs the tests using the built run.js file.";
  task("runtests").flags = {
      "-t --tests=<regex>": "Pattern for tests to run.",
-@@ -449,8 +463,8 @@ task("runtests").flags = {
+@@ -443,8 +457,8 @@ task("runtests").flags = {
      "   --shardId": "1-based ID of this shard (default: 1)",
  };
  
 -const runTestsParallel = () => runConsoleTests("built/local/run.js", "min", /*runInParallel*/ cmdLineOptions.workers > 1, /*watchMode*/ false);
--task("runtests-parallel", series(preBuild, preTest, runTestsParallel, postTest));
+-task("runtests-parallel", series(preBuild, preTest, runTestsParallel));
 +const runTestsParallel = () => runConsoleTests(testRunner, "min", /*runInParallel*/ cmdLineOptions.workers > 1, /*watchMode*/ false);
-+task("runtests-parallel", series(/*preBuild, preTest,*/ runTestsParallel /*, postTest*/)); // TODO(jakebailey): fix this for modules
++task("runtests-parallel", series(/*preBuild, preTest,*/ runTestsParallel)); // TODO(jakebailey): fix this for modules
  task("runtests-parallel").description = "Runs all the tests in parallel using the built run.js file.";
  task("runtests-parallel").flags = {
-     "   --no-lint": "disables lint.",
-@@ -599,10 +613,10 @@ task("publish-nightly").description = "Runs `npm publish --tag next` to create a
+     "   --light": "Run tests in light mode (fewer verifications, but tests run faster).",
+@@ -592,10 +606,10 @@ task("publish-nightly").description = "Runs `npm publish --tag next` to create a
  // write some kind of trigger file that indicates build completion that we could listen for instead.
  const watchRuntests = () => watch(["built/local/*.js", "tests/cases/**/*.ts", "tests/cases/**/tsconfig.json"], { delay: 5000 }, async () => {
      if (cmdLineOptions.tests || cmdLineOptions.failed) {
