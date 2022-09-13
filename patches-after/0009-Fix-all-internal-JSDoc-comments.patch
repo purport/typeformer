@@ -103,11 +103,9 @@ otherwise they won't be used by api-extractor, so move them if needed.
  src/services/transpile.ts                     |    7 +-
  src/services/types.ts                         |   96 +-
  src/services/utilities.ts                     |   98 +-
- .../unittests/tsbuild/amdModulesWithOut.ts    |    4 +-
- src/testRunner/unittests/tsbuild/outFile.ts   |   10 +-
  src/typingsInstallerCore/typingsInstaller.ts  |    8 +-
  src/webServer/webServer.ts                    |    2 +-
- 92 files changed, 2674 insertions(+), 2080 deletions(-)
+ 90 files changed, 2667 insertions(+), 2073 deletions(-)
 
 diff --git a/src/compiler/builder.ts b/src/compiler/builder.ts
 index db11537f00..04efd3a7d3 100644
@@ -15334,75 +15332,6 @@ index 098e371166..1bcf74c162 100644
   */
  export function getFormatCodeSettingsForWriting({ options }: formatting.FormatContext, sourceFile: SourceFile): FormatCodeSettings {
      const shouldAutoDetectSemicolonPreference = !options.semicolons || options.semicolons === SemicolonPreference.Ignore;
-diff --git a/src/testRunner/unittests/tsbuild/amdModulesWithOut.ts b/src/testRunner/unittests/tsbuild/amdModulesWithOut.ts
-index d137e70ecc..e4618ca596 100644
---- a/src/testRunner/unittests/tsbuild/amdModulesWithOut.ts
-+++ b/src/testRunner/unittests/tsbuild/amdModulesWithOut.ts
-@@ -104,7 +104,7 @@ describe("unittests:: tsbuild:: outFile:: on amd modules with --out", () => {
- 
-         describe("stripInternal", () => {
-             function stripInternalScenario(fs: vfs.FileSystem) {
--                const internal = "/*@internal*/";
-+                const internal = "/** @internal */";
-                 ts.replaceText(fs, "/src/app/tsconfig.json", `"composite": true,`, `"composite": true,
- "stripInternal": true,`);
-                 ts.replaceText(fs, "/src/lib/file0.ts", "const", `${internal} const`);
-@@ -140,7 +140,7 @@ ${internal} export enum internalEnum { a, b, c }`);
-             verifyOutFileScenario({
-                 subScenario: "stripInternal",
-                 modifyFs: stripInternalScenario,
--                modifyAgainFs: fs => ts.replaceText(fs, "/src/lib/file1.ts", `export const`, `/*@internal*/ export const`),
-+                modifyAgainFs: fs => ts.replaceText(fs, "/src/lib/file1.ts", `export const`, `/** @internal */ export const`),
-             });
-         });
- 
-diff --git a/src/testRunner/unittests/tsbuild/outFile.ts b/src/testRunner/unittests/tsbuild/outFile.ts
-index 08a80e200e..6f0807633a 100644
---- a/src/testRunner/unittests/tsbuild/outFile.ts
-+++ b/src/testRunner/unittests/tsbuild/outFile.ts
-@@ -385,7 +385,7 @@ describe("unittests:: tsbuild:: outFile::", () => {
-             }
- 
-             function stripInternalScenario(fs: vfs.FileSystem, removeCommentsDisabled?: boolean, jsDocStyle?: boolean) {
--                const internal: string = jsDocStyle ? `/**@internal*/` : `/*@internal*/`;
-+                const internal: string = jsDocStyle ? `/**@internal*/` : `/** @internal */`;
-                 if (removeCommentsDisabled) {
-                     diableRemoveCommentsInAll(fs);
-                 }
-@@ -423,14 +423,14 @@ ${internal} enum internalEnum { a, b, c }`);
-             verifyOutFileScenario({
-                 subScenario: "stripInternal",
-                 modifyFs: stripInternalScenario,
--                modifyAgainFs: fs => ts.replaceText(fs, "/src/first/first_PART1.ts", `/*@internal*/ interface`, "interface"),
-+                modifyAgainFs: fs => ts.replaceText(fs, "/src/first/first_PART1.ts", `/** @internal */ interface`, "interface"),
-             });
- 
-             // Verify ignore dtsChanged
-             verifyOutFileScenario({
-                 subScenario: "stripInternal with comments emit enabled",
-                 modifyFs: fs => stripInternalScenario(fs, /*removeCommentsDisabled*/ true),
--                modifyAgainFs: fs => ts.replaceText(fs, "/src/first/first_PART1.ts", `/*@internal*/ interface`, "interface"),
-+                modifyAgainFs: fs => ts.replaceText(fs, "/src/first/first_PART1.ts", `/** @internal */ interface`, "interface"),
-                 ignoreDtsChanged: true,
-                 baselineOnly: true
-             });
-@@ -468,14 +468,14 @@ ${internal} enum internalEnum { a, b, c }`);
-                 verifyOutFileScenario({
-                     subScenario: "stripInternal when one-two-three are prepended in order",
-                     modifyFs: stripInternalWithDependentOrder,
--                    modifyAgainFs: fs => ts.replaceText(fs, "/src/first/first_PART1.ts", `/*@internal*/ interface`, "interface"),
-+                    modifyAgainFs: fs => ts.replaceText(fs, "/src/first/first_PART1.ts", `/** @internal */ interface`, "interface"),
-                 });
- 
-                 // Verify ignore dtsChanged
-                 verifyOutFileScenario({
-                     subScenario: "stripInternal with comments emit enabled when one-two-three are prepended in order",
-                     modifyFs: fs => stripInternalWithDependentOrder(fs, /*removeCommentsDisabled*/ true),
--                    modifyAgainFs: fs => ts.replaceText(fs, "/src/first/first_PART1.ts", `/*@internal*/ interface`, "interface"),
-+                    modifyAgainFs: fs => ts.replaceText(fs, "/src/first/first_PART1.ts", `/** @internal */ interface`, "interface"),
-                     ignoreDtsChanged: true,
-                     baselineOnly: true
-                 });
 diff --git a/src/typingsInstallerCore/typingsInstaller.ts b/src/typingsInstallerCore/typingsInstaller.ts
 index ad08facc3c..c404433663 100644
 --- a/src/typingsInstallerCore/typingsInstaller.ts
