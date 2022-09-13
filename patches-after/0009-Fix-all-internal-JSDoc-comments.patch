@@ -15,7 +15,6 @@ non-JSDoc comments.
 The comments also need to be attached to a declaration, not floating,
 otherwise they won't be used by api-extractor, so move them if needed.
 ---
- src/api-extractor-base.json                   |    4 +-
  src/compiler/builder.ts                       |    9 +-
  src/compiler/builderPublic.ts                 |   22 +-
  src/compiler/builderStatePublic.ts            |    4 +-
@@ -108,23 +107,8 @@ otherwise they won't be used by api-extractor, so move them if needed.
  src/testRunner/unittests/tsbuild/outFile.ts   |   10 +-
  src/typingsInstallerCore/typingsInstaller.ts  |    8 +-
  src/webServer/webServer.ts                    |    2 +-
- 93 files changed, 2676 insertions(+), 2082 deletions(-)
+ 92 files changed, 2674 insertions(+), 2080 deletions(-)
 
-diff --git a/src/api-extractor-base.json b/src/api-extractor-base.json
-index ea6116b8b5..7ebd76976d 100644
---- a/src/api-extractor-base.json
-+++ b/src/api-extractor-base.json
-@@ -405,8 +405,8 @@
-        */
-       "tsdocMessageReporting": {
-         "default": {
--          "logLevel": "warning"
--          // "addToApiReportFile": false
-+          "logLevel": "none",
-+          "addToApiReportFile": false
-         }
-   
-         // "tsdoc-link-tag-unescaped-text": {
 diff --git a/src/compiler/builder.ts b/src/compiler/builder.ts
 index db11537f00..04efd3a7d3 100644
 --- a/src/compiler/builder.ts

@@ -27,7 +27,7 @@ Subject: [PATCH] Get entrypoints working
  src/tsconfig-base.json                       |  1 -
  src/tsconfig-library-base.json               | 10 ----------
  src/tsconfig-noncomposite-base.json          |  9 ---------
- src/tsconfig.json                            |  5 ++++-
+ src/tsconfig.json                            |  4 +++-
  src/tsserver/nodeServer.ts                   |  3 ++-
  src/tsserver/tsconfig.json                   |  4 ++--
  src/tsserverlibrary/_namespaces/ts.server.ts |  1 -
@@ -40,7 +40,7 @@ Subject: [PATCH] Get entrypoints working
  src/typingsInstallerCore/tsconfig.json       |  2 +-
  src/watchGuard/tsconfig.json                 |  6 ++----
  src/webServer/tsconfig.json                  |  4 +---
- 36 files changed, 95 insertions(+), 125 deletions(-)
+ 36 files changed, 94 insertions(+), 125 deletions(-)
  delete mode 100644 src/compiler/tsconfig.release.json
  delete mode 100644 src/executeCommandLine/tsconfig.release.json
  delete mode 100644 src/tsc/tsconfig.release.json
@@ -427,16 +427,15 @@ index 879a038f5a..0000000000
 -    }
 -}
 diff --git a/src/tsconfig.json b/src/tsconfig.json
-index a8ae1655e8..f53ccfb4d8 100644
+index a8ae1655e8..f70352ca5e 100644
 --- a/src/tsconfig.json
 +++ b/src/tsconfig.json
-@@ -4,11 +4,14 @@
+@@ -4,11 +4,13 @@
      "references": [
          { "path": "./tsc" },
          { "path": "./tsserver" },
 +        { "path": "./tsserverlibrary" },
 +        { "path": "./typescript" },
-+        { "path": "./typescriptServices" },
          { "path": "./typingsInstaller" },
          { "path": "./watchGuard" },
          { "path": "./debug" },

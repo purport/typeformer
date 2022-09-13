@@ -3,35 +3,17 @@ From: Jake Bailey <5341706+jakebailey@users.noreply.github.com>
 Date: Tue, 13 Sep 2022 09:51:00 -0700
 Subject: [PATCH] Work around api-extractor import bug
 
+The import expression for the ETW trace types breaks API extractor; it
+outputs a named import for a non-existent name in the module rather than
+emitting a default import. For now, redeclare the type locally and then
+use a conditional type to verify that what we have is compatible with
+the upstream type when type checking locally.
 ---
- src/api-extractor-base.json |  4 ++--
- src/compiler/perfLogger.ts  | 34 +++++++++++++++++++++++++++++++++-
- 2 files changed, 35 insertions(+), 3 deletions(-)
+ src/compiler/perfLogger.ts | 34 +++++++++++++++++++++++++++++++++-
+ 1 file changed, 33 insertions(+), 1 deletion(-)
 
-diff --git a/src/api-extractor-base.json b/src/api-extractor-base.json
-index 7ebd76976d..19a8384dbd 100644
---- a/src/api-extractor-base.json
-+++ b/src/api-extractor-base.json
-@@ -263,7 +263,7 @@
-        * SUPPORTED TOKENS: <projectFolder>, <packageName>, <unscopedPackageName>
-        * DEFAULT VALUE: ""
-        */
--      "publicTrimmedFilePath": ""
-+      "publicTrimmedFilePath": "",
-   
-       /**
-        * When a declaration is trimmed, by default it will be replaced by a code comment such as
-@@ -272,7 +272,7 @@
-        *
-        * DEFAULT VALUE: false
-        */
--      // "omitTrimmingComments": true
-+      "omitTrimmingComments": true
-     },
-   
-     /**
 diff --git a/src/compiler/perfLogger.ts b/src/compiler/perfLogger.ts
-index 34a59208d6..7e5f0899a9 100644
+index 34a59208d6..a05874a303 100644
 --- a/src/compiler/perfLogger.ts
 +++ b/src/compiler/perfLogger.ts
 @@ -1,6 +1,38 @@
@@ -64,9 +46,9 @@ index 34a59208d6..7e5f0899a9 100644
 +
 +type ImportedPerfLogger = typeof import("@microsoft/typescript-etw");
 +
-+// Assert that our PerfLogger type is the same as the import.
++// Assert that our PerfLogger type is compatible with the library.
 +// TODO(jakebailey): remove this workaround for an api-extractor bug.
-+const _perfLoggerCorrectType: PerfLogger extends ImportedPerfLogger ? ImportedPerfLogger extends PerfLogger ? true : false : false = true;
++const _perfLoggerCorrectType: PerfLogger extends ImportedPerfLogger ? true : false = true;
 +
 +// eslint-disable-next-line @typescript-eslint/no-unused-expressions
 +_perfLoggerCorrectType;
