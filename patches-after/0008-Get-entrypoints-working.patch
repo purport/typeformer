@@ -1,9 +1,10 @@
 From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Jake Bailey <5341706+jakebailey@users.noreply.github.com>
-Date: Tue, 6 Sep 2022 16:00:32 -0700
-Subject: [PATCH] Overhaul tsconfigs to output to the right locations
+Date: Fri, 2 Sep 2022 15:53:02 -0700
+Subject: [PATCH] Get entrypoints working
 
 ---
+ Gulpfile.js                                  | 14 ++++++-------
  src/cancellationToken/tsconfig.json          | 10 ++--------
  src/compiler/tsconfig.json                   |  2 +-
  src/compiler/tsconfig.release.json           | 10 ----------
@@ -11,7 +12,7 @@ Subject: [PATCH] Overhaul tsconfigs to output to the right locations
  src/deprecatedCompat/tsconfig.json           |  4 ++--
  src/dynamicImportCompat/tsconfig.json        |  9 +++------
  src/executeCommandLine/tsconfig.json         |  2 +-
- src/executeCommandLine/tsconfig.release.json | 11 -----------
+ src/executeCommandLine/tsconfig.release.json | 11 ----------
  src/harness/tsconfig.json                    |  2 +-
  src/instrumenter/tsconfig.json               |  5 ++---
  src/jsTyping/tsconfig.json                   |  2 +-
@@ -20,26 +21,67 @@ Subject: [PATCH] Overhaul tsconfigs to output to the right locations
  src/server/tsconfig.json                     |  4 +---
  src/services/tsconfig.json                   |  2 +-
  src/testRunner/tsconfig.json                 |  7 ++-----
+ src/tsc/_namespaces/ts.ts                    |  1 -
  src/tsc/tsconfig.json                        |  4 ++--
- src/tsc/tsconfig.release.json                | 17 -----------------
+ src/tsc/tsconfig.release.json                | 17 ----------------
  src/tsconfig-base.json                       |  1 -
  src/tsconfig-library-base.json               | 10 ----------
  src/tsconfig-noncomposite-base.json          |  9 ---------
+ src/tsconfig.json                            |  5 ++++-
+ src/tsserver/nodeServer.ts                   |  3 ++-
  src/tsserver/tsconfig.json                   |  4 ++--
+ src/tsserverlibrary/_namespaces/ts.server.ts |  1 -
  src/tsserverlibrary/tsconfig.json            |  4 ++--
- src/typescript/tsconfig.json                 |  4 ++--
- src/typescriptServices/tsconfig.json         |  4 ++--
+ src/tsserverlibrary/tsserverlibrary.ts       |  6 +++++-
+ src/typescript/_namespaces/ts.ts             |  6 ++++++
+ src/typescript/tsconfig.json                 | 16 +++++++++++++++
+ src/typescript/typescript.ts                 | 21 ++++++++++++++++++++
  src/typingsInstaller/tsconfig.json           |  5 ++---
  src/typingsInstallerCore/tsconfig.json       |  2 +-
  src/watchGuard/tsconfig.json                 |  6 ++----
  src/webServer/tsconfig.json                  |  4 +---
- 29 files changed, 38 insertions(+), 117 deletions(-)
+ 36 files changed, 95 insertions(+), 125 deletions(-)
  delete mode 100644 src/compiler/tsconfig.release.json
  delete mode 100644 src/executeCommandLine/tsconfig.release.json
  delete mode 100644 src/tsc/tsconfig.release.json
  delete mode 100644 src/tsconfig-library-base.json
  delete mode 100644 src/tsconfig-noncomposite-base.json
+ create mode 100644 src/typescript/_namespaces/ts.ts
+ create mode 100644 src/typescript/tsconfig.json
+ create mode 100644 src/typescript/typescript.ts
 
+diff --git a/Gulpfile.js b/Gulpfile.js
+index 7f65318d68..bb87b72a89 100644
+--- a/Gulpfile.js
++++ b/Gulpfile.js
+@@ -166,12 +166,12 @@ const buildServices = (() => {
+         .pipe(rename("typescript.d.ts"))
+         .pipe(dest("built/local"));
+ 
+-    // create typescript_standalone.d.ts
+-    const createTypescriptStandaloneDts = () => src("built/local/typescriptServices.d.ts")
+-        .pipe(newer("built/local/typescript_standalone.d.ts"))
+-        .pipe(transform(content => content.replace(/declare (namespace|module) ts/g, 'declare module "typescript"')))
+-        .pipe(rename("typescript_standalone.d.ts"))
+-        .pipe(dest("built/local"));
++    // // create typescript_standalone.d.ts
++    // const createTypescriptStandaloneDts = () => src("built/local/typescriptServices.d.ts")
++    //     .pipe(newer("built/local/typescript_standalone.d.ts"))
++    //     .pipe(transform(content => content.replace(/declare (namespace|module) ts/g, 'declare module "typescript"')))
++    //     .pipe(rename("typescript_standalone.d.ts"))
++    //     .pipe(dest("built/local"));
+ 
+     return series(
+         buildTypescriptServicesOut,
+@@ -179,7 +179,7 @@ const buildServices = (() => {
+         createTypescriptServicesDts,
+         createTypescriptJs,
+         createTypescriptDts,
+-        createTypescriptStandaloneDts,
++        // createTypescriptStandaloneDts,
+     );
+ })();
+ task("services", series(preBuild, buildServices));
 diff --git a/src/cancellationToken/tsconfig.json b/src/cancellationToken/tsconfig.json
 index 6d27fe45cf..76eca8f56c 100644
 --- a/src/cancellationToken/tsconfig.json
@@ -295,6 +337,15 @@ index 1aa9033e1d..6a30fb8e97 100644
          "types": [
              "node", "mocha", "chai"
          ],
+diff --git a/src/tsc/_namespaces/ts.ts b/src/tsc/_namespaces/ts.ts
+index 8579e4a93b..8e361ae718 100644
+--- a/src/tsc/_namespaces/ts.ts
++++ b/src/tsc/_namespaces/ts.ts
+@@ -2,4 +2,3 @@
+ 
+ export * from "../../compiler/_namespaces/ts";
+ export * from "../../executeCommandLine/_namespaces/ts";
+-export * from "../tsc";
 diff --git a/src/tsc/tsconfig.json b/src/tsc/tsconfig.json
 index 205112c6f8..8937be39f1 100644
 --- a/src/tsc/tsconfig.json
@@ -375,6 +426,40 @@ index 879a038f5a..0000000000
 -        "incremental": true
 -    }
 -}
+diff --git a/src/tsconfig.json b/src/tsconfig.json
+index a8ae1655e8..f53ccfb4d8 100644
+--- a/src/tsconfig.json
++++ b/src/tsconfig.json
+@@ -4,11 +4,14 @@
+     "references": [
+         { "path": "./tsc" },
+         { "path": "./tsserver" },
++        { "path": "./tsserverlibrary" },
++        { "path": "./typescript" },
++        { "path": "./typescriptServices" },
+         { "path": "./typingsInstaller" },
+         { "path": "./watchGuard" },
+         { "path": "./debug" },
+         { "path": "./cancellationToken" },
+         { "path": "./dynamicImportCompat" },
+-        { "path": "./testRunner" }
++        { "path": "./testRunner" },
+     ]
+ }
+diff --git a/src/tsserver/nodeServer.ts b/src/tsserver/nodeServer.ts
+index 7be2e3c49e..9ea213f134 100644
+--- a/src/tsserver/nodeServer.ts
++++ b/src/tsserver/nodeServer.ts
+@@ -525,7 +525,8 @@ function startNodeSession(options: StartSessionOptions, logger: Logger, cancella
+                 }
+             }
+ 
+-            this.installer = childProcess.fork(combinePaths(__dirname, "typingsInstaller.js"), args, { execArgv });
++            // TODO(jakebailey): fix this for module transform
++            this.installer = childProcess.fork(combinePaths(__dirname, "..", "typingsInstaller", "nodeTypingsInstaller.js"), args, { execArgv });
+             this.installer.on("message", m => this.handleMessage(m));
+ 
+             // We have to schedule this event to the next tick
 diff --git a/src/tsserver/tsconfig.json b/src/tsserver/tsconfig.json
 index 3631224da5..b702499283 100644
 --- a/src/tsserver/tsconfig.json
@@ -390,6 +475,15 @@ index 3631224da5..b702499283 100644
          "types": [
              "node"
          ]
+diff --git a/src/tsserverlibrary/_namespaces/ts.server.ts b/src/tsserverlibrary/_namespaces/ts.server.ts
+index fb916b71f4..21b0d0335f 100644
+--- a/src/tsserverlibrary/_namespaces/ts.server.ts
++++ b/src/tsserverlibrary/_namespaces/ts.server.ts
+@@ -2,4 +2,3 @@
+ 
+ export * from "../../jsTyping/_namespaces/ts.server";
+ export * from "../../server/_namespaces/ts.server";
+-export * from "../tsserverlibrary";
 diff --git a/src/tsserverlibrary/tsconfig.json b/src/tsserverlibrary/tsconfig.json
 index 84e469faca..5855c7d50e 100644
 --- a/src/tsserverlibrary/tsconfig.json
@@ -404,34 +498,78 @@ index 84e469faca..5855c7d50e 100644
      },
      "files": [
          "tsserverlibrary.ts",
+diff --git a/src/tsserverlibrary/tsserverlibrary.ts b/src/tsserverlibrary/tsserverlibrary.ts
+index 8aa07479d7..bd73794b37 100644
+--- a/src/tsserverlibrary/tsserverlibrary.ts
++++ b/src/tsserverlibrary/tsserverlibrary.ts
+@@ -1 +1,5 @@
+-export { };
++import * as ts from "./_namespaces/ts";
++
++// TODO(jakebailey): replace const enum with enum in d.ts
++
++export = ts;
+diff --git a/src/typescript/_namespaces/ts.ts b/src/typescript/_namespaces/ts.ts
+new file mode 100644
+index 0000000000..e55b264380
+--- /dev/null
++++ b/src/typescript/_namespaces/ts.ts
+@@ -0,0 +1,6 @@
++/* Generated file to emulate the ts namespace. */
++
++export * from "../../compiler/_namespaces/ts";
++export * from "../../jsTyping/_namespaces/ts";
++export * from "../../services/_namespaces/ts";
++export * from "../../deprecatedCompat/_namespaces/ts";
 diff --git a/src/typescript/tsconfig.json b/src/typescript/tsconfig.json
-index 13da0a77b5..f30722cadc 100644
---- a/src/typescript/tsconfig.json
+new file mode 100644
+index 0000000000..f30722cadc
+--- /dev/null
 +++ b/src/typescript/tsconfig.json
-@@ -1,7 +1,7 @@
- {
--    "extends": "../tsconfig-library-base",
+@@ -0,0 +1,16 @@
++{
 +    "extends": "../tsconfig-base",
-     "compilerOptions": {
--        "outDir": "../../built/local"
++    "compilerOptions": {
 +        "outDir": "../../built/local/typescript"
-     },
-     "files": [
-         "typescript.ts",
-diff --git a/src/typescriptServices/tsconfig.json b/src/typescriptServices/tsconfig.json
-index 277b98f727..559cb27d9d 100644
---- a/src/typescriptServices/tsconfig.json
-+++ b/src/typescriptServices/tsconfig.json
-@@ -1,7 +1,7 @@
- {
--    "extends": "../tsconfig-library-base",
-+    "extends": "../tsconfig-base",
-     "compilerOptions": {
--        "outDir": "../../built/local"
-+        "outDir": "../../built/local/typescriptServices"
-     },
-     "files": [
-         "typescriptServices.ts",
++    },
++    "files": [
++        "typescript.ts",
++        "_namespaces/ts.ts"
++    ],
++    "references": [
++        { "path": "../compiler" },
++        { "path": "../jsTyping" },
++        { "path": "../services" },
++        { "path": "../deprecatedCompat" }
++    ]
++}
+diff --git a/src/typescript/typescript.ts b/src/typescript/typescript.ts
+new file mode 100644
+index 0000000000..c9862f6a73
+--- /dev/null
++++ b/src/typescript/typescript.ts
+@@ -0,0 +1,21 @@
++import * as ts from "./_namespaces/ts";
++import { Debug, LogLevel } from "./_namespaces/ts";
++
++// TODO(jakebailey): replace const enum with enum in d.ts
++
++// enable deprecation logging
++declare const console: any;
++if (typeof console !== "undefined") {
++    Debug.loggingHost = {
++        log(level, s) {
++            switch (level) {
++                case LogLevel.Error: return console.error(s);
++                case LogLevel.Warning: return console.warn(s);
++                case LogLevel.Info: return console.log(s);
++                case LogLevel.Verbose: return console.log(s);
++            }
++        }
++    };
++}
++
++export = ts;
 diff --git a/src/typingsInstaller/tsconfig.json b/src/typingsInstaller/tsconfig.json
 index ce1cd04846..88bfb976fa 100644
 --- a/src/typingsInstaller/tsconfig.json

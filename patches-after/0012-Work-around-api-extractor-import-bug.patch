@@ -9,10 +9,10 @@ Subject: [PATCH] Work around api-extractor import bug
  2 files changed, 35 insertions(+), 3 deletions(-)
 
 diff --git a/src/api-extractor-base.json b/src/api-extractor-base.json
-index 7832e0cf50..23c09a590f 100644
+index 7ebd76976d..19a8384dbd 100644
 --- a/src/api-extractor-base.json
 +++ b/src/api-extractor-base.json
-@@ -279,7 +279,7 @@
+@@ -263,7 +263,7 @@
         * SUPPORTED TOKENS: <projectFolder>, <packageName>, <unscopedPackageName>
         * DEFAULT VALUE: ""
         */
@@ -21,7 +21,7 @@ index 7832e0cf50..23c09a590f 100644
    
        /**
         * When a declaration is trimmed, by default it will be replaced by a code comment such as
-@@ -288,7 +288,7 @@
+@@ -272,7 +272,7 @@
         *
         * DEFAULT VALUE: false
         */

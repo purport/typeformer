@@ -30,12 +30,12 @@ aren't explicitly written in the source files.
  .../4.0/nodeFactoryTopLevelExports.ts         | 592 +++++++++---------
  src/server/editorServices.ts                  |   4 +-
  src/services/codefixes/helpers.ts             |   4 +-
- src/services/organizeImports.ts               |  11 +-
+ src/services/organizeImports.ts               |   9 +-
  src/services/transform.ts                     |   5 +-
- 24 files changed, 351 insertions(+), 342 deletions(-)
+ 24 files changed, 350 insertions(+), 341 deletions(-)
 
 diff --git a/src/compiler/factory/utilities.ts b/src/compiler/factory/utilities.ts
-index 592e07bec6..a679671d17 100644
+index 010b996d7a..b6c97f8f3b 100644
 --- a/src/compiler/factory/utilities.ts
 +++ b/src/compiler/factory/utilities.ts
 @@ -2,11 +2,12 @@ import {
@@ -70,18 +70,18 @@ index 592e07bec6..a679671d17 100644
      if (isBlock(dest)) {
          return factory.updateBlock(dest, setTextRange(factory.createNodeArray([source, ...dest.statements]), dest.statements));
      }
-@@ -1435,7 +1436,7 @@ export function createAccessorPropertyBackingField(factory: NodeFactory, node: P
- /**
-  * Creates a {@link GetAccessorDeclaration} that reads from a private backing field.
+@@ -1456,7 +1457,7 @@ export function createAccessorPropertyBackingField(factory: NodeFactory, node: P
+  *
+  * @internal
   */
 -export function createAccessorPropertyGetRedirector(factory: NodeFactory, node: PropertyDeclaration, modifiers: ModifiersArray | undefined, name: PropertyName) {
 +export function createAccessorPropertyGetRedirector(factory: NodeFactory, node: PropertyDeclaration, modifiers: ModifiersArray | undefined, name: PropertyName): GetAccessorDeclaration {
      return factory.createGetAccessorDeclaration(
          modifiers,
          name,
-@@ -1456,7 +1457,7 @@ export function createAccessorPropertyGetRedirector(factory: NodeFactory, node:
- /**
-  * Creates a {@link SetAccessorDeclaration} that writes to a private backing field.
+@@ -1478,7 +1479,7 @@ export function createAccessorPropertyGetRedirector(factory: NodeFactory, node:
+  *
+  * @internal
   */
 -export function createAccessorPropertySetRedirector(factory: NodeFactory, node: PropertyDeclaration, modifiers: ModifiersArray | undefined, name: PropertyName) {
 +export function createAccessorPropertySetRedirector(factory: NodeFactory, node: PropertyDeclaration, modifiers: ModifiersArray | undefined, name: PropertyName): SetAccessorDeclaration {
@@ -89,7 +89,7 @@ index 592e07bec6..a679671d17 100644
          modifiers,
          name,
 diff --git a/src/compiler/transformers/classFields.ts b/src/compiler/transformers/classFields.ts
-index 1f2c3ce4c0..103561b53f 100644
+index 5141d77afc..28be1f5f87 100644
 --- a/src/compiler/transformers/classFields.ts
 +++ b/src/compiler/transformers/classFields.ts
 @@ -33,7 +33,7 @@ import {
@@ -101,9 +101,9 @@ index 1f2c3ce4c0..103561b53f 100644
  } from "../_namespaces/ts";
  
  const enum ClassPropertySubstitutionFlags {
-@@ -167,7 +167,7 @@ const enum ClassFacts {
-  * where declarations are elided and initializers are transformed as assignments in the constructor.
-  * When --useDefineForClassFields is on, this transforms to ECMAScript semantics, with Object.defineProperty.
+@@ -168,7 +168,7 @@ const enum ClassFacts {
+  *
+  * @internal
   */
 -export function transformClassFields(context: TransformationContext) {
 +export function transformClassFields(context: TransformationContext): (x: SourceFile | Bundle) => SourceFile | Bundle {
@@ -151,7 +151,7 @@ index 0d4b95afa8..ca3bbbb980 100644
          factory,
          hoistVariableDeclaration
 diff --git a/src/compiler/transformers/es2017.ts b/src/compiler/transformers/es2017.ts
-index 118c0b4c55..b91b912aa9 100644
+index 193eea75be..3f36d8c450 100644
 --- a/src/compiler/transformers/es2017.ts
 +++ b/src/compiler/transformers/es2017.ts
 @@ -15,6 +15,7 @@ import {
@@ -251,7 +251,7 @@ index 68ce3c81c4..a63e4688a7 100644
          hoistVariableDeclaration,
          factory
 diff --git a/src/compiler/transformers/es5.ts b/src/compiler/transformers/es5.ts
-index 60c876af4b..5669e76452 100644
+index cd7eb47d1e..8dd340255a 100644
 --- a/src/compiler/transformers/es5.ts
 +++ b/src/compiler/transformers/es5.ts
 @@ -1,4 +1,5 @@
@@ -260,9 +260,9 @@ index 60c876af4b..5669e76452 100644
      chainBundle, EmitHint, Expression, getOriginalNodeId, Identifier, idText, isIdentifier, isPrivateIdentifier,
      isPropertyAccessExpression, isPropertyAssignment, JsxClosingElement, JsxEmit, JsxOpeningElement,
      JsxSelfClosingElement, Node, nodeIsSynthesized, PropertyAccessExpression, PropertyAssignment, setTextRange,
-@@ -11,7 +12,7 @@ import {
+@@ -12,7 +13,7 @@ import {
   *
-  * @param context Context and state information for the transformation.
+  * @internal
   */
 -export function transformES5(context: TransformationContext) {
 +export function transformES5(context: TransformationContext): (x: SourceFile | Bundle) => SourceFile | Bundle {
@@ -426,7 +426,7 @@ index ffce659146..dddd501043 100644
      // Visit the tag expression
      const tag = visitNode(node.tag, visitor, isExpression);
 diff --git a/src/compiler/transformers/utilities.ts b/src/compiler/transformers/utilities.ts
-index f33ab90eb0..269f9b380c 100644
+index 4460f4fc45..862bdf7c8b 100644
 --- a/src/compiler/transformers/utilities.ts
 +++ b/src/compiler/transformers/utilities.ts
 @@ -12,7 +12,7 @@ import {
@@ -438,9 +438,9 @@ index f33ab90eb0..269f9b380c 100644
      TransformationContext, VariableDeclaration, VariableStatement,
  } from "../_namespaces/ts";
  
-@@ -329,7 +329,7 @@ export function getNonAssignmentOperatorForCompoundAssignment(kind: CompoundAssi
- /**
-  * @returns Contained super() call from descending into the statement ignoring parentheses, if that call exists.
+@@ -332,7 +332,7 @@ export function getNonAssignmentOperatorForCompoundAssignment(kind: CompoundAssi
+  *
+  * @internal
   */
 -export function getSuperCallFromStatement(statement: Statement) {
 +export function getSuperCallFromStatement(statement: Statement): SuperCall | undefined {
@@ -1646,7 +1646,7 @@ index db5f894683..b3ec867dab 100644
  /** @deprecated Use `factory.createToken` or the factory supplied by your transformation context instead. */
  export const createToken = Debug.deprecate(function createToken<TKind extends SyntaxKind>(kind: TKind): Token<TKind> {
 diff --git a/src/server/editorServices.ts b/src/server/editorServices.ts
-index 48b762ef16..162b6dfb56 100644
+index 2580708404..b935faca54 100644
 --- a/src/server/editorServices.ts
 +++ b/src/server/editorServices.ts
 @@ -28,7 +28,7 @@ import {
@@ -1658,7 +1658,7 @@ index 48b762ef16..162b6dfb56 100644
      tracing, tryAddToSet, tryReadFile, TsConfigSourceFile, TypeAcquisition, typeAcquisitionDeclarations,
      unorderedRemoveItem, updateSharedExtendedConfigFileWatcher, updateWatchingWildcardDirectories, UserPreferences,
      version, WatchDirectoryFlags, WatchFactory, WatchLogLevel, WatchOptions, WatchType, WildcardDirectoryWatcher,
-@@ -2975,7 +2975,7 @@ export class ProjectService {
+@@ -2981,7 +2981,7 @@ export class ProjectService {
      }
  
      /** @internal */
@@ -1668,7 +1668,7 @@ index 48b762ef16..162b6dfb56 100644
          if (project) {
              const path = project.toPath(fileName);
 diff --git a/src/services/codefixes/helpers.ts b/src/services/codefixes/helpers.ts
-index c7bcd9840b..16d72381fe 100644
+index 19cbe51830..51f9161fed 100644
 --- a/src/services/codefixes/helpers.ts
 +++ b/src/services/codefixes/helpers.ts
 @@ -8,7 +8,7 @@ import {
@@ -1680,7 +1680,7 @@ index c7bcd9840b..16d72381fe 100644
      NodeBuilderFlags, NodeFlags, nullTransformationContext, ObjectFlags, ObjectLiteralExpression, ObjectType,
      ParameterDeclaration, Program, PropertyAssignment, PropertyDeclaration, PropertyName, QuotePreference, sameMap,
      ScriptTarget, Set, SetAccessorDeclaration, setTextRange, Signature, SignatureDeclaration, signatureHasRestParameter,
-@@ -350,7 +350,7 @@ export function createSignatureDeclarationFromCallExpression(
+@@ -352,7 +352,7 @@ export function createSignatureDeclarationFromCallExpression(
      name: Identifier | string,
      modifierFlags: ModifierFlags,
      contextNode: Node
@@ -1690,7 +1690,7 @@ index c7bcd9840b..16d72381fe 100644
      const scriptTarget = getEmitScriptTarget(context.program.getCompilerOptions());
      const tracker = getNoopSymbolTrackerWithResolver(context);
 diff --git a/src/services/organizeImports.ts b/src/services/organizeImports.ts
-index 52f38aed88..e004e1a34a 100644
+index 8dd382f0e9..d2643e23ea 100644
 --- a/src/services/organizeImports.ts
 +++ b/src/services/organizeImports.ts
 @@ -1,6 +1,7 @@
@@ -1702,7 +1702,7 @@ index 52f38aed88..e004e1a34a 100644
      FindAllReferences, flatMap, formatting, getNewLineOrDefaultFromHost, group, Identifier, identity, ImportDeclaration,
      ImportOrExportSpecifier, ImportSpecifier, isAmbientModule, isExportDeclaration, isExternalModuleNameRelative,
      isExternalModuleReference, isImportDeclaration, isNamedExports, isNamedImports, isNamespaceImport, isString,
-@@ -23,7 +24,7 @@ export function organizeImports(
+@@ -24,7 +25,7 @@ export function organizeImports(
      program: Program,
      preferences: UserPreferences,
      skipDestructiveCodeActions?: boolean
@@ -1711,7 +1711,7 @@ index 52f38aed88..e004e1a34a 100644
      const changeTracker = textChanges.ChangeTracker.fromContext({ host, formatContext, preferences });
  
      const coalesceAndOrganizeImports = (importGroup: readonly ImportDeclaration[]) => stableSort(
-@@ -465,7 +466,7 @@ function sortSpecifiers<T extends ImportOrExportSpecifier>(specifiers: readonly
+@@ -468,7 +469,7 @@ function sortSpecifiers<T extends ImportOrExportSpecifier>(specifiers: readonly
  }
  
  /** @internal */
@@ -1720,16 +1720,7 @@ index 52f38aed88..e004e1a34a 100644
      return compareBooleans(s1.isTypeOnly, s2.isTypeOnly)
          || compareIdentifiers(s1.propertyName || s1.name, s2.propertyName || s2.name)
          || compareIdentifiers(s1.name, s2.name);
-@@ -473,7 +474,7 @@ export function compareImportOrExportSpecifiers<T extends ImportOrExportSpecifie
- 
- /* internal */ // Exported for testing
- /** @internal */
--export function compareModuleSpecifiers(m1: Expression | undefined, m2: Expression | undefined) {
-+export function compareModuleSpecifiers(m1: Expression | undefined, m2: Expression | undefined): Comparison {
-     const name1 = m1 === undefined ? undefined : getExternalModuleName(m1);
-     const name2 = m2 === undefined ? undefined : getExternalModuleName(m2);
-     return compareBooleans(name1 === undefined, name2 === undefined) ||
-@@ -519,7 +520,7 @@ export function getImportSpecifierInsertionIndex(sortedImports: SortedReadonlyAr
+@@ -525,7 +526,7 @@ export function getImportSpecifierInsertionIndex(sortedImports: SortedReadonlyAr
  }
  
  /** @internal */

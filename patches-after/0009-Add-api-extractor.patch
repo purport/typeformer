@@ -4,39 +4,61 @@ Date: Fri, 2 Sep 2022 16:39:54 -0700
 Subject: [PATCH] Add api-extractor
 
 ---
- .gitignore                        |   1 +
- package-lock.json                 | 658 +++++++++++++++++++++++++-----
- package.json                      |   1 +
- scripts/apiExtractor.ts           |  15 +
- src/api-extractor-base.json       | 414 +++++++++++++++++++
- src/typescript/api-extractor.json |  59 +++
- src/typescript/typescript.ts      |   3 +-
- 7 files changed, 1050 insertions(+), 101 deletions(-)
- create mode 100644 scripts/apiExtractor.ts
+ Gulpfile.js                                  |  18 +
+ package-lock.json                            | 658 ++++++++++++++++---
+ package.json                                 |   1 +
+ scripts/{apiExtractor.js => apiExtractor.ts} |  26 +-
+ src/api-extractor-base.json                  | 421 ++++++++++++
+ src/tsserverlibrary/api-extractor.json       |  16 +
+ src/tsserverlibrary/tsserverlibrary.ts       |   6 +-
+ src/typescript/api-extractor.json            |  16 +
+ src/typescript/typescript.ts                 |   5 +-
+ src/typescriptServices/api-extractor.json    |  16 +
+ 10 files changed, 1064 insertions(+), 119 deletions(-)
+ rename scripts/{apiExtractor.js => apiExtractor.ts} (66%)
  create mode 100644 src/api-extractor-base.json
+ create mode 100644 src/tsserverlibrary/api-extractor.json
  create mode 100644 src/typescript/api-extractor.json
+ create mode 100644 src/typescriptServices/api-extractor.json
 
-diff --git a/.gitignore b/.gitignore
-index cdf20ba5a2..4e8d7e0186 100644
---- a/.gitignore
-+++ b/.gitignore
-@@ -41,6 +41,7 @@ scripts/eslint/built/
- scripts/debug.bat
- scripts/run.bat
- scripts/word2md.js
-+scripts/apiExtractor.js
- scripts/buildProtocol.js
- scripts/ior.js
- scripts/configurePrerelease.js
+diff --git a/Gulpfile.js b/Gulpfile.js
+index bb87b72a89..d8bf3fe867 100644
+--- a/Gulpfile.js
++++ b/Gulpfile.js
+@@ -98,6 +98,24 @@ const buildAll = () => buildProject("src");
+ 
+ task("moduleBuild", parallel(generateLibs, series(buildScripts, localize, buildAll)));
+ 
++const apiExtractor = async () => {
++    async function runApiExtractor(configPath) {
++        await exec(process.execPath, [
++            "node_modules/@microsoft/api-extractor/bin/api-extractor",
++            "run",
++            "--local",
++            "--config",
++            configPath,
++        ]);
++    }
++
++    // TODO(jakebailey): prepend copyright notice, replace const enums with regular enums
++    await runApiExtractor("./src/typescript/api-extractor.json");
++    await runApiExtractor("./src/tsserverlibrary/api-extractor.json");
++};
++
++task("api-extractor", series(task("moduleBuild"), apiExtractor));
++
+ const buildDebugTools = () => buildProject("src/debug");
+ const cleanDebugTools = () => cleanProject("src/debug");
+ cleanTasks.push(cleanDebugTools);
 diff --git a/package-lock.json b/package-lock.json
-index 1c07125ef1..b428f5bfc0 100644
+index 1c07125ef1..78018b1601 100644
 --- a/package-lock.json
 +++ b/package-lock.json
 @@ -13,6 +13,7 @@
                  "tsserver": "bin/tsserver"
              },
              "devDependencies": {
-+                "@microsoft/api-extractor": "^7.30.0",
++                "@microsoft/api-extractor": "^7.31.0",
                  "@octokit/rest": "latest",
                  "@types/async": "latest",
                  "@types/chai": "latest",
@@ -45,9 +67,9 @@ index 1c07125ef1..b428f5bfc0 100644
              "dev": true
          },
 +        "node_modules/@microsoft/api-extractor": {
-+            "version": "7.30.1",
-+            "resolved": "https://registry.npmjs.org/@microsoft/api-extractor/-/api-extractor-7.30.1.tgz",
-+            "integrity": "sha512-RXpBcshikKl0vVx292JC1A0l6SXITS9YBFPv3hnWvXj79Q5KbLdonvfAljnpK/RSrCzot14I1kUE90J0vcYE3Q==",
++            "version": "7.31.0",
++            "resolved": "https://registry.npmjs.org/@microsoft/api-extractor/-/api-extractor-7.31.0.tgz",
++            "integrity": "sha512-1gVDvm/eKmntBn5X5Rc+XDREm9gfxQ/BQfGFf7Rf4uWvJc4Q4GxidC3lBODYDOcikjG983bzbo0xTu5BS8J93Q==",
 +            "dev": true,
 +            "dependencies": {
 +                "@microsoft/api-extractor-model": "7.24.0",
@@ -512,9 +534,9 @@ index 1c07125ef1..b428f5bfc0 100644
              "dev": true
          },
 +        "@microsoft/api-extractor": {
-+            "version": "7.30.1",
-+            "resolved": "https://registry.npmjs.org/@microsoft/api-extractor/-/api-extractor-7.30.1.tgz",
-+            "integrity": "sha512-RXpBcshikKl0vVx292JC1A0l6SXITS9YBFPv3hnWvXj79Q5KbLdonvfAljnpK/RSrCzot14I1kUE90J0vcYE3Q==",
++            "version": "7.31.0",
++            "resolved": "https://registry.npmjs.org/@microsoft/api-extractor/-/api-extractor-7.31.0.tgz",
++            "integrity": "sha512-1gVDvm/eKmntBn5X5Rc+XDREm9gfxQ/BQfGFf7Rf4uWvJc4Q4GxidC3lBODYDOcikjG983bzbo0xTu5BS8J93Q==",
 +            "dev": true,
 +            "requires": {
 +                "@microsoft/api-extractor-model": "7.24.0",
@@ -922,23 +944,37 @@ index 1c07125ef1..b428f5bfc0 100644
      }
  }
 diff --git a/package.json b/package.json
-index 0d80542b7f..d8f17a20c7 100644
+index 0d80542b7f..bfdf548e27 100644
 --- a/package.json
 +++ b/package.json
 @@ -39,6 +39,7 @@
          "!**/.gitattributes"
      ],
      "devDependencies": {
-+        "@microsoft/api-extractor": "^7.30.0",
++        "@microsoft/api-extractor": "^7.31.0",
          "@octokit/rest": "latest",
          "@types/async": "latest",
          "@types/chai": "latest",
-diff --git a/scripts/apiExtractor.ts b/scripts/apiExtractor.ts
-new file mode 100644
-index 0000000000..d9d29be0cc
---- /dev/null
+diff --git a/scripts/apiExtractor.js b/scripts/apiExtractor.ts
+similarity index 66%
+rename from scripts/apiExtractor.js
+rename to scripts/apiExtractor.ts
+index d036416c91..d9d29be0cc 100644
+--- a/scripts/apiExtractor.js
 +++ b/scripts/apiExtractor.ts
-@@ -0,0 +1,15 @@
+@@ -1,11 +1,15 @@
+-"use strict";
+-Object.defineProperty(exports, "__esModule", { value: true });
+-const path = require("path");
+-const packageRoot = path.resolve(__dirname, "..");
+-// TODO(jakebailey): call api extractor for:
+-//   - src/typescript
+-//   - src/typescriptServices
+-//   - src/tsserverlibrary
+-// Then in the output, replace const enum with "enum".
+-// Also apply copyright header, as api-extractor won't.
+-//# sourceMappingURL=apiExtractor.js.map
+\ No newline at end of file
 +import * as path from "path";
 +import {
 +  Extractor,
@@ -956,29 +992,15 @@ index 0000000000..d9d29be0cc
 +// Also apply copyright header, as api-extractor won't.
 diff --git a/src/api-extractor-base.json b/src/api-extractor-base.json
 new file mode 100644
-index 0000000000..dbc6360d5a
+index 0000000000..ea6116b8b5
 --- /dev/null
 +++ b/src/api-extractor-base.json
-@@ -0,0 +1,414 @@
+@@ -0,0 +1,421 @@
 +/**
 + * Config file for API Extractor.  For more info, please visit: https://api-extractor.com
 + */
 + {
-+    "$schema": "https://developer.microsoft.com/json-schemas/api-extractor/v7/api-extractor.schema.json",
-+  
-+    /**
-+     * Optionally specifies another JSON config file that this file extends from.  This provides a way for
-+     * standard settings to be shared across multiple projects.
-+     *
-+     * If the path starts with "./" or "../", the path is resolved relative to the folder of the file that contains
-+     * the "extends" field.  Otherwise, the first path segment is interpreted as an NPM package name, and will be
-+     * resolved using NodeJS require().
-+     *
-+     * SUPPORTED TOKENS: none
-+     * DEFAULT VALUE: ""
-+     */
-+    // "extends": "./shared/api-extractor-base.json"
-+    // "extends": "my-package/include/api-extractor-base.json"
++    "$schema": "https://raw.githubusercontent.com/microsoft/rushstack/%40microsoft/api-extractor_v7.31.0/apps/api-extractor/src/schemas/api-extractor.schema.json",
 +  
 +    /**
 +     * Determines the "<projectFolder>" token that can be used with other config file settings.  The project folder
@@ -1097,7 +1119,6 @@ index 0000000000..dbc6360d5a
 +      /**
 +       * (REQUIRED) Whether to generate an API report.
 +       */
-+    //   "enabled": true
 +      "enabled": false
 +  
 +      /**
@@ -1158,7 +1179,6 @@ index 0000000000..dbc6360d5a
 +      /**
 +       * (REQUIRED) Whether to generate a doc model file.
 +       */
-+    //   "enabled": true
 +      "enabled": false
 +  
 +      /**
@@ -1341,6 +1361,29 @@ index 0000000000..dbc6360d5a
 +        "default": {
 +          "logLevel": "warning"
 +          // "addToApiReportFile": false
++        },
++
++        "ae-internal-missing-underscore": {
++          "logLevel": "none",
++          "addToApiReportFile": false
++        },
++
++        // TODO(jakebailey): should we explicitly mark things as public?
++        "ae-missing-release-tag": {
++          "logLevel": "none",
++          "addToApiReportFile": false
++        },
++
++        // TODO(jakebailey): Fix these?
++        "ae-unresolved-link": {
++          "logLevel": "none",
++          "addToApiReportFile": false
++        },
++
++        // This incorrectly fires for functions with partially internal overloads.
++        "ae-internal-mixed-release-tag": {
++          "logLevel": "none",
++          "addToApiReportFile": false
 +        }
 +  
 +        // "ae-extra-release-tag": {
@@ -1375,87 +1418,105 @@ index 0000000000..dbc6360d5a
 +  }
 +  
 \ No newline at end of file
+diff --git a/src/tsserverlibrary/api-extractor.json b/src/tsserverlibrary/api-extractor.json
+new file mode 100644
+index 0000000000..3f3ba43259
+--- /dev/null
++++ b/src/tsserverlibrary/api-extractor.json
+@@ -0,0 +1,16 @@
++{
++    "$schema": "https://raw.githubusercontent.com/microsoft/rushstack/%40microsoft/api-extractor_v7.31.0/apps/api-extractor/src/schemas/api-extractor.schema.json",
++    "extends": "../api-extractor-base.json",
++    "compiler": {
++        "tsconfigFilePath": "./tsconfig.json"
++    },
++
++    "mainEntryPointFilePath": "<projectFolder>/built/local/tsserverlibrary/tsserverlibrary.d.ts",
++
++    "dtsRollup": {
++        "enabled": true,
++        "publicTrimmedFilePath": "<projectFolder>/built/local/tsserverlibrary.d.ts",
++        "untrimmedFilePath": "<projectFolder>/built/local/tsserverlibrary.internal.d.ts"
++    }
++}
++  
+\ No newline at end of file
+diff --git a/src/tsserverlibrary/tsserverlibrary.ts b/src/tsserverlibrary/tsserverlibrary.ts
+index bd73794b37..caa2e6b1db 100644
+--- a/src/tsserverlibrary/tsserverlibrary.ts
++++ b/src/tsserverlibrary/tsserverlibrary.ts
+@@ -1,5 +1 @@
+-import * as ts from "./_namespaces/ts";
+-
+-// TODO(jakebailey): replace const enum with enum in d.ts
+-
+-export = ts;
++export * from "./_namespaces/ts";
 diff --git a/src/typescript/api-extractor.json b/src/typescript/api-extractor.json
 new file mode 100644
-index 0000000000..44979b5524
+index 0000000000..60231b6911
 --- /dev/null
 +++ b/src/typescript/api-extractor.json
-@@ -0,0 +1,59 @@
-+/**
-+ * Config file for API Extractor.  For more info, please visit: https://api-extractor.com
-+ */
-+ {
-+    "$schema": "https://developer.microsoft.com/json-schemas/api-extractor/v7/api-extractor.schema.json",
-+  
-+    /**
-+     * Optionally specifies another JSON config file that this file extends from.  This provides a way for
-+     * standard settings to be shared across multiple projects.
-+     *
-+     * If the path starts with "./" or "../", the path is resolved relative to the folder of the file that contains
-+     * the "extends" field.  Otherwise, the first path segment is interpreted as an NPM package name, and will be
-+     * resolved using NodeJS require().
-+     *
-+     * SUPPORTED TOKENS: none
-+     * DEFAULT VALUE: ""
-+     */
+@@ -0,0 +1,16 @@
++{
++    "$schema": "https://raw.githubusercontent.com/microsoft/rushstack/%40microsoft/api-extractor_v7.31.0/apps/api-extractor/src/schemas/api-extractor.schema.json",
 +    "extends": "../api-extractor-base.json",
-+
-+    /**
-+     * Determines how the TypeScript compiler engine will be invoked by API Extractor.
-+     */
-+     "compiler": {
-+      /**
-+       * Specifies the path to the tsconfig.json file to be used by API Extractor when analyzing the project.
-+       *
-+       * The path is resolved relative to the folder of the config file that contains the setting; to change this,
-+       * prepend a folder token such as "<projectFolder>".
-+       *
-+       * Note: This setting will be ignored if "overrideTsconfig" is used.
-+       *
-+       * SUPPORTED TOKENS: <projectFolder>, <packageName>, <unscopedPackageName>
-+       * DEFAULT VALUE: "<projectFolder>/tsconfig.json"
-+       */
-+      "tsconfigFilePath": "./tsconfig.json"
++    "compiler": {
++        "tsconfigFilePath": "./tsconfig.json"
 +    },
-+  
-+    /**
-+     * (REQUIRED) Specifies the .d.ts file to be used as the starting point for analysis.  API Extractor
-+     * analyzes the symbols exported by this module.
-+     *
-+     * The file extension must be ".d.ts" and not ".ts".
-+     *
-+     * The path is resolved relative to the folder of the config file that contains the setting; to change this,
-+     * prepend a folder token such as "<projectFolder>".
-+     *
-+     * SUPPORTED TOKENS: <projectFolder>, <packageName>, <unscopedPackageName>
-+     */
++
 +    "mainEntryPointFilePath": "<projectFolder>/built/local/typescript/typescript.d.ts",
 +
 +    "dtsRollup": {
-+      /**
-+       * (REQUIRED) Whether to generate the .d.ts rollup file.
-+       */
-+      "enabled": true,
-+      "publicTrimmedFilePath": "<projectFolder>/built/local/typescript.d.ts"
++        "enabled": true,
++        "publicTrimmedFilePath": "<projectFolder>/built/local/typescript.d.ts",
++        "untrimmedFilePath": "<projectFolder>/built/local/typescript.internal.d.ts"
 +    }
-+  }
++}
 +  
 \ No newline at end of file
 diff --git a/src/typescript/typescript.ts b/src/typescript/typescript.ts
-index c9862f6a73..dd5007e2d0 100644
+index c9862f6a73..8a5136a1eb 100644
 --- a/src/typescript/typescript.ts
 +++ b/src/typescript/typescript.ts
-@@ -1,4 +1,3 @@
+@@ -1,8 +1,5 @@
 -import * as ts from "./_namespaces/ts";
  import { Debug, LogLevel } from "./_namespaces/ts";
  
- // TODO(jakebailey): replace const enum with enum in d.ts
-@@ -18,4 +17,4 @@ if (typeof console !== "undefined") {
+-// TODO(jakebailey): replace const enum with enum in d.ts
+-
+ // enable deprecation logging
+ declare const console: any;
+ if (typeof console !== "undefined") {
+@@ -18,4 +15,4 @@ if (typeof console !== "undefined") {
      };
  }
  
 -export = ts;
 +export * from "./_namespaces/ts";
+diff --git a/src/typescriptServices/api-extractor.json b/src/typescriptServices/api-extractor.json
+new file mode 100644
+index 0000000000..b245768aa3
+--- /dev/null
++++ b/src/typescriptServices/api-extractor.json
+@@ -0,0 +1,16 @@
++{
++    "$schema": "https://raw.githubusercontent.com/microsoft/rushstack/%40microsoft/api-extractor_v7.31.0/apps/api-extractor/src/schemas/api-extractor.schema.json",
++    "extends": "../api-extractor-base.json",
++    "compiler": {
++        "tsconfigFilePath": "./tsconfig.json"
++    },
++
++    "mainEntryPointFilePath": "<projectFolder>/built/local/typescriptServices/typescriptServices.d.ts",
++
++    "dtsRollup": {
++        "enabled": true,
++        "publicTrimmedFilePath": "<projectFolder>/built/local/typescriptServices.d.ts",
++        "untrimmedFilePath": "<projectFolder>/built/local/typescriptServices.internal.d.ts"
++    }
++}
++  
+\ No newline at end of file
 -- 
 2.37.1
 

@@ -1,0 +1,75 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Jake Bailey <5341706+jakebailey@users.noreply.github.com>
+Date: Tue, 13 Sep 2022 13:25:45 -0700
+Subject: [PATCH] Remove typescriptServices project
+
+This project is the same as the (soon added) typescript project.
+---
+ src/typescriptServices/_namespaces/ts.ts     |  7 -------
+ src/typescriptServices/tsconfig.json         | 16 ----------------
+ src/typescriptServices/typescriptServices.ts | 16 ----------------
+ 3 files changed, 39 deletions(-)
+ delete mode 100644 src/typescriptServices/_namespaces/ts.ts
+ delete mode 100644 src/typescriptServices/tsconfig.json
+ delete mode 100644 src/typescriptServices/typescriptServices.ts
+
+diff --git a/src/typescriptServices/_namespaces/ts.ts b/src/typescriptServices/_namespaces/ts.ts
+deleted file mode 100644
+index dc05210189..0000000000
+--- a/src/typescriptServices/_namespaces/ts.ts
++++ /dev/null
+@@ -1,7 +0,0 @@
+-/* Generated file to emulate the ts namespace. */
+-
+-export * from "../../compiler/_namespaces/ts";
+-export * from "../../jsTyping/_namespaces/ts";
+-export * from "../../services/_namespaces/ts";
+-export * from "../../deprecatedCompat/_namespaces/ts";
+-export * from "../typescriptServices";
+diff --git a/src/typescriptServices/tsconfig.json b/src/typescriptServices/tsconfig.json
+deleted file mode 100644
+index 277b98f727..0000000000
+--- a/src/typescriptServices/tsconfig.json
++++ /dev/null
+@@ -1,16 +0,0 @@
+-{
+-    "extends": "../tsconfig-library-base",
+-    "compilerOptions": {
+-        "outDir": "../../built/local"
+-    },
+-    "files": [
+-        "typescriptServices.ts",
+-        "_namespaces/ts.ts"
+-    ],
+-    "references": [
+-        { "path": "../compiler" },
+-        { "path": "../jsTyping" },
+-        { "path": "../services" },
+-        { "path": "../deprecatedCompat" }
+-    ]
+-}
+diff --git a/src/typescriptServices/typescriptServices.ts b/src/typescriptServices/typescriptServices.ts
+deleted file mode 100644
+index 4eefe91f9e..0000000000
+--- a/src/typescriptServices/typescriptServices.ts
++++ /dev/null
+@@ -1,16 +0,0 @@
+-import { Debug, LogLevel } from "./_namespaces/ts";
+-
+-// enable deprecation logging
+-declare const console: any;
+-if (typeof console !== "undefined") {
+-    Debug.loggingHost = {
+-        log(level, s) {
+-            switch (level) {
+-                case LogLevel.Error: return console.error(s);
+-                case LogLevel.Warning: return console.warn(s);
+-                case LogLevel.Info: return console.log(s);
+-                case LogLevel.Verbose: return console.log(s);
+-            }
+-        }
+-    };
+-}
+-- 
+2.37.1
+
