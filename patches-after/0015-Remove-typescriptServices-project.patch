@@ -1,0 +1,128 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Jake Bailey <5341706+jakebailey@users.noreply.github.com>
+Date: Tue, 13 Sep 2022 13:25:45 -0700
+Subject: [PATCH] Remove typescriptServices project
+
+---
+ Gulpfile.js                                  |  1 -
+ src/tsconfig.json                            |  1 -
+ src/typescriptServices/_namespaces/ts.ts     |  7 -------
+ src/typescriptServices/api-extractor.json    | 16 ----------------
+ src/typescriptServices/tsconfig.json         | 16 ----------------
+ src/typescriptServices/typescriptServices.ts | 19 -------------------
+ 6 files changed, 60 deletions(-)
+ delete mode 100644 src/typescriptServices/_namespaces/ts.ts
+ delete mode 100644 src/typescriptServices/api-extractor.json
+ delete mode 100644 src/typescriptServices/tsconfig.json
+ delete mode 100644 src/typescriptServices/typescriptServices.ts
+
+diff --git a/Gulpfile.js b/Gulpfile.js
+index 7b2637f03b..208b6fc838 100644
+--- a/Gulpfile.js
++++ b/Gulpfile.js
+@@ -113,7 +113,6 @@ const apiExtractor = async () => {
+     // TODO(jakebailey): prepend copyright notice, replace const enums with regular enums
+     await runApiExtractor("./src/typescript/api-extractor.json");
+     await runApiExtractor("./src/tsserverlibrary/api-extractor.json");
+-    await runApiExtractor("./src/typescriptServices/api-extractor.json");
+ };
+ 
+ task("api-extractor", series(task("moduleBuild"), apiExtractor));
+diff --git a/src/tsconfig.json b/src/tsconfig.json
+index f53ccfb4d8..f70352ca5e 100644
+--- a/src/tsconfig.json
++++ b/src/tsconfig.json
+@@ -6,7 +6,6 @@
+         { "path": "./tsserver" },
+         { "path": "./tsserverlibrary" },
+         { "path": "./typescript" },
+-        { "path": "./typescriptServices" },
+         { "path": "./typingsInstaller" },
+         { "path": "./watchGuard" },
+         { "path": "./debug" },
+diff --git a/src/typescriptServices/_namespaces/ts.ts b/src/typescriptServices/_namespaces/ts.ts
+deleted file mode 100644
+index dc05210189..0000000000
+--- a/src/typescriptServices/_namespaces/ts.ts
++++ /dev/null
+@@ -1,7 +0,0 @@
+-/* Generated file to emulate the ts namespace. */
+-
+-export * from "../../compiler/_namespaces/ts";
+-export * from "../../jsTyping/_namespaces/ts";
+-export * from "../../services/_namespaces/ts";
+-export * from "../../deprecatedCompat/_namespaces/ts";
+-export * from "../typescriptServices";
+diff --git a/src/typescriptServices/api-extractor.json b/src/typescriptServices/api-extractor.json
+deleted file mode 100644
+index b245768aa3..0000000000
+--- a/src/typescriptServices/api-extractor.json
++++ /dev/null
+@@ -1,16 +0,0 @@
+-{
+-    "$schema": "https://raw.githubusercontent.com/microsoft/rushstack/%40microsoft/api-extractor_v7.31.0/apps/api-extractor/src/schemas/api-extractor.schema.json",
+-    "extends": "../api-extractor-base.json",
+-    "compiler": {
+-        "tsconfigFilePath": "./tsconfig.json"
+-    },
+-
+-    "mainEntryPointFilePath": "<projectFolder>/built/local/typescriptServices/typescriptServices.d.ts",
+-
+-    "dtsRollup": {
+-        "enabled": true,
+-        "publicTrimmedFilePath": "<projectFolder>/built/local/typescriptServices.d.ts",
+-        "untrimmedFilePath": "<projectFolder>/built/local/typescriptServices.internal.d.ts"
+-    }
+-}
+-  
+\ No newline at end of file
+diff --git a/src/typescriptServices/tsconfig.json b/src/typescriptServices/tsconfig.json
+deleted file mode 100644
+index 559cb27d9d..0000000000
+--- a/src/typescriptServices/tsconfig.json
++++ /dev/null
+@@ -1,16 +0,0 @@
+-{
+-    "extends": "../tsconfig-base",
+-    "compilerOptions": {
+-        "outDir": "../../built/local/typescriptServices"
+-    },
+-    "files": [
+-        "typescriptServices.ts",
+-        "_namespaces/ts.ts"
+-    ],
+-    "references": [
+-        { "path": "../compiler" },
+-        { "path": "../jsTyping" },
+-        { "path": "../services" },
+-        { "path": "../deprecatedCompat" }
+-    ]
+-}
+diff --git a/src/typescriptServices/typescriptServices.ts b/src/typescriptServices/typescriptServices.ts
+deleted file mode 100644
+index 6c5ea3cd98..0000000000
+--- a/src/typescriptServices/typescriptServices.ts
++++ /dev/null
+@@ -1,19 +0,0 @@
+-import { Debug, LogLevel } from "./_namespaces/ts";
+-import * as _ts from "./_namespaces/ts";
+-
+-// enable deprecation logging
+-declare const console: any;
+-if (typeof console !== "undefined") {
+-    Debug.loggingHost = {
+-        log(level, s) {
+-            switch (level) {
+-                case LogLevel.Error: return console.error(s);
+-                case LogLevel.Warning: return console.warn(s);
+-                case LogLevel.Info: return console.log(s);
+-                case LogLevel.Verbose: return console.log(s);
+-            }
+-        }
+-    };
+-}
+-
+-// TODO(jakebailey): what does this export?
+-- 
+2.37.1
+

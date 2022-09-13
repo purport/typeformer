@@ -7,21 +7,26 @@ Subject: [PATCH] Fix all at-internal comments, which need to be attached to a
 ---
  src/api-extractor-base.json                |  21 +-
  src/compiler/builder.ts                    |   9 +-
- src/compiler/core.ts                       | 307 +++++++++++++------
+ src/compiler/commandLineParser.ts          |  21 +-
+ src/compiler/core.ts                       | 307 ++++++++++++------
  src/compiler/emitter.ts                    |  10 +-
- src/compiler/factory/baseNodeFactory.ts    |   3 +-
+ src/compiler/factory/baseNodeFactory.ts    |   6 +-
  src/compiler/factory/emitHelpers.ts        |  12 +-
+ src/compiler/factory/emitNode.ts           |  15 +-
+ src/compiler/factory/nodeFactory.ts        |   6 +-
  src/compiler/factory/utilities.ts          |  66 ++--
+ src/compiler/moduleNameResolver.ts         |  18 +-
  src/compiler/moduleSpecifiers.ts           |   7 +-
- src/compiler/parser.ts                     |   3 +-
+ src/compiler/parser.ts                     |   6 +-
  src/compiler/path.ts                       | 109 ++++---
  src/compiler/perfLogger.ts                 |   7 +-
  src/compiler/performance.ts                |  32 +-
  src/compiler/performanceCore.ts            |   7 +-
- src/compiler/program.ts                    |   3 +-
+ src/compiler/program.ts                    |   6 +-
  src/compiler/resolutionCache.ts            |  10 +-
  src/compiler/semver.ts                     |   6 +-
  src/compiler/sourcemap.ts                  |   3 +-
+ src/compiler/sys.ts                        |   9 +-
  src/compiler/transformer.ts                |   3 +-
  src/compiler/transformers/classFields.ts   |   3 +-
  src/compiler/transformers/declarations.ts  |   3 +-
@@ -30,12 +35,16 @@ Subject: [PATCH] Fix all at-internal comments, which need to be attached to a
  src/compiler/transformers/es5.ts           |   3 +-
  src/compiler/transformers/utilities.ts     |  27 +-
  src/compiler/tsbuildPublic.ts              |   7 +-
- src/compiler/utilities.ts                  | 332 ++++++++++++++-------
- src/compiler/utilitiesPublic.ts            |   3 +-
+ src/compiler/types.ts                      |  43 ++-
+ src/compiler/utilities.ts                  | 359 ++++++++++++++-------
+ src/compiler/utilitiesPublic.ts            |  55 +++-
  src/compiler/watch.ts                      |  28 +-
+ src/compiler/watchPublic.ts                |   3 +-
  src/compiler/watchUtilities.ts             |  21 +-
  src/jsTyping/jsTyping.ts                   |   9 +-
  src/server/editorServices.ts               |  14 +-
+ src/server/project.ts                      |   3 +-
+ src/server/protocol.ts                     |  36 ++-
  src/server/utilities.ts                    |   7 +-
  src/services/breakpoints.ts                |   3 +-
  src/services/callHierarchy.ts              |  28 +-
@@ -48,16 +57,17 @@ Subject: [PATCH] Fix all at-internal comments, which need to be attached to a
  src/services/goToDefinition.ts             |   7 +-
  src/services/importTracker.ts              |  17 +-
  src/services/jsDoc.ts                      |   3 +-
- src/services/organizeImports.ts            |   9 +-
+ src/services/organizeImports.ts            |  16 +-
  src/services/refactorProvider.ts           |   7 +-
- src/services/refactors/extractSymbol.ts    |   8 +-
+ src/services/refactors/extractSymbol.ts    |  15 +-
  src/services/refactors/helpers.ts          |  10 +-
- src/services/services.ts                   |  14 +-
+ src/services/services.ts                   |  24 +-
  src/services/shims.ts                      |  21 +-
  src/services/sourcemaps.ts                 |   3 +-
  src/services/textChanges.ts                |  10 +-
- src/services/utilities.ts                  |  88 ++++--
- 52 files changed, 938 insertions(+), 424 deletions(-)
+ src/services/transpile.ts                  |   7 +-
+ src/services/utilities.ts                  |  88 +++--
+ 62 files changed, 1123 insertions(+), 512 deletions(-)
 
 diff --git a/src/api-extractor-base.json b/src/api-extractor-base.json
 index dbc6360d5a..7832e0cf50 100644
@@ -134,6 +144,85 @@ index db11537f00..04efd3a7d3 100644
   */
  export type ProgramBuildInfoFileInfo = string | ProgramBuildInfoBuilderStateFileInfo;
  /** @internal */
+diff --git a/src/compiler/commandLineParser.ts b/src/compiler/commandLineParser.ts
+index 22e288fb83..0dc93ac058 100644
+--- a/src/compiler/commandLineParser.ts
++++ b/src/compiler/commandLineParser.ts
+@@ -122,15 +122,17 @@ const libEntries: [string, string][] = [
+  * An array of supported "lib" reference file names used to determine the order for inclusion
+  * when referenced, as well as for spelling suggestions. This ensures the correct ordering for
+  * overload resolution when a type declared in one lib is extended by another.
++ *
++ * @internal
+  */
+-/** @internal */
+ export const libs = libEntries.map(entry => entry[0]);
+ 
+ /**
+  * A map of lib names to lib files. This map is used both for parsing the "lib" command line
+  * option as well as for resolving lib reference directives.
++ *
++ * @internal
+  */
+-/** @internal */
+ export const libMap = new Map(libEntries);
+ 
+ // Watch related options
+@@ -2142,8 +2144,9 @@ export function convertToObject(sourceFile: JsonSourceFile, errors: Push<Diagnos
+  * Convert the json syntax tree into the json value and report errors
+  * This returns the json value (apart from checking errors) only if returnValue provided is true.
+  * Otherwise it just checks the errors and returns undefined
++ *
++ * @internal
+  */
+-/** @internal */
+ export function convertToObjectWorker(
+     sourceFile: JsonSourceFile,
+     rootExpression: Expression | undefined,
+@@ -2389,8 +2392,9 @@ export interface ConvertToTSConfigHost {
+  * @param configParseResult options to be generated into tsconfig.json
+  * @param configFileName name of the parsed config file - output paths will be generated relative to this
+  * @param host provides current directory and case sensitivity services
++ *
++ * @internal
+  */
+-/** @internal */
+ export function convertToTSConfig(configParseResult: ParsedCommandLine, configFileName: string, host: ConvertToTSConfigHost): TSConfig {
+     const getCanonicalFileName = createGetCanonicalFileName(host.useCaseSensitiveFileNames);
+     const files = map(
+@@ -2586,8 +2590,9 @@ function getSerializedCompilerOption(options: CompilerOptions): ESMap<string, Co
+  * Generate tsconfig configuration when running command line "--init"
+  * @param options commandlineOptions to be generated into tsconfig.json
+  * @param fileNames array of filenames to be generated into tsconfig.json
++ *
++ * @internal
+  */
+-/** @internal */
+ export function generateTSConfig(options: CompilerOptions, fileNames: readonly string[], newLine: string): string {
+     const compilerOptionsMap = getSerializedCompilerOption(options);
+     return writeConfigurations();
+@@ -3407,8 +3412,9 @@ const wildcardDirectoryPattern = /^[^*?]*(?=\/[^/]*[*?])/;
+  * @param options Compiler options.
+  * @param host The host used to resolve files and directories.
+  * @param extraFileExtensions optionaly file extra file extension information from host
++ *
++ * @internal
+  */
+-/** @internal */
+ export function getFileNamesFromConfigSpecs(
+     configFileSpecs: ConfigFileSpecs,
+     basePath: string,
+@@ -3726,8 +3732,9 @@ function removeWildcardFilesWithLowerPriorityExtension(file: string, wildcardFil
+ /**
+  * Produces a cleaned version of compiler options with personally identifying info (aka, paths) removed.
+  * Also converts enum values back to strings.
++ *
++ * @internal
+  */
+-/** @internal */
+ export function convertCompilerOptionsForTelemetry(opts: CompilerOptions): CompilerOptions {
+     const out: CompilerOptions = {};
+     for (const key in opts) {
 diff --git a/src/compiler/core.ts b/src/compiler/core.ts
 index 2e3a662665..70ccdb380f 100644
 --- a/src/compiler/core.ts
@@ -1200,10 +1289,21 @@ index 423023d6d5..30d52243c7 100644
  
  /** @internal */
 diff --git a/src/compiler/factory/baseNodeFactory.ts b/src/compiler/factory/baseNodeFactory.ts
-index b592b1126d..65fa224f89 100644
+index b592b1126d..4da1378336 100644
 --- a/src/compiler/factory/baseNodeFactory.ts
 +++ b/src/compiler/factory/baseNodeFactory.ts
-@@ -13,9 +13,10 @@ export interface BaseNodeFactory {
+@@ -3,8 +3,9 @@ import { Node, objectAllocator, SyntaxKind } from "../_namespaces/ts";
+ /**
+  * A `BaseNodeFactory` is an abstraction over an `ObjectAllocator` that handles caching `Node` constructors
+  * and allocating `Node` instances based on a set of predefined types.
++ *
++ * @internal
+  */
+-/** @internal */
+ export interface BaseNodeFactory {
+     createBaseSourceFileNode(kind: SyntaxKind): Node;
+     createBaseIdentifierNode(kind: SyntaxKind): Node;
+@@ -13,9 +14,10 @@ export interface BaseNodeFactory {
      createBaseNode(kind: SyntaxKind): Node;
  }
  
@@ -1283,6 +1383,89 @@ index b4eb142d54..6d10a3a781 100644
   */
  export const classPrivateFieldInHelper: UnscopedEmitHelper = {
      name: "typescript:classPrivateFieldIn",
+diff --git a/src/compiler/factory/emitNode.ts b/src/compiler/factory/emitNode.ts
+index 98d587b443..693094489a 100644
+--- a/src/compiler/factory/emitNode.ts
++++ b/src/compiler/factory/emitNode.ts
+@@ -72,8 +72,9 @@ export function setEmitFlags<T extends Node>(node: T, emitFlags: EmitFlags) {
+ 
+ /**
+  * Sets flags that control emit behavior of a node.
++ *
++ * @internal
+  */
+-/** @internal */
+ export function addEmitFlags<T extends Node>(node: T, emitFlags: EmitFlags) {
+     const emitNode = getOrCreateEmitNode(node);
+     emitNode.flags = emitNode.flags | emitFlags;
+@@ -114,16 +115,18 @@ export function setTokenSourceMapRange<T extends Node>(node: T, token: SyntaxKin
+ 
+ /**
+  * Gets a custom text range to use when emitting comments.
++ *
++ * @internal
+  */
+-/** @internal */
+ export function getStartsOnNewLine(node: Node) {
+     return node.emitNode?.startsOnNewLine;
+ }
+ 
+ /**
+  * Sets a custom text range to use when emitting comments.
++ *
++ * @internal
+  */
+-/** @internal */
+ export function setStartsOnNewLine<T extends Node>(node: T, newLine: boolean) {
+     getOrCreateEmitNode(node).startsOnNewLine = newLine;
+     return node;
+@@ -263,16 +266,18 @@ export function moveEmitHelpers(source: Node, target: Node, predicate: (helper:
+ 
+ /**
+  * Gets the SnippetElement of a node.
++ *
++ * @internal
+  */
+-/** @internal */
+ export function getSnippetElement(node: Node): SnippetElement | undefined {
+     return node.emitNode?.snippetElement;
+ }
+ 
+ /**
+  * Sets the SnippetElement of a node.
++ *
++ * @internal
+  */
+-/** @internal */
+ export function setSnippetElement<T extends Node>(node: T, snippet: SnippetElement): T {
+     const emitNode = getOrCreateEmitNode(node);
+     emitNode.snippetElement = snippet;
+diff --git a/src/compiler/factory/nodeFactory.ts b/src/compiler/factory/nodeFactory.ts
+index 46574d6aa1..ef8e679606 100644
+--- a/src/compiler/factory/nodeFactory.ts
++++ b/src/compiler/factory/nodeFactory.ts
+@@ -106,8 +106,9 @@ export function addNodeFactoryPatcher(fn: (factory: NodeFactory) => void) {
+  * Creates a `NodeFactory` that can be used to create and update a syntax tree.
+  * @param flags Flags that control factory behavior.
+  * @param baseFactory A `BaseNodeFactory` used to create the base `Node` objects.
++ *
++ * @internal
+  */
+-/** @internal */
+ export function createNodeFactory(flags: NodeFactoryFlags, baseFactory: BaseNodeFactory): NodeFactory {
+     const update = flags & NodeFactoryFlags.NoOriginalNode ? updateWithoutOriginal : updateWithOriginal;
+ 
+@@ -6563,8 +6564,9 @@ function aggregateChildrenFlags(children: MutableNodeArray<Node>) {
+ 
+ /**
+  * Gets the transform flags to exclude when unioning the transform flags of a subtree.
++ *
++ * @internal
+  */
+-/** @internal */
+ export function getTransformFlagsSubtreeExclusions(kind: SyntaxKind) {
+     if (kind >= SyntaxKind.FirstTypeNode && kind <= SyntaxKind.LastTypeNode) {
+         return TransformFlags.TypeExcludes;
 diff --git a/src/compiler/factory/utilities.ts b/src/compiler/factory/utilities.ts
 index a679671d17..b6c97f8f3b 100644
 --- a/src/compiler/factory/utilities.ts
@@ -1571,6 +1754,67 @@ index a679671d17..b6c97f8f3b 100644
   */
  export function createAccessorPropertySetRedirector(factory: NodeFactory, node: PropertyDeclaration, modifiers: ModifiersArray | undefined, name: PropertyName): SetAccessorDeclaration {
      return factory.createSetAccessorDeclaration(
+diff --git a/src/compiler/moduleNameResolver.ts b/src/compiler/moduleNameResolver.ts
+index bbebd99b8a..1904a2d9bb 100644
+--- a/src/compiler/moduleNameResolver.ts
++++ b/src/compiler/moduleNameResolver.ts
+@@ -142,8 +142,10 @@ interface ModuleResolutionState {
+     reportDiagnostic: DiagnosticReporter;
+ }
+ 
+-/** Just the fields that we use for module resolution. */
+-/** @internal */
++/** Just the fields that we use for module resolution.
++ *
++ * @internal
++ */
+ interface PackageJsonPathFields {
+     typings?: string;
+     types?: string;
+@@ -1267,8 +1269,9 @@ function tryLoadModuleUsingBaseUrl(extensions: Extensions, moduleName: string, l
+  * Expose resolution logic to allow us to use Node module resolution logic from arbitrary locations.
+  * No way to do this with `require()`: https://github.com/nodejs/node/issues/5963
+  * Throws an error if the module can't be resolved.
++ *
++ * @internal
+  */
+-/** @internal */
+ export function resolveJSModule(moduleName: string, initialDir: string, host: ModuleResolutionHost): string {
+     const { resolvedModule, failedLookupLocations } = tryResolveJSModuleWorker(moduleName, initialDir, host);
+     if (!resolvedModule) {
+@@ -1527,8 +1530,9 @@ export function pathContainsNodeModules(path: string): boolean {
+  *   For `/node_modules/foo/bar.d.ts` this is packageDirectory: "foo"
+  *   For `/node_modules/@types/foo/bar/index.d.ts` this is packageDirectory: "@types/foo"
+  *   For `/node_modules/foo/bar/index.d.ts` this is packageDirectory: "foo"
++ *
++ * @internal
+  */
+-/** @internal */
+ export function parseNodeModuleFromPath(resolved: string): string | undefined {
+     const path = normalizePath(resolved);
+     const idx = path.lastIndexOf(nodeModulesPathPart);
+@@ -1836,8 +1840,9 @@ export interface PackageJsonInfo {
+ 
+ /**
+  * A function for locating the package.json scope for a given path
++ *
++ * @internal
+  */
+-/** @internal */
+  export function getPackageScopeForPath(fileName: Path, state: ModuleResolutionState): PackageJsonInfo | undefined {
+     const parts = getPathComponents(fileName);
+     parts.pop();
+@@ -2651,8 +2656,9 @@ export function classicNameResolver(moduleName: string, containingFile: string,
+ /**
+  * A host may load a module from a global cache of typings.
+  * This is the minumum code needed to expose that functionality; the rest is in the host.
++ *
++ * @internal
+  */
+-/** @internal */
+ export function loadModuleFromGlobalCache(moduleName: string, projectName: string | undefined, compilerOptions: CompilerOptions, host: ModuleResolutionHost, globalCache: string, packageJsonInfoCache: PackageJsonInfoCache): ResolvedModuleWithFailedLookupLocations {
+     const traceEnabled = isTraceEnabled(compilerOptions, host);
+     if (traceEnabled) {
 diff --git a/src/compiler/moduleSpecifiers.ts b/src/compiler/moduleSpecifiers.ts
 index 78858ac29e..cfa2e7a609 100644
 --- a/src/compiler/moduleSpecifiers.ts
@@ -1590,10 +1834,21 @@ index 78858ac29e..cfa2e7a609 100644
      moduleSymbol: Symbol,
      checker: TypeChecker,
 diff --git a/src/compiler/parser.ts b/src/compiler/parser.ts
-index 40c9fda81e..2abe92843f 100644
+index 40c9fda81e..00ab59fd47 100644
 --- a/src/compiler/parser.ts
 +++ b/src/compiler/parser.ts
-@@ -915,7 +915,6 @@ export function forEachChild<T>(node: Node, cbNode: (node: Node) => T | undefine
+@@ -89,8 +89,9 @@ let SourceFileConstructor: new (kind: SyntaxKind, pos?: number, end?: number) =>
+ 
+ /**
+  * NOTE: You should not use this, it is only exported to support `createNode` in `~/src/deprecatedCompat/deprecations.ts`.
++ *
++ * @internal
+  */
+-/** @internal */
+ export const parseBaseNodeFactory: BaseNodeFactory = {
+     createBaseSourceFileNode: kind => new (SourceFileConstructor || (SourceFileConstructor = objectAllocator.getSourceFileConstructor()))(kind, -1, -1),
+     createBaseIdentifierNode: kind => new (IdentifierConstructor || (IdentifierConstructor = objectAllocator.getIdentifierConstructor()))(kind, -1, -1),
+@@ -915,7 +916,6 @@ export function forEachChild<T>(node: Node, cbNode: (node: Node) => T | undefine
      return fn === undefined ? undefined : fn(node, cbNode, cbNodes);
  }
  
@@ -1601,7 +1856,7 @@ index 40c9fda81e..2abe92843f 100644
  /**
   * Invokes a callback for each child of the given node. The 'cbNode' callback is invoked for all child nodes
   * stored in properties. If a 'cbNodes' callback is specified, it is invoked for embedded arrays; additionally,
-@@ -928,6 +927,8 @@ export function forEachChild<T>(node: Node, cbNode: (node: Node) => T | undefine
+@@ -928,6 +928,8 @@ export function forEachChild<T>(node: Node, cbNode: (node: Node) => T | undefine
   *
   * @remarks Unlike `forEachChild`, `forEachChildRecursively` handles recursively invoking the traversal on each child node found,
   * and while doing so, handles traversing the structure without relying on the callstack to encode the tree structure.
@@ -2245,10 +2500,21 @@ index 4373319375..ce65f1d889 100644
      nativePerformance ? () => nativePerformance.now() :
      Date.now ? Date.now :
 diff --git a/src/compiler/program.ts b/src/compiler/program.ts
-index c8dd95b53c..24a4992ed6 100644
+index c8dd95b53c..d250b30aa6 100644
 --- a/src/compiler/program.ts
 +++ b/src/compiler/program.ts
-@@ -4378,11 +4378,12 @@ export function resolveProjectReferencePath(hostOrRef: ResolveProjectReferencePa
+@@ -801,8 +801,9 @@ export function getReferencedFileLocation(getSourceFileByPath: (path: Path) => S
+ 
+ /**
+  * Determines if program structure is upto date or needs to be recreated
++ *
++ * @internal
+  */
+-/** @internal */
+ export function isProgramUptoDate(
+     program: Program | undefined,
+     rootFileNames: string[],
+@@ -4378,11 +4379,12 @@ export function resolveProjectReferencePath(hostOrRef: ResolveProjectReferencePa
      return resolveConfigFileProjectName(passedInRef.path);
  }
  
@@ -2339,6 +2605,43 @@ index ba810d6d00..3fea87a803 100644
   */
  export function tryGetSourceMappingURL(lineInfo: LineInfo) {
      for (let index = lineInfo.getLineCount() - 1; index >= 0; index--) {
+diff --git a/src/compiler/sys.ts b/src/compiler/sys.ts
+index ee3297a123..6a8d8fbd53 100644
+--- a/src/compiler/sys.ts
++++ b/src/compiler/sys.ts
+@@ -14,8 +14,9 @@ declare function clearTimeout(handle: any): void;
+ /**
+  * djb2 hashing algorithm
+  * http://www.cse.yorku.ca/~oz/hash.html
++ *
++ * @internal
+  */
+-/** @internal */
+ export function generateDjb2Hash(data: string): string {
+     let acc = 5381;
+     for (let i = 0; i < data.length; i++) {
+@@ -28,8 +29,9 @@ export function generateDjb2Hash(data: string): string {
+  * Set a high stack trace limit to provide more information in case of an error.
+  * Called for command-line and server use cases.
+  * Not called if TypeScript is used as a library.
++ *
++ * @internal
+  */
+-/** @internal */
+ export function setStackTraceLimit() {
+     if ((Error as any).stackTraceLimit < 100) { // Also tests that we won't set the property if it doesn't exist.
+         (Error as any).stackTraceLimit = 100;
+@@ -1240,8 +1242,9 @@ export function createSystemWatchFunctions({
+ 
+ /**
+  * patch writefile to create folder before writing the file
++ *
++ * @internal
+  */
+-/** @internal */
+ export function patchWriteFileEnsuringDirectory(sys: System) {
+     // patch writefile to create folder before writing the file
+     const originalWriteFile = sys.writeFile;
 diff --git a/src/compiler/transformer.ts b/src/compiler/transformer.ts
 index 4e6b893c42..6a905084c0 100644
 --- a/src/compiler/transformer.ts
@@ -2620,8 +2923,140 @@ index e425f9918d..bd457dda91 100644
  export function getCurrentTime(host: { now?(): Date; }) {
      return host.now ? host.now() : new Date();
  }
+diff --git a/src/compiler/types.ts b/src/compiler/types.ts
+index fd41acf509..2e39dc5368 100644
+--- a/src/compiler/types.ts
++++ b/src/compiler/types.ts
+@@ -3018,8 +3018,9 @@ export interface NotEmittedStatement extends Statement {
+ 
+ /**
+  * Marks the end of transformed declaration to properly emit exports.
++ *
++ * @internal
+  */
+-/** @internal */
+ export interface EndOfDeclarationMarker extends Statement {
+     readonly kind: SyntaxKind.EndOfDeclarationMarker;
+ }
+@@ -3034,8 +3035,9 @@ export interface CommaListExpression extends Expression {
+ 
+ /**
+  * Marks the beginning of a merged transformed declaration.
++ *
++ * @internal
+  */
+-/** @internal */
+ export interface MergeDeclarationMarker extends Statement {
+     readonly kind: SyntaxKind.MergeDeclarationMarker;
+ }
+@@ -5169,8 +5171,11 @@ export interface AllDecorators {
+     setDecorators?: readonly Decorator[] | undefined;
+ }
+ 
+-/** Indicates how to serialize the name for a TypeReferenceNode when emitting decorator metadata */
+-/** @internal */
++/**
++ * Indicates how to serialize the name for a TypeReferenceNode when emitting decorator metadata
++ *
++ * @internal
++ */
+ export enum TypeReferenceSerializationKind {
+     // The TypeReferenceNode could not be resolved.
+     // The type name should be emitted using a safe fallback.
+@@ -5515,8 +5520,11 @@ export interface UnderscoreEscapedMap<T> extends ESMap<__String, T>, ReadonlyUnd
+ /** SymbolTable based on ES6 Map interface. */
+ export type SymbolTable = UnderscoreEscapedMap<Symbol>;
+ 
+-/** Used to track a `declare module "foo*"`-like declaration. */
+-/** @internal */
++/**
++ * Used to track a `declare module "foo*"`-like declaration.
++ *
++ * @internal
++ */
+ export interface PatternAmbientModule {
+     pattern: Pattern;
+     symbol: Symbol;
+@@ -6335,8 +6343,9 @@ export const enum InferenceFlags {
+  * Generally, Ternary.Maybe is used as the result of a relation that depends on itself, and
+  * Ternary.Unknown is used as the result of a variance check that depends on itself. We make
+  * a distinction because we don't want to cache circular variance check results.
++ *
++ * @internal
+  */
+-/** @internal */
+ export const enum Ternary {
+     False = 0,
+     Unknown = 1,
+@@ -7236,8 +7245,9 @@ export interface CompilerHost extends ModuleResolutionHost {
+     /** @internal */ storeFilesChangingSignatureDuringEmit?: boolean;
+ }
+ 
+-/** true if --out otherwise source file name */
+-/** @internal */
++/** true if --out otherwise source file name *
++ * @internal
++ */
+ export type SourceOfProjectReferenceRedirect = string | true;
+ 
+ /** @internal */
+@@ -7453,8 +7463,9 @@ export type EmitHelperUniqueNameCallback = (name: string) => string;
+ /**
+  * Used by the checker, this enum keeps track of external emit helpers that should be type
+  * checked.
++ *
++ * @internal
+  */
+-/** @internal */
+ export const enum ExternalEmitHelpers {
+     Extends = 1 << 0,               // __extends (used by the ES2015 class transformation)
+     Assign = 1 << 1,                // __assign (used by Jsx and ESNext object spread transformations)
+@@ -8805,8 +8816,9 @@ export interface RawSourceMap {
+ 
+ /**
+  * Generates a source map.
++ *
++ * @internal
+  */
+-/** @internal */
+ export interface SourceMapGenerator {
+     getSources(): readonly string[];
+     /**
+@@ -8852,8 +8864,9 @@ export interface DocumentPositionMapperHost {
+ 
+ /**
+  * Maps positions between source and generated files.
++ *
++ * @internal
+  */
+-/** @internal */
+ export interface DocumentPositionMapper {
+     getSourcePosition(input: DocumentPosition): DocumentPosition;
+     getGeneratedPosition(input: DocumentPosition): DocumentPosition;
+@@ -9191,8 +9204,9 @@ type ArgumentDefinitionToFieldUnion<T extends readonly PragmaArgumentSpecificati
+ 
+ /**
+  * Maps a pragma definition into the desired shape for its arguments object
++ *
++ * @internal
+  */
+-/** @internal */
+ type PragmaArgumentType<KPrag extends keyof ConcretePragmaSpecs> =
+     ConcretePragmaSpecs[KPrag] extends { args: readonly PragmaArgumentSpecification<any>[] }
+         ? UnionToIntersection<ArgumentDefinitionToFieldUnion<ConcretePragmaSpecs[KPrag]["args"]>>
+@@ -9217,8 +9231,9 @@ export interface ReadonlyPragmaMap extends ReadonlyESMap<string, PragmaPseudoMap
+  * A strongly-typed es6 map of pragma entries, the values of which are either a single argument
+  * value (if only one was found), or an array of multiple argument values if the pragma is present
+  * in multiple places
++ *
++ * @internal
+  */
+-/** @internal */
+ export interface PragmaMap extends ESMap<string, PragmaPseudoMap[keyof PragmaPseudoMap] | PragmaPseudoMap[keyof PragmaPseudoMap][]>, ReadonlyPragmaMap {
+     set<TKey extends keyof PragmaPseudoMap>(key: TKey, value: PragmaPseudoMap[TKey] | PragmaPseudoMap[TKey][]): this;
+     get<TKey extends keyof PragmaPseudoMap>(key: TKey): PragmaPseudoMap[TKey] | PragmaPseudoMap[TKey][];
 diff --git a/src/compiler/utilities.ts b/src/compiler/utilities.ts
-index d371740a49..3d682a13ce 100644
+index d371740a49..5003b1ad9b 100644
 --- a/src/compiler/utilities.ts
 +++ b/src/compiler/utilities.ts
 @@ -212,10 +212,11 @@ export function forEachAncestor<T>(node: Node, callback: (n: Node) => T | undefi
@@ -3020,7 +3455,18 @@ index d371740a49..3d682a13ce 100644
  export function isBindableStaticElementAccessExpression(node: Node, excludeThisKeyword?: boolean): node is BindableStaticElementAccessExpression {
      return isLiteralLikeElementAccess(node)
          && ((!excludeThisKeyword && node.expression.kind === SyntaxKind.ThisKeyword) ||
-@@ -3138,8 +3188,11 @@ export function getNextJSDocCommentLocation(node: Node) {
+@@ -2783,8 +2833,9 @@ function isVoidZero(node: Node) {
+ /**
+  * Does not handle signed numeric names like `a[+0]` - handling those would require handling prefix unary expressions
+  * throughout late binding handling as well, which is awkward (but ultimately probably doable if there is demand)
++ *
++ * @internal
+  */
+-/** @internal */
+ export function getElementOrPropertyAccessArgumentExpressionOrName(node: AccessExpression): Identifier | PrivateIdentifier | StringLiteralLike | NumericLiteral | ElementAccessExpression | undefined {
+     if (isPropertyAccessExpression(node)) {
+         return node.name;
+@@ -3138,8 +3189,11 @@ export function getNextJSDocCommentLocation(node: Node) {
      }
  }
  
@@ -3034,7 +3480,7 @@ index d371740a49..3d682a13ce 100644
  export function getParameterSymbolFromJSDoc(node: JSDocParameterTag): Symbol | undefined {
      if (node.symbol) {
          return node.symbol;
-@@ -3192,8 +3245,11 @@ export function getEffectiveJSDocHost(node: Node): Node | undefined {
+@@ -3192,8 +3246,11 @@ export function getEffectiveJSDocHost(node: Node): Node | undefined {
      }
  }
  
@@ -3048,7 +3494,7 @@ index d371740a49..3d682a13ce 100644
  export function getJSDocHost(node: Node): HasJSDoc | undefined {
      const jsDoc = getJSDocRoot(node);
      if (!jsDoc) {
-@@ -3301,10 +3357,11 @@ export type NodeWithPossibleHoistedDeclaration =
+@@ -3301,10 +3358,11 @@ export type NodeWithPossibleHoistedDeclaration =
      | TryStatement
      | CatchClause;
  
@@ -3061,7 +3507,7 @@ index d371740a49..3d682a13ce 100644
   */
  export function isNodeWithPossibleHoistedDeclaration(node: Node): node is NodeWithPossibleHoistedDeclaration {
      switch (node.kind) {
-@@ -3360,11 +3417,12 @@ export function walkUpParenthesizedExpressions(node: Node) {
+@@ -3360,11 +3418,12 @@ export function walkUpParenthesizedExpressions(node: Node) {
      return walkUp(node, SyntaxKind.ParenthesizedExpression);
  }
  
@@ -3075,7 +3521,7 @@ index d371740a49..3d682a13ce 100644
   */
  export function walkUpParenthesizedTypesAndGetParentAndChild(node: Node): [ParenthesizedTypeNode | undefined, Node] {
      let child: ParenthesizedTypeNode | undefined;
-@@ -3602,8 +3660,11 @@ export function getEffectiveImplementsTypeNodes(node: ClassLikeDeclaration): und
+@@ -3602,8 +3661,11 @@ export function getEffectiveImplementsTypeNodes(node: ClassLikeDeclaration): und
      }
  }
  
@@ -3089,7 +3535,7 @@ index d371740a49..3d682a13ce 100644
  export function getAllSuperTypeNodes(node: Node): readonly TypeNode[] {
      return isInterfaceDeclaration(node) ? getInterfaceBaseTypeNodes(node) || emptyArray :
          isClassLike(node) ? concatenate(singleElementArray(getEffectiveBaseTypeNode(node)), getEffectiveImplementsTypeNodes(node)) || emptyArray :
-@@ -3745,7 +3806,6 @@ export function isSignedNumericLiteral(node: Node): node is PrefixUnaryExpressio
+@@ -3745,7 +3807,6 @@ export function isSignedNumericLiteral(node: Node): node is PrefixUnaryExpressio
      return isPrefixUnaryExpression(node) && (node.operator === SyntaxKind.PlusToken || node.operator === SyntaxKind.MinusToken) && isNumericLiteral(node.operand);
  }
  
@@ -3097,7 +3543,7 @@ index d371740a49..3d682a13ce 100644
  /**
   * A declaration has a dynamic name if all of the following are true:
   *   1. The declaration has a computed property name.
-@@ -3753,6 +3813,8 @@ export function isSignedNumericLiteral(node: Node): node is PrefixUnaryExpressio
+@@ -3753,6 +3814,8 @@ export function isSignedNumericLiteral(node: Node): node is PrefixUnaryExpressio
   *   3. The computed name is *not* expressed as a NumericLiteral.
   *   4. The computed name is *not* expressed as a PlusToken or MinusToken
   *      immediately followed by a NumericLiteral.
@@ -3106,7 +3552,7 @@ index d371740a49..3d682a13ce 100644
   */
  export function hasDynamicName(declaration: Declaration): declaration is DynamicNamedDeclaration | DynamicNamedBinaryExpression {
      const name = getNameOfDeclaration(declaration);
-@@ -3837,9 +3899,10 @@ export function isPrivateIdentifierSymbol(symbol: Symbol): boolean {
+@@ -3837,9 +3900,10 @@ export function isPrivateIdentifierSymbol(symbol: Symbol): boolean {
      return startsWith(symbol.escapedName as string, "__#");
  }
  
@@ -3118,7 +3564,7 @@ index d371740a49..3d682a13ce 100644
   */
  export function isESSymbolIdentifier(node: Node): boolean {
      return node.kind === SyntaxKind.Identifier && (node as Identifier).escapedText === "Symbol";
-@@ -4453,11 +4516,12 @@ function getReplacement(c: string, offset: number, input: string) {
+@@ -4453,11 +4517,12 @@ function getReplacement(c: string, offset: number, input: string) {
      return escapedCharsMap.get(c) || encodeUtf16EscapeSequence(c.charCodeAt(0));
  }
  
@@ -3132,7 +3578,7 @@ index d371740a49..3d682a13ce 100644
   */
  export function escapeString(s: string, quoteChar?: CharacterCodes.doubleQuote | CharacterCodes.singleQuote | CharacterCodes.backtick): string {
      const escapedCharsRegExp =
-@@ -4509,11 +4573,12 @@ export function escapeJsxAttributeString(s: string, quoteChar?: CharacterCodes.d
+@@ -4509,11 +4574,12 @@ export function escapeJsxAttributeString(s: string, quoteChar?: CharacterCodes.d
      return s.replace(escapedCharsRegExp, getJsxAttributeStringReplacement);
  }
  
@@ -3146,7 +3592,7 @@ index d371740a49..3d682a13ce 100644
   */
  export function stripQuotes(name: string) {
      const length = name.length;
-@@ -4783,9 +4848,10 @@ export function getExternalModuleNameFromDeclaration(host: ResolveModuleNameReso
+@@ -4783,9 +4849,10 @@ export function getExternalModuleNameFromDeclaration(host: ResolveModuleNameReso
      return getResolvedExternalModuleName(host, file);
  }
  
@@ -3158,7 +3604,7 @@ index d371740a49..3d682a13ce 100644
   */
  export function getExternalModuleNameFromPath(host: ResolveModuleNameResolutionHost, fileName: string, referencePath?: string): string {
      const getCanonicalFileName = (f: string) => host.getCanonicalFileName(f);
-@@ -4834,9 +4900,10 @@ export function getDeclarationEmitExtensionForPath(path: string) {
+@@ -4834,9 +4901,10 @@ export function getDeclarationEmitExtensionForPath(path: string) {
          Extension.Dts;
  }
  
@@ -3170,7 +3616,7 @@ index d371740a49..3d682a13ce 100644
   */
  export function getPossibleOriginalInputExtensionForExtension(path: string) {
      return fileExtensionIsOneOf(path, [Extension.Dmts, Extension.Mjs, Extension.Mts]) ? [Extension.Mts, Extension.Mjs] :
-@@ -4850,8 +4917,11 @@ export function outFile(options: CompilerOptions) {
+@@ -4850,8 +4918,11 @@ export function outFile(options: CompilerOptions) {
      return options.outFile || options.out;
  }
  
@@ -3184,7 +3630,7 @@ index d371740a49..3d682a13ce 100644
  export function getPathsBasePath(options: CompilerOptions, host: { getCurrentDirectory?(): string }) {
      if (!options.paths) return undefined;
      return options.baseUrl ?? Debug.checkDefined(options.pathsBasePath || host.getCurrentDirectory?.(), "Encountered 'paths' without a 'baseUrl', config file, or host 'getCurrentDirectory'.");
-@@ -4866,7 +4936,6 @@ export interface EmitFileNames {
+@@ -4866,7 +4937,6 @@ export interface EmitFileNames {
      buildInfoPath?: string | undefined;
  }
  
@@ -3192,7 +3638,7 @@ index d371740a49..3d682a13ce 100644
  /**
   * Gets the source files that are expected to have an emit output.
   *
-@@ -4875,6 +4944,8 @@ export interface EmitFileNames {
+@@ -4875,6 +4945,8 @@ export interface EmitFileNames {
   *
   * @param host An EmitHost.
   * @param targetSourceFile An optional target source file to emit.
@@ -3201,7 +3647,7 @@ index d371740a49..3d682a13ce 100644
   */
  export function getSourceFilesToEmit(host: EmitHost, targetSourceFile?: SourceFile, forceDtsEmit?: boolean): readonly SourceFile[] {
      const options = host.getCompilerOptions();
-@@ -4898,8 +4969,11 @@ export function getSourceFilesToEmit(host: EmitHost, targetSourceFile?: SourceFi
+@@ -4898,8 +4970,11 @@ export function getSourceFilesToEmit(host: EmitHost, targetSourceFile?: SourceFi
      }
  }
  
@@ -3215,7 +3661,7 @@ index d371740a49..3d682a13ce 100644
  export function sourceFileMayBeEmitted(sourceFile: SourceFile, host: SourceFileMayBeEmittedHost, forceDtsEmit?: boolean) {
      const options = host.getCompilerOptions();
      return !(options.noEmitForJsFiles && isSourceFileJS(sourceFile)) &&
-@@ -4986,8 +5060,11 @@ export function getSetAccessorValueParameter(accessor: SetAccessorDeclaration):
+@@ -4986,8 +5061,11 @@ export function getSetAccessorValueParameter(accessor: SetAccessorDeclaration):
      }
  }
  
@@ -3229,7 +3675,7 @@ index d371740a49..3d682a13ce 100644
  export function getSetAccessorTypeAnnotationNode(accessor: SetAccessorDeclaration): TypeNode | undefined {
      const parameter = getSetAccessorValueParameter(accessor);
      return parameter && parameter.type;
-@@ -5084,11 +5161,12 @@ export function getAllAccessorDeclarations(declarations: readonly Declaration[],
+@@ -5084,11 +5162,12 @@ export function getAllAccessorDeclarations(declarations: readonly Declaration[],
      };
  }
  
@@ -3243,7 +3689,7 @@ index d371740a49..3d682a13ce 100644
   */
  export function getEffectiveTypeAnnotationNode(node: Node): TypeNode | undefined {
      if (!isInJSFile(node) && isFunctionDeclaration(node)) return undefined;
-@@ -5102,10 +5180,11 @@ export function getTypeAnnotationNode(node: Node): TypeNode | undefined {
+@@ -5102,10 +5181,11 @@ export function getTypeAnnotationNode(node: Node): TypeNode | undefined {
      return (node as HasType).type;
  }
  
@@ -3256,7 +3702,7 @@ index d371740a49..3d682a13ce 100644
   */
  export function getEffectiveReturnTypeNode(node: SignatureDeclaration | JSDocSignature): TypeNode | undefined {
      return isJSDocSignature(node) ?
-@@ -5123,10 +5202,11 @@ function isNonTypeAliasTemplate(tag: JSDocTag): tag is JSDocTemplateTag {
+@@ -5123,10 +5203,11 @@ function isNonTypeAliasTemplate(tag: JSDocTag): tag is JSDocTemplateTag {
      return isJSDocTemplateTag(tag) && !(tag.parent.kind === SyntaxKind.JSDoc && tag.parent.tags!.some(isJSDocTypeAlias));
  }
  
@@ -3269,7 +3715,7 @@ index d371740a49..3d682a13ce 100644
   */
  export function getEffectiveSetAccessorTypeAnnotationNode(node: SetAccessorDeclaration): TypeNode | undefined {
      const parameter = getSetAccessorValueParameter(node);
-@@ -5193,10 +5273,11 @@ export function emitComments(
+@@ -5193,10 +5274,11 @@ export function emitComments(
      }
  }
  
@@ -3282,7 +3728,7 @@ index d371740a49..3d682a13ce 100644
   */
  export function emitDetachedComments(text: string, lineMap: readonly number[], writer: EmitTextWriter,
      writeComment: (text: string, lineMap: readonly number[], writer: EmitTextWriter, commentPos: number, commentEnd: number, newLine: string) => void,
-@@ -5447,11 +5528,12 @@ function getModifierFlagsWorker(node: Node, includeJSDoc: boolean, alwaysInclude
+@@ -5447,11 +5529,12 @@ function getModifierFlagsWorker(node: Node, includeJSDoc: boolean, alwaysInclude
      return node.modifierFlagsCache & ~(ModifierFlags.HasComputedFlags | ModifierFlags.HasComputedJSDocModifiers);
  }
  
@@ -3296,7 +3742,7 @@ index d371740a49..3d682a13ce 100644
   */
  export function getEffectiveModifierFlags(node: Node): ModifierFlags {
      return getModifierFlagsWorker(node, /*includeJSDoc*/ true);
-@@ -5462,11 +5544,12 @@ export function getEffectiveModifierFlagsAlwaysIncludeJSDoc(node: Node): Modifie
+@@ -5462,11 +5545,12 @@ export function getEffectiveModifierFlagsAlwaysIncludeJSDoc(node: Node): Modifie
      return getModifierFlagsWorker(node, /*includeJSDOc*/ true, /*alwaysIncludeJSDOc*/ true);
  }
  
@@ -3310,7 +3756,7 @@ index d371740a49..3d682a13ce 100644
   */
  export function getSyntacticModifierFlags(node: Node): ModifierFlags {
      return getModifierFlagsWorker(node, /*includeJSDoc*/ false);
-@@ -5488,21 +5571,23 @@ function getJSDocModifierFlagsNoCache(node: Node): ModifierFlags {
+@@ -5488,21 +5572,23 @@ function getJSDocModifierFlagsNoCache(node: Node): ModifierFlags {
      return flags;
  }
  
@@ -3336,7 +3782,7 @@ index d371740a49..3d682a13ce 100644
   */
  export function getSyntacticModifierFlagsNoCache(node: Node): ModifierFlags {
      let flags = canHaveModifiers(node) ? modifiersToFlags(node.modifiers) : ModifierFlags.None;
-@@ -5570,8 +5655,11 @@ export function isAssignmentOperator(token: SyntaxKind): boolean {
+@@ -5570,8 +5656,11 @@ export function isAssignmentOperator(token: SyntaxKind): boolean {
      return token >= SyntaxKind.FirstAssignment && token <= SyntaxKind.LastAssignment;
  }
  
@@ -3350,7 +3796,7 @@ index d371740a49..3d682a13ce 100644
  export function tryGetClassExtendingExpressionWithTypeArguments(node: Node): ClassLikeDeclaration | undefined {
      const cls = tryGetClassImplementingOrExtendingExpressionWithTypeArguments(node);
      return cls && !cls.isImplements ? cls.class : undefined;
-@@ -5731,8 +5819,11 @@ function isExportDefaultSymbol(symbol: Symbol): boolean {
+@@ -5731,8 +5820,11 @@ function isExportDefaultSymbol(symbol: Symbol): boolean {
      return symbol && length(symbol.declarations) > 0 && hasSyntacticModifier(symbol.declarations![0], ModifierFlags.Default);
  }
  
@@ -3364,7 +3810,7 @@ index d371740a49..3d682a13ce 100644
  export function tryExtractTSExtension(fileName: string): string | undefined {
      return find(supportedTSExtensionsForExtractExtension, extension => fileExtensionIs(fileName, extension));
  }
-@@ -5776,9 +5867,10 @@ function getExpandedCharCodes(input: string): number[] {
+@@ -5776,9 +5868,10 @@ function getExpandedCharCodes(input: string): number[] {
  
  const base64Digits = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=";
  
@@ -3376,7 +3822,7 @@ index d371740a49..3d682a13ce 100644
   */
  export function convertToBase64(input: string): string {
      let result = "";
-@@ -5924,43 +6016,47 @@ export function getNewLineCharacter(options: CompilerOptions | PrinterOptions, g
+@@ -5924,43 +6017,47 @@ export function getNewLineCharacter(options: CompilerOptions | PrinterOptions, g
      return getNewLine ? getNewLine() : sys ? sys.newLine : carriageReturnLineFeed;
  }
  
@@ -3428,7 +3874,7 @@ index d371740a49..3d682a13ce 100644
   */
  export function moveRangePastDecorators(node: Node): TextRange {
      const lastDecorator = canHaveModifiers(node) ? findLast(node.modifiers, isDecorator) : undefined;
-@@ -5969,9 +6065,10 @@ export function moveRangePastDecorators(node: Node): TextRange {
+@@ -5969,9 +6066,10 @@ export function moveRangePastDecorators(node: Node): TextRange {
          : node;
  }
  
@@ -3440,7 +3886,7 @@ index d371740a49..3d682a13ce 100644
   */
  export function moveRangePastModifiers(node: Node): TextRange {
      const lastModifier = canHaveModifiers(node) ? lastOrUndefined(node.modifiers) : undefined;
-@@ -5980,22 +6077,24 @@ export function moveRangePastModifiers(node: Node): TextRange {
+@@ -5980,22 +6078,24 @@ export function moveRangePastModifiers(node: Node): TextRange {
          : moveRangePastDecorators(node);
  }
  
@@ -3467,7 +3913,7 @@ index d371740a49..3d682a13ce 100644
   */
  export function createTokenRange(pos: number, token: SyntaxKind): TextRange {
      return createRange(pos, pos + tokenToString(token)!.length);
-@@ -6076,10 +6175,11 @@ function getPreviousNonWhitespacePosition(pos: number, stopPos = 0, sourceFile:
+@@ -6076,10 +6176,11 @@ function getPreviousNonWhitespacePosition(pos: number, stopPos = 0, sourceFile:
      }
  }
  
@@ -3480,7 +3926,7 @@ index d371740a49..3d682a13ce 100644
   */
  export function isDeclarationNameOfEnumOrNamespace(node: Identifier) {
      const parseNode = getParseTreeNode(node);
-@@ -6145,8 +6245,11 @@ export function skipAlias(symbol: Symbol, checker: TypeChecker) {
+@@ -6145,8 +6246,11 @@ export function skipAlias(symbol: Symbol, checker: TypeChecker) {
      return symbol.flags & SymbolFlags.Alias ? checker.getAliasedSymbol(symbol) : symbol;
  }
  
@@ -3494,7 +3940,7 @@ index d371740a49..3d682a13ce 100644
  export function getCombinedLocalAndExportSymbolFlags(symbol: Symbol): SymbolFlags {
      return symbol.exportSymbol ? symbol.exportSymbol.flags | symbol.flags : symbol.flags;
  }
-@@ -6240,9 +6343,10 @@ export function compareDataObjects(dst: any, src: any): boolean {
+@@ -6240,9 +6344,10 @@ export function compareDataObjects(dst: any, src: any): boolean {
      return true;
  }
  
@@ -3506,7 +3952,7 @@ index d371740a49..3d682a13ce 100644
   */
  export function clearMap<K, T>(map: { forEach: ESMap<K, T>["forEach"]; clear: ESMap<K, T>["clear"]; }, onDeleteValue: (valueInMap: T, key: K) => void) {
      // Remove all
-@@ -6263,9 +6367,10 @@ export interface MutateMapSkippingNewValuesOptions<K, T, U> {
+@@ -6263,9 +6368,10 @@ export interface MutateMapSkippingNewValuesOptions<K, T, U> {
      onExistingValue?(existingValue: T, valueInNewMap: U, key: K): void;
  }
  
@@ -3518,7 +3964,7 @@ index d371740a49..3d682a13ce 100644
   */
  export function mutateMapSkippingNewValues<K, T, U>(
      map: ESMap<K, T>,
-@@ -6293,9 +6398,10 @@ export interface MutateMapOptions<K, T, U> extends MutateMapSkippingNewValuesOpt
+@@ -6293,9 +6399,10 @@ export interface MutateMapOptions<K, T, U> extends MutateMapSkippingNewValuesOpt
      createNewValue(key: K, valueInNewMap: U): T;
  }
  
@@ -3530,7 +3976,7 @@ index d371740a49..3d682a13ce 100644
   */
  export function mutateMap<K, T, U>(map: ESMap<K, T>, newMap: ReadonlyESMap<K, U>, options: MutateMapOptions<K, T, U>) {
      // Needs update
-@@ -6369,8 +6475,11 @@ export function getLastChild(node: Node): Node | undefined {
+@@ -6369,8 +6476,11 @@ export function getLastChild(node: Node): Node | undefined {
      return lastChild;
  }
  
@@ -3544,7 +3990,7 @@ index d371740a49..3d682a13ce 100644
  export function addToSeen<K>(seen: ESMap<K, true>, key: K): boolean;
  /** @internal */
  export function addToSeen<K, T>(seen: ESMap<K, T>, key: K, value: T): boolean;
-@@ -7360,10 +7469,11 @@ export function getRegularExpressionsForWildcards(specs: readonly string[] | und
+@@ -7360,10 +7470,11 @@ export function getRegularExpressionsForWildcards(specs: readonly string[] | und
          spec && getSubPatternFromSpec(spec, basePath, usage, wildcardMatchers[usage]));
  }
  
@@ -3557,7 +4003,7 @@ index d371740a49..3d682a13ce 100644
   */
  export function isImplicitGlob(lastPathComponent: string): boolean {
      return !/[.*?]/.test(lastPathComponent);
-@@ -7472,8 +7582,11 @@ export interface FileMatcherPatterns {
+@@ -7472,8 +7583,11 @@ export interface FileMatcherPatterns {
      basePaths: readonly string[];
  }
  
@@ -3571,7 +4017,7 @@ index d371740a49..3d682a13ce 100644
  export function getFileMatcherPatterns(path: string, excludes: readonly string[] | undefined, includes: readonly string[] | undefined, useCaseSensitiveFileNames: boolean, currentDirectory: string): FileMatcherPatterns {
      path = normalizePath(path);
      currentDirectory = normalizePath(currentDirectory);
-@@ -7493,8 +7606,11 @@ export function getRegexFromPattern(pattern: string, useCaseSensitiveFileNames:
+@@ -7493,8 +7607,11 @@ export function getRegexFromPattern(pattern: string, useCaseSensitiveFileNames:
      return new RegExp(pattern, useCaseSensitiveFileNames ? "" : "i");
  }
  
@@ -3585,7 +4031,7 @@ index d371740a49..3d682a13ce 100644
  export function matchFiles(path: string, extensions: readonly string[] | undefined, excludes: readonly string[] | undefined, includes: readonly string[] | undefined, useCaseSensitiveFileNames: boolean, currentDirectory: string, depth: number | undefined, getFileSystemEntries: (path: string) => FileSystemEntries, realpath: (path: string) => string): string[] {
      path = normalizePath(path);
      currentDirectory = normalizePath(currentDirectory);
-@@ -7634,9 +7750,10 @@ export function getScriptKindFromFileName(fileName: string): ScriptKind {
+@@ -7634,9 +7751,10 @@ export function getScriptKindFromFileName(fileName: string): ScriptKind {
      }
  }
  
@@ -3597,7 +4043,7 @@ index d371740a49..3d682a13ce 100644
   */
  export const supportedTSExtensions: readonly Extension[][] = [[Extension.Ts, Extension.Tsx, Extension.Dts], [Extension.Cts, Extension.Dcts], [Extension.Mts, Extension.Dmts]];
  /** @internal */
-@@ -7754,10 +7871,11 @@ export function changeExtension<T extends string | Path>(path: T, newExtension:
+@@ -7754,10 +7872,11 @@ export function changeExtension<T extends string | Path>(path: T, newExtension:
      return changeAnyExtension(path, newExtension, extensionsToRemove, /*ignoreCase*/ false) as T;
  }
  
@@ -3610,7 +4056,7 @@ index d371740a49..3d682a13ce 100644
   */
  export function tryParsePattern(pattern: string): string | Pattern | undefined {
      const indexOfStar = pattern.indexOf("*");
-@@ -7784,8 +7902,11 @@ export function positionIsSynthesized(pos: number): boolean {
+@@ -7784,8 +7903,11 @@ export function positionIsSynthesized(pos: number): boolean {
      return !(pos >= 0);
  }
  
@@ -3624,7 +4070,7 @@ index d371740a49..3d682a13ce 100644
  export function extensionIsTS(ext: Extension): boolean {
      return ext === Extension.Ts || ext === Extension.Tsx || ext === Extension.Dts || ext === Extension.Cts || ext === Extension.Mts || ext === Extension.Dmts || ext === Extension.Dcts;
  }
-@@ -7795,10 +7916,11 @@ export function resolutionExtensionIsTSOrJson(ext: Extension) {
+@@ -7795,10 +7917,11 @@ export function resolutionExtensionIsTSOrJson(ext: Extension) {
      return extensionIsTS(ext) || ext === Extension.Json;
  }
  
@@ -3637,7 +4083,7 @@ index d371740a49..3d682a13ce 100644
   */
  export function extensionFromPath(path: string): Extension {
      const ext = tryGetExtensionFromPath(path);
-@@ -7827,11 +7949,12 @@ export const emptyFileSystemEntries: FileSystemEntries = {
+@@ -7827,11 +7950,12 @@ export const emptyFileSystemEntries: FileSystemEntries = {
  };
  
  
@@ -3651,7 +4097,7 @@ index d371740a49..3d682a13ce 100644
   */
  export function matchPatternOrExact(patternOrStrings: readonly (string | Pattern)[], candidate: string): string | Pattern | undefined {
      const patterns: Pattern[] = [];
-@@ -7921,10 +8044,11 @@ export function isJsonEqual(a: unknown, b: unknown): boolean {
+@@ -7921,10 +8045,11 @@ export function isJsonEqual(a: unknown, b: unknown): boolean {
      return a === b || typeof a === "object" && a !== null && typeof b === "object" && b !== null && equalOwnProperties(a as MapLike<unknown>, b as MapLike<unknown>, isJsonEqual);
  }
  
@@ -3664,7 +4110,94 @@ index d371740a49..3d682a13ce 100644
   */
  export function parsePseudoBigInt(stringValue: string): string {
      let log2Base: number;
-@@ -8181,19 +8305,21 @@ function isPackedElement(node: Expression) {
+@@ -8060,8 +8185,9 @@ export function arrayIsHomogeneous<T>(array: readonly T[], comparer: EqualityCom
+ 
+ /**
+  * Bypasses immutability and directly sets the `pos` property of a `TextRange` or `Node`.
++ *
++ * @internal
+  */
+-/** @internal */
+ export function setTextRangePos<T extends ReadonlyTextRange>(range: T, pos: number) {
+     (range as TextRange).pos = pos;
+     return range;
+@@ -8069,8 +8195,9 @@ export function setTextRangePos<T extends ReadonlyTextRange>(range: T, pos: numb
+ 
+ /**
+  * Bypasses immutability and directly sets the `end` property of a `TextRange` or `Node`.
++ *
++ * @internal
+  */
+-/** @internal */
+ export function setTextRangeEnd<T extends ReadonlyTextRange>(range: T, end: number) {
+     (range as TextRange).end = end;
+     return range;
+@@ -8078,8 +8205,9 @@ export function setTextRangeEnd<T extends ReadonlyTextRange>(range: T, end: numb
+ 
+ /**
+  * Bypasses immutability and directly sets the `pos` and `end` properties of a `TextRange` or `Node`.
++ *
++ * @internal
+  */
+-/** @internal */
+ export function setTextRangePosEnd<T extends ReadonlyTextRange>(range: T, pos: number, end: number) {
+     return setTextRangeEnd(setTextRangePos(range, pos), end);
+ }
+@@ -8087,16 +8215,18 @@ export function setTextRangePosEnd<T extends ReadonlyTextRange>(range: T, pos: n
+ /**
+  * Bypasses immutability and directly sets the `pos` and `end` properties of a `TextRange` or `Node` from the
+  * provided position and width.
++ *
++ * @internal
+  */
+-/** @internal */
+ export function setTextRangePosWidth<T extends ReadonlyTextRange>(range: T, pos: number, width: number) {
+     return setTextRangePosEnd(range, pos, pos + width);
+ }
+ 
+ /**
+  * Bypasses immutability and directly sets the `flags` property of a `Node`.
++ *
++ * @internal
+  */
+-/** @internal */
+ export function setNodeFlags<T extends Node>(node: T, newFlags: NodeFlags): T;
+ /** @internal */
+ export function setNodeFlags<T extends Node>(node: T | undefined, newFlags: NodeFlags): T | undefined;
+@@ -8110,8 +8240,9 @@ export function setNodeFlags<T extends Node>(node: T | undefined, newFlags: Node
+ 
+ /**
+  * Bypasses immutability and directly sets the `parent` property of a `Node`.
++ *
++ * @internal
+  */
+-/** @internal */
+ export function setParent<T extends Node>(child: T, parent: T["parent"] | undefined): T;
+ /** @internal */
+ export function setParent<T extends Node>(child: T | undefined, parent: T["parent"] | undefined): T | undefined;
+@@ -8125,8 +8256,9 @@ export function setParent<T extends Node>(child: T | undefined, parent: T["paren
+ 
+ /**
+  * Bypasses immutability and directly sets the `parent` property of each `Node` in an array of nodes, if is not already set.
++ *
++ * @internal
+  */
+-/** @internal */
+ export function setEachParent<T extends readonly Node[]>(children: T, parent: T[number]["parent"]): T;
+ /** @internal */
+ export function setEachParent<T extends readonly Node[]>(children: T | undefined, parent: T[number]["parent"]): T | undefined;
+@@ -8145,8 +8277,9 @@ export function setEachParent<T extends readonly Node[]>(children: T | undefined
+  * @param rootNode The root node from which to start the recursion.
+  * @param incremental When `true`, only recursively descends through nodes whose `parent` pointers are incorrect.
+  * This allows us to quickly bail out of setting `parent` for subtrees during incremental parsing.
++ *
++ * @internal
+  */
+-/** @internal */
+ export function setParentRecursive<T extends Node>(rootNode: T, incremental: boolean): T;
+ /** @internal */
+ export function setParentRecursive<T extends Node>(rootNode: T | undefined, incremental: boolean): T | undefined;
+@@ -8181,19 +8314,21 @@ function isPackedElement(node: Expression) {
      return !isOmittedExpression(node);
  }
  
@@ -3689,10 +4222,76 @@ index d371740a49..3d682a13ce 100644
  export function expressionResultIsUnused(node: Expression): boolean {
      Debug.assertIsDefined(node.parent);
 diff --git a/src/compiler/utilitiesPublic.ts b/src/compiler/utilitiesPublic.ts
-index 547db22486..fa9ffc2bdc 100644
+index 547db22486..df6bec6235 100644
 --- a/src/compiler/utilitiesPublic.ts
 +++ b/src/compiler/utilitiesPublic.ts
-@@ -1697,10 +1697,11 @@ export function isUnaryExpressionWithWrite(expr: Node): expr is PrefixUnaryExpre
+@@ -1060,8 +1060,9 @@ export function isOptionalChainRoot(node: Node): node is OptionalChainRoot {
+ 
+ /**
+  * Determines whether a node is the expression preceding an optional chain (i.e. `a` in `a?.b`).
++ *
++ * @internal
+  */
+-/** @internal */
+ export function isExpressionOfOptionalChainRoot(node: Node): node is Expression & { parent: OptionalChainRoot } {
+     return isOptionalChainRoot(node.parent) && node.parent.expression === node;
+ }
+@@ -1076,8 +1077,9 @@ export function isExpressionOfOptionalChainRoot(node: Node): node is Expression
+  *   the end of the chain starting at `c?.`)
+  * 5. For `a?.(b?.c).d`, both `b?.c` and `a?.(b?.c)d` are outermost (`c` is the end of the chain starting at `b`, and `d` is
+  *   the end of the chain starting at `a?.`)
++ *
++ * @internal
+  */
+-/** @internal */
+ export function isOutermostOptionalChain(node: OptionalChain) {
+     return !isOptionalChain(node.parent) // cases 1, 2, and 3
+         || isOptionalChainRoot(node.parent) // case 4
+@@ -1519,8 +1521,9 @@ export function isArrayBindingElement(node: Node): node is ArrayBindingElement {
+ 
+ /**
+  * Determines whether the BindingOrAssignmentElement is a BindingElement-like declaration
++ *
++ * @internal
+  */
+-/** @internal */
+ export function isDeclarationBindingElement(bindingElement: BindingOrAssignmentElement): bindingElement is VariableDeclaration | ParameterDeclaration | BindingElement {
+     switch (bindingElement.kind) {
+         case SyntaxKind.VariableDeclaration:
+@@ -1534,8 +1537,9 @@ export function isDeclarationBindingElement(bindingElement: BindingOrAssignmentE
+ 
+ /**
+  * Determines whether a node is a BindingOrAssignmentPattern
++ *
++ * @internal
+  */
+-/** @internal */
+ export function isBindingOrAssignmentPattern(node: BindingOrAssignmentElementTarget): node is BindingOrAssignmentPattern {
+     return isObjectBindingOrAssignmentPattern(node)
+         || isArrayBindingOrAssignmentPattern(node);
+@@ -1543,8 +1547,9 @@ export function isBindingOrAssignmentPattern(node: BindingOrAssignmentElementTar
+ 
+ /**
+  * Determines whether a node is an ObjectBindingOrAssignmentPattern
++ *
++ * @internal
+  */
+-/** @internal */
+ export function isObjectBindingOrAssignmentPattern(node: BindingOrAssignmentElementTarget): node is ObjectBindingOrAssignmentPattern {
+     switch (node.kind) {
+         case SyntaxKind.ObjectBindingPattern:
+@@ -1569,8 +1574,9 @@ export function isObjectBindingOrAssignmentElement(node: Node): node is ObjectBi
+ 
+ /**
+  * Determines whether a node is an ArrayBindingOrAssignmentPattern
++ *
++ * @internal
+  */
+-/** @internal */
+ export function isArrayBindingOrAssignmentPattern(node: BindingOrAssignmentElementTarget): node is ArrayBindingOrAssignmentPattern {
+     switch (node.kind) {
+         case SyntaxKind.ArrayBindingPattern:
+@@ -1697,10 +1703,11 @@ export function isUnaryExpressionWithWrite(expr: Node): expr is PrefixUnaryExpre
      }
  }
  
@@ -3705,6 +4304,80 @@ index 547db22486..fa9ffc2bdc 100644
   */
  export function isExpression(node: Node): node is Expression {
      return isExpressionKind(skipPartiallyEmittedExpressions(node).kind);
+@@ -1927,8 +1934,9 @@ export function isDeclarationStatement(node: Node): node is DeclarationStatement
+ 
+ /**
+  * Determines whether the node is a statement that is not also a declaration
++ *
++ * @internal
+  */
+-/** @internal */
+ export function isStatementButNotDeclaration(node: Node): node is Statement {
+     return isStatementKindButNotDeclarationKind(node.kind);
+ }
+@@ -1953,8 +1961,9 @@ function isBlockStatement(node: Node): node is Block {
+ 
+ /**
+  * NOTE: This is similar to `isStatement` but does not access parent pointers.
++ *
++ * @internal
+  */
+-/** @internal */
+ export function isStatementOrBlock(node: Node): node is Statement | Block {
+     const kind = node.kind;
+     return isStatementKindButNotDeclarationKind(kind)
+@@ -2022,8 +2031,11 @@ export function isCaseOrDefaultClause(node: Node): node is CaseOrDefaultClause {
+ 
+ // JSDoc
+ 
+-/** True if node is of some JSDoc syntax kind. */
+-/** @internal */
++/**
++ * True if node is of some JSDoc syntax kind.
++ *
++ * @internal
++ */
+ export function isJSDocNode(node: Node): boolean {
+     return node.kind >= SyntaxKind.FirstJSDocNode && node.kind <= SyntaxKind.LastJSDocNode;
+ }
+@@ -2053,22 +2065,31 @@ export function isGetAccessor(node: Node): node is GetAccessorDeclaration {
+     return node.kind === SyntaxKind.GetAccessor;
+ }
+ 
+-/** True if has jsdoc nodes attached to it. */
+-/** @internal */
++/**
++ * True if has jsdoc nodes attached to it.
++ *
++ * @internal
++ */
+ // TODO: GH#19856 Would like to return `node is Node & { jsDoc: JSDoc[] }` but it causes long compile times
+ export function hasJSDocNodes(node: Node): node is HasJSDoc {
+     const { jsDoc } = node as JSDocContainer;
+     return !!jsDoc && jsDoc.length > 0;
+ }
+ 
+-/** True if has type node attached to it. */
+-/** @internal */
++/**
++ * True if has type node attached to it.
++ *
++ * @internal
++ */
+ export function hasType(node: Node): node is HasType {
+     return !!(node as HasType).type;
+ }
+ 
+-/** True if has initializer node attached to it. */
+-/** @internal */
++/**
++ * True if has initializer node attached to it.
++ *
++ * @internal
++ */
+ export function hasInitializer(node: Node): node is HasInitializer {
+     return !!(node as HasInitializer).initializer;
+ }
 diff --git a/src/compiler/watch.ts b/src/compiler/watch.ts
 index 13cd32f3dd..41db993d31 100644
 --- a/src/compiler/watch.ts
@@ -3807,6 +4480,21 @@ index 13cd32f3dd..41db993d31 100644
   */
  export function createWatchCompilerHostOfFilesAndCompilerOptions<T extends BuilderProgram = EmitAndSemanticDiagnosticsBuilderProgram>({
      rootFiles, options, watchOptions, projectReferences,
+diff --git a/src/compiler/watchPublic.ts b/src/compiler/watchPublic.ts
+index 016df40d23..cc0573817f 100644
+--- a/src/compiler/watchPublic.ts
++++ b/src/compiler/watchPublic.ts
+@@ -202,8 +202,9 @@ export interface WatchCompilerHostOfConfigFile<T extends BuilderProgram> extends
+ 
+ /**
+  * Host to create watch with config file that is already parsed (from tsc)
++ *
++ * @internal
+  */
+-/** @internal */
+ export interface WatchCompilerHostOfConfigFile<T extends BuilderProgram> extends WatchCompilerHost<T> {
+     configFileParsingResult?: ParsedCommandLine;
+     extendedConfigCache?: Map<ExtendedConfigCacheEntry>;
 diff --git a/src/compiler/watchUtilities.ts b/src/compiler/watchUtilities.ts
 index f126713313..5dce173af6 100644
 --- a/src/compiler/watchUtilities.ts
@@ -3975,6 +4663,153 @@ index 162b6dfb56..b935faca54 100644
  export function projectContainsInfoDirectly(project: Project, info: ScriptInfo) {
      return project.containsScriptInfo(info) &&
          !project.isSourceOfProjectReferenceRedirect(info.path);
+diff --git a/src/server/project.ts b/src/server/project.ts
+index 40e2f09422..ccb85d4d98 100644
+--- a/src/server/project.ts
++++ b/src/server/project.ts
+@@ -144,8 +144,9 @@ export interface BeginEnablePluginResult {
+ /**
+  * The project root can be script info - if root is present,
+  * or it could be just normalized path if root wasn't present on the host(only for non inferred project)
++ *
++ * @internal
+  */
+-/** @internal */
+ export interface ProjectRootFile {
+     fileName: NormalizedPath;
+     info?: ScriptInfo;
+diff --git a/src/server/protocol.ts b/src/server/protocol.ts
+index 6cbb1717b1..db8068b8a6 100644
+--- a/src/server/protocol.ts
++++ b/src/server/protocol.ts
+@@ -402,16 +402,18 @@ export interface OutliningSpansResponse extends Response {
+ 
+ /**
+  * Request to obtain outlining spans in file.
++ *
++ * @internal
+  */
+-/** @internal */
+ export interface OutliningSpansRequestFull extends FileRequest {
+     command: CommandTypes.GetOutliningSpansFull;
+ }
+ 
+ /**
+  * Response to OutliningSpansRequest request.
++ *
++ * @internal
+  */
+-/** @internal */
+ export interface OutliningSpansResponseFull extends Response {
+     body?: ts.OutliningSpan[];
+ }
+@@ -829,16 +831,18 @@ export interface GetSupportedCodeFixesResponse extends Response {
+ 
+ /**
+  * A request to get encoded Syntactic classifications for a span in the file
++ *
++ * @internal
+  */
+-/** @internal */
+ export interface EncodedSyntacticClassificationsRequest extends FileRequest {
+     arguments: EncodedSyntacticClassificationsRequestArgs;
+ }
+ 
+ /**
+  * Arguments for EncodedSyntacticClassificationsRequest request.
++ *
++ * @internal
+  */
+-/** @internal */
+ export interface EncodedSyntacticClassificationsRequestArgs extends FileRequestArgs {
+     /**
+      * Start position of the span.
+@@ -1414,8 +1418,9 @@ export type ExternalProjectCompilerOptions = CompilerOptions & CompileOnSaveMixi
+ 
+ /**
+  * Contains information about current project version
++ *
++ * @internal
+  */
+-/** @internal */
+ export interface ProjectVersionInfo {
+     /**
+      * Project name
+@@ -1484,8 +1489,9 @@ export interface ProjectChanges {
+  * if files is set - then this is the entire set of files in the project
+  * if changes is set - then this is the set of changes that should be applied to existing project
+  * otherwise - assume that nothing is changed
++ *
++ * @internal
+  */
+-/** @internal */
+ export interface ProjectFiles {
+     /**
+      * Information about project verison
+@@ -1505,8 +1511,9 @@ export interface ProjectFiles {
+ 
+ /**
+  * Combines project information with project level errors.
++ *
++ * @internal
+  */
+-/** @internal */
+ export interface ProjectFilesWithDiagnostics extends ProjectFiles {
+     /**
+      * List of errors in project
+@@ -1516,8 +1523,9 @@ export interface ProjectFilesWithDiagnostics extends ProjectFiles {
+ 
+ /**
+  * Represents set of changes in open file
++ *
++ * @internal
+  */
+-/** @internal */
+ export interface ChangedOpenFile {
+     /**
+      * Name of file
+@@ -1769,16 +1777,18 @@ export interface CloseExternalProjectResponse extends Response {
+ 
+ /**
+  * Request to check if given list of projects is up-to-date and synchronize them if necessary
++ *
++ * @internal
+  */
+-/** @internal */
+ export interface SynchronizeProjectListRequest extends Request {
+     arguments: SynchronizeProjectListRequestArgs;
+ }
+ 
+ /**
+  * Arguments to SynchronizeProjectListRequest
++ *
++ * @internal
+  */
+-/** @internal */
+ export interface SynchronizeProjectListRequestArgs {
+     /**
+      * List of last known projects
+@@ -1793,16 +1803,18 @@ export interface SynchronizeProjectListRequestArgs {
+ 
+ /**
+  * Request to synchronize list of open files with the client
++ *
++ * @internal
+  */
+-/** @internal */
+ export interface ApplyChangedToOpenFilesRequest extends Request {
+     arguments: ApplyChangedToOpenFilesRequestArgs;
+ }
+ 
+ /**
+  * Arguments to ApplyChangedToOpenFilesRequest
++ *
++ * @internal
+  */
+-/** @internal */
+ export interface ApplyChangedToOpenFilesRequestArgs {
+     /**
+      * List of newly open files
 diff --git a/src/server/utilities.ts b/src/server/utilities.ts
 index 03fb2ded56..95d2483593 100644
 --- a/src/server/utilities.ts
@@ -4332,7 +5167,7 @@ index 703d6adcb0..edf2e55178 100644
  export function getDocCommentTemplateAtPosition(newLine: string, sourceFile: SourceFile, position: number, options?: DocCommentTemplateOptions): TextInsertion | undefined {
      const tokenAtPos = getTokenAtPosition(sourceFile, position);
 diff --git a/src/services/organizeImports.ts b/src/services/organizeImports.ts
-index e004e1a34a..d58abf051a 100644
+index e004e1a34a..7e4f1427e4 100644
 --- a/src/services/organizeImports.ts
 +++ b/src/services/organizeImports.ts
 @@ -10,12 +10,13 @@ import {
@@ -4374,6 +5209,20 @@ index e004e1a34a..d58abf051a 100644
   */
  export function coalesceExports(exportGroup: readonly ExportDeclaration[]) {
      if (exportGroup.length === 0) {
+@@ -472,8 +475,11 @@ export function compareImportOrExportSpecifiers<T extends ImportOrExportSpecifie
+         || compareIdentifiers(s1.name, s2.name);
+ }
+ 
+-/* internal */ // Exported for testing
+-/** @internal */
++/**
++ * Exported for testing
++ * 
++ * @internal
++ */
+ export function compareModuleSpecifiers(m1: Expression | undefined, m2: Expression | undefined): Comparison {
+     const name1 = m1 === undefined ? undefined : getExternalModuleName(m1);
+     const name2 = m2 === undefined ? undefined : getExternalModuleName(m2);
 diff --git a/src/services/refactorProvider.ts b/src/services/refactorProvider.ts
 index 41f9b72547..3fb1751875 100644
 --- a/src/services/refactorProvider.ts
@@ -4393,7 +5242,7 @@ index 41f9b72547..3fb1751875 100644
      refactors.set(name, refactor);
  }
 diff --git a/src/services/refactors/extractSymbol.ts b/src/services/refactors/extractSymbol.ts
-index acb6048a1c..5579b4f92b 100644
+index acb6048a1c..a49c9f248d 100644
 --- a/src/services/refactors/extractSymbol.ts
 +++ b/src/services/refactors/extractSymbol.ts
 @@ -49,10 +49,11 @@ registerRefactor(refactorName, {
@@ -4409,7 +5258,21 @@ index acb6048a1c..5579b4f92b 100644
   */
  export function getRefactorActionsToExtractSymbol(context: RefactorContext): readonly ApplicableRefactorInfo[] {
      const requestedRefactor = context.kind;
-@@ -297,14 +298,15 @@ type RangeToExtract = {
+@@ -196,8 +197,11 @@ export function getRefactorActionsToExtractSymbol(context: RefactorContext): rea
+     }
+ }
+ 
+-/* Exported for tests */
+-/** @internal */
++/**
++ * Exported for tests
++ *
++ * @internal
++ */
+ export function getRefactorEditsToExtractSymbol(context: RefactorContext, actionName: string): RefactorEditInfo | undefined {
+     const rangeToExtract = getRangeToExtract(context.file, getRefactorContextSpan(context));
+     const targetRange = rangeToExtract.targetRange!; // TODO:GH#18217
+@@ -297,14 +301,15 @@ type RangeToExtract = {
   */
  type Scope = FunctionLikeDeclaration | SourceFile | ModuleBlock | ClassLikeDeclaration;
  
@@ -4463,7 +5326,7 @@ index ed7658941d..39f6a16276 100644
  export function refactorKindBeginsWith(known: string, requested: string | undefined): boolean {
      if(!requested) return true;
 diff --git a/src/services/services.ts b/src/services/services.ts
-index 80f57420c1..c43b84fcc4 100644
+index 80f57420c1..03e2fcf8f2 100644
 --- a/src/services/services.ts
 +++ b/src/services/services.ts
 @@ -1194,8 +1194,11 @@ class CancellationTokenObject implements CancellationToken {
@@ -4494,6 +5357,31 @@ index 80f57420c1..c43b84fcc4 100644
  export function getNameTable(sourceFile: SourceFile): UnderscoreEscapedMap<number> {
      if (!sourceFile.nameTable) {
          initializeNameTable(sourceFile);
+@@ -2843,8 +2849,9 @@ function literalIsName(node: StringLiteralLike | NumericLiteral): boolean {
+ 
+ /**
+  * Returns the containing object literal property declaration given a possible name node, e.g. "a" in x = { "a": 1 }
++ *
++ * @internal
+  */
+-/** @internal */
+ export function getContainingObjectLiteralElement(node: Node): ObjectLiteralElementWithName | undefined {
+     const element = getContainingObjectLiteralElementWorker(node);
+     return element && (isObjectLiteralExpression(element.parent) || isJsxAttributes(element.parent)) ? element as ObjectLiteralElementWithName : undefined;
+@@ -2882,8 +2889,11 @@ function getSymbolAtLocationForQuickInfo(node: Node, checker: TypeChecker): Symb
+     return checker.getSymbolAtLocation(node);
+ }
+ 
+-/** Gets all symbols for one property. Does not get symbols for every property. */
+-/** @internal */
++/**
++ * Gets all symbols for one property. Does not get symbols for every property.
++ *
++ * @internal
++ */
+ export function getPropertySymbolsFromContextualType(node: ObjectLiteralElementWithName, checker: TypeChecker, contextualType: Type, unionSymbolOk: boolean): readonly Symbol[] {
+     const name = getNameFromPropertyName(node.name);
+     if (!name) return emptyArray;
 diff --git a/src/services/shims.ts b/src/services/shims.ts
 index 4a1a2d8c19..6303302620 100644
 --- a/src/services/shims.ts
@@ -4593,6 +5481,24 @@ index 2aec0843d2..2ddc725e83 100644
  export function deleteNode(changes: ChangeTracker, sourceFile: SourceFile, node: Node, options: ConfigurableStartEnd = { leadingTriviaOption: LeadingTriviaOption.IncludeAll }): void {
      const startPosition = getAdjustedStartPosition(sourceFile, node, options);
      const endPosition = getAdjustedEndPosition(sourceFile, node, options);
+diff --git a/src/services/transpile.ts b/src/services/transpile.ts
+index e9d8a61513..47c881cae0 100644
+--- a/src/services/transpile.ts
++++ b/src/services/transpile.ts
+@@ -127,8 +127,11 @@ export function transpile(input: string, compilerOptions?: CompilerOptions, file
+ 
+ let commandLineOptionsStringToEnum: CommandLineOptionOfCustomType[];
+ 
+-/** JS users may pass in string values for enum compiler options (such as ModuleKind), so convert. */
+-/** @internal */
++/**
++ * JS users may pass in string values for enum compiler options (such as ModuleKind), so convert.
++ *
++ * @internal
++ */
+ export function fixupCompilerOptions(options: CompilerOptions, diagnostics: Diagnostic[]): CompilerOptions {
+     // Lazily create this value to fix module loading errors.
+     commandLineOptionsStringToEnum = commandLineOptionsStringToEnum ||
 diff --git a/src/services/utilities.ts b/src/services/utilities.ts
 index 8f859b7df2..1bcf74c162 100644
 --- a/src/services/utilities.ts
