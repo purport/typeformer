@@ -4,18 +4,18 @@ Date: Fri, 2 Sep 2022 16:39:54 -0700
 Subject: [PATCH] Add api-extractor
 
 ---
- Gulpfile.js                                  |  18 +
- package-lock.json                            | 658 ++++++++++++++++---
- package.json                                 |   1 +
- scripts/{apiExtractor.js => apiExtractor.ts} |  26 +-
- src/api-extractor-base.json                  | 421 ++++++++++++
- src/tsserverlibrary/api-extractor.json       |  16 +
- src/tsserverlibrary/tsserverlibrary.ts       |   6 +-
- src/typescript/api-extractor.json            |  16 +
- src/typescript/typescript.ts                 |   5 +-
- src/typescriptServices/api-extractor.json    |  16 +
- 10 files changed, 1064 insertions(+), 119 deletions(-)
- rename scripts/{apiExtractor.js => apiExtractor.ts} (66%)
+ Gulpfile.js                               |  18 +
+ package-lock.json                         | 658 ++++++++++++++++++----
+ package.json                              |   1 +
+ scripts/apiExtractor.js                   |  11 -
+ src/api-extractor-base.json               | 421 ++++++++++++++
+ src/tsserverlibrary/api-extractor.json    |  16 +
+ src/tsserverlibrary/tsserverlibrary.ts    |   6 +-
+ src/typescript/api-extractor.json         |  16 +
+ src/typescript/typescript.ts              |   5 +-
+ src/typescriptServices/api-extractor.json |  16 +
+ 10 files changed, 1049 insertions(+), 119 deletions(-)
+ delete mode 100644 scripts/apiExtractor.js
  create mode 100644 src/api-extractor-base.json
  create mode 100644 src/tsserverlibrary/api-extractor.json
  create mode 100644 src/typescript/api-extractor.json
@@ -955,14 +955,12 @@ index 0d80542b7f..bfdf548e27 100644
          "@octokit/rest": "latest",
          "@types/async": "latest",
          "@types/chai": "latest",
-diff --git a/scripts/apiExtractor.js b/scripts/apiExtractor.ts
-similarity index 66%
-rename from scripts/apiExtractor.js
-rename to scripts/apiExtractor.ts
-index d036416c91..d9d29be0cc 100644
+diff --git a/scripts/apiExtractor.js b/scripts/apiExtractor.js
+deleted file mode 100644
+index d036416c91..0000000000
 --- a/scripts/apiExtractor.js
-+++ b/scripts/apiExtractor.ts
-@@ -1,11 +1,15 @@
++++ /dev/null
+@@ -1,11 +0,0 @@
 -"use strict";
 -Object.defineProperty(exports, "__esModule", { value: true });
 -const path = require("path");
@@ -975,21 +973,6 @@ index d036416c91..d9d29be0cc 100644
 -// Also apply copyright header, as api-extractor won't.
 -//# sourceMappingURL=apiExtractor.js.map
 \ No newline at end of file
-+import * as path from "path";
-+import {
-+  Extractor,
-+  ExtractorConfig,
-+  ExtractorResult
-+} from "@microsoft/api-extractor";
-+
-+const packageRoot = path.resolve(__dirname, "..");
-+
-+// TODO(jakebailey): call api extractor for:
-+//   - src/typescript
-+//   - src/typescriptServices
-+//   - src/tsserverlibrary
-+// Then in the output, replace const enum with "enum".
-+// Also apply copyright header, as api-extractor won't.
 diff --git a/src/api-extractor-base.json b/src/api-extractor-base.json
 new file mode 100644
 index 0000000000..ea6116b8b5

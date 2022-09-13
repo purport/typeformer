@@ -3,6 +3,9 @@ From: Jake Bailey <5341706+jakebailey@users.noreply.github.com>
 Date: Wed, 7 Sep 2022 15:09:39 -0700
 Subject: [PATCH] Disable one-namespace-per-file
 
+Now that we are modules, there's no reason to ban multiple namespaces
+per file; each file is its own scope and declaring a namespace won't
+merge it into any other files.
 ---
  .eslintrc.json | 3 ++-
  1 file changed, 2 insertions(+), 1 deletion(-)
