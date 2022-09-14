@@ -168,7 +168,7 @@ index d8bf3fe867..c928cb4846 100644
  task("runtests-parallel").flags = {
      "   --light": "Run tests in light mode (fewer verifications, but tests run faster).",
 diff --git a/package-lock.json b/package-lock.json
-index f577db504b..dc5bb80d1d 100644
+index 32119e0319..2b8148a3c0 100644
 --- a/package-lock.json
 +++ b/package-lock.json
 @@ -43,6 +43,7 @@

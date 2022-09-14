@@ -47,7 +47,7 @@ index bb87b72a89..d8bf3fe867 100644
  const cleanDebugTools = () => cleanProject("src/debug");
  cleanTasks.push(cleanDebugTools);
 diff --git a/package-lock.json b/package-lock.json
-index ef54a9bae4..f577db504b 100644
+index 5dbc1b6c0d..32119e0319 100644
 --- a/package-lock.json
 +++ b/package-lock.json
 @@ -13,6 +13,7 @@
@@ -162,7 +162,7 @@ index ef54a9bae4..f577db504b 100644
              "version": "2.1.5",
              "resolved": "https://registry.npmjs.org/@nodelib/fs.scandir/-/fs.scandir-2.1.5.tgz",
 @@ -411,6 +508,121 @@
-                 "@octokit/openapi-types": "^13.9.1"
+                 "@octokit/openapi-types": "^13.10.0"
              }
          },
 +        "node_modules/@rushstack/node-core-library": {
@@ -531,7 +531,7 @@ index ef54a9bae4..f577db504b 100644
              "version": "2.1.5",
              "resolved": "https://registry.npmjs.org/@nodelib/fs.scandir/-/fs.scandir-2.1.5.tgz",
 @@ -8800,6 +9189,115 @@
-                 "@octokit/openapi-types": "^13.9.1"
+                 "@octokit/openapi-types": "^13.10.0"
              }
          },
 +        "@rushstack/node-core-library": {
