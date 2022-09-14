@@ -1,22 +1,24 @@
 From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Jake Bailey <5341706+jakebailey@users.noreply.github.com>
 Date: Tue, 13 Sep 2022 16:21:03 -0700
-Subject: [PATCH] Hack something together to test esbuild
+Subject: [PATCH] Hack something together to test various builds
 
 ---
- Gulpfile.js                           |  53 ++-
+ Gulpfile.js                           |  86 +++-
  package-lock.json                     | 549 ++++++++++++++++++++++++++
  package.json                          |   1 +
  scripts/build/tests.js                |  22 +-
- src/compiler/sys.ts                   |   5 +-
+ src/compiler/sys.ts                   |  14 +-
  src/harness/fourslashImpl.ts          |   6 +-
- src/testRunner/_namespaces/Harness.ts |   4 +
- src/testRunner/runner.ts              |   2 +-
+ src/server/scriptVersionCache.ts      |   8 +-
+ src/services/services.ts              |   4 +-
+ src/testRunner/_namespaces/Harness.ts |   5 +
+ src/testRunner/runner.ts              |   3 +-
  src/tsconfig-base.json                |   1 +
- 9 files changed, 618 insertions(+), 25 deletions(-)
+ 11 files changed, 661 insertions(+), 38 deletions(-)
 
 diff --git a/Gulpfile.js b/Gulpfile.js
-index d8bf3fe867..7026e28194 100644
+index d8bf3fe867..c928cb4846 100644
 --- a/Gulpfile.js
 +++ b/Gulpfile.js
 @@ -19,7 +19,7 @@ const cmdLineOptions = require("./scripts/build/options");
@@ -28,11 +30,27 @@ index d8bf3fe867..7026e28194 100644
  
  const buildScripts = () => buildProject("scripts");
  task("scripts", buildScripts);
-@@ -94,9 +94,44 @@ const localize = async () => {
-     }
+@@ -57,9 +57,7 @@ const diagnosticInformationMapTs = "src/compiler/diagnosticInformationMap.genera
+ const diagnosticMessagesJson = "src/compiler/diagnosticMessages.json";
+ const diagnosticMessagesGeneratedJson = "src/compiler/diagnosticMessages.generated.json";
+ const generateDiagnostics = async () => {
+-    if (needsUpdate(diagnosticMessagesJson, [diagnosticMessagesGeneratedJson, diagnosticInformationMapTs])) {
+-        await exec(process.execPath, ["scripts/processDiagnosticMessages.js", diagnosticMessagesJson]);
+-    }
++    await exec(process.execPath, ["scripts/processDiagnosticMessages.js", diagnosticMessagesJson]);
  };
+ task("generate-diagnostics", series(buildScripts, generateDiagnostics));
+ task("generate-diagnostics").description = "Generates a diagnostic file in TypeScript based on an input JSON file";
+@@ -89,14 +87,65 @@ const localizationTargets = ["cs", "de", "es", "fr", "it", "ja", "ko", "pl", "pt
+     .concat(generatedLCGFile);
  
--const buildAll = () => buildProject("src");
+ const localize = async () => {
+-    if (needsUpdate(diagnosticMessagesGeneratedJson, generatedLCGFile)) {
+-        return exec(process.execPath, ["scripts/generateLocalizedDiagnosticMessages.js", "src/loc/lcl", "built/local", diagnosticMessagesGeneratedJson], { ignoreExitCode: true });
+-    }
++    return exec(process.execPath, ["scripts/generateLocalizedDiagnosticMessages.js", "src/loc/lcl", "built/local", diagnosticMessagesGeneratedJson], { ignoreExitCode: true });
++};
++
 +/**
 + * @param {string} entrypoint
 + * @param {string} outfile
@@ -43,39 +61,58 @@ index d8bf3fe867..7026e28194 100644
 +        "--bundle",
 +        `--outfile=${outfile}`,
 +        "--platform=node",
-+        "--target=node12",
++        "--target=node10", // Node 10; oldest benchmarker.
 +        "--sourcemap",
 +        "--external:./node_modules/*",
 +        "--conditions=require",
++        // "--supported:const-and-let=false", // Unfortunately, no: https://github.com/evanw/esbuild/issues/297
++        "--supported:object-rest-spread=false", // See: https://github.com/evanw/esbuild/releases/tag/v0.14.46
 +    ]);
 +}
 +
-+const preBundle = parallel(generateLibs, series(buildScripts, localize, generateDiagnostics));
++const buildSrc = () => buildProject("src");
 +
-+const bundleTsc = () => esbuild("./src/tsc/tsc.ts", "./built/local/tsc.js");
-+const bundleTypescript = () => esbuild("./src/typescript/typescript.ts", "./built/local/typescript.js");
-+const bundleServer = () => esbuild("./src/tsserver/server.ts", "./built/local/tsserver.js");
-+const bundleServerLibrary = () => esbuild("./src/tsserverlibrary/tsserverlibrary.ts", "./built/local/tsserverlibrary.js");
-+const bundleTests = () => esbuild("./src/testRunner/_namespaces/Harness.ts", testRunner);
++const writeHackyShim = (project) => {
++    return (done) => {
++        fs.writeFileSync(`./built/local/${project}.js`, `module.exports = require("./${project}/${project}.js")`);
++        done();
++    };
+ };
+ 
+-const buildAll = () => buildProject("src");
++const preBundleFromSrc = parallel(generateLibs, series(buildScripts, generateDiagnostics, localize));
++const preBuildSrc = preBundleFromSrc;
++const preBundleFromEmit = series(preBundleFromSrc, buildSrc);
++
++const bundleTscFromEmit = () => esbuild("./built/local/tsc/tsc.js", "./built/local/tsc.js");
++const bundleTypescriptFromEmit = () => esbuild("./built/local/typescript/typescript.js", "./built/local/typescript.js");
++const bundleServerFromEmit = () => esbuild("./built/local/tsserver/server.js", "./built/local/tsserver.js");
++const bundleServerLibraryFromEmit = () => esbuild("./built/local/tsserverlibrary/tsserverlibrary.js", "./built/local/tsserverlibrary.js");
++const bundleTestsFromEmit = () => esbuild("./built/local/testRunner/_namespaces/Harness.js", testRunner);
 +
 +
-+const bundleAll = series([
-+    bundleTsc,
-+    bundleTypescript,
-+    bundleServer,
-+    bundleServerLibrary,
-+    bundleTests,
++const bundleTscFromSrc = () => esbuild("./built/local/tsc/tsc.js", "./built/local/tsc.js");
++const bundleTypescriptFromSrc = () => esbuild("./built/local/typescript/typescript.js", "./built/local/typescript.js");
++const bundleServerFromSrc = () => esbuild("./built/local/tsserver/server.js", "./built/local/tsserver.js");
++const bundleServerLibraryFromSrc = () => esbuild("./built/local/tsserverlibrary/tsserverlibrary.js", "./built/local/tsserverlibrary.js");
++const bundleTestsFromSrc = () => esbuild("./built/local/testRunner/_namespaces/Harness.js", testRunner);
++
++const bundleAllFromSrc = series([
++    bundleTscFromSrc,
++    bundleTypescriptFromSrc,
++    bundleServerFromSrc,
++    bundleServerLibraryFromSrc,
++    bundleTestsFromSrc,
 +]);
-+task("bundle", series(preBundle, bundleAll));
-+
++task("bundle-src", series(preBundleFromSrc, bundleAllFromSrc));
  
 -task("moduleBuild", parallel(generateLibs, series(buildScripts, localize, buildAll)));
-+const buildSrc = () => buildProject("src");
-+task("buildSrc", series(preBundle, bundleAll, buildSrc));
++
++task("buildSrc", preBundleFromEmit);
  
  const apiExtractor = async () => {
      async function runApiExtractor(configPath) {
-@@ -114,17 +149,17 @@ const apiExtractor = async () => {
+@@ -114,17 +163,20 @@ const apiExtractor = async () => {
      await runApiExtractor("./src/tsserverlibrary/api-extractor.json");
  };
  
@@ -92,39 +129,46 @@ index d8bf3fe867..7026e28194 100644
  
  const buildTsc = () => buildProject("src/tsc");
 -task("tsc", series(lkgPreBuild, buildTsc));
-+task("tsc", series(preBundle, bundleTsc));
++
++// task("tsc", series(preBundleFromSrc, bundleTscFromSrc)); // esbuild on ./src
++// task("tsc", series(preBundleFromEmit, bundleTscFromEmit)); // esbuild on emitted ./built/local
++task("tsc", series(preBuildSrc, buildSrc, writeHackyShim("tsc"))); // CJS
  task("tsc").description = "Builds the command-line compiler";
  
  const cleanTsc = () => cleanProject("src/tsc");
-@@ -244,7 +279,7 @@ task("dynamicImportCompat", buildDynamicImportCompat);
+@@ -244,7 +296,11 @@ task("dynamicImportCompat", buildDynamicImportCompat);
  const buildServerMain = () => buildProject("src/tsserver", cmdLineOptions);
  const buildServer = series(buildDynamicImportCompat, buildServerMain);
  buildServer.displayName = "buildServer";
 -task("tsserver", series(preBuild, buildServer));
-+task("tsserver", series(preBundle, bundleServer));
++
++// task("tsserver", series(preBundleFromSrc, bundleServerFromSrc)); // esbuild on ./src
++// task("tsserver", series(preBundleFromEmit, bundleServerFromEmit)); // esbuild on emitted ./built/local
++
++task("tsserver", series(preBuildSrc, buildSrc, writeHackyShim("tsserver"))); // CJS
  task("tsserver").description = "Builds the language server";
  task("tsserver").flags = {
      "   --built": "Compile using the built version of the compiler."
-@@ -461,7 +496,7 @@ const preTest = parallel(buildTsc, buildTests, buildServices, buildLssl);
+@@ -461,7 +517,7 @@ const preTest = parallel(buildTsc, buildTests, buildServices, buildLssl);
  preTest.displayName = "preTest";
  
  const runTests = () => runConsoleTests(testRunner, "mocha-fivemat-progress-reporter", /*runInParallel*/ false, /*watchMode*/ false);
 -task("runtests", series(/*preBuild, preTest,*/ task("moduleBuild"), runTests)); // TODO(jakebailey): fix this for modules
-+task("runtests", series(/*preBuild, preTest,*/ bundleTests, runTests)); // TODO(jakebailey): fix this for modules
++task("runtests", series(/*preBuild, preTest,*/ preBundleFromSrc, bundleTestsFromSrc, runTests)); // TODO(jakebailey): fix this for modules
  task("runtests").description = "Runs the tests using the built run.js file.";
  task("runtests").flags = {
      "-t --tests=<regex>": "Pattern for tests to run.",
-@@ -480,7 +515,7 @@ task("runtests").flags = {
+@@ -480,7 +536,7 @@ task("runtests").flags = {
  };
  
  const runTestsParallel = () => runConsoleTests(testRunner, "min", /*runInParallel*/ cmdLineOptions.workers > 1, /*watchMode*/ false);
 -task("runtests-parallel", series(/*preBuild, preTest,*/ task("moduleBuild"), runTestsParallel)); // TODO(jakebailey): fix this for modules
-+task("runtests-parallel", series(/*preBuild, preTest,*/ bundleTests, runTestsParallel)); // TODO(jakebailey): fix this for modules
++task("runtests-parallel", series(/*preBuild, preTest,*/ preBundleFromSrc, bundleTestsFromSrc, runTestsParallel)); // TODO(jakebailey): fix this for modules
  task("runtests-parallel").description = "Runs all the tests in parallel using the built run.js file.";
  task("runtests-parallel").flags = {
      "   --light": "Run tests in light mode (fewer verifications, but tests run faster).",
 diff --git a/package-lock.json b/package-lock.json
-index 78018b1601..748b8aa3da 100644
+index f577db504b..dc5bb80d1d 100644
 --- a/package-lock.json
 +++ b/package-lock.json
 @@ -43,6 +43,7 @@
@@ -158,7 +202,7 @@ index 78018b1601..748b8aa3da 100644
          "node_modules/@eslint/eslintrc": {
              "version": "1.3.2",
              "resolved": "https://registry.npmjs.org/@eslint/eslintrc/-/eslintrc-1.3.2.tgz",
-@@ -2494,6 +2511,362 @@
+@@ -2510,6 +2527,362 @@
                  "es6-symbol": "^3.1.1"
              }
          },
@@ -521,7 +565,7 @@ index 78018b1601..748b8aa3da 100644
          "node_modules/escalade": {
              "version": "3.1.1",
              "resolved": "https://registry.npmjs.org/escalade/-/escalade-3.1.1.tgz",
-@@ -8794,6 +9167,13 @@
+@@ -8857,6 +9230,13 @@
                  "jsdoc-type-pratt-parser": "~3.1.0"
              }
          },
@@ -535,7 +579,7 @@ index 78018b1601..748b8aa3da 100644
          "@eslint/eslintrc": {
              "version": "1.3.2",
              "resolved": "https://registry.npmjs.org/@eslint/eslintrc/-/eslintrc-1.3.2.tgz",
-@@ -10722,6 +11102,175 @@
+@@ -10801,6 +11181,175 @@
                  "es6-symbol": "^3.1.1"
              }
          },
@@ -757,21 +801,37 @@ index 4dd76c1f62..f656034347 100644
      catch (e) {
          errorStatus = undefined;
 diff --git a/src/compiler/sys.ts b/src/compiler/sys.ts
-index 6a8d8fbd53..4fdf0c16c7 100644
+index 6a8d8fbd53..a7aa67d8c9 100644
 --- a/src/compiler/sys.ts
 +++ b/src/compiler/sys.ts
-@@ -1532,7 +1532,10 @@ export let sys: System = (() => {
+@@ -1532,7 +1532,14 @@ export let sys: System = (() => {
                  //
                  // TODO(jakebailey): replace this function with one that returns the path
                  // to the lib folder (or package path)?.
 -                return _path.join(_path.dirname(__dirname), "fake.js");
 +                // return _path.join(_path.dirname(__dirname), "fake.js");
 +
-+                // Experiment: bundle using esbuild, so __filename is the right thing again.
++                // HACK: detect if we are bundled or not for sake of perf testing. This is not
++                // how I'd do it for real.
++                if (__filename.endsWith("sys.js")) {
++                    return _path.join(_path.dirname(__dirname), "fake.js");
++                }
 +                return __filename;
              },
              getCurrentDirectory,
              getDirectories,
+@@ -1571,7 +1578,10 @@ export let sys: System = (() => {
+             debugMode: !!process.env.NODE_INSPECTOR_IPC || !!process.env.VSCODE_INSPECTOR_OPTIONS || some(process.execArgv as string[], arg => /^--(inspect|debug)(-brk)?(=\d+)?$/i.test(arg)),
+             tryEnableSourceMapsForHost() {
+                 try {
+-                    require("source-map-support").install();
++                    // Trick esbuild into not eagerly resolving a path to a JS file.
++                    // See: https://github.com/evanw/esbuild/issues/1958
++                    const moduleName = "source-map-support" as const;
++                    (require(moduleName) as typeof import("source-map-support")).install();
+                 }
+                 catch {
+                     // Could not enable source maps.
 diff --git a/src/harness/fourslashImpl.ts b/src/harness/fourslashImpl.ts
 index c968d1522f..d09bbe38b2 100644
 --- a/src/harness/fourslashImpl.ts
@@ -796,37 +856,80 @@ index c968d1522f..d09bbe38b2 100644
      }
      catch (err) {
          // ensure 'source-map-support' is triggered while we still have the handler attached by accessing `error.stack`.
+diff --git a/src/server/scriptVersionCache.ts b/src/server/scriptVersionCache.ts
+index 6c99b15ecb..13a2fbe6a0 100644
+--- a/src/server/scriptVersionCache.ts
++++ b/src/server/scriptVersionCache.ts
+@@ -255,16 +255,16 @@ class TextChange {
+ 
+ /** @internal */
+ export class ScriptVersionCache {
++    private static readonly changeNumberThreshold = 8;
++    private static readonly changeLengthThreshold = 256;
++    private static readonly maxVersions = 8;
++
+     private changes: TextChange[] = [];
+     private readonly versions: LineIndexSnapshot[] = new Array<LineIndexSnapshot>(ScriptVersionCache.maxVersions);
+     private minVersion = 0; // no versions earlier than min version will maintain change history
+ 
+     private currentVersion = 0;
+ 
+-    private static readonly changeNumberThreshold = 8;
+-    private static readonly changeLengthThreshold = 256;
+-    private static readonly maxVersions = 8;
+-
+     private versionToIndex(version: number) {
+         if (version < this.minVersion || version > this.currentVersion) {
+             return undefined;
+diff --git a/src/services/services.ts b/src/services/services.ts
+index 03e2fcf8f2..4872a6afb5 100644
+--- a/src/services/services.ts
++++ b/src/services/services.ts
+@@ -484,9 +484,9 @@ class IdentifierObject extends TokenOrIdentifierObject implements Identifier {
+ }
+ IdentifierObject.prototype.kind = SyntaxKind.Identifier;
+ class PrivateIdentifierObject extends TokenOrIdentifierObject implements PrivateIdentifier {
+-    public kind!: SyntaxKind.PrivateIdentifier;
++    public kind: SyntaxKind.PrivateIdentifier = SyntaxKind.PrivateIdentifier;
+     public escapedText!: __String;
+-    public symbol!: Symbol;
++    // public symbol!: Symbol;
+     _primaryExpressionBrand: any;
+     _memberExpressionBrand: any;
+     _leftHandSideExpressionBrand: any;
 diff --git a/src/testRunner/_namespaces/Harness.ts b/src/testRunner/_namespaces/Harness.ts
-index caf03e950a..fe70bf15d8 100644
+index caf03e950a..aff7e44d98 100644
 --- a/src/testRunner/_namespaces/Harness.ts
 +++ b/src/testRunner/_namespaces/Harness.ts
-@@ -11,3 +11,7 @@ export * from "../compilerRunner";
+@@ -11,3 +11,8 @@ export * from "../compilerRunner";
  export * from "../externalCompileRunner";
  export * from "../test262Runner";
  export * from "../runner";
 +
 +
 +// Must be after runner.
++// NOTE: if emitting CJS, comment this out, and uncomment the one in runner.ts.
 +import "./tests";
 diff --git a/src/testRunner/runner.ts b/src/testRunner/runner.ts
-index afce965527..e77aa757b5 100644
+index afce965527..0aec1a0136 100644
 --- a/src/testRunner/runner.ts
 +++ b/src/testRunner/runner.ts
-@@ -293,4 +293,4 @@ function startTestEnvironment() {
+@@ -293,4 +293,5 @@ function startTestEnvironment() {
  startTestEnvironment();
  
  // This brings in all of the unittests.
 -import "./_namespaces/tests";
++// NOTE: if emitting CJS, uncomment this, and comment out the one in Harness.ts.
 +// import "./_namespaces/tests";
 diff --git a/src/tsconfig-base.json b/src/tsconfig-base.json
-index d3ece6a19d..c07487870f 100644
+index d3ece6a19d..bae7684eed 100644
 --- a/src/tsconfig-base.json
 +++ b/src/tsconfig-base.json
 @@ -10,6 +10,7 @@
          "sourceMap": true,
          "composite": true,
          "noEmitOnError": true,
-+        "emitDeclarationOnly": true,
++        // "emitDeclarationOnly": true,
  
          "strictNullChecks": true,
          "noImplicitAny": true,

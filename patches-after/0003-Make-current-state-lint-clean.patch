@@ -24,7 +24,7 @@ index 899759fce3..78b7a20d9a 100644
          this.eventHandler({ eventName: ProjectInfoTelemetryEvent, data });
  
 diff --git a/src/server/session.ts b/src/server/session.ts
-index e28017ab24..b8c177adce 100644
+index c1070c4ac2..15e09d7bc2 100644
 --- a/src/server/session.ts
 +++ b/src/server/session.ts
 @@ -2953,7 +2953,7 @@ export class Session<TMessage = string> implements EventSender {

@@ -1153,10 +1153,10 @@ index 19398777e3..8ef9fd038b 100644
  function verifyPathRecognizedAsDynamic(path: string) {
      const file: ts.projectSystem.File = {
 diff --git a/src/testRunner/unittests/tsserver/helpers.ts b/src/testRunner/unittests/tsserver/helpers.ts
-index a954b8cdf0..58fb57e556 100644
+index 5c451157f2..055ca6ae6c 100644
 --- a/src/testRunner/unittests/tsserver/helpers.ts
 +++ b/src/testRunner/unittests/tsserver/helpers.ts
-@@ -947,3 +947,15 @@ export function verifyGetErrScenario(scenario: VerifyGetErrScenario) {
+@@ -938,3 +938,15 @@ export function verifyGetErrScenario(scenario: VerifyGetErrScenario) {
      verifyErrorsUsingGeterrForProject(scenario);
      verifyErrorsUsingSyncMethods(scenario);
  }
@@ -1173,7 +1173,7 @@ index a954b8cdf0..58fb57e556 100644
 +    return host;
 +}
 diff --git a/src/testRunner/unittests/tsserver/projectReferences.ts b/src/testRunner/unittests/tsserver/projectReferences.ts
-index 2753e386e1..9771c40562 100644
+index 85ca59c24f..d03e2167de 100644
 --- a/src/testRunner/unittests/tsserver/projectReferences.ts
 +++ b/src/testRunner/unittests/tsserver/projectReferences.ts
 @@ -1,11 +1,5 @@

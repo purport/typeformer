@@ -2601,7 +2601,7 @@ index e04d06a406..010b996d7a 100644
  export function createAccessorPropertySetRedirector(factory: NodeFactory, node: PropertyDeclaration, modifiers: ModifiersArray | undefined, name: PropertyName) {
      return factory.createSetAccessorDeclaration(
 diff --git a/src/compiler/moduleNameResolver.ts b/src/compiler/moduleNameResolver.ts
-index b096965634..1904a2d9bb 100644
+index 979766cb81..2b2397a62b 100644
 --- a/src/compiler/moduleNameResolver.ts
 +++ b/src/compiler/moduleNameResolver.ts
 @@ -19,13 +19,13 @@ import {
@@ -2825,8 +2825,8 @@ index b096965634..1904a2d9bb 100644
 +/** @internal */
  export interface PackageJsonInfo {
      packageDirectory: string;
-     packageJsonContent: PackageJsonPathFields;
-@@ -1836,8 +1840,9 @@ export interface PackageJsonInfo {
+     contents: PackageJsonInfoContents;
+@@ -1840,8 +1844,9 @@ export interface PackageJsonInfoContents {
  
  /**
   * A function for locating the package.json scope for a given path
@@ -2834,10 +2834,10 @@ index b096965634..1904a2d9bb 100644
 + * @internal
   */
 -/*@internal*/
-  export function getPackageScopeForPath(fileName: Path, state: ModuleResolutionState): PackageJsonInfo | undefined {
+  export function getPackageScopeForPath(fileName: string, state: ModuleResolutionState): PackageJsonInfo | undefined {
      const parts = getPathComponents(fileName);
      parts.pop();
-@@ -1851,7 +1856,7 @@ export interface PackageJsonInfo {
+@@ -1855,7 +1860,7 @@ export interface PackageJsonInfoContents {
      return undefined;
  }
  
@@ -2846,7 +2846,7 @@ index b096965634..1904a2d9bb 100644
  export function getPackageJsonInfo(packageDirectory: string, onlyRecordFailures: boolean, state: ModuleResolutionState): PackageJsonInfo | undefined {
      const { host, traceEnabled } = state;
      const packageJsonPath = combinePaths(packageDirectory, "package.json");
-@@ -1995,7 +2000,7 @@ function extensionIsOk(extensions: Extensions, extension: Extension): boolean {
+@@ -2001,7 +2006,7 @@ function extensionIsOk(extensions: Extensions, extension: Extension): boolean {
      }
  }
  
@@ -2855,7 +2855,7 @@ index b096965634..1904a2d9bb 100644
  export function parsePackageName(moduleName: string): { packageName: string, rest: string } {
      let idx = moduleName.indexOf(directorySeparator);
      if (moduleName[0] === "@") {
-@@ -2004,7 +2009,7 @@ export function parsePackageName(moduleName: string): { packageName: string, res
+@@ -2010,7 +2015,7 @@ export function parsePackageName(moduleName: string): { packageName: string, res
      return idx === -1 ? { packageName: moduleName, rest: "" } : { packageName: moduleName.slice(0, idx), rest: moduleName.slice(idx + 1) };
  }
  
@@ -2864,7 +2864,7 @@ index b096965634..1904a2d9bb 100644
  export function allKeysStartWithDot(obj: MapLike<unknown>) {
      return every(getOwnKeys(obj), k => startsWith(k, "."));
  }
-@@ -2373,7 +2378,7 @@ function getLoadModuleFromTargetImportOrExport(extensions: Extensions, state: Mo
+@@ -2377,7 +2382,7 @@ function getLoadModuleFromTargetImportOrExport(extensions: Extensions, state: Mo
      }
  }
  
@@ -2873,7 +2873,7 @@ index b096965634..1904a2d9bb 100644
  export function isApplicableVersionedTypesKey(conditions: readonly string[], key: string) {
      if (conditions.indexOf("types") === -1) return false; // only apply versioned types conditions if the types condition is applied
      if (!startsWith(key, "types@")) return false;
-@@ -2544,12 +2549,12 @@ function mangleScopedPackageNameWithTrace(packageName: string, state: ModuleReso
+@@ -2548,12 +2553,12 @@ function mangleScopedPackageNameWithTrace(packageName: string, state: ModuleReso
      return mangled;
  }
  
@@ -2888,7 +2888,7 @@ index b096965634..1904a2d9bb 100644
  export function mangleScopedPackageName(packageName: string): string {
      if (startsWith(packageName, "@")) {
          const replaceSlash = packageName.replace(directorySeparator, mangledScopedPackageSeparator);
-@@ -2560,7 +2565,7 @@ export function mangleScopedPackageName(packageName: string): string {
+@@ -2564,7 +2569,7 @@ export function mangleScopedPackageName(packageName: string): string {
      return packageName;
  }
  
@@ -2897,7 +2897,7 @@ index b096965634..1904a2d9bb 100644
  export function getPackageNameFromTypesPackageName(mangledName: string): string {
      const withoutAtTypePrefix = removePrefix(mangledName, "@types/");
      if (withoutAtTypePrefix !== mangledName) {
-@@ -2569,7 +2574,7 @@ export function getPackageNameFromTypesPackageName(mangledName: string): string
+@@ -2573,7 +2578,7 @@ export function getPackageNameFromTypesPackageName(mangledName: string): string
      return mangledName;
  }
  
@@ -2906,7 +2906,7 @@ index b096965634..1904a2d9bb 100644
  export function unmangleScopedPackageName(typesPackageName: string): string {
      return stringContains(typesPackageName, mangledScopedPackageSeparator) ?
          "@" + typesPackageName.replace(mangledScopedPackageSeparator, directorySeparator) :
-@@ -2651,8 +2656,9 @@ export function classicNameResolver(moduleName: string, containingFile: string,
+@@ -2655,8 +2660,9 @@ export function classicNameResolver(moduleName: string, containingFile: string,
  /**
   * A host may load a module from a global cache of typings.
   * This is the minumum code needed to expose that functionality; the rest is in the host.
@@ -2918,7 +2918,7 @@ index b096965634..1904a2d9bb 100644
      const traceEnabled = isTraceEnabled(compilerOptions, host);
      if (traceEnabled) {
 diff --git a/src/compiler/moduleSpecifiers.ts b/src/compiler/moduleSpecifiers.ts
-index 78858ac29e..cfa2e7a609 100644
+index 6a01040365..25f450cb43 100644
 --- a/src/compiler/moduleSpecifiers.ts
 +++ b/src/compiler/moduleSpecifiers.ts
 @@ -180,8 +180,11 @@ function tryGetModuleSpecifiersFromCacheWorker(
@@ -2936,7 +2936,7 @@ index 78858ac29e..cfa2e7a609 100644
      moduleSymbol: Symbol,
      checker: TypeChecker,
 diff --git a/src/compiler/parser.ts b/src/compiler/parser.ts
-index eb0910daab..00ab59fd47 100644
+index 8b08767faa..351aeb7914 100644
 --- a/src/compiler/parser.ts
 +++ b/src/compiler/parser.ts
 @@ -89,8 +89,9 @@ let SourceFileConstructor: new (kind: SyntaxKind, pos?: number, end?: number) =>
@@ -2976,7 +2976,7 @@ index eb0910daab..00ab59fd47 100644
  export function isFileProbablyExternalModule(sourceFile: SourceFile) {
      // Try to use the first top-level import/export when available, then
      // fall back to looking for an 'import.meta' somewhere in the tree if necessary.
-@@ -915,7 +916,6 @@ export function forEachChild<T>(node: Node, cbNode: (node: Node) => T | undefine
+@@ -916,7 +917,6 @@ export function forEachChild<T>(node: Node, cbNode: (node: Node) => T | undefine
      return fn === undefined ? undefined : fn(node, cbNode, cbNodes);
  }
  
@@ -2984,7 +2984,7 @@ index eb0910daab..00ab59fd47 100644
  /**
   * Invokes a callback for each child of the given node. The 'cbNode' callback is invoked for all child nodes
   * stored in properties. If a 'cbNodes' callback is specified, it is invoked for embedded arrays; additionally,
-@@ -928,6 +928,8 @@ export function forEachChild<T>(node: Node, cbNode: (node: Node) => T | undefine
+@@ -929,6 +929,8 @@ export function forEachChild<T>(node: Node, cbNode: (node: Node) => T | undefine
   *
   * @remarks Unlike `forEachChild`, `forEachChildRecursively` handles recursively invoking the traversal on each child node found,
   * and while doing so, handles traversing the structure without relying on the callstack to encode the tree structure.
@@ -2993,7 +2993,7 @@ index eb0910daab..00ab59fd47 100644
   */
  export function forEachChildRecursively<T>(rootNode: Node, cbNode: (node: Node, parent: Node) => T | "skip" | undefined, cbNodes?: (nodes: NodeArray<Node>, parent: Node) => T | "skip" | undefined): T | undefined {
      const queue: (Node | NodeArray<Node>)[] = gatherPossibleChildren(rootNode);
-@@ -992,8 +994,8 @@ export interface CreateSourceFileOptions {
+@@ -993,8 +995,8 @@ export interface CreateSourceFileOptions {
       * check specified by `isFileProbablyExternalModule` will be used to set the field.
       */
      setExternalModuleIndicator?: (file: SourceFile) => void;
@@ -3004,7 +3004,7 @@ index eb0910daab..00ab59fd47 100644
  }
  
  function setExternalModuleIndicator(sourceFile: SourceFile) {
-@@ -1064,7 +1066,7 @@ export function updateSourceFile(sourceFile: SourceFile, newText: string, textCh
+@@ -1065,7 +1067,7 @@ export function updateSourceFile(sourceFile: SourceFile, newText: string, textCh
      return newSourceFile;
  }
  
@@ -3013,7 +3013,7 @@ index eb0910daab..00ab59fd47 100644
  export function parseIsolatedJSDocComment(content: string, start?: number, length?: number) {
      const result = Parser.JSDocParser.parseIsolatedJSDocComment(content, start, length);
      if (result && result.jsDoc) {
-@@ -1076,7 +1078,7 @@ export function parseIsolatedJSDocComment(content: string, start?: number, lengt
+@@ -1077,7 +1079,7 @@ export function parseIsolatedJSDocComment(content: string, start?: number, lengt
      return result;
  }
  
@@ -3022,7 +3022,7 @@ index eb0910daab..00ab59fd47 100644
  // Exposed only for testing.
  export function parseJSDocTypeExpressionForTests(content: string, start?: number, length?: number) {
      return Parser.JSDocParser.parseJSDocTypeExpressionForTests(content, start, length);
-@@ -9775,7 +9777,7 @@ export function isDeclarationFileName(fileName: string): boolean {
+@@ -9776,7 +9778,7 @@ export function isDeclarationFileName(fileName: string): boolean {
      return fileExtensionIsOneOf(fileName, supportedDeclarationExtensions);
  }
  
@@ -3031,7 +3031,7 @@ index eb0910daab..00ab59fd47 100644
  export interface PragmaContext {
      languageVersion: ScriptTarget;
      pragmas?: PragmaMap;
-@@ -9802,7 +9804,7 @@ function parseResolutionMode(mode: string | undefined, pos: number, end: number,
+@@ -9803,7 +9805,7 @@ function parseResolutionMode(mode: string | undefined, pos: number, end: number,
      return undefined;
  }
  
@@ -3040,7 +3040,7 @@ index eb0910daab..00ab59fd47 100644
  export function processCommentPragmas(context: PragmaContext, sourceText: string): void {
      const pragmas: PragmaPseudoMapEntry[] = [];
  
-@@ -9827,10 +9829,10 @@ export function processCommentPragmas(context: PragmaContext, sourceText: string
+@@ -9828,10 +9830,10 @@ export function processCommentPragmas(context: PragmaContext, sourceText: string
      }
  }
  
@@ -3691,7 +3691,7 @@ index 15d3c41994..ce65f1d889 100644
 \ No newline at end of file
 +    () => +(new Date());
 diff --git a/src/compiler/program.ts b/src/compiler/program.ts
-index d3dd0ce3fa..d250b30aa6 100644
+index 710df77675..6e18b7559d 100644
 --- a/src/compiler/program.ts
 +++ b/src/compiler/program.ts
 @@ -73,7 +73,7 @@ export function resolveTripleslashReference(moduleName: string, containingFile:
@@ -3872,7 +3872,7 @@ index d3dd0ce3fa..d250b30aa6 100644
 -/*@internal*/
 +/** @internal */
  export function getImpliedNodeFormatForFileWorker(
-     fileName: Path,
+     fileName: string,
      packageJsonInfoCache: PackageJsonInfoCache | undefined,
 @@ -4267,10 +4268,10 @@ function updateHostForUseSourceOfProjectReferenceRedirect(host: HostForUseSource
      }
@@ -4879,7 +4879,7 @@ index a178952c1f..bd457dda91 100644
       *  To dispose this project and ensure that all the necessary actions are taken and state is updated accordingly
       */
 diff --git a/src/compiler/types.ts b/src/compiler/types.ts
-index 6c1a508400..2e39dc5368 100644
+index c3199af3cb..23a86b69e5 100644
 --- a/src/compiler/types.ts
 +++ b/src/compiler/types.ts
 @@ -8,7 +8,7 @@ import {
@@ -5006,8 +5006,8 @@ index 6c1a508400..2e39dc5368 100644
  export type ForEachChildNodes =
      | HasChildren
      | MissingDeclaration
-@@ -942,13 +942,13 @@ export type ForEachChildNodes =
-     | JSDocDeprecatedTag
+@@ -943,13 +943,13 @@ export type ForEachChildNodes =
+     | JSDocOverrideTag
      ;
  
 -/* @internal */
@@ -5022,7 +5022,7 @@ index 6c1a508400..2e39dc5368 100644
  export type HasChildren =
      | QualifiedName
      | ComputedPropertyName
-@@ -1166,7 +1166,7 @@ export type HasType =
+@@ -1167,7 +1167,7 @@ export type HasType =
  
  // NOTE: Changing the following list requires changes to:
  // - `canHaveIllegalType` in factory/utilities.ts
@@ -5031,7 +5031,7 @@ index 6c1a508400..2e39dc5368 100644
  export type HasIllegalType =
      | ConstructorDeclaration
      | SetAccessorDeclaration
-@@ -1174,7 +1174,7 @@ export type HasIllegalType =
+@@ -1175,7 +1175,7 @@ export type HasIllegalType =
  
  // NOTE: Changing the following list requires changes to:
  // - `canHaveIllegalTypeParameters` in factory/utilities.ts
@@ -5040,7 +5040,7 @@ index 6c1a508400..2e39dc5368 100644
  export type HasIllegalTypeParameters =
      | ConstructorDeclaration
      | SetAccessorDeclaration
-@@ -1205,7 +1205,7 @@ export type HasExpressionInitializer =
+@@ -1206,7 +1206,7 @@ export type HasExpressionInitializer =
      | EnumMember
      ;
  
@@ -5049,7 +5049,7 @@ index 6c1a508400..2e39dc5368 100644
  export type HasIllegalExpressionInitializer =
      | PropertySignature
      ;
-@@ -1225,7 +1225,7 @@ export type HasDecorators =
+@@ -1226,7 +1226,7 @@ export type HasDecorators =
  
  // NOTE: Changing the following list requires changes to:
  // - `canHaveIllegalDecorators` in factory/utilities.ts
@@ -5058,7 +5058,7 @@ index 6c1a508400..2e39dc5368 100644
  export type HasIllegalDecorators =
      | PropertyAssignment
      | ShorthandPropertyAssignment
-@@ -1279,7 +1279,7 @@ export type HasModifiers =
+@@ -1280,7 +1280,7 @@ export type HasModifiers =
  
  // NOTE: Changing the following list requires changes to:
  // - `canHaveIllegalModifiers` in factory/utilities.ts
@@ -5067,7 +5067,7 @@ index 6c1a508400..2e39dc5368 100644
  export type HasIllegalModifiers =
      | ClassStaticBlockDeclaration
      | PropertyAssignment
-@@ -1289,15 +1289,15 @@ export type HasIllegalModifiers =
+@@ -1290,15 +1290,15 @@ export type HasIllegalModifiers =
      | NamespaceExportDeclaration
      ;
  
@@ -5086,7 +5086,7 @@ index 6c1a508400..2e39dc5368 100644
  }
  
  // TODO(rbuckton): Constraint 'TKind' to 'TokenSyntaxKind'
-@@ -1402,11 +1402,11 @@ export type ModifiersArray = NodeArray<Modifier>;
+@@ -1403,11 +1403,11 @@ export type ModifiersArray = NodeArray<Modifier>;
  export const enum GeneratedIdentifierFlags {
      // Kinds
      None = 0,                           // Not automatically generated.
@@ -5103,7 +5103,7 @@ index 6c1a508400..2e39dc5368 100644
  
      // Flags
      ReservedInNestedScopes = 1 << 3,    // Reserve the generated name in nested scopes
-@@ -1423,14 +1423,14 @@ export interface Identifier extends PrimaryExpression, Declaration {
+@@ -1424,14 +1424,14 @@ export interface Identifier extends PrimaryExpression, Declaration {
       */
      readonly escapedText: __String;
      readonly originalKeywordKind?: SyntaxKind;                // Original syntaxKind which get set so that we can report an error later
@@ -5125,7 +5125,7 @@ index 6c1a508400..2e39dc5368 100644
  }
  
  // Transient identifier node (marked by id === -1)
-@@ -1438,7 +1438,7 @@ export interface TransientIdentifier extends Identifier {
+@@ -1439,7 +1439,7 @@ export interface TransientIdentifier extends Identifier {
      resolvedSymbol: Symbol;
  }
  
@@ -5134,7 +5134,7 @@ index 6c1a508400..2e39dc5368 100644
  export interface GeneratedIdentifier extends Identifier {
      autoGenerateFlags: GeneratedIdentifierFlags;
  }
-@@ -1447,7 +1447,7 @@ export interface QualifiedName extends Node {
+@@ -1448,7 +1448,7 @@ export interface QualifiedName extends Node {
      readonly kind: SyntaxKind.QualifiedName;
      readonly left: EntityName;
      readonly right: Identifier;
@@ -5143,7 +5143,7 @@ index 6c1a508400..2e39dc5368 100644
  }
  
  export type EntityName = Identifier | QualifiedName;
-@@ -1474,28 +1474,28 @@ export interface NamedDeclaration extends Declaration {
+@@ -1475,28 +1475,28 @@ export interface NamedDeclaration extends Declaration {
      readonly name?: DeclarationName;
  }
  
@@ -5177,7 +5177,7 @@ index 6c1a508400..2e39dc5368 100644
  export interface LateBoundElementAccessExpression extends ElementAccessExpression {
      readonly argumentExpression: EntityNameExpression;
  }
-@@ -1516,18 +1516,18 @@ export interface PrivateIdentifier extends PrimaryExpression {
+@@ -1517,18 +1517,18 @@ export interface PrivateIdentifier extends PrimaryExpression {
      // escaping not strictly necessary
      // avoids gotchas in transforms and utils
      readonly escapedText: __String;
@@ -5202,7 +5202,7 @@ index 6c1a508400..2e39dc5368 100644
  // A name that supports late-binding (used in checker)
  export interface LateBoundName extends ComputedPropertyName {
      readonly expression: EntityNameExpression;
-@@ -1558,7 +1558,7 @@ export interface SignatureDeclarationBase extends NamedDeclaration, JSDocContain
+@@ -1559,7 +1559,7 @@ export interface SignatureDeclarationBase extends NamedDeclaration, JSDocContain
      readonly typeParameters?: NodeArray<TypeParameterDeclaration> | undefined;
      readonly parameters: NodeArray<ParameterDeclaration>;
      readonly type?: TypeNode | undefined;
@@ -5211,7 +5211,7 @@ index 6c1a508400..2e39dc5368 100644
  }
  
  export type SignatureDeclaration =
-@@ -1595,7 +1595,7 @@ export interface VariableDeclaration extends NamedDeclaration, JSDocContainer {
+@@ -1596,7 +1596,7 @@ export interface VariableDeclaration extends NamedDeclaration, JSDocContainer {
      readonly initializer?: Expression;             // Optional initializer
  }
  
@@ -5220,7 +5220,7 @@ index 6c1a508400..2e39dc5368 100644
  export type InitializedVariableDeclaration = VariableDeclaration & { readonly initializer: Expression };
  
  export interface VariableDeclarationList extends Node {
-@@ -1624,7 +1624,7 @@ export interface BindingElement extends NamedDeclaration {
+@@ -1625,7 +1625,7 @@ export interface BindingElement extends NamedDeclaration {
      readonly initializer?: Expression;           // Optional initializer
  }
  
@@ -5229,7 +5229,7 @@ index 6c1a508400..2e39dc5368 100644
  export type BindingElementGrandparent = BindingElement["parent"]["parent"];
  
  export interface PropertySignature extends TypeElement, JSDocContainer {
-@@ -1635,7 +1635,7 @@ export interface PropertySignature extends TypeElement, JSDocContainer {
+@@ -1636,7 +1636,7 @@ export interface PropertySignature extends TypeElement, JSDocContainer {
      readonly type?: TypeNode;                    // Optional type annotation
  
      // The following properties are used only to report grammar errors
@@ -5238,7 +5238,7 @@ index 6c1a508400..2e39dc5368 100644
  }
  
  export interface PropertyDeclaration extends ClassElement, JSDocContainer {
-@@ -1653,29 +1653,29 @@ export interface AutoAccessorPropertyDeclaration extends PropertyDeclaration {
+@@ -1654,29 +1654,29 @@ export interface AutoAccessorPropertyDeclaration extends PropertyDeclaration {
      _autoAccessorBrand: any;
  }
  
@@ -5275,7 +5275,7 @@ index 6c1a508400..2e39dc5368 100644
  export type PrivateClassElementDeclaration =
      | PrivateIdentifierPropertyDeclaration
      | PrivateIdentifierAutoAccessorPropertyDeclaration
-@@ -1683,7 +1683,7 @@ export type PrivateClassElementDeclaration =
+@@ -1684,7 +1684,7 @@ export type PrivateClassElementDeclaration =
      | PrivateIdentifierGetAccessorDeclaration
      | PrivateIdentifierSetAccessorDeclaration;
  
@@ -5284,7 +5284,7 @@ index 6c1a508400..2e39dc5368 100644
  export type InitializedPropertyDeclaration = PropertyDeclaration & { readonly initializer: Expression };
  
  export interface ObjectLiteralElement extends NamedDeclaration {
-@@ -1707,10 +1707,10 @@ export interface PropertyAssignment extends ObjectLiteralElement, JSDocContainer
+@@ -1708,10 +1708,10 @@ export interface PropertyAssignment extends ObjectLiteralElement, JSDocContainer
      readonly initializer: Expression;
  
      // The following properties are used only to report grammar errors
@@ -5299,7 +5299,7 @@ index 6c1a508400..2e39dc5368 100644
  }
  
  export interface ShorthandPropertyAssignment extends ObjectLiteralElement, JSDocContainer {
-@@ -1723,10 +1723,10 @@ export interface ShorthandPropertyAssignment extends ObjectLiteralElement, JSDoc
+@@ -1724,10 +1724,10 @@ export interface ShorthandPropertyAssignment extends ObjectLiteralElement, JSDoc
      readonly objectAssignmentInitializer?: Expression;
  
      // The following properties are used only to report grammar errors
@@ -5314,7 +5314,7 @@ index 6c1a508400..2e39dc5368 100644
  }
  
  export interface SpreadAssignment extends ObjectLiteralElement, JSDocContainer {
-@@ -1783,8 +1783,8 @@ export interface FunctionLikeDeclarationBase extends SignatureDeclarationBase {
+@@ -1784,8 +1784,8 @@ export interface FunctionLikeDeclarationBase extends SignatureDeclarationBase {
      readonly questionToken?: QuestionToken | undefined;
      readonly exclamationToken?: ExclamationToken | undefined;
      readonly body?: Block | Expression | undefined;
@@ -5325,7 +5325,7 @@ index 6c1a508400..2e39dc5368 100644
  }
  
  export type FunctionLikeDeclaration =
-@@ -1805,7 +1805,7 @@ export interface FunctionDeclaration extends FunctionLikeDeclarationBase, Declar
+@@ -1806,7 +1806,7 @@ export interface FunctionDeclaration extends FunctionLikeDeclarationBase, Declar
      readonly body?: FunctionBody;
  
      // The following properties are used only to report grammar errors
@@ -5334,7 +5334,7 @@ index 6c1a508400..2e39dc5368 100644
  }
  
  export interface MethodSignature extends SignatureDeclarationBase, TypeElement {
-@@ -1832,7 +1832,7 @@ export interface MethodDeclaration extends FunctionLikeDeclarationBase, ClassEle
+@@ -1833,7 +1833,7 @@ export interface MethodDeclaration extends FunctionLikeDeclarationBase, ClassEle
      readonly body?: FunctionBody | undefined;
  
      // The following properties are used only to report grammar errors
@@ -5343,7 +5343,7 @@ index 6c1a508400..2e39dc5368 100644
  }
  
  export interface ConstructorDeclaration extends FunctionLikeDeclarationBase, ClassElement, JSDocContainer {
-@@ -1842,9 +1842,9 @@ export interface ConstructorDeclaration extends FunctionLikeDeclarationBase, Cla
+@@ -1843,9 +1843,9 @@ export interface ConstructorDeclaration extends FunctionLikeDeclarationBase, Cla
      readonly body?: FunctionBody | undefined;
  
      // The following properties are used only to report grammar errors
@@ -5356,7 +5356,7 @@ index 6c1a508400..2e39dc5368 100644
  }
  
  /** For when we encounter a semicolon in a class declaration. ES6 allows these as class elements. */
-@@ -1863,7 +1863,7 @@ export interface GetAccessorDeclaration extends FunctionLikeDeclarationBase, Cla
+@@ -1864,7 +1864,7 @@ export interface GetAccessorDeclaration extends FunctionLikeDeclarationBase, Cla
      readonly body?: FunctionBody;
  
      // The following properties are used only to report grammar errors
@@ -5365,7 +5365,7 @@ index 6c1a508400..2e39dc5368 100644
  }
  
  // See the comment on MethodDeclaration for the intuition behind SetAccessorDeclaration being a
-@@ -1876,8 +1876,8 @@ export interface SetAccessorDeclaration extends FunctionLikeDeclarationBase, Cla
+@@ -1877,8 +1877,8 @@ export interface SetAccessorDeclaration extends FunctionLikeDeclarationBase, Cla
      readonly body?: FunctionBody;
  
      // The following properties are used only to report grammar errors
@@ -5376,7 +5376,7 @@ index 6c1a508400..2e39dc5368 100644
  }
  
  export type AccessorDeclaration = GetAccessorDeclaration | SetAccessorDeclaration;
-@@ -1889,7 +1889,7 @@ export interface IndexSignatureDeclaration extends SignatureDeclarationBase, Cla
+@@ -1890,7 +1890,7 @@ export interface IndexSignatureDeclaration extends SignatureDeclarationBase, Cla
      readonly type: TypeNode;
  
      // The following properties are used only to report grammar errors
@@ -5385,7 +5385,7 @@ index 6c1a508400..2e39dc5368 100644
  }
  
  export interface ClassStaticBlockDeclaration extends ClassElement, JSDocContainer {
-@@ -1897,19 +1897,19 @@ export interface ClassStaticBlockDeclaration extends ClassElement, JSDocContaine
+@@ -1898,19 +1898,19 @@ export interface ClassStaticBlockDeclaration extends ClassElement, JSDocContaine
      readonly parent: ClassDeclaration | ClassExpression;
      readonly body: Block;
  
@@ -5410,7 +5410,7 @@ index 6c1a508400..2e39dc5368 100644
  export interface TypeNode extends Node {
      readonly kind: TypeNodeSyntaxKind;
  }
-@@ -1933,7 +1933,7 @@ export interface ImportTypeNode extends NodeWithTypeArguments {
+@@ -1934,7 +1934,7 @@ export interface ImportTypeNode extends NodeWithTypeArguments {
      readonly qualifier?: EntityName;
  }
  
@@ -5419,7 +5419,7 @@ index 6c1a508400..2e39dc5368 100644
  export type LiteralImportTypeNode = ImportTypeNode & { readonly argument: LiteralTypeNode & { readonly literal: StringLiteral } };
  
  export interface ThisTypeNode extends TypeNode {
-@@ -1951,7 +1951,7 @@ export interface FunctionTypeNode extends FunctionOrConstructorTypeNodeBase {
+@@ -1952,7 +1952,7 @@ export interface FunctionTypeNode extends FunctionOrConstructorTypeNodeBase {
      readonly kind: SyntaxKind.FunctionType;
  
      // The following properties are used only to report grammar errors
@@ -5428,7 +5428,7 @@ index 6c1a508400..2e39dc5368 100644
  }
  
  export interface ConstructorTypeNode extends FunctionOrConstructorTypeNodeBase {
-@@ -2053,7 +2053,7 @@ export interface TypeOperatorNode extends TypeNode {
+@@ -2054,7 +2054,7 @@ export interface TypeOperatorNode extends TypeNode {
      readonly type: TypeNode;
  }
  
@@ -5437,7 +5437,7 @@ index 6c1a508400..2e39dc5368 100644
  export interface UniqueTypeOperatorNode extends TypeOperatorNode {
      readonly operator: SyntaxKind.UniqueKeyword;
  }
-@@ -2082,9 +2082,9 @@ export interface LiteralTypeNode extends TypeNode {
+@@ -2083,9 +2083,9 @@ export interface LiteralTypeNode extends TypeNode {
  
  export interface StringLiteral extends LiteralExpression, Declaration {
      readonly kind: SyntaxKind.StringLiteral;
@@ -5449,7 +5449,7 @@ index 6c1a508400..2e39dc5368 100644
  }
  
  export type StringLiteralLike = StringLiteral | NoSubstitutionTemplateLiteral;
-@@ -2504,7 +2504,7 @@ export interface LiteralLikeNode extends Node {
+@@ -2505,7 +2505,7 @@ export interface LiteralLikeNode extends Node {
  
  export interface TemplateLiteralLikeNode extends LiteralLikeNode {
      rawText?: string;
@@ -5458,7 +5458,7 @@ index 6c1a508400..2e39dc5368 100644
      templateFlags?: TokenFlags;
  }
  
-@@ -2521,42 +2521,42 @@ export interface RegularExpressionLiteral extends LiteralExpression {
+@@ -2522,42 +2522,42 @@ export interface RegularExpressionLiteral extends LiteralExpression {
  
  export interface NoSubstitutionTemplateLiteral extends LiteralExpression, TemplateLiteralLikeNode, Declaration {
      readonly kind: SyntaxKind.NoSubstitutionTemplateLiteral;
@@ -5513,7 +5513,7 @@ index 6c1a508400..2e39dc5368 100644
      readonly numericLiteralFlags: TokenFlags;
  }
  
-@@ -2576,21 +2576,21 @@ export type LiteralToken =
+@@ -2577,21 +2577,21 @@ export type LiteralToken =
  export interface TemplateHead extends TemplateLiteralLikeNode {
      readonly kind: SyntaxKind.TemplateHead;
      readonly parent: TemplateExpression | TemplateLiteralTypeNode;
@@ -5538,7 +5538,7 @@ index 6c1a508400..2e39dc5368 100644
      templateFlags?: TokenFlags;
  }
  
-@@ -2630,7 +2630,7 @@ export interface ParenthesizedExpression extends PrimaryExpression, JSDocContain
+@@ -2631,7 +2631,7 @@ export interface ParenthesizedExpression extends PrimaryExpression, JSDocContain
      readonly expression: Expression;
  }
  
@@ -5547,7 +5547,7 @@ index 6c1a508400..2e39dc5368 100644
  export interface JSDocTypeAssertion extends ParenthesizedExpression {
      readonly _jsDocTypeAssertionBrand: never;
  }
-@@ -2638,7 +2638,7 @@ export interface JSDocTypeAssertion extends ParenthesizedExpression {
+@@ -2639,7 +2639,7 @@ export interface JSDocTypeAssertion extends ParenthesizedExpression {
  export interface ArrayLiteralExpression extends PrimaryExpression {
      readonly kind: SyntaxKind.ArrayLiteralExpression;
      readonly elements: NodeArray<Expression>;
@@ -5556,7 +5556,7 @@ index 6c1a508400..2e39dc5368 100644
      multiLine?: boolean;
  }
  
-@@ -2661,7 +2661,7 @@ export interface ObjectLiteralExpressionBase<T extends ObjectLiteralElement> ext
+@@ -2662,7 +2662,7 @@ export interface ObjectLiteralExpressionBase<T extends ObjectLiteralElement> ext
  // An ObjectLiteralExpression is the declaration node for an anonymous symbol.
  export interface ObjectLiteralExpression extends ObjectLiteralExpressionBase<ObjectLiteralElementLike> {
      readonly kind: SyntaxKind.ObjectLiteralExpression;
@@ -5565,7 +5565,7 @@ index 6c1a508400..2e39dc5368 100644
      multiLine?: boolean;
  }
  
-@@ -2676,7 +2676,7 @@ export interface PropertyAccessExpression extends MemberExpression, NamedDeclara
+@@ -2677,7 +2677,7 @@ export interface PropertyAccessExpression extends MemberExpression, NamedDeclara
      readonly name: MemberName;
  }
  
@@ -5574,7 +5574,7 @@ index 6c1a508400..2e39dc5368 100644
  export interface PrivateIdentifierPropertyAccessExpression extends PropertyAccessExpression {
      readonly name: PrivateIdentifier;
  }
-@@ -2686,7 +2686,7 @@ export interface PropertyAccessChain extends PropertyAccessExpression {
+@@ -2687,7 +2687,7 @@ export interface PropertyAccessChain extends PropertyAccessExpression {
      readonly name: MemberName;
  }
  
@@ -5583,7 +5583,7 @@ index 6c1a508400..2e39dc5368 100644
  export interface PropertyAccessChainRoot extends PropertyAccessChain {
      readonly questionDotToken: QuestionDotToken;
  }
-@@ -2713,7 +2713,7 @@ export interface ElementAccessChain extends ElementAccessExpression {
+@@ -2714,7 +2714,7 @@ export interface ElementAccessChain extends ElementAccessExpression {
      _optionalChainBrand: any;
  }
  
@@ -5592,7 +5592,7 @@ index 6c1a508400..2e39dc5368 100644
  export interface ElementAccessChainRoot extends ElementAccessChain {
      readonly questionDotToken: QuestionDotToken;
  }
-@@ -2737,7 +2737,7 @@ export interface CallChain extends CallExpression {
+@@ -2738,7 +2738,7 @@ export interface CallChain extends CallExpression {
      _optionalChainBrand: any;
  }
  
@@ -5601,7 +5601,7 @@ index 6c1a508400..2e39dc5368 100644
  export interface CallChainRoot extends CallChain {
      readonly questionDotToken: QuestionDotToken;
  }
-@@ -2749,7 +2749,7 @@ export type OptionalChain =
+@@ -2750,7 +2750,7 @@ export type OptionalChain =
      | NonNullChain
      ;
  
@@ -5610,7 +5610,7 @@ index 6c1a508400..2e39dc5368 100644
  export type OptionalChainRoot =
      | PropertyAccessChainRoot
      | ElementAccessChainRoot
-@@ -2830,7 +2830,7 @@ export interface TaggedTemplateExpression extends MemberExpression {
+@@ -2831,7 +2831,7 @@ export interface TaggedTemplateExpression extends MemberExpression {
      readonly tag: LeftHandSideExpression;
      readonly typeArguments?: NodeArray<TypeNode>;
      readonly template: TemplateLiteral;
@@ -5619,7 +5619,7 @@ index 6c1a508400..2e39dc5368 100644
  }
  
  export type CallLikeExpression =
-@@ -2881,7 +2881,7 @@ export interface MetaProperty extends PrimaryExpression {
+@@ -2882,7 +2882,7 @@ export interface MetaProperty extends PrimaryExpression {
      readonly name: Identifier;
  }
  
@@ -5628,7 +5628,7 @@ index 6c1a508400..2e39dc5368 100644
  export interface ImportMetaProperty extends MetaProperty {
      readonly keywordToken: SyntaxKind.ImportKeyword;
      readonly name: Identifier & { readonly escapedText: __String & "meta" };
-@@ -3018,8 +3018,9 @@ export interface NotEmittedStatement extends Statement {
+@@ -3019,8 +3019,9 @@ export interface NotEmittedStatement extends Statement {
  
  /**
   * Marks the end of transformed declaration to properly emit exports.
@@ -5639,7 +5639,7 @@ index 6c1a508400..2e39dc5368 100644
  export interface EndOfDeclarationMarker extends Statement {
      readonly kind: SyntaxKind.EndOfDeclarationMarker;
  }
-@@ -3034,13 +3035,14 @@ export interface CommaListExpression extends Expression {
+@@ -3035,13 +3036,14 @@ export interface CommaListExpression extends Expression {
  
  /**
   * Marks the beginning of a merged transformed declaration.
@@ -5656,7 +5656,7 @@ index 6c1a508400..2e39dc5368 100644
  export interface SyntheticReferenceExpression extends LeftHandSideExpression {
      readonly kind: SyntaxKind.SyntheticReferenceExpression;
      readonly expression: Expression;
-@@ -3060,8 +3062,8 @@ export interface MissingDeclaration extends DeclarationStatement {
+@@ -3061,8 +3063,8 @@ export interface MissingDeclaration extends DeclarationStatement {
      readonly name?: Identifier;
  
      // The following properties are used only to report grammar errors
@@ -5667,7 +5667,7 @@ index 6c1a508400..2e39dc5368 100644
  }
  
  export type BlockLike =
-@@ -3074,7 +3076,7 @@ export type BlockLike =
+@@ -3075,7 +3077,7 @@ export type BlockLike =
  export interface Block extends Statement {
      readonly kind: SyntaxKind.Block;
      readonly statements: NodeArray<Statement>;
@@ -5676,7 +5676,7 @@ index 6c1a508400..2e39dc5368 100644
  }
  
  export interface VariableStatement extends Statement {
-@@ -3083,7 +3085,7 @@ export interface VariableStatement extends Statement {
+@@ -3084,7 +3086,7 @@ export interface VariableStatement extends Statement {
      readonly declarationList: VariableDeclarationList;
  
      // The following properties are used only to report grammar errors
@@ -5685,7 +5685,7 @@ index 6c1a508400..2e39dc5368 100644
  }
  
  export interface ExpressionStatement extends Statement {
-@@ -3091,7 +3093,7 @@ export interface ExpressionStatement extends Statement {
+@@ -3092,7 +3094,7 @@ export interface ExpressionStatement extends Statement {
      readonly expression: Expression;
  }
  
@@ -5694,7 +5694,7 @@ index 6c1a508400..2e39dc5368 100644
  export interface PrologueDirective extends ExpressionStatement {
      readonly expression: StringLiteral;
  }
-@@ -3191,14 +3193,14 @@ export interface CaseClause extends Node, JSDocContainer {
+@@ -3192,14 +3194,14 @@ export interface CaseClause extends Node, JSDocContainer {
      readonly parent: CaseBlock;
      readonly expression: Expression;
      readonly statements: NodeArray<Statement>;
@@ -5711,7 +5711,7 @@ index 6c1a508400..2e39dc5368 100644
  }
  
  export type CaseOrDefaultClause =
-@@ -3297,7 +3299,7 @@ export interface InterfaceDeclaration extends DeclarationStatement, JSDocContain
+@@ -3298,7 +3300,7 @@ export interface InterfaceDeclaration extends DeclarationStatement, JSDocContain
      readonly members: NodeArray<TypeElement>;
  
      // The following properties are used only to report grammar errors
@@ -5720,7 +5720,7 @@ index 6c1a508400..2e39dc5368 100644
  }
  
  export interface HeritageClause extends Node {
-@@ -3315,7 +3317,7 @@ export interface TypeAliasDeclaration extends DeclarationStatement, JSDocContain
+@@ -3316,7 +3318,7 @@ export interface TypeAliasDeclaration extends DeclarationStatement, JSDocContain
      readonly type: TypeNode;
  
      // The following properties are used only to report grammar errors
@@ -5729,7 +5729,7 @@ index 6c1a508400..2e39dc5368 100644
  }
  
  export interface EnumMember extends NamedDeclaration, JSDocContainer {
-@@ -3334,7 +3336,7 @@ export interface EnumDeclaration extends DeclarationStatement, JSDocContainer {
+@@ -3335,7 +3337,7 @@ export interface EnumDeclaration extends DeclarationStatement, JSDocContainer {
      readonly members: NodeArray<EnumMember>;
  
      // The following properties are used only to report grammar errors
@@ -5738,7 +5738,7 @@ index 6c1a508400..2e39dc5368 100644
  }
  
  export type ModuleName =
-@@ -3347,7 +3349,7 @@ export type ModuleBody =
+@@ -3348,7 +3350,7 @@ export type ModuleBody =
      | JSDocNamespaceBody
      ;
  
@@ -5747,7 +5747,7 @@ index 6c1a508400..2e39dc5368 100644
  export interface AmbientModuleDeclaration extends ModuleDeclaration {
      readonly body?: ModuleBlock;
  }
-@@ -3360,7 +3362,7 @@ export interface ModuleDeclaration extends DeclarationStatement, JSDocContainer
+@@ -3361,7 +3363,7 @@ export interface ModuleDeclaration extends DeclarationStatement, JSDocContainer
      readonly body?: ModuleBody | JSDocNamespaceDeclaration;
  
      // The following properties are used only to report grammar errors
@@ -5756,7 +5756,7 @@ index 6c1a508400..2e39dc5368 100644
  }
  
  export type NamespaceBody =
-@@ -3411,7 +3413,7 @@ export interface ImportEqualsDeclaration extends DeclarationStatement, JSDocCont
+@@ -3412,7 +3414,7 @@ export interface ImportEqualsDeclaration extends DeclarationStatement, JSDocCont
      readonly moduleReference: ModuleReference;
  
      // The following properties are used only to report grammar errors
@@ -5765,7 +5765,7 @@ index 6c1a508400..2e39dc5368 100644
  }
  
  export interface ExternalModuleReference extends Node {
-@@ -3434,7 +3436,7 @@ export interface ImportDeclaration extends Statement {
+@@ -3435,7 +3437,7 @@ export interface ImportDeclaration extends Statement {
      readonly assertClause?: AssertClause;
  
      // The following properties are used only to report grammar errors
@@ -5774,7 +5774,7 @@ index 6c1a508400..2e39dc5368 100644
  }
  
  export type NamedImportBindings =
-@@ -3494,8 +3496,8 @@ export interface NamespaceExportDeclaration extends DeclarationStatement, JSDocC
+@@ -3495,8 +3497,8 @@ export interface NamespaceExportDeclaration extends DeclarationStatement, JSDocC
      readonly name: Identifier;
  
      // The following properties are used only to report grammar errors
@@ -5785,7 +5785,7 @@ index 6c1a508400..2e39dc5368 100644
  }
  
  export interface ExportDeclaration extends DeclarationStatement, JSDocContainer {
-@@ -3510,7 +3512,7 @@ export interface ExportDeclaration extends DeclarationStatement, JSDocContainer
+@@ -3511,7 +3513,7 @@ export interface ExportDeclaration extends DeclarationStatement, JSDocContainer
      readonly assertClause?: AssertClause;
  
      // The following properties are used only to report grammar errors
@@ -5794,7 +5794,7 @@ index 6c1a508400..2e39dc5368 100644
  }
  
  export interface NamedImports extends Node {
-@@ -3575,7 +3577,7 @@ export interface ExportAssignment extends DeclarationStatement, JSDocContainer {
+@@ -3576,7 +3578,7 @@ export interface ExportAssignment extends DeclarationStatement, JSDocContainer {
      readonly expression: Expression;
  
      // The following properties are used only to report grammar errors
@@ -5803,7 +5803,7 @@ index 6c1a508400..2e39dc5368 100644
  }
  
  export interface FileReference extends TextRange {
-@@ -3942,14 +3944,14 @@ export interface AmdDependency {
+@@ -3943,14 +3945,14 @@ export interface AmdDependency {
   */
  export interface SourceFileLike {
      readonly text: string;
@@ -5821,7 +5821,7 @@ index 6c1a508400..2e39dc5368 100644
  export interface RedirectInfo {
      /** Source file this redirects to. */
      readonly redirectTarget: SourceFile;
-@@ -3967,27 +3969,27 @@ export interface SourceFile extends Declaration {
+@@ -3968,27 +3970,27 @@ export interface SourceFile extends Declaration {
      readonly endOfFileToken: Token<SyntaxKind.EndOfFileToken>;
  
      fileName: string;
@@ -5853,7 +5853,7 @@ index 6c1a508400..2e39dc5368 100644
  
      amdDependencies: readonly AmdDependency[];
      moduleName?: string;
-@@ -3998,7 +4000,7 @@ export interface SourceFile extends Declaration {
+@@ -3999,7 +4001,7 @@ export interface SourceFile extends Declaration {
      isDeclarationFile: boolean;
  
      // this map is used by transpiler to supply alternative names for dependencies (i.e. in case of bundling)
@@ -5862,7 +5862,7 @@ index 6c1a508400..2e39dc5368 100644
      renamedDependencies?: ReadonlyESMap<string, string>;
  
      /**
-@@ -4031,98 +4033,98 @@ export interface SourceFile extends Declaration {
+@@ -4032,98 +4034,98 @@ export interface SourceFile extends Declaration {
       * CommonJS-output-format by the node module transformer and type checker, regardless of extension or context.
       */
      impliedNodeFormat?: ModuleKind.ESNext | ModuleKind.CommonJS;
@@ -6005,7 +6005,7 @@ index 6c1a508400..2e39dc5368 100644
  }
  
  export interface InputFiles extends Node {
-@@ -4135,9 +4137,9 @@ export interface InputFiles extends Node {
+@@ -4136,9 +4138,9 @@ export interface InputFiles extends Node {
      declarationText: string;
      declarationMapPath?: string;
      declarationMapText?: string;
@@ -6018,7 +6018,7 @@ index 6c1a508400..2e39dc5368 100644
  }
  
  export interface UnparsedSource extends Node {
-@@ -4157,10 +4159,10 @@ export interface UnparsedSource extends Node {
+@@ -4158,10 +4160,10 @@ export interface UnparsedSource extends Node {
      sourceMapText?: string;
      readonly syntheticReferences?: readonly UnparsedSyntheticReference[];
      readonly texts: readonly UnparsedSourceText[];
@@ -6032,7 +6032,7 @@ index 6c1a508400..2e39dc5368 100644
      getLineAndCharacterOfPosition(pos: number): LineAndCharacter;
  }
  
-@@ -4202,7 +4204,7 @@ export interface UnparsedTextLike extends UnparsedSection {
+@@ -4203,7 +4205,7 @@ export interface UnparsedTextLike extends UnparsedSection {
  export interface UnparsedSyntheticReference extends UnparsedSection {
      readonly kind: SyntaxKind.UnparsedSyntheticReference;
      readonly parent: UnparsedSource;
@@ -6041,7 +6041,7 @@ index 6c1a508400..2e39dc5368 100644
  }
  
  export interface JsonSourceFile extends SourceFile {
-@@ -4211,7 +4213,7 @@ export interface JsonSourceFile extends SourceFile {
+@@ -4212,7 +4214,7 @@ export interface JsonSourceFile extends SourceFile {
  
  export interface TsConfigSourceFile extends JsonSourceFile {
      extendedSourceFiles?: string[];
@@ -6050,7 +6050,7 @@ index 6c1a508400..2e39dc5368 100644
  }
  
  export interface JsonMinusNumericLiteral extends PrefixUnaryExpression {
-@@ -4264,9 +4266,9 @@ export interface ParseConfigHost {
+@@ -4265,9 +4267,9 @@ export interface ParseConfigHost {
  export type ResolvedConfigFileName = string & { _isResolvedConfigFileName: never };
  
  export interface WriteFileCallbackData {
@@ -6063,7 +6063,7 @@ index 6c1a508400..2e39dc5368 100644
  }
  export type WriteFileCallback = (
      fileName: string,
-@@ -4286,7 +4288,7 @@ export interface CancellationToken {
+@@ -4287,7 +4289,7 @@ export interface CancellationToken {
      throwIfCancellationRequested(): void;
  }
  
@@ -6072,7 +6072,7 @@ index 6c1a508400..2e39dc5368 100644
  export enum FileIncludeKind {
      RootFile,
      SourceFromProjectReference,
-@@ -4299,49 +4301,49 @@ export enum FileIncludeKind {
+@@ -4300,49 +4302,49 @@ export enum FileIncludeKind {
      AutomaticTypeDirectiveFile
  }
  
@@ -6130,7 +6130,7 @@ index 6c1a508400..2e39dc5368 100644
  export type FileIncludeReason =
      RootFile |
      LibFile |
-@@ -4349,13 +4351,13 @@ export type FileIncludeReason =
+@@ -4350,13 +4352,13 @@ export type FileIncludeReason =
      ReferencedFile |
      AutomaticTypeDirectiveFile;
  
@@ -6146,7 +6146,7 @@ index 6c1a508400..2e39dc5368 100644
  export interface FilePreprocessingReferencedDiagnostic {
      kind: FilePreprocessingDiagnosticsKind.FilePreprocessingReferencedDiagnostic;
      reason: ReferencedFile;
-@@ -4363,7 +4365,7 @@ export interface FilePreprocessingReferencedDiagnostic {
+@@ -4364,7 +4366,7 @@ export interface FilePreprocessingReferencedDiagnostic {
      args?: (string | number | undefined)[];
  }
  
@@ -6155,7 +6155,7 @@ index 6c1a508400..2e39dc5368 100644
  export interface FilePreprocessingFileExplainingDiagnostic {
      kind: FilePreprocessingDiagnosticsKind.FilePreprocessingFileExplainingDiagnostic;
      file?: Path;
-@@ -4372,7 +4374,7 @@ export interface FilePreprocessingFileExplainingDiagnostic {
+@@ -4373,7 +4375,7 @@ export interface FilePreprocessingFileExplainingDiagnostic {
      args?: (string | number | undefined)[];
  }
  
@@ -6164,7 +6164,7 @@ index 6c1a508400..2e39dc5368 100644
  export type FilePreprocessingDiagnostics = FilePreprocessingReferencedDiagnostic | FilePreprocessingFileExplainingDiagnostic;
  
  export interface Program extends ScriptReferenceHost {
-@@ -4391,11 +4393,11 @@ export interface Program extends ScriptReferenceHost {
+@@ -4392,11 +4394,11 @@ export interface Program extends ScriptReferenceHost {
       * Get a list of file names that were passed to 'createProgram' or referenced in a
       * program source file but could not be located.
       */
@@ -6179,7 +6179,7 @@ index 6c1a508400..2e39dc5368 100644
      getFilesByNameMap(): ESMap<string, SourceFile | false | undefined>;
  
      /**
-@@ -4409,7 +4411,7 @@ export interface Program extends ScriptReferenceHost {
+@@ -4410,7 +4412,7 @@ export interface Program extends ScriptReferenceHost {
       * will be invoked when writing the JavaScript and declaration files.
       */
      emit(targetSourceFile?: SourceFile, writeFile?: WriteFileCallback, cancellationToken?: CancellationToken, emitOnlyDtsFiles?: boolean, customTransformers?: CustomTransformers): EmitResult;
@@ -6188,7 +6188,7 @@ index 6c1a508400..2e39dc5368 100644
      emit(targetSourceFile?: SourceFile, writeFile?: WriteFileCallback, cancellationToken?: CancellationToken, emitOnlyDtsFiles?: boolean, customTransformers?: CustomTransformers, forceDtsEmit?: boolean): EmitResult; // eslint-disable-line @typescript-eslint/unified-signatures
  
      getOptionsDiagnostics(cancellationToken?: CancellationToken): readonly Diagnostic[];
-@@ -4419,21 +4421,21 @@ export interface Program extends ScriptReferenceHost {
+@@ -4420,21 +4422,21 @@ export interface Program extends ScriptReferenceHost {
      getSemanticDiagnostics(sourceFile?: SourceFile, cancellationToken?: CancellationToken): readonly Diagnostic[];
      getDeclarationDiagnostics(sourceFile?: SourceFile, cancellationToken?: CancellationToken): readonly DiagnosticWithLocation[];
      getConfigFileParsingDiagnostics(): readonly Diagnostic[];
@@ -6216,7 +6216,7 @@ index 6c1a508400..2e39dc5368 100644
  
      getNodeCount(): number;
      getIdentifierCount(): number;
-@@ -4442,53 +4444,53 @@ export interface Program extends ScriptReferenceHost {
+@@ -4443,53 +4445,53 @@ export interface Program extends ScriptReferenceHost {
      getInstantiationCount(): number;
      getRelationCacheSizes(): { assignable: number, identity: number, subtype: number, strictSubtype: number };
  
@@ -6293,7 +6293,7 @@ index 6c1a508400..2e39dc5368 100644
  export type RedirectTargetsMap = ReadonlyESMap<Path, readonly string[]>;
  
  export interface ResolvedProjectReference {
-@@ -4497,7 +4499,7 @@ export interface ResolvedProjectReference {
+@@ -4498,7 +4500,7 @@ export interface ResolvedProjectReference {
      references?: readonly (ResolvedProjectReference | undefined)[];
  }
  
@@ -6302,7 +6302,7 @@ index 6c1a508400..2e39dc5368 100644
  export const enum StructureIsReused {
      Not,
      SafeModules,
-@@ -4520,7 +4522,7 @@ export interface CustomTransformers {
+@@ -4521,7 +4523,7 @@ export interface CustomTransformers {
      afterDeclarations?: (TransformerFactory<Bundle | SourceFile> | CustomTransformerFactory)[];
  }
  
@@ -6311,7 +6311,7 @@ index 6c1a508400..2e39dc5368 100644
  export interface EmitTransformers {
      scriptTransformers: readonly TransformerFactory<SourceFile | Bundle>[];
      declarationTransformers: readonly TransformerFactory<SourceFile | Bundle>[];
-@@ -4541,7 +4543,7 @@ export interface SourceMapSpan {
+@@ -4542,7 +4544,7 @@ export interface SourceMapSpan {
      sourceIndex: number;
  }
  
@@ -6320,7 +6320,7 @@ index 6c1a508400..2e39dc5368 100644
  export interface SourceMapEmitResult {
      inputSourceFileNames: readonly string[];      // Input source file (which one can use on program to get the file), 1:1 mapping with the sourceMap.sources list
      sourceMap: RawSourceMap;
-@@ -4575,10 +4577,10 @@ export interface EmitResult {
+@@ -4576,10 +4578,10 @@ export interface EmitResult {
      /** Contains declaration emit diagnostics */
      diagnostics: readonly Diagnostic[];
      emittedFiles?: string[]; // Array of files the compiler wrote to disk
@@ -6333,7 +6333,7 @@ index 6c1a508400..2e39dc5368 100644
  export interface TypeCheckerHost extends ModuleSpecifierResolutionHost {
      getCompilerOptions(): CompilerOptions;
  
-@@ -4593,54 +4595,54 @@ export interface TypeCheckerHost extends ModuleSpecifierResolutionHost {
+@@ -4594,54 +4596,54 @@ export interface TypeCheckerHost extends ModuleSpecifierResolutionHost {
  
  export interface TypeChecker {
      getTypeOfSymbolAtLocation(symbol: Symbol, node: Node): Type;
@@ -6401,7 +6401,7 @@ index 6c1a508400..2e39dc5368 100644
      /** Note that the resulting nodes cannot be checked. */
      symbolToTypeParameterDeclarations(symbol: Symbol, enclosingDeclaration: Node | undefined, flags: NodeBuilderFlags | undefined): NodeArray<TypeParameterDeclaration> | undefined;
      /** Note that the resulting nodes cannot be checked. */
-@@ -4650,7 +4652,7 @@ export interface TypeChecker {
+@@ -4651,7 +4653,7 @@ export interface TypeChecker {
  
      getSymbolsInScope(location: Node, meaning: SymbolFlags): Symbol[];
      getSymbolAtLocation(node: Node): Symbol | undefined;
@@ -6410,7 +6410,7 @@ index 6c1a508400..2e39dc5368 100644
      getSymbolsOfParameterPropertyDeclaration(parameter: ParameterDeclaration, parameterName: string): Symbol[];
      /**
       * The function returns the value (local variable) symbol of an identifier in the short-hand property assignment.
-@@ -4678,10 +4680,10 @@ export interface TypeChecker {
+@@ -4679,10 +4681,10 @@ export interface TypeChecker {
      symbolToString(symbol: Symbol, enclosingDeclaration?: Node, meaning?: SymbolFlags, flags?: SymbolFormatFlags): string;
      typePredicateToString(predicate: TypePredicate, enclosingDeclaration?: Node, flags?: TypeFormatFlags): string;
  
@@ -6425,7 +6425,7 @@ index 6c1a508400..2e39dc5368 100644
  
      getFullyQualifiedName(symbol: Symbol): string;
      getAugmentedPropertiesOfType(type: Type): Symbol[];
-@@ -4689,12 +4691,12 @@ export interface TypeChecker {
+@@ -4690,12 +4692,12 @@ export interface TypeChecker {
      getRootSymbols(symbol: Symbol): readonly Symbol[];
      getSymbolOfExpando(node: Node, allowDeclaration: boolean): Symbol | undefined;
      getContextualType(node: Expression): Type | undefined;
@@ -6444,7 +6444,7 @@ index 6c1a508400..2e39dc5368 100644
  
      /**
       * returns unknownSignature in the case of an error.
-@@ -4702,31 +4704,31 @@ export interface TypeChecker {
+@@ -4703,31 +4705,31 @@ export interface TypeChecker {
       * @param argumentCount Apparent number of arguments, passed in case of a possibly incomplete call. This should come from an ArgumentListInfo. See `signatureHelp.ts`.
       */
      getResolvedSignature(node: CallLikeExpression, candidatesOutArray?: Signature[], argumentCount?: number): Signature | undefined;
@@ -6485,7 +6485,7 @@ index 6c1a508400..2e39dc5368 100644
      getJsxIntrinsicTagNamesAt(location: Node): Symbol[];
      isOptionalParameter(node: ParameterDeclaration): boolean;
      getAmbientModules(): Symbol[];
-@@ -4736,41 +4738,41 @@ export interface TypeChecker {
+@@ -4737,41 +4739,41 @@ export interface TypeChecker {
       * Unlike `tryGetMemberInModuleExports`, this includes properties of an `export =` value.
       * Does *not* return properties of primitive types.
       */
@@ -6558,7 +6558,7 @@ index 6c1a508400..2e39dc5368 100644
          declaration: SignatureDeclaration | undefined,
          typeParameters: readonly TypeParameter[] | undefined,
          thisParameter: Symbol | undefined,
-@@ -4780,47 +4782,47 @@ export interface TypeChecker {
+@@ -4781,47 +4783,47 @@ export interface TypeChecker {
          minArgumentCount: number,
          flags: SignatureFlags
      ): Signature;
@@ -6634,7 +6634,7 @@ index 6c1a508400..2e39dc5368 100644
  
      /**
       * Note that this will return undefined in the following case:
-@@ -4831,23 +4833,23 @@ export interface TypeChecker {
+@@ -4832,23 +4834,23 @@ export interface TypeChecker {
       * Where `C` is the symbol we're looking for.
       * This should be called in a loop climbing parents of the symbol, so we'll get `N`.
       */
@@ -6664,7 +6664,7 @@ index 6c1a508400..2e39dc5368 100644
  
      /**
       * Depending on the operation performed, it may be appropriate to throw away the checker
-@@ -4856,28 +4858,28 @@ export interface TypeChecker {
+@@ -4857,28 +4859,28 @@ export interface TypeChecker {
       */
      runWithCancellationToken<T>(token: CancellationToken, cb: (checker: TypeChecker) => T): T;
  
@@ -6701,7 +6701,7 @@ index 6c1a508400..2e39dc5368 100644
  export const enum ContextFlags {
      None           = 0,
      Signature      = 1 << 0, // Obtaining contextual signature
-@@ -4919,11 +4921,11 @@ export const enum NodeBuilderFlags {
+@@ -4920,11 +4922,11 @@ export const enum NodeBuilderFlags {
      AllowEmptyTuple                         = 1 << 19,
      AllowUniqueESSymbolType                 = 1 << 20,
      AllowEmptyIndexInfoType                 = 1 << 21,
@@ -6715,7 +6715,7 @@ index 6c1a508400..2e39dc5368 100644
  
      IgnoreErrors = AllowThisInObjectLiteral | AllowQualifiedNameInPlaceOfIdentifier | AllowAnonymousIdentifier | AllowEmptyUnionOrIntersection | AllowEmptyTuple | AllowEmptyIndexInfoType | AllowNodeModulesRelativePaths,
  
-@@ -4998,13 +5000,13 @@ export const enum SymbolFormatFlags {
+@@ -4999,13 +5001,13 @@ export const enum SymbolFormatFlags {
      UseAliasDefinedOutsideCurrentScope      = 1 << 3,
  
      // { [E.A]: 1 }
@@ -6732,7 +6732,7 @@ index 6c1a508400..2e39dc5368 100644
  export interface SymbolWalker {
      /** Note: Return values are not ordered. */
      walkType(root: Type): { visitedTypes: readonly Type[], visitedSymbols: readonly Symbol[] };
-@@ -5013,7 +5015,7 @@ export interface SymbolWalker {
+@@ -5014,7 +5016,7 @@ export interface SymbolWalker {
  }
  
  // This was previously deprecated in our public API, but is still used internally
@@ -6741,7 +6741,7 @@ index 6c1a508400..2e39dc5368 100644
  interface SymbolWriter extends SymbolTracker {
      writeKeyword(text: string): void;
      writeOperator(text: string): void;
-@@ -5029,14 +5031,14 @@ interface SymbolWriter extends SymbolTracker {
+@@ -5030,14 +5032,14 @@ interface SymbolWriter extends SymbolTracker {
      clear(): void;
  }
  
@@ -6758,7 +6758,7 @@ index 6c1a508400..2e39dc5368 100644
  export const enum SyntheticSymbolKind {
      UnionOrIntersection,
      Spread
-@@ -5084,52 +5086,52 @@ export interface AssertsIdentifierTypePredicate extends TypePredicateBase {
+@@ -5085,52 +5087,52 @@ export interface AssertsIdentifierTypePredicate extends TypePredicateBase {
  
  export type TypePredicate = ThisTypePredicate | IdentifierTypePredicate | AssertsThisTypePredicate | AssertsIdentifierTypePredicate;
  
@@ -6823,7 +6823,7 @@ index 6c1a508400..2e39dc5368 100644
  export type LateVisibilityPaintedStatement =
      | AnyImportSyntax
      | VariableStatement
-@@ -5140,7 +5142,7 @@ export type LateVisibilityPaintedStatement =
+@@ -5141,7 +5143,7 @@ export type LateVisibilityPaintedStatement =
      | InterfaceDeclaration
      | EnumDeclaration;
  
@@ -6832,7 +6832,7 @@ index 6c1a508400..2e39dc5368 100644
  export interface SymbolVisibilityResult {
      accessibility: SymbolAccessibility;
      aliasesToMakeVisible?: LateVisibilityPaintedStatement[]; // aliases that need to have this symbol visible
-@@ -5148,12 +5150,12 @@ export interface SymbolVisibilityResult {
+@@ -5149,12 +5151,12 @@ export interface SymbolVisibilityResult {
      errorNode?: Node; // optional node that results in error
  }
  
@@ -6847,7 +6847,7 @@ index 6c1a508400..2e39dc5368 100644
  export interface AllAccessorDeclarations {
      firstAccessor: AccessorDeclaration;
      secondAccessor: AccessorDeclaration | undefined;
-@@ -5161,7 +5163,7 @@ export interface AllAccessorDeclarations {
+@@ -5162,7 +5164,7 @@ export interface AllAccessorDeclarations {
      setAccessor: SetAccessorDeclaration | undefined;
  }
  
@@ -6856,7 +6856,7 @@ index 6c1a508400..2e39dc5368 100644
  export interface AllDecorators {
      decorators: readonly Decorator[] | undefined;
      parameters?: readonly (readonly Decorator[] | undefined)[];
-@@ -5169,8 +5171,11 @@ export interface AllDecorators {
+@@ -5170,8 +5172,11 @@ export interface AllDecorators {
      setDecorators?: readonly Decorator[] | undefined;
  }
  
@@ -6870,7 +6870,7 @@ index 6c1a508400..2e39dc5368 100644
  export enum TypeReferenceSerializationKind {
      // The TypeReferenceNode could not be resolved.
      // The type name should be emitted using a safe fallback.
-@@ -5213,7 +5218,7 @@ export enum TypeReferenceSerializationKind {
+@@ -5214,7 +5219,7 @@ export enum TypeReferenceSerializationKind {
      ObjectType,
  }
  
@@ -6879,7 +6879,7 @@ index 6c1a508400..2e39dc5368 100644
  export interface EmitResolver {
      hasGlobalName(name: string): boolean;
      getReferencedExportContainer(node: Identifier, prefixLocals?: boolean): SourceFile | ModuleDeclaration | EnumDeclaration | undefined;
-@@ -5288,7 +5293,7 @@ export const enum SymbolFlags {
+@@ -5289,7 +5294,7 @@ export const enum SymbolFlags {
      Transient               = 1 << 25,  // Transient symbol (created during type check)
      Assignment              = 1 << 26,  // Assignment treated as declaration (eg `this.prop = 1`)
      ModuleExports           = 1 << 27,  // Symbol for CommonJS `module` of `module.exports`
@@ -6888,7 +6888,7 @@ index 6c1a508400..2e39dc5368 100644
      All = FunctionScopedVariable | BlockScopedVariable | Property | EnumMember | Function | Class | Interface | ConstEnum | RegularEnum | ValueModule | NamespaceModule | TypeLiteral
          | ObjectLiteral | Method | Constructor | GetAccessor | SetAccessor | Signature | TypeParameter | TypeAlias | ExportValue | Alias | Prototype | ExportStar | Optional | Transient,
  
-@@ -5336,22 +5341,22 @@ export const enum SymbolFlags {
+@@ -5337,22 +5342,22 @@ export const enum SymbolFlags {
  
      ClassMember = Method | Accessor | Property,
  
@@ -6916,7 +6916,7 @@ index 6c1a508400..2e39dc5368 100644
  export type SymbolId = number;
  
  export interface Symbol {
-@@ -5362,18 +5367,18 @@ export interface Symbol {
+@@ -5363,18 +5368,18 @@ export interface Symbol {
      members?: SymbolTable;                  // Class, interface or object literal instance members
      exports?: SymbolTable;                  // Module exports
      globalExports?: SymbolTable;            // Conditional global UMD exports
@@ -6947,7 +6947,7 @@ index 6c1a508400..2e39dc5368 100644
  export interface SymbolLinks {
      immediateTarget?: Symbol;                   // Immediate target of an alias. May be another alias. Do not access directly, use `checker.getImmediateAliasedSymbol` instead.
      aliasTarget?: Symbol,                       // Resolved (non-alias) target of an alias
-@@ -5422,13 +5427,13 @@ export interface SymbolLinks {
+@@ -5423,13 +5428,13 @@ export interface SymbolLinks {
      filteredIndexSymbolCache?: ESMap<string, Symbol> //Symbol with applicable declarations
  }
  
@@ -6963,7 +6963,7 @@ index 6c1a508400..2e39dc5368 100644
  export const enum CheckFlags {
      Instantiated      = 1 << 0,         // Instantiated symbol
      SyntheticProperty = 1 << 1,         // Property in union or intersection type
-@@ -5456,18 +5461,18 @@ export const enum CheckFlags {
+@@ -5457,18 +5462,18 @@ export const enum CheckFlags {
      Partial = ReadPartial | WritePartial
  }
  
@@ -6985,7 +6985,7 @@ index 6c1a508400..2e39dc5368 100644
  export interface ReverseMappedSymbol extends TransientSymbol {
      propertyType: Type;
      mappedType: MappedType;
-@@ -5515,14 +5520,17 @@ export interface UnderscoreEscapedMap<T> extends ESMap<__String, T>, ReadonlyUnd
+@@ -5516,14 +5521,17 @@ export interface UnderscoreEscapedMap<T> extends ESMap<__String, T>, ReadonlyUnd
  /** SymbolTable based on ES6 Map interface. */
  export type SymbolTable = UnderscoreEscapedMap<Symbol>;
  
@@ -7006,7 +7006,7 @@ index 6c1a508400..2e39dc5368 100644
  export const enum NodeCheckFlags {
      TypeChecked                              = 0x00000001,  // Node has been type checked
      LexicalThis                              = 0x00000002,  // Lexical 'this' reference
-@@ -5551,7 +5559,7 @@ export const enum NodeCheckFlags {
+@@ -5552,7 +5560,7 @@ export const enum NodeCheckFlags {
      InCheckIdentifier                        = 0x10000000,
  }
  
@@ -7015,7 +7015,7 @@ index 6c1a508400..2e39dc5368 100644
  export interface NodeLinks {
      flags: NodeCheckFlags;              // Set of flags specific to Node
      resolvedType?: Type;                // Cached type of type node
-@@ -5612,21 +5620,21 @@ export const enum TypeFlags {
+@@ -5613,21 +5621,21 @@ export const enum TypeFlags {
      TemplateLiteral = 1 << 27,  // Template literal type
      StringMapping   = 1 << 28,  // Uppercase/Lowercase type
  
@@ -7043,7 +7043,7 @@ index 6c1a508400..2e39dc5368 100644
      Primitive = String | Number | BigInt | Boolean | Enum | EnumLiteral | ESSymbol | Void | Undefined | Null | Literal | UniqueESSymbol,
      StringLike = String | StringLiteral | TemplateLiteral | StringMapping,
      NumberLike = Number | NumberLiteral | Enum,
-@@ -5635,9 +5643,9 @@ export const enum TypeFlags {
+@@ -5636,9 +5644,9 @@ export const enum TypeFlags {
      EnumLike = Enum | EnumLiteral,
      ESSymbolLike = ESSymbol | UniqueESSymbol,
      VoidLike = Void | Undefined,
@@ -7055,7 +7055,7 @@ index 6c1a508400..2e39dc5368 100644
      DisjointDomains = NonPrimitive | StringLike | NumberLike | BigIntLike | BooleanLike | ESSymbolLike | VoidLike | Null,
      UnionOrIntersection = Union | Intersection,
      StructuredType = Object | Union | Intersection,
-@@ -5646,78 +5654,78 @@ export const enum TypeFlags {
+@@ -5647,78 +5655,78 @@ export const enum TypeFlags {
      InstantiablePrimitive = Index | TemplateLiteral | StringMapping,
      Instantiable = InstantiableNonPrimitive | InstantiablePrimitive,
      StructuredOrInstantiable = StructuredType | Instantiable,
@@ -7156,7 +7156,7 @@ index 6c1a508400..2e39dc5368 100644
  export type FreshableType = LiteralType | FreshableIntrinsicType;
  
  // String literal types (TypeFlags.StringLiteral)
-@@ -5770,78 +5778,78 @@ export const enum ObjectFlags {
+@@ -5771,78 +5779,78 @@ export const enum ObjectFlags {
      JSLiteral        = 1 << 12, // Object type declared in JS - disables errors on read/write of nonexisting members
      FreshLiteral     = 1 << 13, // Fresh object literal
      ArrayLiteral     = 1 << 14, // Originates in an array literal
@@ -7264,7 +7264,7 @@ index 6c1a508400..2e39dc5368 100644
  }
  
  /** Class and interface types (ObjectFlags.Class and ObjectFlags.Interface). */
-@@ -5850,11 +5858,11 @@ export interface InterfaceType extends ObjectType {
+@@ -5851,11 +5859,11 @@ export interface InterfaceType extends ObjectType {
      outerTypeParameters: TypeParameter[] | undefined; // Outer type parameters (undefined if none)
      localTypeParameters: TypeParameter[] | undefined; // Local type parameters (undefined if none)
      thisType: TypeParameter | undefined;              // The "this" type (undefined if none)
@@ -7279,7 +7279,7 @@ index 6c1a508400..2e39dc5368 100644
      baseTypesResolved?: boolean;
  }
  
-@@ -5881,26 +5889,26 @@ export interface InterfaceTypeWithDeclaredMembers extends InterfaceType {
+@@ -5882,26 +5890,26 @@ export interface InterfaceTypeWithDeclaredMembers extends InterfaceType {
  export interface TypeReference extends ObjectType {
      target: GenericType;    // Type reference target
      node?: TypeReferenceNode | ArrayTypeNode | TupleTypeNode;
@@ -7314,7 +7314,7 @@ index 6c1a508400..2e39dc5368 100644
  export const enum VarianceFlags {
      Invariant     =      0,  // Neither covariant nor contravariant
      Covariant     = 1 << 0,  // Covariant
-@@ -5915,9 +5923,9 @@ export const enum VarianceFlags {
+@@ -5916,9 +5924,9 @@ export const enum VarianceFlags {
  
  // Generic class and interface types
  export interface GenericType extends InterfaceType, TypeReference {
@@ -7326,7 +7326,7 @@ index 6c1a508400..2e39dc5368 100644
      variances?: VarianceFlags[];  // Variance of each type parameter
  }
  
-@@ -5948,43 +5956,43 @@ export interface TupleTypeReference extends TypeReference {
+@@ -5949,43 +5957,43 @@ export interface TupleTypeReference extends TypeReference {
  
  export interface UnionOrIntersectionType extends Type {
      types: Type[];                    // Constituent types
@@ -7384,7 +7384,7 @@ index 6c1a508400..2e39dc5368 100644
  // An instantiated anonymous type has a target and a mapper
  export interface AnonymousType extends ObjectType {
      target?: AnonymousType;  // Instantiation target
-@@ -5992,12 +6000,12 @@ export interface AnonymousType extends ObjectType {
+@@ -5993,12 +6001,12 @@ export interface AnonymousType extends ObjectType {
      instantiations?: ESMap<string, Type>; // Instantiations of generic type alias (undefined if non-generic)
  }
  
@@ -7399,7 +7399,7 @@ index 6c1a508400..2e39dc5368 100644
  export interface MappedType extends AnonymousType {
      declaration: MappedTypeNode;
      typeParameter?: TypeParameter;
-@@ -6014,14 +6022,14 @@ export interface EvolvingArrayType extends ObjectType {
+@@ -6015,14 +6023,14 @@ export interface EvolvingArrayType extends ObjectType {
      finalArrayType?: Type;  // Final array type of evolving array type
  }
  
@@ -7416,7 +7416,7 @@ index 6c1a508400..2e39dc5368 100644
  // Resolved object, union, or intersection type
  export interface ResolvedType extends ObjectType, UnionOrIntersectionType {
      members: SymbolTable;             // Properties by name
-@@ -6031,7 +6039,7 @@ export interface ResolvedType extends ObjectType, UnionOrIntersectionType {
+@@ -6032,7 +6040,7 @@ export interface ResolvedType extends ObjectType, UnionOrIntersectionType {
      indexInfos: readonly IndexInfo[];  // Index signatures
  }
  
@@ -7425,7 +7425,7 @@ index 6c1a508400..2e39dc5368 100644
  // Object literals are initially marked fresh. Freshness disappears following an assignment,
  // before a type assertion, or when an object literal's type is widened. The regular
  // version of a fresh type is identical except for the TypeFlags.FreshObjectLiteral flag.
-@@ -6039,7 +6047,7 @@ export interface FreshObjectLiteralType extends ResolvedType {
+@@ -6040,7 +6048,7 @@ export interface FreshObjectLiteralType extends ResolvedType {
      regularType: ResolvedType;  // Regular version of fresh type
  }
  
@@ -7434,7 +7434,7 @@ index 6c1a508400..2e39dc5368 100644
  export interface IterationTypes {
      readonly yieldType: Type;
      readonly returnType: Type;
-@@ -6047,7 +6055,7 @@ export interface IterationTypes {
+@@ -6048,7 +6056,7 @@ export interface IterationTypes {
  }
  
  // Just a place to cache element types of iterables and iterators
@@ -7443,7 +7443,7 @@ index 6c1a508400..2e39dc5368 100644
  export interface IterableOrIteratorType extends ObjectType, UnionType {
      iterationTypesOfGeneratorReturnType?: IterationTypes;
      iterationTypesOfAsyncGeneratorReturnType?: IterationTypes;
-@@ -6058,46 +6066,46 @@ export interface IterableOrIteratorType extends ObjectType, UnionType {
+@@ -6059,46 +6067,46 @@ export interface IterableOrIteratorType extends ObjectType, UnionType {
      iterationTypesOfIteratorResult?: IterationTypes;
  }
  
@@ -7502,7 +7502,7 @@ index 6c1a508400..2e39dc5368 100644
  export const enum AccessFlags {
      None = 0,
      IncludeUndefined = 1 << 0,
-@@ -6117,7 +6125,7 @@ export const enum AccessFlags {
+@@ -6118,7 +6126,7 @@ export const enum AccessFlags {
  export interface IndexedAccessType extends InstantiableType {
      objectType: Type;
      indexType: Type;
@@ -7511,7 +7511,7 @@ index 6c1a508400..2e39dc5368 100644
      accessFlags: AccessFlags;  // Only includes AccessFlags.Persistent
      constraint?: Type;
      simplifiedForReading?: Type;
-@@ -6129,7 +6137,7 @@ export type TypeVariable = TypeParameter | IndexedAccessType;
+@@ -6130,7 +6138,7 @@ export type TypeVariable = TypeParameter | IndexedAccessType;
  // keyof T types (TypeFlags.Index)
  export interface IndexType extends InstantiableType {
      type: InstantiableType | UnionOrIntersectionType;
@@ -7520,7 +7520,7 @@ index 6c1a508400..2e39dc5368 100644
      stringsOnly: boolean;
  }
  
-@@ -6152,13 +6160,13 @@ export interface ConditionalType extends InstantiableType {
+@@ -6153,13 +6161,13 @@ export interface ConditionalType extends InstantiableType {
      extendsType: Type;
      resolvedTrueType?: Type;
      resolvedFalseType?: Type;
@@ -7538,7 +7538,7 @@ index 6c1a508400..2e39dc5368 100644
      combinedMapper?: TypeMapper;
  }
  
-@@ -6184,7 +6192,7 @@ export interface SubstitutionType extends InstantiableType {
+@@ -6185,7 +6193,7 @@ export interface SubstitutionType extends InstantiableType {
      constraint: Type;  // Constraint that target type is known to satisfy
  }
  
@@ -7547,7 +7547,7 @@ index 6c1a508400..2e39dc5368 100644
  export const enum JsxReferenceKind {
      Component,
      Function,
-@@ -6196,7 +6204,7 @@ export const enum SignatureKind {
+@@ -6197,7 +6205,7 @@ export const enum SignatureKind {
      Construct,
  }
  
@@ -7556,7 +7556,7 @@ index 6c1a508400..2e39dc5368 100644
  export const enum SignatureFlags {
      None = 0,
  
-@@ -6219,44 +6227,44 @@ export const enum SignatureFlags {
+@@ -6220,44 +6228,44 @@ export const enum SignatureFlags {
  }
  
  export interface Signature {
@@ -7618,7 +7618,7 @@ index 6c1a508400..2e39dc5368 100644
      instantiations?: ESMap<string, Signature>;    // Generic signature instantiation cache
  }
  
-@@ -6272,7 +6280,7 @@ export interface IndexInfo {
+@@ -6273,7 +6281,7 @@ export interface IndexInfo {
      declaration?: IndexSignatureDeclaration;
  }
  
@@ -7627,7 +7627,7 @@ index 6c1a508400..2e39dc5368 100644
  export const enum TypeMapKind {
      Simple,
      Array,
-@@ -6282,7 +6290,7 @@ export const enum TypeMapKind {
+@@ -6283,7 +6291,7 @@ export const enum TypeMapKind {
      Merged,
  }
  
@@ -7636,7 +7636,7 @@ index 6c1a508400..2e39dc5368 100644
  export type TypeMapper =
      | { kind: TypeMapKind.Simple, source: Type, target: Type }
      | { kind: TypeMapKind.Array, sources: readonly Type[], targets: readonly Type[] | undefined }
-@@ -6308,7 +6316,7 @@ export const enum InferencePriority {
+@@ -6309,7 +6317,7 @@ export const enum InferencePriority {
      Circularity = -1,  // Inference circularity (value less than all other priorities)
  }
  
@@ -7645,7 +7645,7 @@ index 6c1a508400..2e39dc5368 100644
  export interface InferenceInfo {
      typeParameter: TypeParameter;            // Type parameter for which inferences are being made
      candidates: Type[] | undefined;          // Candidates in covariant positions (or undefined)
-@@ -6320,7 +6328,7 @@ export interface InferenceInfo {
+@@ -6321,7 +6329,7 @@ export interface InferenceInfo {
      impliedArity?: number;
  }
  
@@ -7654,7 +7654,7 @@ index 6c1a508400..2e39dc5368 100644
  export const enum InferenceFlags {
      None            =      0,  // No special inference behaviors
      NoDefault       = 1 << 0,  // Infer unknownType for no inferences (otherwise anyType or emptyObjectType)
-@@ -6335,8 +6343,9 @@ export const enum InferenceFlags {
+@@ -6336,8 +6344,9 @@ export const enum InferenceFlags {
   * Generally, Ternary.Maybe is used as the result of a relation that depends on itself, and
   * Ternary.Unknown is used as the result of a variance check that depends on itself. We make
   * a distinction because we don't want to cache circular variance check results.
@@ -7665,7 +7665,7 @@ index 6c1a508400..2e39dc5368 100644
  export const enum Ternary {
      False = 0,
      Unknown = 1,
-@@ -6344,10 +6353,10 @@ export const enum Ternary {
+@@ -6345,10 +6354,10 @@ export const enum Ternary {
      True = -1
  }
  
@@ -7678,7 +7678,7 @@ index 6c1a508400..2e39dc5368 100644
  export interface InferenceContext {
      inferences: InferenceInfo[];                  // Inferences made for each type parameter
      signature?: Signature;                        // Generic signature for which inferences are made (if any)
-@@ -6360,13 +6369,13 @@ export interface InferenceContext {
+@@ -6361,13 +6370,13 @@ export interface InferenceContext {
      intraExpressionInferenceSites?: IntraExpressionInferenceSite[];
  }
  
@@ -7694,7 +7694,7 @@ index 6c1a508400..2e39dc5368 100644
  export interface WideningContext {
      parent?: WideningContext;       // Parent context
      propertyName?: __String;        // Name of property in parent
-@@ -6374,7 +6383,7 @@ export interface WideningContext {
+@@ -6375,7 +6384,7 @@ export interface WideningContext {
      resolvedProperties?: Symbol[];  // Properties occurring in sibling object literals
  }
  
@@ -7703,7 +7703,7 @@ index 6c1a508400..2e39dc5368 100644
  export const enum AssignmentDeclarationKind {
      None,
      /// exports.name = expr
-@@ -6417,7 +6426,7 @@ export interface DiagnosticMessage {
+@@ -6418,7 +6427,7 @@ export interface DiagnosticMessage {
      message: string;
      reportsUnnecessary?: {};
      reportsDeprecated?: {};
@@ -7712,7 +7712,7 @@ index 6c1a508400..2e39dc5368 100644
      elidedInCompatabilityPyramid?: boolean;
  }
  
-@@ -6441,7 +6450,7 @@ export interface Diagnostic extends DiagnosticRelatedInformation {
+@@ -6442,7 +6451,7 @@ export interface Diagnostic extends DiagnosticRelatedInformation {
      reportsDeprecated?: {}
      source?: string;
      relatedInformation?: DiagnosticRelatedInformation[];
@@ -7721,7 +7721,7 @@ index 6c1a508400..2e39dc5368 100644
  }
  
  export interface DiagnosticRelatedInformation {
-@@ -6459,7 +6468,7 @@ export interface DiagnosticWithLocation extends Diagnostic {
+@@ -6460,7 +6469,7 @@ export interface DiagnosticWithLocation extends Diagnostic {
      length: number;
  }
  
@@ -7730,7 +7730,7 @@ index 6c1a508400..2e39dc5368 100644
  export interface DiagnosticWithDetachedLocation extends Diagnostic {
      file: undefined;
      fileName: string;
-@@ -6473,7 +6482,7 @@ export enum DiagnosticCategory {
+@@ -6474,7 +6483,7 @@ export enum DiagnosticCategory {
      Suggestion,
      Message
  }
@@ -7739,7 +7739,7 @@ index 6c1a508400..2e39dc5368 100644
  export function diagnosticCategoryName(d: { category: DiagnosticCategory }, lowerCase = true): string {
      const name = DiagnosticCategory[d.category];
      return lowerCase ? name.toLowerCase() : name;
-@@ -6547,9 +6556,9 @@ export enum PollingWatchKind {
+@@ -6548,9 +6557,9 @@ export enum PollingWatchKind {
  export type CompilerOptionsValue = string | number | boolean | (string | number)[] | string[] | MapLike<string[]> | PluginImport[] | ProjectReference[] | null | undefined;
  
  export interface CompilerOptions {
@@ -7751,7 +7751,7 @@ index 6c1a508400..2e39dc5368 100644
      allowSyntheticDefaultImports?: boolean;
      allowUmdGlobalAccess?: boolean;
      allowUnreachableCode?: boolean;
-@@ -6557,19 +6566,19 @@ export interface CompilerOptions {
+@@ -6558,19 +6567,19 @@ export interface CompilerOptions {
      alwaysStrict?: boolean;  // Always combine with strict property
      baseUrl?: string;
      /** An error if set - this should only go through the -b pipeline and not actually be observed */
@@ -7776,7 +7776,7 @@ index 6c1a508400..2e39dc5368 100644
      disableSizeLimit?: boolean;
      disableSourceOfProjectReferenceRedirect?: boolean;
      disableSolutionSearching?: boolean;
-@@ -6580,22 +6589,22 @@ export interface CompilerOptions {
+@@ -6581,22 +6590,22 @@ export interface CompilerOptions {
      exactOptionalPropertyTypes?: boolean;
      experimentalDecorators?: boolean;
      forceConsistentCasingInFileNames?: boolean;
@@ -7807,7 +7807,7 @@ index 6c1a508400..2e39dc5368 100644
      locale?: string;
      mapRoot?: string;
      maxNodeModuleJsDepth?: number;
-@@ -6605,7 +6614,7 @@ export interface CompilerOptions {
+@@ -6606,7 +6615,7 @@ export interface CompilerOptions {
      moduleDetection?: ModuleDetectionKind;
      newLine?: NewLineKind;
      noEmit?: boolean;
@@ -7816,7 +7816,7 @@ index 6c1a508400..2e39dc5368 100644
      noEmitHelpers?: boolean;
      noEmitOnError?: boolean;
      noErrorTruncation?: boolean;
-@@ -6621,7 +6630,7 @@ export interface CompilerOptions {
+@@ -6622,7 +6631,7 @@ export interface CompilerOptions {
      assumeChangesOnlyAffectDirectDependencies?: boolean;
      noLib?: boolean;
      noResolve?: boolean;
@@ -7825,7 +7825,7 @@ index 6c1a508400..2e39dc5368 100644
      noDtsResolution?: boolean;
      noUncheckedIndexedAccess?: boolean;
      out?: string;
-@@ -6629,15 +6638,15 @@ export interface CompilerOptions {
+@@ -6630,15 +6639,15 @@ export interface CompilerOptions {
      outFile?: string;
      paths?: MapLike<string[]>;
      /** The directory of the config file that specified 'paths'. Used to resolve relative paths when 'baseUrl' is absent. */
@@ -7845,7 +7845,7 @@ index 6c1a508400..2e39dc5368 100644
      reactNamespace?: string;
      jsxFactory?: string;
      jsxFragmentFactory?: string;
-@@ -6660,7 +6669,7 @@ export interface CompilerOptions {
+@@ -6661,7 +6670,7 @@ export interface CompilerOptions {
      stripInternal?: boolean;
      suppressExcessPropertyErrors?: boolean;
      suppressImplicitAnyIndexErrors?: boolean;
@@ -7854,7 +7854,7 @@ index 6c1a508400..2e39dc5368 100644
      target?: ScriptTarget;
      traceResolution?: boolean;
      useUnknownInCatchVariables?: boolean;
-@@ -6668,10 +6677,10 @@ export interface CompilerOptions {
+@@ -6669,10 +6678,10 @@ export interface CompilerOptions {
      types?: string[];
      /** Paths used to compute primary types search locations */
      typeRoots?: string[];
@@ -7868,7 +7868,7 @@ index 6c1a508400..2e39dc5368 100644
      useDefineForClassFields?: boolean;
  
      [option: string]: CompilerOptionsValue | TsConfigSourceFile | undefined;
-@@ -6804,7 +6813,7 @@ export const enum WatchDirectoryFlags {
+@@ -6805,7 +6814,7 @@ export const enum WatchDirectoryFlags {
      Recursive = 1 << 0,
  }
  
@@ -7877,7 +7877,7 @@ index 6c1a508400..2e39dc5368 100644
  export interface ConfigFileSpecs {
      filesSpecs: readonly string[] | undefined;
      /**
-@@ -6822,7 +6831,7 @@ export interface ConfigFileSpecs {
+@@ -6823,7 +6832,7 @@ export interface ConfigFileSpecs {
      isDefaultIncludeSpec: boolean;
  }
  
@@ -7886,7 +7886,7 @@ index 6c1a508400..2e39dc5368 100644
  export type RequireResult<T = {}> =
      | { module: T, modulePath?: string, error: undefined }
      | { module: undefined, modulePath?: undefined, error: { stack?: string, message?: string } };
-@@ -6836,7 +6845,7 @@ export interface CreateProgramOptions {
+@@ -6837,7 +6846,7 @@ export interface CreateProgramOptions {
      configFileParsingDiagnostics?: readonly Diagnostic[];
  }
  
@@ -7895,7 +7895,7 @@ index 6c1a508400..2e39dc5368 100644
  export interface CommandLineOptionBase {
      name: string;
      type: "string" | "number" | "boolean" | "object" | "list" | ESMap<string, number | string>;    // a value of a primitive type, or an object literal mapping named values to actual values
-@@ -6863,37 +6872,37 @@ export interface CommandLineOptionBase {
+@@ -6864,37 +6873,37 @@ export interface CommandLineOptionBase {
      extraValidation?: (value: CompilerOptionsValue) => [DiagnosticMessage, ...string[]] | undefined; // Additional validation to be performed for the value to be valid
  }
  
@@ -7939,7 +7939,7 @@ index 6c1a508400..2e39dc5368 100644
  export interface DidYouMeanOptionsDiagnostics {
      alternateMode?: AlternateModeDiagnostics;
      optionDeclarations: CommandLineOption[];
-@@ -6901,24 +6910,24 @@ export interface DidYouMeanOptionsDiagnostics {
+@@ -6902,24 +6911,24 @@ export interface DidYouMeanOptionsDiagnostics {
      unknownDidYouMeanDiagnostic: DiagnosticMessage,
  }
  
@@ -7968,7 +7968,7 @@ index 6c1a508400..2e39dc5368 100644
  export const enum CharacterCodes {
      nullCharacter = 0,
      maxAsciiCharacter = 0x7F,
-@@ -7153,11 +7162,11 @@ export const enum Extension {
+@@ -7154,11 +7163,11 @@ export const enum Extension {
  
  export interface ResolvedModuleWithFailedLookupLocations {
      readonly resolvedModule: ResolvedModuleFull | undefined;
@@ -7983,7 +7983,7 @@ index 6c1a508400..2e39dc5368 100644
      readonly resolutionDiagnostics: Diagnostic[]
  }
  
-@@ -7180,13 +7189,13 @@ export interface ResolvedTypeReferenceDirective {
+@@ -7181,13 +7190,13 @@ export interface ResolvedTypeReferenceDirective {
  export interface ResolvedTypeReferenceDirectiveWithFailedLookupLocations {
      readonly resolvedTypeReferenceDirective: ResolvedTypeReferenceDirective | undefined;
      readonly failedLookupLocations: string[];
@@ -8001,7 +8001,7 @@ index 6c1a508400..2e39dc5368 100644
  export type HasChangedAutomaticTypeDirectiveNames = () => boolean;
  
  export interface CompilerHost extends ModuleResolutionHost {
-@@ -7219,34 +7228,35 @@ export interface CompilerHost extends ModuleResolutionHost {
+@@ -7220,34 +7229,35 @@ export interface CompilerHost extends ModuleResolutionHost {
       */
      resolveTypeReferenceDirectives?(typeReferenceDirectiveNames: string[] | readonly FileReference[], containingFile: string, redirectedReference: ResolvedProjectReference | undefined, options: CompilerOptions, containingFileMode?: SourceFile["impliedNodeFormat"] | undefined): (ResolvedTypeReferenceDirective | undefined)[];
      getEnvironmentVariable?(name: string): string | undefined;
@@ -8050,7 +8050,7 @@ index 6c1a508400..2e39dc5368 100644
  export const enum TransformFlags {
      None = 0,
  
-@@ -7341,11 +7351,11 @@ export interface SourceMapRange extends TextRange {
+@@ -7342,11 +7352,11 @@ export interface SourceMapRange extends TextRange {
  export interface SourceMapSource {
      fileName: string;
      text: string;
@@ -8064,7 +8064,7 @@ index 6c1a508400..2e39dc5368 100644
  export interface EmitNode {
      annotatedNodes?: Node[];                 // Tracks Parse-tree nodes with EmitNodes for eventual cleanup.
      flags: EmitFlags;                        // Flags that customize emit
-@@ -7363,23 +7373,23 @@ export interface EmitNode {
+@@ -7364,23 +7374,23 @@ export interface EmitNode {
      typeNode?: TypeNode;                         // VariableDeclaration type
  }
  
@@ -8092,7 +8092,7 @@ index 6c1a508400..2e39dc5368 100644
  export const enum SnippetKind {
      TabStop,                                // `$1`, `$2`
      Placeholder,                            // `${1:foo}`
-@@ -7417,11 +7427,11 @@ export const enum EmitFlags {
+@@ -7418,11 +7428,11 @@ export const enum EmitFlags {
      HasEndOfDeclarationMarker = 1 << 22,    // Declaration has an associated NotEmittedStatement to mark the end of the declaration
      Iterator = 1 << 23,                     // The expression to a `yield*` should be treated as an Iterator when down-leveling, not an Iterable.
      NoAsciiEscaping = 1 << 24,              // When synthesizing nodes that lack an original node or textSourceNode, we want to write the text on the node with ASCII escaping substitutions.
@@ -8109,7 +8109,7 @@ index 6c1a508400..2e39dc5368 100644
  }
  
  export interface EmitHelperBase {
-@@ -7438,14 +7448,14 @@ export interface ScopedEmitHelper extends EmitHelperBase {
+@@ -7439,14 +7449,14 @@ export interface ScopedEmitHelper extends EmitHelperBase {
  
  export interface UnscopedEmitHelper extends EmitHelperBase {
      readonly scoped: false;                                         // Indicates whether the helper MUST be emitted in the current scope.
@@ -8126,7 +8126,7 @@ index 6c1a508400..2e39dc5368 100644
  export type UniqueNameHandler = (baseName: string, checkFn?: (name: string) => boolean, optimistic?: boolean) => string;
  
  export type EmitHelperUniqueNameCallback = (name: string) => string;
-@@ -7453,8 +7463,9 @@ export type EmitHelperUniqueNameCallback = (name: string) => string;
+@@ -7454,8 +7464,9 @@ export type EmitHelperUniqueNameCallback = (name: string) => string;
  /**
   * Used by the checker, this enum keeps track of external emit helpers that should be type
   * checked.
@@ -8137,7 +8137,7 @@ index 6c1a508400..2e39dc5368 100644
  export const enum ExternalEmitHelpers {
      Extends = 1 << 0,               // __extends (used by the ES2015 class transformation)
      Assign = 1 << 1,                // __assign (used by Jsx and ESNext object spread transformations)
-@@ -7508,7 +7519,7 @@ export const enum EmitHint {
+@@ -7509,7 +7520,7 @@ export const enum EmitHint {
      JsxAttributeValue,   // Emitting a JSX attribute value
  }
  
@@ -8146,7 +8146,7 @@ index 6c1a508400..2e39dc5368 100644
  export interface SourceFileMayBeEmittedHost {
      getCompilerOptions(): CompilerOptions;
      isSourceFileFromExternalLibrary(file: SourceFile): boolean;
-@@ -7516,7 +7527,7 @@ export interface SourceFileMayBeEmittedHost {
+@@ -7517,7 +7528,7 @@ export interface SourceFileMayBeEmittedHost {
      isSourceOfProjectReferenceRedirect(fileName: string): boolean;
  }
  
@@ -8155,7 +8155,7 @@ index 6c1a508400..2e39dc5368 100644
  export interface EmitHost extends ScriptReferenceHost, ModuleSpecifierResolutionHost, SourceFileMayBeEmittedHost {
      getSourceFiles(): readonly SourceFile[];
      useCaseSensitiveFileNames(): boolean;
-@@ -7539,7 +7550,7 @@ export interface EmitHost extends ScriptReferenceHost, ModuleSpecifierResolution
+@@ -7540,7 +7551,7 @@ export interface EmitHost extends ScriptReferenceHost, ModuleSpecifierResolution
      createHash?(data: string): string;
  }
  
@@ -8164,7 +8164,7 @@ index 6c1a508400..2e39dc5368 100644
  export interface PropertyDescriptorAttributes {
      enumerable?: boolean | Expression;
      configurable?: boolean | Expression;
-@@ -7561,7 +7572,7 @@ export const enum OuterExpressionKinds {
+@@ -7562,7 +7573,7 @@ export const enum OuterExpressionKinds {
      ExcludeJSDocTypeAssertion = 1 << 4,
  }
  
@@ -8173,7 +8173,7 @@ index 6c1a508400..2e39dc5368 100644
  export type OuterExpression =
      | ParenthesizedExpression
      | TypeAssertion
-@@ -7572,13 +7583,13 @@ export type OuterExpression =
+@@ -7573,13 +7584,13 @@ export type OuterExpression =
  
  export type TypeOfTag = "undefined" | "number" | "bigint" | "boolean" | "string" | "symbol" | "object" | "function";
  
@@ -8189,7 +8189,7 @@ index 6c1a508400..2e39dc5368 100644
  export interface ParenthesizerRules {
      getParenthesizeLeftSideOfBinaryForOperator(binaryOperator: SyntaxKind): (leftSide: Expression) => Expression;
      getParenthesizeRightSideOfBinaryForOperator(binaryOperator: SyntaxKind): (rightSide: Expression) => Expression;
-@@ -7613,7 +7624,7 @@ export interface ParenthesizerRules {
+@@ -7614,7 +7625,7 @@ export interface ParenthesizerRules {
      parenthesizeTypeArguments(typeParameters: readonly TypeNode[] | undefined): NodeArray<TypeNode> | undefined;
  }
  
@@ -8198,7 +8198,7 @@ index 6c1a508400..2e39dc5368 100644
  export interface NodeConverters {
      convertToFunctionBlock(node: ConciseBody, multiLine?: boolean): Block;
      convertToFunctionExpression(node: FunctionDeclaration): FunctionExpression;
-@@ -7625,7 +7636,7 @@ export interface NodeConverters {
+@@ -7626,7 +7637,7 @@ export interface NodeConverters {
      convertToAssignmentElementTarget(node: BindingOrAssignmentElementTarget): Expression;
  }
  
@@ -8207,7 +8207,7 @@ index 6c1a508400..2e39dc5368 100644
  export interface GeneratedNamePart {
      /** an additional prefix to insert before the text sourced from `node` */
      prefix?: string;
-@@ -7635,10 +7646,10 @@ export interface GeneratedNamePart {
+@@ -7636,10 +7647,10 @@ export interface GeneratedNamePart {
  }
  
  export interface NodeFactory {
@@ -8222,7 +8222,7 @@ index 6c1a508400..2e39dc5368 100644
      createNodeArray<T extends Node>(elements?: readonly T[], hasTrailingComma?: boolean): NodeArray<T>;
  
      //
-@@ -7648,7 +7659,7 @@ export interface NodeFactory {
+@@ -7649,7 +7660,7 @@ export interface NodeFactory {
      createNumericLiteral(value: string | number, numericLiteralFlags?: TokenFlags): NumericLiteral;
      createBigIntLiteral(value: string | PseudoBigInt): BigIntLiteral;
      createStringLiteral(text: string, isSingleQuote?: boolean): StringLiteral;
@@ -8231,7 +8231,7 @@ index 6c1a508400..2e39dc5368 100644
      createStringLiteralFromNode(sourceNode: PropertyNameLiteral | PrivateIdentifier, isSingleQuote?: boolean): StringLiteral;
      createRegularExpressionLiteral(text: string): RegularExpressionLiteral;
  
-@@ -7657,8 +7668,8 @@ export interface NodeFactory {
+@@ -7658,8 +7669,8 @@ export interface NodeFactory {
      //
  
      createIdentifier(text: string): Identifier;
@@ -8242,7 +8242,7 @@ index 6c1a508400..2e39dc5368 100644
  
      /**
       * Create a unique temporary variable.
-@@ -7670,7 +7681,7 @@ export interface NodeFactory {
+@@ -7671,7 +7682,7 @@ export interface NodeFactory {
       * setting `EmitFlags.ReuseTempVariableScope` on the nested function itself.
       */
      createTempVariable(recordTempVariable: ((node: Identifier) => void) | undefined, reservedInNestedScopes?: boolean): Identifier;
@@ -8251,7 +8251,7 @@ index 6c1a508400..2e39dc5368 100644
  
      /**
       * Create a unique temporary variable for use in a loop.
-@@ -7682,17 +7693,17 @@ export interface NodeFactory {
+@@ -7683,17 +7694,17 @@ export interface NodeFactory {
  
      /** Create a unique name based on the supplied text. */
      createUniqueName(text: string, flags?: GeneratedIdentifierFlags): Identifier;
@@ -8273,7 +8273,7 @@ index 6c1a508400..2e39dc5368 100644
  
      //
      // Punctuation
-@@ -7708,7 +7719,7 @@ export interface NodeFactory {
+@@ -7709,7 +7720,7 @@ export interface NodeFactory {
      createToken<TKind extends ModifierSyntaxKind>(token: TKind): ModifierToken<TKind>;
      createToken<TKind extends KeywordSyntaxKind>(token: TKind): KeywordToken<TKind>;
      createToken<TKind extends SyntaxKind.Unknown | SyntaxKind.EndOfFileToken>(token: TKind): Token<TKind>;
@@ -8282,7 +8282,7 @@ index 6c1a508400..2e39dc5368 100644
  
      //
      // Reserved words
-@@ -7770,7 +7781,7 @@ export interface NodeFactory {
+@@ -7771,7 +7782,7 @@ export interface NodeFactory {
      createConstructSignature(typeParameters: readonly TypeParameterDeclaration[] | undefined, parameters: readonly ParameterDeclaration[], type: TypeNode | undefined): ConstructSignatureDeclaration;
      updateConstructSignature(node: ConstructSignatureDeclaration, typeParameters: NodeArray<TypeParameterDeclaration> | undefined, parameters: NodeArray<ParameterDeclaration>, type: TypeNode | undefined): ConstructSignatureDeclaration;
      createIndexSignature(modifiers: readonly Modifier[] | undefined, parameters: readonly ParameterDeclaration[], type: TypeNode): IndexSignatureDeclaration;
@@ -8291,7 +8291,7 @@ index 6c1a508400..2e39dc5368 100644
      updateIndexSignature(node: IndexSignatureDeclaration, modifiers: readonly Modifier[] | undefined, parameters: readonly ParameterDeclaration[], type: TypeNode): IndexSignatureDeclaration;
      createTemplateLiteralTypeSpan(type: TypeNode, literal: TemplateMiddle | TemplateTail): TemplateLiteralTypeSpan;
      updateTemplateLiteralTypeSpan(node: TemplateLiteralTypeSpan, type: TypeNode, literal: TemplateMiddle | TemplateTail): TemplateLiteralTypeSpan;
-@@ -7897,11 +7908,11 @@ export interface NodeFactory {
+@@ -7898,11 +7909,11 @@ export interface NodeFactory {
      createTemplateTail(text: string | undefined, rawText: string, templateFlags?: TokenFlags): TemplateTail;
      createNoSubstitutionTemplateLiteral(text: string, rawText?: string): NoSubstitutionTemplateLiteral;
      createNoSubstitutionTemplateLiteral(text: string | undefined, rawText: string): NoSubstitutionTemplateLiteral;
@@ -8306,7 +8306,7 @@ index 6c1a508400..2e39dc5368 100644
      updateYieldExpression(node: YieldExpression, asteriskToken: AsteriskToken | undefined, expression: Expression | undefined): YieldExpression;
      createSpreadElement(expression: Expression): SpreadElement;
      updateSpreadElement(node: SpreadElement, expression: Expression): SpreadElement;
-@@ -8019,7 +8030,7 @@ export interface NodeFactory {
+@@ -8020,7 +8031,7 @@ export interface NodeFactory {
      updateNamedExports(node: NamedExports, elements: readonly ExportSpecifier[]): NamedExports;
      createExportSpecifier(isTypeOnly: boolean, propertyName: string | Identifier | undefined, name: string | Identifier): ExportSpecifier;
      updateExportSpecifier(node: ExportSpecifier, isTypeOnly: boolean, propertyName: Identifier | undefined, name: Identifier): ExportSpecifier;
@@ -8315,7 +8315,7 @@ index 6c1a508400..2e39dc5368 100644
  
      //
      // Module references
-@@ -8174,30 +8185,30 @@ export interface NodeFactory {
+@@ -8175,30 +8186,30 @@ export interface NodeFactory {
      createSourceFile(statements: readonly Statement[], endOfFileToken: EndOfFileToken, flags: NodeFlags): SourceFile;
      updateSourceFile(node: SourceFile, statements: readonly Statement[], isDeclarationFile?: boolean, referencedFiles?: readonly FileReference[], typeReferences?: readonly FileReference[], hasNoDefaultLib?: boolean, libReferences?: readonly FileReference[]): SourceFile;
  
@@ -8358,7 +8358,7 @@ index 6c1a508400..2e39dc5368 100644
      createCommaListExpression(elements: readonly Expression[]): CommaListExpression;
      updateCommaListExpression(node: CommaListExpression, elements: readonly Expression[]): CommaListExpression;
      createBundle(sourceFiles: readonly SourceFile[], prepends?: readonly (UnparsedSource | InputFiles)[]): Bundle;
-@@ -8255,19 +8266,19 @@ export interface NodeFactory {
+@@ -8256,19 +8267,19 @@ export interface NodeFactory {
      createExportDefault(expression: Expression): ExportAssignment;
      createExternalModuleExport(exportName: Identifier): ExportDeclaration;
  
@@ -8391,7 +8391,7 @@ index 6c1a508400..2e39dc5368 100644
      /**
       * Wraps an expression that cannot be an assignment target in an expression that can be.
       *
-@@ -8283,8 +8294,8 @@ export interface NodeFactory {
+@@ -8284,8 +8295,8 @@ export interface NodeFactory {
       * @param paramName
       * @param expression
       */
@@ -8402,7 +8402,7 @@ index 6c1a508400..2e39dc5368 100644
      /**
       * Gets the internal name of a declaration. This is primarily used for declarations that can be
       * referred to by name in the body of an ES5 class function body. An internal name will *never*
-@@ -8296,7 +8307,7 @@ export interface NodeFactory {
+@@ -8297,7 +8308,7 @@ export interface NodeFactory {
       * @param allowComments A value indicating whether comments may be emitted for the name.
       * @param allowSourceMaps A value indicating whether source maps may be emitted for the name.
       */
@@ -8411,7 +8411,7 @@ index 6c1a508400..2e39dc5368 100644
      /**
       * Gets the local name of a declaration. This is primarily used for declarations that can be
       * referred to by name in the declaration's immediate scope (classes, enums, namespaces). A
-@@ -8307,7 +8318,7 @@ export interface NodeFactory {
+@@ -8308,7 +8319,7 @@ export interface NodeFactory {
       * @param allowComments A value indicating whether comments may be emitted for the name.
       * @param allowSourceMaps A value indicating whether source maps may be emitted for the name.
       */
@@ -8420,7 +8420,7 @@ index 6c1a508400..2e39dc5368 100644
      /**
       * Gets the export name of a declaration. This is primarily used for declarations that can be
       * referred to by name in the declaration's immediate scope (classes, enums, namespaces). An
-@@ -8318,7 +8329,7 @@ export interface NodeFactory {
+@@ -8319,7 +8330,7 @@ export interface NodeFactory {
       * @param allowComments A value indicating whether comments may be emitted for the name.
       * @param allowSourceMaps A value indicating whether source maps may be emitted for the name.
       */
@@ -8429,7 +8429,7 @@ index 6c1a508400..2e39dc5368 100644
      /**
       * Gets the name of a declaration for use in declarations.
       *
-@@ -8326,7 +8337,7 @@ export interface NodeFactory {
+@@ -8327,7 +8338,7 @@ export interface NodeFactory {
       * @param allowComments A value indicating whether comments may be emitted for the name.
       * @param allowSourceMaps A value indicating whether source maps may be emitted for the name.
       */
@@ -8438,7 +8438,7 @@ index 6c1a508400..2e39dc5368 100644
      /**
       * Gets a namespace-qualified name for use in expressions.
       *
-@@ -8335,7 +8346,7 @@ export interface NodeFactory {
+@@ -8336,7 +8347,7 @@ export interface NodeFactory {
       * @param allowComments A value indicating whether comments may be emitted for the name.
       * @param allowSourceMaps A value indicating whether source maps may be emitted for the name.
       */
@@ -8447,7 +8447,7 @@ index 6c1a508400..2e39dc5368 100644
      /**
       * Gets the exported name of a declaration for use in expressions.
       *
-@@ -8347,15 +8358,15 @@ export interface NodeFactory {
+@@ -8348,15 +8359,15 @@ export interface NodeFactory {
       * @param allowComments A value indicating whether comments may be emitted for the name.
       * @param allowSourceMaps A value indicating whether source maps may be emitted for the name.
       */
@@ -8466,7 +8466,7 @@ index 6c1a508400..2e39dc5368 100644
      /**
       * Copies any necessary standard and custom prologue-directives into target array.
       * @param source origin statements array
-@@ -8363,7 +8374,7 @@ export interface NodeFactory {
+@@ -8364,7 +8375,7 @@ export interface NodeFactory {
       * @param ensureUseStrict boolean determining whether the function need to add prologue-directives
       * @param visitor Optional callback used to visit any custom prologue directives.
       */
@@ -8475,7 +8475,7 @@ index 6c1a508400..2e39dc5368 100644
      /**
       * Copies only the standard (string-expression) prologue-directives into the target statement-array.
       * @param source origin statements array
-@@ -8371,7 +8382,7 @@ export interface NodeFactory {
+@@ -8372,7 +8383,7 @@ export interface NodeFactory {
       * @param statementOffset The offset at which to begin the copy.
       * @param ensureUseStrict boolean determining whether the function need to add prologue-directives
       */
@@ -8484,7 +8484,7 @@ index 6c1a508400..2e39dc5368 100644
      /**
       * Copies only the custom prologue-directives into target statement-array.
       * @param source origin statements array
-@@ -8379,29 +8390,29 @@ export interface NodeFactory {
+@@ -8380,29 +8391,29 @@ export interface NodeFactory {
       * @param statementOffset The offset at which to begin the copy.
       * @param visitor Optional callback used to visit any custom prologue directives.
       */
@@ -8523,7 +8523,7 @@ index 6c1a508400..2e39dc5368 100644
  export const enum LexicalEnvironmentFlags {
      None = 0,
      InParameters = 1 << 0, // currently visiting a parameter list
-@@ -8417,8 +8428,8 @@ export interface CoreTransformationContext {
+@@ -8418,8 +8429,8 @@ export interface CoreTransformationContext {
      /** Starts a new lexical environment. */
      startLexicalEnvironment(): void;
  
@@ -8534,7 +8534,7 @@ index 6c1a508400..2e39dc5368 100644
  
      /** Suspends the current lexical environment, usually after visiting a parameter list. */
      suspendLexicalEnvironment(): void;
-@@ -8435,21 +8446,21 @@ export interface CoreTransformationContext {
+@@ -8436,21 +8447,21 @@ export interface CoreTransformationContext {
      /** Hoists a variable declaration to the containing scope. */
      hoistVariableDeclaration(node: Identifier): void;
  
@@ -8563,7 +8563,7 @@ index 6c1a508400..2e39dc5368 100644
  
      /** Records a request for a non-scoped emit helper in the current context. */
      requestEmitHelper(helper: EmitHelper): void;
-@@ -8493,7 +8504,7 @@ export interface TransformationContext extends CoreTransformationContext {
+@@ -8494,7 +8505,7 @@ export interface TransformationContext extends CoreTransformationContext {
       */
      onEmitNode: (hint: EmitHint, node: Node, emitCallback: (hint: EmitHint, node: Node) => void) => void;
  
@@ -8572,7 +8572,7 @@ index 6c1a508400..2e39dc5368 100644
  }
  
  export interface TransformationResult<T extends Node> {
-@@ -8588,14 +8599,14 @@ export interface Printer {
+@@ -8589,14 +8600,14 @@ export interface Printer {
       * Prints a bundle of source files as-is, without any emit transformations.
       */
      printBundle(bundle: Bundle): string;
@@ -8593,7 +8593,7 @@ index 6c1a508400..2e39dc5368 100644
  export const enum BundleFileSectionKind {
      Prologue = "prologue",
      EmitHelpers = "emitHelpers",
-@@ -8611,51 +8622,51 @@ export const enum BundleFileSectionKind {
+@@ -8612,51 +8623,51 @@ export const enum BundleFileSectionKind {
      // comments?
  }
  
@@ -8654,7 +8654,7 @@ index 6c1a508400..2e39dc5368 100644
  export type BundleFileSection =
      BundleFilePrologue
      | BundleFileEmitHelpers
-@@ -8664,31 +8675,31 @@ export type BundleFileSection =
+@@ -8665,31 +8676,31 @@ export type BundleFileSection =
      | BundleFilePrepend
      | BundleFileTextLike;
  
@@ -8691,7 +8691,7 @@ index 6c1a508400..2e39dc5368 100644
  export interface BundleFileInfo {
      sections: BundleFileSection[];
      hash?: string;
-@@ -8696,7 +8707,7 @@ export interface BundleFileInfo {
+@@ -8697,7 +8708,7 @@ export interface BundleFileInfo {
      sources?: SourceFileInfo;
  }
  
@@ -8700,7 +8700,7 @@ index 6c1a508400..2e39dc5368 100644
  export interface BundleBuildInfo {
      js?: BundleFileInfo;
      dts?: BundleFileInfo;
-@@ -8704,7 +8715,7 @@ export interface BundleBuildInfo {
+@@ -8705,7 +8716,7 @@ export interface BundleBuildInfo {
      sourceFiles: readonly string[];
  }
  
@@ -8709,7 +8709,7 @@ index 6c1a508400..2e39dc5368 100644
  export interface BuildInfo {
      bundle?: BundleBuildInfo;
      program?: ProgramBuildInfo;
-@@ -8759,16 +8770,16 @@ export interface PrintHandlers {
+@@ -8760,16 +8771,16 @@ export interface PrintHandlers {
       * ```
       */
      substituteNode?(hint: EmitHint, node: Node): Node;
@@ -8736,7 +8736,7 @@ index 6c1a508400..2e39dc5368 100644
  }
  
  export interface PrinterOptions {
-@@ -8776,23 +8787,23 @@ export interface PrinterOptions {
+@@ -8777,23 +8788,23 @@ export interface PrinterOptions {
      newLine?: NewLineKind;
      omitTrailingSemicolon?: boolean;
      noEmitHelpers?: boolean;
@@ -8777,7 +8777,7 @@ index 6c1a508400..2e39dc5368 100644
  export interface RawSourceMap {
      version: 3;
      file: string;
-@@ -8805,8 +8816,9 @@ export interface RawSourceMap {
+@@ -8806,8 +8817,9 @@ export interface RawSourceMap {
  
  /**
   * Generates a source map.
@@ -8788,7 +8788,7 @@ index 6c1a508400..2e39dc5368 100644
  export interface SourceMapGenerator {
      getSources(): readonly string[];
      /**
-@@ -8843,7 +8855,7 @@ export interface SourceMapGenerator {
+@@ -8844,7 +8856,7 @@ export interface SourceMapGenerator {
      toString(): string;
  }
  
@@ -8797,7 +8797,7 @@ index 6c1a508400..2e39dc5368 100644
  export interface DocumentPositionMapperHost {
      getSourceFileLike(fileName: string): SourceFileLike | undefined;
      getCanonicalFileName(path: string): string;
-@@ -8852,20 +8864,21 @@ export interface DocumentPositionMapperHost {
+@@ -8853,20 +8865,21 @@ export interface DocumentPositionMapperHost {
  
  /**
   * Maps positions between source and generated files.
@@ -8822,7 +8822,7 @@ index 6c1a508400..2e39dc5368 100644
  export interface EmitTextWriter extends SymbolWriter {
      write(s: string): void;
      writeTrailingSemicolon(text: string): void;
-@@ -8889,12 +8902,12 @@ export interface GetEffectiveTypeRootsHost {
+@@ -8890,12 +8903,12 @@ export interface GetEffectiveTypeRootsHost {
      getCurrentDirectory?(): string;
  }
  
@@ -8837,7 +8837,7 @@ index 6c1a508400..2e39dc5368 100644
  export interface ModuleSpecifierResolutionHost {
      useCaseSensitiveFileNames?(): boolean;
      fileExists(path: string): boolean;
-@@ -8914,26 +8927,26 @@ export interface ModuleSpecifierResolutionHost {
+@@ -8915,26 +8928,26 @@ export interface ModuleSpecifierResolutionHost {
      getFileIncludeReasons(): MultiMap<Path, FileIncludeReason>;
  }
  
@@ -8868,7 +8868,7 @@ index 6c1a508400..2e39dc5368 100644
  export interface ModuleSpecifierCache {
      get(fromFileName: Path, toFileName: Path, preferences: UserPreferences, options: ModuleSpecifierOptions): Readonly<ResolvedModuleSpecifierInfo> | undefined;
      set(fromFileName: Path, toFileName: Path, preferences: UserPreferences, options: ModuleSpecifierOptions, modulePaths: readonly ModulePath[], moduleSpecifiers: readonly string[]): void;
-@@ -8944,7 +8957,7 @@ export interface ModuleSpecifierCache {
+@@ -8945,7 +8958,7 @@ export interface ModuleSpecifierCache {
  }
  
  // Note: this used to be deprecated in our public API, but is still used internally
@@ -8877,7 +8877,7 @@ index 6c1a508400..2e39dc5368 100644
  export interface SymbolTracker {
      // Called when the symbol writer encounters a symbol to write.  Currently only used by the
      // declaration emitter to help determine if it should patch up the final declaration file
-@@ -8974,7 +8987,7 @@ export interface TextChangeRange {
+@@ -8975,7 +8988,7 @@ export interface TextChangeRange {
      newLength: number;
  }
  
@@ -8886,7 +8886,7 @@ index 6c1a508400..2e39dc5368 100644
  export interface DiagnosticCollection {
      // Adds a diagnostic to this diagnostic collection.
      add(diagnostic: Diagnostic): void;
-@@ -9083,7 +9096,7 @@ export const enum ListFormat {
+@@ -9084,7 +9097,7 @@ export const enum ListFormat {
      JSDocComment = MultiLine | AsteriskDelimited,
  }
  
@@ -8895,7 +8895,7 @@ index 6c1a508400..2e39dc5368 100644
  export const enum PragmaKindFlags {
      None            =      0,
      /**
-@@ -9107,14 +9120,14 @@ export const enum PragmaKindFlags {
+@@ -9108,14 +9121,14 @@ export const enum PragmaKindFlags {
      Default = All,
  }
  
@@ -8912,7 +8912,7 @@ index 6c1a508400..2e39dc5368 100644
  export interface PragmaDefinition<T1 extends string = string, T2 extends string = string, T3 extends string = string, T4 extends string = string> {
      args?:
          | readonly [PragmaArgumentSpecification<T1>]
-@@ -9127,7 +9140,7 @@ export interface PragmaDefinition<T1 extends string = string, T2 extends string
+@@ -9128,7 +9141,7 @@ export interface PragmaDefinition<T1 extends string = string, T2 extends string
  
  // While not strictly a type, this is here because `PragmaMap` needs to be here to be used with `SourceFile`, and we don't
  //  fancy effectively defining it twice, once in value-space and once in type-space
@@ -8921,7 +8921,7 @@ index 6c1a508400..2e39dc5368 100644
  export const commentPragmas = {
      "reference": {
          args: [
-@@ -9171,43 +9184,44 @@ export const commentPragmas = {
+@@ -9172,43 +9185,44 @@ export const commentPragmas = {
      },
  } as const;
  
@@ -8975,7 +8975,7 @@ index 6c1a508400..2e39dc5368 100644
  export interface ReadonlyPragmaMap extends ReadonlyESMap<string, PragmaPseudoMap[keyof PragmaPseudoMap] | PragmaPseudoMap[keyof PragmaPseudoMap][]> {
      get<TKey extends keyof PragmaPseudoMap>(key: TKey): PragmaPseudoMap[TKey] | PragmaPseudoMap[TKey][];
      forEach(action: <TKey extends keyof PragmaPseudoMap>(value: PragmaPseudoMap[TKey] | PragmaPseudoMap[TKey][], key: TKey) => void): void;
-@@ -9217,15 +9231,16 @@ export interface ReadonlyPragmaMap extends ReadonlyESMap<string, PragmaPseudoMap
+@@ -9218,15 +9232,16 @@ export interface ReadonlyPragmaMap extends ReadonlyESMap<string, PragmaPseudoMap
   * A strongly-typed es6 map of pragma entries, the values of which are either a single argument
   * value (if only one was found), or an array of multiple argument values if the pragma is present
   * in multiple places
@@ -8994,7 +8994,7 @@ index 6c1a508400..2e39dc5368 100644
  export interface CommentDirectivesMap {
      getUnusedExpectations(): CommentDirective[];
      markUsed(matchedLine: number): boolean;
-@@ -9269,7 +9284,7 @@ export interface PseudoBigInt {
+@@ -9270,7 +9285,7 @@ export interface PseudoBigInt {
      base10Value: string;
  }
  
@@ -11003,7 +11003,7 @@ index 3dcb96b072..2f22a76e0e 100644
  export function visitEachChild<T extends Node>(node: T | undefined, visitor: Visitor, context: TransformationContext, nodesVisitor = visitNodes, tokenVisitor?: Visitor, nodeVisitor: NodeVisitor = visitNode): T | undefined {
      if (node === undefined) {
 diff --git a/src/compiler/watch.ts b/src/compiler/watch.ts
-index 13cd32f3dd..41db993d31 100644
+index df9e9506f6..81f48515e7 100644
 --- a/src/compiler/watch.ts
 +++ b/src/compiler/watch.ts
 @@ -27,9 +27,10 @@ const sysFormatDiagnosticsHost: FormatDiagnosticsHost | undefined = sys ? {
@@ -13815,7 +13815,7 @@ index aa160e17d2..25c77fe3d4 100644
          if (this.sourceMapFilePath && !isString(this.sourceMapFilePath)) {
              closeFileWatcherOf(this.sourceMapFilePath);
 diff --git a/src/server/session.ts b/src/server/session.ts
-index b8c177adce..25a59e866a 100644
+index 15e09d7bc2..9200a281c8 100644
 --- a/src/server/session.ts
 +++ b/src/server/session.ts
 @@ -3531,7 +3531,7 @@ export interface HandlerResponse {
@@ -14267,7 +14267,7 @@ index c7bc8a28e1..9a8978bdb2 100644
 \ No newline at end of file
 +}
 diff --git a/src/services/goToDefinition.ts b/src/services/goToDefinition.ts
-index 536026deed..77d5178552 100644
+index d9c6214828..89f9c3ad9f 100644
 --- a/src/services/goToDefinition.ts
 +++ b/src/services/goToDefinition.ts
 @@ -415,8 +415,11 @@ function getDefinitionFromSymbol(typeChecker: TypeChecker, symbol: Symbol, node:
