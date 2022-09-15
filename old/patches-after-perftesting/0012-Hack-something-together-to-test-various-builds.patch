@@ -1,0 +1,939 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Jake Bailey <5341706+jakebailey@users.noreply.github.com>
+Date: Tue, 13 Sep 2022 16:21:03 -0700
+Subject: [PATCH] Hack something together to test various builds
+
+---
+ Gulpfile.js                           |  87 +++-
+ package-lock.json                     | 549 ++++++++++++++++++++++++++
+ package.json                          |   1 +
+ scripts/build/tests.js                |  22 +-
+ src/compiler/sys.ts                   |  14 +-
+ src/harness/fourslashImpl.ts          |   6 +-
+ src/server/scriptVersionCache.ts      |   8 +-
+ src/services/services.ts              |   4 +-
+ src/testRunner/_namespaces/Harness.ts |   5 +
+ src/testRunner/runner.ts              |   3 +-
+ src/tsconfig-base.json                |   1 +
+ 11 files changed, 662 insertions(+), 38 deletions(-)
+
+diff --git a/Gulpfile.js b/Gulpfile.js
+index d8bf3fe867..259b398420 100644
+--- a/Gulpfile.js
++++ b/Gulpfile.js
+@@ -19,7 +19,7 @@ const cmdLineOptions = require("./scripts/build/options");
+ const copyright = "CopyrightNotice.txt";
+ const cleanTasks = [];
+ 
+-const testRunner = "./built/local/testRunner/runner.js";
++const testRunner = "./built/local/testRunner.js";
+ 
+ const buildScripts = () => buildProject("scripts");
+ task("scripts", buildScripts);
+@@ -57,9 +57,7 @@ const diagnosticInformationMapTs = "src/compiler/diagnosticInformationMap.genera
+ const diagnosticMessagesJson = "src/compiler/diagnosticMessages.json";
+ const diagnosticMessagesGeneratedJson = "src/compiler/diagnosticMessages.generated.json";
+ const generateDiagnostics = async () => {
+-    if (needsUpdate(diagnosticMessagesJson, [diagnosticMessagesGeneratedJson, diagnosticInformationMapTs])) {
+-        await exec(process.execPath, ["scripts/processDiagnosticMessages.js", diagnosticMessagesJson]);
+-    }
++    await exec(process.execPath, ["scripts/processDiagnosticMessages.js", diagnosticMessagesJson]);
+ };
+ task("generate-diagnostics", series(buildScripts, generateDiagnostics));
+ task("generate-diagnostics").description = "Generates a diagnostic file in TypeScript based on an input JSON file";
+@@ -89,14 +87,66 @@ const localizationTargets = ["cs", "de", "es", "fr", "it", "ja", "ko", "pl", "pt
+     .concat(generatedLCGFile);
+ 
+ const localize = async () => {
+-    if (needsUpdate(diagnosticMessagesGeneratedJson, generatedLCGFile)) {
+-        return exec(process.execPath, ["scripts/generateLocalizedDiagnosticMessages.js", "src/loc/lcl", "built/local", diagnosticMessagesGeneratedJson], { ignoreExitCode: true });
+-    }
++    return exec(process.execPath, ["scripts/generateLocalizedDiagnosticMessages.js", "src/loc/lcl", "built/local", diagnosticMessagesGeneratedJson], { ignoreExitCode: true });
+ };
+ 
+-const buildAll = () => buildProject("src");
++/**
++ * @param {string} entrypoint
++ * @param {string} outfile
++ */
++async function esbuild(entrypoint, outfile) {
++    await exec("node_modules/esbuild/bin/esbuild", [
++        entrypoint,
++        "--bundle",
++        `--outfile=${outfile}`,
++        "--platform=node",
++        "--target=node10", // Node 10; oldest benchmarker.
++        "--sourcemap",
++        "--external:./node_modules/*",
++        "--conditions=require",
++        // "--supported:const-and-let=false", // Unfortunately, no: https://github.com/evanw/esbuild/issues/297
++        "--supported:object-rest-spread=false", // See: https://github.com/evanw/esbuild/releases/tag/v0.14.46
++    ]);
++}
++
++const buildSrc = () => buildProject("src");
++
++/** @type {(infile: string, outfile: string) => (done: () => void) => void} */
++const writeHackyCJSShim = (infile, outfile) => {
++    return (done) => {
++        const inRelativeToOut = infile = path.relative(path.dirname(outfile), infile);
++        fs.writeFileSync(outfile, `module.exports = require("./${inRelativeToOut}")`);
++        done();
++    };
++};
+ 
+-task("moduleBuild", parallel(generateLibs, series(buildScripts, localize, buildAll)));
++const preBundleFromSrc = parallel(generateLibs, series(buildScripts, generateDiagnostics, localize));
++const preBuildSrc = preBundleFromSrc;
++const preBundleFromEmit = series(preBundleFromSrc, buildSrc);
++
++const bundleTscFromEmit = () => esbuild("./built/local/tsc/tsc.js", "./built/local/tsc.js");
++const bundleTypescriptFromEmit = () => esbuild("./built/local/typescript/typescript.js", "./built/local/typescript.js");
++const bundleServerFromEmit = () => esbuild("./built/local/tsserver/server.js", "./built/local/tsserver.js");
++const bundleServerLibraryFromEmit = () => esbuild("./built/local/tsserverlibrary/tsserverlibrary.js", "./built/local/tsserverlibrary.js");
++const bundleTestsFromEmit = () => esbuild("./built/local/testRunner/_namespaces/Harness.js", testRunner);
++
++const bundleTscFromSrc = () => esbuild("./src/tsc/tsc.ts", "./built/local/tsc.js");
++const bundleTypescriptFromSrc = () => esbuild("./src/typescript/typescript.ts", "./built/local/typescript.js");
++const bundleServerFromSrc = () => esbuild("./src/tsserver/server.ts", "./built/local/tsserver.js");
++const bundleServerLibraryFromSrc = () => esbuild("./src/tsserverlibrary/tsserverlibrary.ts", "./built/local/tsserverlibrary.js");
++const bundleTestsFromSrc = () => esbuild("./src/testRunner/_namespaces/Harness.ts", testRunner);
++
++const bundleAllFromSrc = series([
++    bundleTscFromSrc,
++    bundleTypescriptFromSrc,
++    bundleServerFromSrc,
++    bundleServerLibraryFromSrc,
++    bundleTestsFromSrc,
++]);
++task("bundle-src", series(preBundleFromSrc, bundleAllFromSrc));
++
++
++task("buildSrc", preBundleFromEmit);
+ 
+ const apiExtractor = async () => {
+     async function runApiExtractor(configPath) {
+@@ -114,17 +164,20 @@ const apiExtractor = async () => {
+     await runApiExtractor("./src/tsserverlibrary/api-extractor.json");
+ };
+ 
+-task("api-extractor", series(task("moduleBuild"), apiExtractor));
++task("api-extractor", series(buildSrc, apiExtractor));
+ 
+ const buildDebugTools = () => buildProject("src/debug");
+ const cleanDebugTools = () => cleanProject("src/debug");
+ cleanTasks.push(cleanDebugTools);
+ 
+ // Pre-build steps when targeting the LKG compiler
+-const lkgPreBuild = parallel(generateLibs, series(buildScripts, generateDiagnostics, buildDebugTools));
++const lkgPreBuild = parallel(generateLibs, series(buildScripts, generateDiagnostics /** , buildDebugTools */));
+ 
+ const buildTsc = () => buildProject("src/tsc");
+-task("tsc", series(lkgPreBuild, buildTsc));
++
++// task("tsc", series(preBundleFromSrc, bundleTscFromSrc)); // esbuild on ./src
++// task("tsc", series(preBundleFromEmit, bundleTscFromEmit)); // esbuild on emitted ./built/local
++task("tsc", series(preBuildSrc, buildSrc, writeHackyCJSShim("./built/local/tsc/tsc.js", "./built/local/tsc.js"))); // CJS
+ task("tsc").description = "Builds the command-line compiler";
+ 
+ const cleanTsc = () => cleanProject("src/tsc");
+@@ -244,7 +297,11 @@ task("dynamicImportCompat", buildDynamicImportCompat);
+ const buildServerMain = () => buildProject("src/tsserver", cmdLineOptions);
+ const buildServer = series(buildDynamicImportCompat, buildServerMain);
+ buildServer.displayName = "buildServer";
+-task("tsserver", series(preBuild, buildServer));
++
++// task("tsserver", series(preBundleFromSrc, bundleServerFromSrc)); // esbuild on ./src
++// task("tsserver", series(preBundleFromEmit, bundleServerFromEmit)); // esbuild on emitted ./built/local
++
++task("tsserver", series(preBuildSrc, buildSrc, writeHackyCJSShim("./built/local/tsserver/server.js", "./built/local/tsserver.js"))); // CJS
+ task("tsserver").description = "Builds the language server";
+ task("tsserver").flags = {
+     "   --built": "Compile using the built version of the compiler."
+@@ -461,7 +518,7 @@ const preTest = parallel(buildTsc, buildTests, buildServices, buildLssl);
+ preTest.displayName = "preTest";
+ 
+ const runTests = () => runConsoleTests(testRunner, "mocha-fivemat-progress-reporter", /*runInParallel*/ false, /*watchMode*/ false);
+-task("runtests", series(/*preBuild, preTest,*/ task("moduleBuild"), runTests)); // TODO(jakebailey): fix this for modules
++task("runtests", series(/*preBuild, preTest,*/ preBundleFromSrc, bundleTestsFromSrc, runTests)); // TODO(jakebailey): fix this for modules
+ task("runtests").description = "Runs the tests using the built run.js file.";
+ task("runtests").flags = {
+     "-t --tests=<regex>": "Pattern for tests to run.",
+@@ -480,7 +537,7 @@ task("runtests").flags = {
+ };
+ 
+ const runTestsParallel = () => runConsoleTests(testRunner, "min", /*runInParallel*/ cmdLineOptions.workers > 1, /*watchMode*/ false);
+-task("runtests-parallel", series(/*preBuild, preTest,*/ task("moduleBuild"), runTestsParallel)); // TODO(jakebailey): fix this for modules
++task("runtests-parallel", series(/*preBuild, preTest,*/ preBundleFromSrc, bundleTestsFromSrc, runTestsParallel)); // TODO(jakebailey): fix this for modules
+ task("runtests-parallel").description = "Runs all the tests in parallel using the built run.js file.";
+ task("runtests-parallel").flags = {
+     "   --light": "Run tests in light mode (fewer verifications, but tests run faster).",
+diff --git a/package-lock.json b/package-lock.json
+index 32119e0319..2b8148a3c0 100644
+--- a/package-lock.json
++++ b/package-lock.json
+@@ -43,6 +43,7 @@
+                 "chalk": "^4.1.2",
+                 "del": "^6.1.1",
+                 "diff": "^5.1.0",
++                "esbuild": "^0.15.7",
+                 "eslint": "^8.22.0",
+                 "eslint-formatter-autolinkable-stylish": "^1.2.0",
+                 "eslint-plugin-import": "^2.26.0",
+@@ -89,6 +90,22 @@
+                 "node": "^14 || ^16 || ^17 || ^18"
+             }
+         },
++        "node_modules/@esbuild/linux-loong64": {
++            "version": "0.15.7",
++            "resolved": "https://registry.npmjs.org/@esbuild/linux-loong64/-/linux-loong64-0.15.7.tgz",
++            "integrity": "sha512-IKznSJOsVUuyt7cDzzSZyqBEcZe+7WlBqTVXiF1OXP/4Nm387ToaXZ0fyLwI1iBlI/bzpxVq411QE2/Bt2XWWw==",
++            "cpu": [
++                "loong64"
++            ],
++            "dev": true,
++            "optional": true,
++            "os": [
++                "linux"
++            ],
++            "engines": {
++                "node": ">=12"
++            }
++        },
+         "node_modules/@eslint/eslintrc": {
+             "version": "1.3.2",
+             "resolved": "https://registry.npmjs.org/@eslint/eslintrc/-/eslintrc-1.3.2.tgz",
+@@ -2510,6 +2527,362 @@
+                 "es6-symbol": "^3.1.1"
+             }
+         },
++        "node_modules/esbuild": {
++            "version": "0.15.7",
++            "resolved": "https://registry.npmjs.org/esbuild/-/esbuild-0.15.7.tgz",
++            "integrity": "sha512-7V8tzllIbAQV1M4QoE52ImKu8hT/NLGlGXkiDsbEU5PS6K8Mn09ZnYoS+dcmHxOS9CRsV4IRAMdT3I67IyUNXw==",
++            "dev": true,
++            "hasInstallScript": true,
++            "bin": {
++                "esbuild": "bin/esbuild"
++            },
++            "engines": {
++                "node": ">=12"
++            },
++            "optionalDependencies": {
++                "@esbuild/linux-loong64": "0.15.7",
++                "esbuild-android-64": "0.15.7",
++                "esbuild-android-arm64": "0.15.7",
++                "esbuild-darwin-64": "0.15.7",
++                "esbuild-darwin-arm64": "0.15.7",
++                "esbuild-freebsd-64": "0.15.7",
++                "esbuild-freebsd-arm64": "0.15.7",
++                "esbuild-linux-32": "0.15.7",
++                "esbuild-linux-64": "0.15.7",
++                "esbuild-linux-arm": "0.15.7",
++                "esbuild-linux-arm64": "0.15.7",
++                "esbuild-linux-mips64le": "0.15.7",
++                "esbuild-linux-ppc64le": "0.15.7",
++                "esbuild-linux-riscv64": "0.15.7",
++                "esbuild-linux-s390x": "0.15.7",
++                "esbuild-netbsd-64": "0.15.7",
++                "esbuild-openbsd-64": "0.15.7",
++                "esbuild-sunos-64": "0.15.7",
++                "esbuild-windows-32": "0.15.7",
++                "esbuild-windows-64": "0.15.7",
++                "esbuild-windows-arm64": "0.15.7"
++            }
++        },
++        "node_modules/esbuild-android-64": {
++            "version": "0.15.7",
++            "resolved": "https://registry.npmjs.org/esbuild-android-64/-/esbuild-android-64-0.15.7.tgz",
++            "integrity": "sha512-p7rCvdsldhxQr3YHxptf1Jcd86dlhvc3EQmQJaZzzuAxefO9PvcI0GLOa5nCWem1AJ8iMRu9w0r5TG8pHmbi9w==",
++            "cpu": [
++                "x64"
++            ],
++            "dev": true,
++            "optional": true,
++            "os": [
++                "android"
++            ],
++            "engines": {
++                "node": ">=12"
++            }
++        },
++        "node_modules/esbuild-android-arm64": {
++            "version": "0.15.7",
++            "resolved": "https://registry.npmjs.org/esbuild-android-arm64/-/esbuild-android-arm64-0.15.7.tgz",
++            "integrity": "sha512-L775l9ynJT7rVqRM5vo+9w5g2ysbOCfsdLV4CWanTZ1k/9Jb3IYlQ06VCI1edhcosTYJRECQFJa3eAvkx72eyQ==",
++            "cpu": [
++                "arm64"
++            ],
++            "dev": true,
++            "optional": true,
++            "os": [
++                "android"
++            ],
++            "engines": {
++                "node": ">=12"
++            }
++        },
++        "node_modules/esbuild-darwin-64": {
++            "version": "0.15.7",
++            "resolved": "https://registry.npmjs.org/esbuild-darwin-64/-/esbuild-darwin-64-0.15.7.tgz",
++            "integrity": "sha512-KGPt3r1c9ww009t2xLB6Vk0YyNOXh7hbjZ3EecHoVDxgtbUlYstMPDaReimKe6eOEfyY4hBEEeTvKwPsiH5WZg==",
++            "cpu": [
++                "x64"
++            ],
++            "dev": true,
++            "optional": true,
++            "os": [
++                "darwin"
++            ],
++            "engines": {
++                "node": ">=12"
++            }
++        },
++        "node_modules/esbuild-darwin-arm64": {
++            "version": "0.15.7",
++            "resolved": "https://registry.npmjs.org/esbuild-darwin-arm64/-/esbuild-darwin-arm64-0.15.7.tgz",
++            "integrity": "sha512-kBIHvtVqbSGajN88lYMnR3aIleH3ABZLLFLxwL2stiuIGAjGlQW741NxVTpUHQXUmPzxi6POqc9npkXa8AcSZQ==",
++            "cpu": [
++                "arm64"
++            ],
++            "dev": true,
++            "optional": true,
++            "os": [
++                "darwin"
++            ],
++            "engines": {
++                "node": ">=12"
++            }
++        },
++        "node_modules/esbuild-freebsd-64": {
++            "version": "0.15.7",
++            "resolved": "https://registry.npmjs.org/esbuild-freebsd-64/-/esbuild-freebsd-64-0.15.7.tgz",
++            "integrity": "sha512-hESZB91qDLV5MEwNxzMxPfbjAhOmtfsr9Wnuci7pY6TtEh4UDuevmGmkUIjX/b+e/k4tcNBMf7SRQ2mdNuK/HQ==",
++            "cpu": [
++                "x64"
++            ],
++            "dev": true,
++            "optional": true,
++            "os": [
++                "freebsd"
++            ],
++            "engines": {
++                "node": ">=12"
++            }
++        },
++        "node_modules/esbuild-freebsd-arm64": {
++            "version": "0.15.7",
++            "resolved": "https://registry.npmjs.org/esbuild-freebsd-arm64/-/esbuild-freebsd-arm64-0.15.7.tgz",
++            "integrity": "sha512-dLFR0ChH5t+b3J8w0fVKGvtwSLWCv7GYT2Y2jFGulF1L5HftQLzVGN+6pi1SivuiVSmTh28FwUhi9PwQicXI6Q==",
++            "cpu": [
++                "arm64"
++            ],
++            "dev": true,
++            "optional": true,
++            "os": [
++                "freebsd"
++            ],
++            "engines": {
++                "node": ">=12"
++            }
++        },
++        "node_modules/esbuild-linux-32": {
++            "version": "0.15.7",
++            "resolved": "https://registry.npmjs.org/esbuild-linux-32/-/esbuild-linux-32-0.15.7.tgz",
++            "integrity": "sha512-v3gT/LsONGUZcjbt2swrMjwxo32NJzk+7sAgtxhGx1+ZmOFaTRXBAi1PPfgpeo/J//Un2jIKm/I+qqeo4caJvg==",
++            "cpu": [
++                "ia32"
++            ],
++            "dev": true,
++            "optional": true,
++            "os": [
++                "linux"
++            ],
++            "engines": {
++                "node": ">=12"
++            }
++        },
++        "node_modules/esbuild-linux-64": {
++            "version": "0.15.7",
++            "resolved": "https://registry.npmjs.org/esbuild-linux-64/-/esbuild-linux-64-0.15.7.tgz",
++            "integrity": "sha512-LxXEfLAKwOVmm1yecpMmWERBshl+Kv5YJ/1KnyAr6HRHFW8cxOEsEfisD3sVl/RvHyW//lhYUVSuy9jGEfIRAQ==",
++            "cpu": [
++                "x64"
++            ],
++            "dev": true,
++            "optional": true,
++            "os": [
++                "linux"
++            ],
++            "engines": {
++                "node": ">=12"
++            }
++        },
++        "node_modules/esbuild-linux-arm": {
++            "version": "0.15.7",
++            "resolved": "https://registry.npmjs.org/esbuild-linux-arm/-/esbuild-linux-arm-0.15.7.tgz",
++            "integrity": "sha512-JKgAHtMR5f75wJTeuNQbyznZZa+pjiUHV7sRZp42UNdyXC6TiUYMW/8z8yIBAr2Fpad8hM1royZKQisqPABPvQ==",
++            "cpu": [
++                "arm"
++            ],
++            "dev": true,
++            "optional": true,
++            "os": [
++                "linux"
++            ],
++            "engines": {
++                "node": ">=12"
++            }
++        },
++        "node_modules/esbuild-linux-arm64": {
++            "version": "0.15.7",
++            "resolved": "https://registry.npmjs.org/esbuild-linux-arm64/-/esbuild-linux-arm64-0.15.7.tgz",
++            "integrity": "sha512-P3cfhudpzWDkglutWgXcT2S7Ft7o2e3YDMrP1n0z2dlbUZghUkKCyaWw0zhp4KxEEzt/E7lmrtRu/pGWnwb9vw==",
++            "cpu": [
++                "arm64"
++            ],
++            "dev": true,
++            "optional": true,
++            "os": [
++                "linux"
++            ],
++            "engines": {
++                "node": ">=12"
++            }
++        },
++        "node_modules/esbuild-linux-mips64le": {
++            "version": "0.15.7",
++            "resolved": "https://registry.npmjs.org/esbuild-linux-mips64le/-/esbuild-linux-mips64le-0.15.7.tgz",
++            "integrity": "sha512-T7XKuxl0VpeFLCJXub6U+iybiqh0kM/bWOTb4qcPyDDwNVhLUiPcGdG2/0S7F93czUZOKP57YiLV8YQewgLHKw==",
++            "cpu": [
++                "mips64el"
++            ],
++            "dev": true,
++            "optional": true,
++            "os": [
++                "linux"
++            ],
++            "engines": {
++                "node": ">=12"
++            }
++        },
++        "node_modules/esbuild-linux-ppc64le": {
++            "version": "0.15.7",
++            "resolved": "https://registry.npmjs.org/esbuild-linux-ppc64le/-/esbuild-linux-ppc64le-0.15.7.tgz",
++            "integrity": "sha512-6mGuC19WpFN7NYbecMIJjeQgvDb5aMuvyk0PDYBJrqAEMkTwg3Z98kEKuCm6THHRnrgsdr7bp4SruSAxEM4eJw==",
++            "cpu": [
++                "ppc64"
++            ],
++            "dev": true,
++            "optional": true,
++            "os": [
++                "linux"
++            ],
++            "engines": {
++                "node": ">=12"
++            }
++        },
++        "node_modules/esbuild-linux-riscv64": {
++            "version": "0.15.7",
++            "resolved": "https://registry.npmjs.org/esbuild-linux-riscv64/-/esbuild-linux-riscv64-0.15.7.tgz",
++            "integrity": "sha512-uUJsezbswAYo/X7OU/P+PuL/EI9WzxsEQXDekfwpQ23uGiooxqoLFAPmXPcRAt941vjlY9jtITEEikWMBr+F/g==",
++            "cpu": [
++                "riscv64"
++            ],
++            "dev": true,
++            "optional": true,
++            "os": [
++                "linux"
++            ],
++            "engines": {
++                "node": ">=12"
++            }
++        },
++        "node_modules/esbuild-linux-s390x": {
++            "version": "0.15.7",
++            "resolved": "https://registry.npmjs.org/esbuild-linux-s390x/-/esbuild-linux-s390x-0.15.7.tgz",
++            "integrity": "sha512-+tO+xOyTNMc34rXlSxK7aCwJgvQyffqEM5MMdNDEeMU3ss0S6wKvbBOQfgd5jRPblfwJ6b+bKiz0g5nABpY0QQ==",
++            "cpu": [
++                "s390x"
++            ],
++            "dev": true,
++            "optional": true,
++            "os": [
++                "linux"
++            ],
++            "engines": {
++                "node": ">=12"
++            }
++        },
++        "node_modules/esbuild-netbsd-64": {
++            "version": "0.15.7",
++            "resolved": "https://registry.npmjs.org/esbuild-netbsd-64/-/esbuild-netbsd-64-0.15.7.tgz",
++            "integrity": "sha512-yVc4Wz+Pu3cP5hzm5kIygNPrjar/v5WCSoRmIjCPWfBVJkZNb5brEGKUlf+0Y759D48BCWa0WHrWXaNy0DULTQ==",
++            "cpu": [
++                "x64"
++            ],
++            "dev": true,
++            "optional": true,
++            "os": [
++                "netbsd"
++            ],
++            "engines": {
++                "node": ">=12"
++            }
++        },
++        "node_modules/esbuild-openbsd-64": {
++            "version": "0.15.7",
++            "resolved": "https://registry.npmjs.org/esbuild-openbsd-64/-/esbuild-openbsd-64-0.15.7.tgz",
++            "integrity": "sha512-GsimbwC4FSR4lN3wf8XmTQ+r8/0YSQo21rWDL0XFFhLHKlzEA4SsT1Tl8bPYu00IU6UWSJ+b3fG/8SB69rcuEQ==",
++            "cpu": [
++                "x64"
++            ],
++            "dev": true,
++            "optional": true,
++            "os": [
++                "openbsd"
++            ],
++            "engines": {
++                "node": ">=12"
++            }
++        },
++        "node_modules/esbuild-sunos-64": {
++            "version": "0.15.7",
++            "resolved": "https://registry.npmjs.org/esbuild-sunos-64/-/esbuild-sunos-64-0.15.7.tgz",
++            "integrity": "sha512-8CDI1aL/ts0mDGbWzjEOGKXnU7p3rDzggHSBtVryQzkSOsjCHRVe0iFYUuhczlxU1R3LN/E7HgUO4NXzGGP/Ag==",
++            "cpu": [
++                "x64"
++            ],
++            "dev": true,
++            "optional": true,
++            "os": [
++                "sunos"
++            ],
++            "engines": {
++                "node": ">=12"
++            }
++        },
++        "node_modules/esbuild-windows-32": {
++            "version": "0.15.7",
++            "resolved": "https://registry.npmjs.org/esbuild-windows-32/-/esbuild-windows-32-0.15.7.tgz",
++            "integrity": "sha512-cOnKXUEPS8EGCzRSFa1x6NQjGhGsFlVgjhqGEbLTPsA7x4RRYiy2RKoArNUU4iR2vHmzqS5Gr84MEumO/wxYKA==",
++            "cpu": [
++                "ia32"
++            ],
++            "dev": true,
++            "optional": true,
++            "os": [
++                "win32"
++            ],
++            "engines": {
++                "node": ">=12"
++            }
++        },
++        "node_modules/esbuild-windows-64": {
++            "version": "0.15.7",
++            "resolved": "https://registry.npmjs.org/esbuild-windows-64/-/esbuild-windows-64-0.15.7.tgz",
++            "integrity": "sha512-7MI08Ec2sTIDv+zH6StNBKO+2hGUYIT42GmFyW6MBBWWtJhTcQLinKS6ldIN1d52MXIbiJ6nXyCJ+LpL4jBm3Q==",
++            "cpu": [
++                "x64"
++            ],
++            "dev": true,
++            "optional": true,
++            "os": [
++                "win32"
++            ],
++            "engines": {
++                "node": ">=12"
++            }
++        },
++        "node_modules/esbuild-windows-arm64": {
++            "version": "0.15.7",
++            "resolved": "https://registry.npmjs.org/esbuild-windows-arm64/-/esbuild-windows-arm64-0.15.7.tgz",
++            "integrity": "sha512-R06nmqBlWjKHddhRJYlqDd3Fabx9LFdKcjoOy08YLimwmsswlFBJV4rXzZCxz/b7ZJXvrZgj8DDv1ewE9+StMw==",
++            "cpu": [
++                "arm64"
++            ],
++            "dev": true,
++            "optional": true,
++            "os": [
++                "win32"
++            ],
++            "engines": {
++                "node": ">=12"
++            }
++        },
+         "node_modules/escalade": {
+             "version": "3.1.1",
+             "resolved": "https://registry.npmjs.org/escalade/-/escalade-3.1.1.tgz",
+@@ -8857,6 +9230,13 @@
+                 "jsdoc-type-pratt-parser": "~3.1.0"
+             }
+         },
++        "@esbuild/linux-loong64": {
++            "version": "0.15.7",
++            "resolved": "https://registry.npmjs.org/@esbuild/linux-loong64/-/linux-loong64-0.15.7.tgz",
++            "integrity": "sha512-IKznSJOsVUuyt7cDzzSZyqBEcZe+7WlBqTVXiF1OXP/4Nm387ToaXZ0fyLwI1iBlI/bzpxVq411QE2/Bt2XWWw==",
++            "dev": true,
++            "optional": true
++        },
+         "@eslint/eslintrc": {
+             "version": "1.3.2",
+             "resolved": "https://registry.npmjs.org/@eslint/eslintrc/-/eslintrc-1.3.2.tgz",
+@@ -10801,6 +11181,175 @@
+                 "es6-symbol": "^3.1.1"
+             }
+         },
++        "esbuild": {
++            "version": "0.15.7",
++            "resolved": "https://registry.npmjs.org/esbuild/-/esbuild-0.15.7.tgz",
++            "integrity": "sha512-7V8tzllIbAQV1M4QoE52ImKu8hT/NLGlGXkiDsbEU5PS6K8Mn09ZnYoS+dcmHxOS9CRsV4IRAMdT3I67IyUNXw==",
++            "dev": true,
++            "requires": {
++                "@esbuild/linux-loong64": "0.15.7",
++                "esbuild-android-64": "0.15.7",
++                "esbuild-android-arm64": "0.15.7",
++                "esbuild-darwin-64": "0.15.7",
++                "esbuild-darwin-arm64": "0.15.7",
++                "esbuild-freebsd-64": "0.15.7",
++                "esbuild-freebsd-arm64": "0.15.7",
++                "esbuild-linux-32": "0.15.7",
++                "esbuild-linux-64": "0.15.7",
++                "esbuild-linux-arm": "0.15.7",
++                "esbuild-linux-arm64": "0.15.7",
++                "esbuild-linux-mips64le": "0.15.7",
++                "esbuild-linux-ppc64le": "0.15.7",
++                "esbuild-linux-riscv64": "0.15.7",
++                "esbuild-linux-s390x": "0.15.7",
++                "esbuild-netbsd-64": "0.15.7",
++                "esbuild-openbsd-64": "0.15.7",
++                "esbuild-sunos-64": "0.15.7",
++                "esbuild-windows-32": "0.15.7",
++                "esbuild-windows-64": "0.15.7",
++                "esbuild-windows-arm64": "0.15.7"
++            }
++        },
++        "esbuild-android-64": {
++            "version": "0.15.7",
++            "resolved": "https://registry.npmjs.org/esbuild-android-64/-/esbuild-android-64-0.15.7.tgz",
++            "integrity": "sha512-p7rCvdsldhxQr3YHxptf1Jcd86dlhvc3EQmQJaZzzuAxefO9PvcI0GLOa5nCWem1AJ8iMRu9w0r5TG8pHmbi9w==",
++            "dev": true,
++            "optional": true
++        },
++        "esbuild-android-arm64": {
++            "version": "0.15.7",
++            "resolved": "https://registry.npmjs.org/esbuild-android-arm64/-/esbuild-android-arm64-0.15.7.tgz",
++            "integrity": "sha512-L775l9ynJT7rVqRM5vo+9w5g2ysbOCfsdLV4CWanTZ1k/9Jb3IYlQ06VCI1edhcosTYJRECQFJa3eAvkx72eyQ==",
++            "dev": true,
++            "optional": true
++        },
++        "esbuild-darwin-64": {
++            "version": "0.15.7",
++            "resolved": "https://registry.npmjs.org/esbuild-darwin-64/-/esbuild-darwin-64-0.15.7.tgz",
++            "integrity": "sha512-KGPt3r1c9ww009t2xLB6Vk0YyNOXh7hbjZ3EecHoVDxgtbUlYstMPDaReimKe6eOEfyY4hBEEeTvKwPsiH5WZg==",
++            "dev": true,
++            "optional": true
++        },
++        "esbuild-darwin-arm64": {
++            "version": "0.15.7",
++            "resolved": "https://registry.npmjs.org/esbuild-darwin-arm64/-/esbuild-darwin-arm64-0.15.7.tgz",
++            "integrity": "sha512-kBIHvtVqbSGajN88lYMnR3aIleH3ABZLLFLxwL2stiuIGAjGlQW741NxVTpUHQXUmPzxi6POqc9npkXa8AcSZQ==",
++            "dev": true,
++            "optional": true
++        },
++        "esbuild-freebsd-64": {
++            "version": "0.15.7",
++            "resolved": "https://registry.npmjs.org/esbuild-freebsd-64/-/esbuild-freebsd-64-0.15.7.tgz",
++            "integrity": "sha512-hESZB91qDLV5MEwNxzMxPfbjAhOmtfsr9Wnuci7pY6TtEh4UDuevmGmkUIjX/b+e/k4tcNBMf7SRQ2mdNuK/HQ==",
++            "dev": true,
++            "optional": true
++        },
++        "esbuild-freebsd-arm64": {
++            "version": "0.15.7",
++            "resolved": "https://registry.npmjs.org/esbuild-freebsd-arm64/-/esbuild-freebsd-arm64-0.15.7.tgz",
++            "integrity": "sha512-dLFR0ChH5t+b3J8w0fVKGvtwSLWCv7GYT2Y2jFGulF1L5HftQLzVGN+6pi1SivuiVSmTh28FwUhi9PwQicXI6Q==",
++            "dev": true,
++            "optional": true
++        },
++        "esbuild-linux-32": {
++            "version": "0.15.7",
++            "resolved": "https://registry.npmjs.org/esbuild-linux-32/-/esbuild-linux-32-0.15.7.tgz",
++            "integrity": "sha512-v3gT/LsONGUZcjbt2swrMjwxo32NJzk+7sAgtxhGx1+ZmOFaTRXBAi1PPfgpeo/J//Un2jIKm/I+qqeo4caJvg==",
++            "dev": true,
++            "optional": true
++        },
++        "esbuild-linux-64": {
++            "version": "0.15.7",
++            "resolved": "https://registry.npmjs.org/esbuild-linux-64/-/esbuild-linux-64-0.15.7.tgz",
++            "integrity": "sha512-LxXEfLAKwOVmm1yecpMmWERBshl+Kv5YJ/1KnyAr6HRHFW8cxOEsEfisD3sVl/RvHyW//lhYUVSuy9jGEfIRAQ==",
++            "dev": true,
++            "optional": true
++        },
++        "esbuild-linux-arm": {
++            "version": "0.15.7",
++            "resolved": "https://registry.npmjs.org/esbuild-linux-arm/-/esbuild-linux-arm-0.15.7.tgz",
++            "integrity": "sha512-JKgAHtMR5f75wJTeuNQbyznZZa+pjiUHV7sRZp42UNdyXC6TiUYMW/8z8yIBAr2Fpad8hM1royZKQisqPABPvQ==",
++            "dev": true,
++            "optional": true
++        },
++        "esbuild-linux-arm64": {
++            "version": "0.15.7",
++            "resolved": "https://registry.npmjs.org/esbuild-linux-arm64/-/esbuild-linux-arm64-0.15.7.tgz",
++            "integrity": "sha512-P3cfhudpzWDkglutWgXcT2S7Ft7o2e3YDMrP1n0z2dlbUZghUkKCyaWw0zhp4KxEEzt/E7lmrtRu/pGWnwb9vw==",
++            "dev": true,
++            "optional": true
++        },
++        "esbuild-linux-mips64le": {
++            "version": "0.15.7",
++            "resolved": "https://registry.npmjs.org/esbuild-linux-mips64le/-/esbuild-linux-mips64le-0.15.7.tgz",
++            "integrity": "sha512-T7XKuxl0VpeFLCJXub6U+iybiqh0kM/bWOTb4qcPyDDwNVhLUiPcGdG2/0S7F93czUZOKP57YiLV8YQewgLHKw==",
++            "dev": true,
++            "optional": true
++        },
++        "esbuild-linux-ppc64le": {
++            "version": "0.15.7",
++            "resolved": "https://registry.npmjs.org/esbuild-linux-ppc64le/-/esbuild-linux-ppc64le-0.15.7.tgz",
++            "integrity": "sha512-6mGuC19WpFN7NYbecMIJjeQgvDb5aMuvyk0PDYBJrqAEMkTwg3Z98kEKuCm6THHRnrgsdr7bp4SruSAxEM4eJw==",
++            "dev": true,
++            "optional": true
++        },
++        "esbuild-linux-riscv64": {
++            "version": "0.15.7",
++            "resolved": "https://registry.npmjs.org/esbuild-linux-riscv64/-/esbuild-linux-riscv64-0.15.7.tgz",
++            "integrity": "sha512-uUJsezbswAYo/X7OU/P+PuL/EI9WzxsEQXDekfwpQ23uGiooxqoLFAPmXPcRAt941vjlY9jtITEEikWMBr+F/g==",
++            "dev": true,
++            "optional": true
++        },
++        "esbuild-linux-s390x": {
++            "version": "0.15.7",
++            "resolved": "https://registry.npmjs.org/esbuild-linux-s390x/-/esbuild-linux-s390x-0.15.7.tgz",
++            "integrity": "sha512-+tO+xOyTNMc34rXlSxK7aCwJgvQyffqEM5MMdNDEeMU3ss0S6wKvbBOQfgd5jRPblfwJ6b+bKiz0g5nABpY0QQ==",
++            "dev": true,
++            "optional": true
++        },
++        "esbuild-netbsd-64": {
++            "version": "0.15.7",
++            "resolved": "https://registry.npmjs.org/esbuild-netbsd-64/-/esbuild-netbsd-64-0.15.7.tgz",
++            "integrity": "sha512-yVc4Wz+Pu3cP5hzm5kIygNPrjar/v5WCSoRmIjCPWfBVJkZNb5brEGKUlf+0Y759D48BCWa0WHrWXaNy0DULTQ==",
++            "dev": true,
++            "optional": true
++        },
++        "esbuild-openbsd-64": {
++            "version": "0.15.7",
++            "resolved": "https://registry.npmjs.org/esbuild-openbsd-64/-/esbuild-openbsd-64-0.15.7.tgz",
++            "integrity": "sha512-GsimbwC4FSR4lN3wf8XmTQ+r8/0YSQo21rWDL0XFFhLHKlzEA4SsT1Tl8bPYu00IU6UWSJ+b3fG/8SB69rcuEQ==",
++            "dev": true,
++            "optional": true
++        },
++        "esbuild-sunos-64": {
++            "version": "0.15.7",
++            "resolved": "https://registry.npmjs.org/esbuild-sunos-64/-/esbuild-sunos-64-0.15.7.tgz",
++            "integrity": "sha512-8CDI1aL/ts0mDGbWzjEOGKXnU7p3rDzggHSBtVryQzkSOsjCHRVe0iFYUuhczlxU1R3LN/E7HgUO4NXzGGP/Ag==",
++            "dev": true,
++            "optional": true
++        },
++        "esbuild-windows-32": {
++            "version": "0.15.7",
++            "resolved": "https://registry.npmjs.org/esbuild-windows-32/-/esbuild-windows-32-0.15.7.tgz",
++            "integrity": "sha512-cOnKXUEPS8EGCzRSFa1x6NQjGhGsFlVgjhqGEbLTPsA7x4RRYiy2RKoArNUU4iR2vHmzqS5Gr84MEumO/wxYKA==",
++            "dev": true,
++            "optional": true
++        },
++        "esbuild-windows-64": {
++            "version": "0.15.7",
++            "resolved": "https://registry.npmjs.org/esbuild-windows-64/-/esbuild-windows-64-0.15.7.tgz",
++            "integrity": "sha512-7MI08Ec2sTIDv+zH6StNBKO+2hGUYIT42GmFyW6MBBWWtJhTcQLinKS6ldIN1d52MXIbiJ6nXyCJ+LpL4jBm3Q==",
++            "dev": true,
++            "optional": true
++        },
++        "esbuild-windows-arm64": {
++            "version": "0.15.7",
++            "resolved": "https://registry.npmjs.org/esbuild-windows-arm64/-/esbuild-windows-arm64-0.15.7.tgz",
++            "integrity": "sha512-R06nmqBlWjKHddhRJYlqDd3Fabx9LFdKcjoOy08YLimwmsswlFBJV4rXzZCxz/b7ZJXvrZgj8DDv1ewE9+StMw==",
++            "dev": true,
++            "optional": true
++        },
+         "escalade": {
+             "version": "3.1.1",
+             "resolved": "https://registry.npmjs.org/escalade/-/escalade-3.1.1.tgz",
+diff --git a/package.json b/package.json
+index bfdf548e27..841134462c 100644
+--- a/package.json
++++ b/package.json
+@@ -69,6 +69,7 @@
+         "chalk": "^4.1.2",
+         "del": "^6.1.1",
+         "diff": "^5.1.0",
++        "esbuild": "^0.15.7",
+         "eslint": "^8.22.0",
+         "eslint-formatter-autolinkable-stylish": "^1.2.0",
+         "eslint-plugin-import": "^2.26.0",
+diff --git a/scripts/build/tests.js b/scripts/build/tests.js
+index 4dd76c1f62..f656034347 100644
+--- a/scripts/build/tests.js
++++ b/scripts/build/tests.js
+@@ -123,17 +123,17 @@ async function runConsoleTests(runJs, defaultReporter, runInParallel, watchMode)
+             errorStatus = exitCode;
+             error = new Error(`Process exited with status code ${errorStatus}.`);
+         }
+-        else if (cmdLineOptions.ci) {
+-            // finally, do a sanity check and build the compiler with the built version of itself
+-            log.info("Starting sanity check build...");
+-            // Cleanup everything except lint rules (we'll need those later and would rather not waste time rebuilding them)
+-            await exec("gulp", ["clean-tsc", "clean-services", "clean-tsserver", "clean-lssl", "clean-tests"]);
+-            const { exitCode } = await exec("gulp", ["local", "--lkg=false"]);
+-            if (exitCode !== 0) {
+-                errorStatus = exitCode;
+-                error = new Error(`Sanity check build process exited with status code ${errorStatus}.`);
+-            }
+-        }
++        // else if (cmdLineOptions.ci) {
++        //     // finally, do a sanity check and build the compiler with the built version of itself
++        //     log.info("Starting sanity check build...");
++        //     // Cleanup everything except lint rules (we'll need those later and would rather not waste time rebuilding them)
++        //     await exec("gulp", ["clean-tsc", "clean-services", "clean-tsserver", "clean-lssl", "clean-tests"]);
++        //     const { exitCode } = await exec("gulp", ["local", "--lkg=false"]);
++        //     if (exitCode !== 0) {
++        //         errorStatus = exitCode;
++        //         error = new Error(`Sanity check build process exited with status code ${errorStatus}.`);
++        //     }
++        // }
+     }
+     catch (e) {
+         errorStatus = undefined;
+diff --git a/src/compiler/sys.ts b/src/compiler/sys.ts
+index 6a8d8fbd53..a7aa67d8c9 100644
+--- a/src/compiler/sys.ts
++++ b/src/compiler/sys.ts
+@@ -1532,7 +1532,14 @@ export let sys: System = (() => {
+                 //
+                 // TODO(jakebailey): replace this function with one that returns the path
+                 // to the lib folder (or package path)?.
+-                return _path.join(_path.dirname(__dirname), "fake.js");
++                // return _path.join(_path.dirname(__dirname), "fake.js");
++
++                // HACK: detect if we are bundled or not for sake of perf testing. This is not
++                // how I'd do it for real.
++                if (__filename.endsWith("sys.js")) {
++                    return _path.join(_path.dirname(__dirname), "fake.js");
++                }
++                return __filename;
+             },
+             getCurrentDirectory,
+             getDirectories,
+@@ -1571,7 +1578,10 @@ export let sys: System = (() => {
+             debugMode: !!process.env.NODE_INSPECTOR_IPC || !!process.env.VSCODE_INSPECTOR_OPTIONS || some(process.execArgv as string[], arg => /^--(inspect|debug)(-brk)?(=\d+)?$/i.test(arg)),
+             tryEnableSourceMapsForHost() {
+                 try {
+-                    require("source-map-support").install();
++                    // Trick esbuild into not eagerly resolving a path to a JS file.
++                    // See: https://github.com/evanw/esbuild/issues/1958
++                    const moduleName = "source-map-support" as const;
++                    (require(moduleName) as typeof import("source-map-support")).install();
+                 }
+                 catch {
+                     // Could not enable source maps.
+diff --git a/src/harness/fourslashImpl.ts b/src/harness/fourslashImpl.ts
+index c968d1522f..d09bbe38b2 100644
+--- a/src/harness/fourslashImpl.ts
++++ b/src/harness/fourslashImpl.ts
+@@ -4059,7 +4059,7 @@ export function runFourSlashTestContent(basePath: string, testType: FourSlashTes
+ function runCode(code: string, state: TestState, fileName: string): void {
+     // Compile and execute the test
+     const generatedFile = ts.changeExtension(fileName, ".js");
+-    const wrappedCode = `(function(test, goTo, plugins, verify, edit, debug, format, cancellation, classification, completion, verifyOperationIsCancelled) {${code}\n//# sourceURL=${ts.getBaseFileName(generatedFile)}\n})`;
++    const wrappedCode = `(function(ts, test, goTo, config, verify, edit, debug, format, cancellation, classification, completion, verifyOperationIsCancelled, ignoreInterpolations) {${code}\n//# sourceURL=${ts.getBaseFileName(generatedFile)}\n})`;
+ 
+     type SourceMapSupportModule = typeof import("source-map-support") & {
+         // TODO(rbuckton): This is missing from the DT definitions and needs to be added.
+@@ -4093,8 +4093,8 @@ function runCode(code: string, state: TestState, fileName: string): void {
+         const format = new FourSlashInterface.Format(state);
+         const cancellation = new FourSlashInterface.Cancellation(state);
+         // eslint-disable-next-line no-eval
+-        const f = eval(wrappedCode);
+-        f(test, goTo, config, verify, edit, debug, format, cancellation, FourSlashInterface.classification, FourSlashInterface.Completion, verifyOperationIsCancelled);
++        const f = (0, eval)(wrappedCode);
++        f(ts, test, goTo, config, verify, edit, debug, format, cancellation, FourSlashInterface.classification, FourSlashInterface.Completion, verifyOperationIsCancelled, ignoreInterpolations);
+     }
+     catch (err) {
+         // ensure 'source-map-support' is triggered while we still have the handler attached by accessing `error.stack`.
+diff --git a/src/server/scriptVersionCache.ts b/src/server/scriptVersionCache.ts
+index 6c99b15ecb..13a2fbe6a0 100644
+--- a/src/server/scriptVersionCache.ts
++++ b/src/server/scriptVersionCache.ts
+@@ -255,16 +255,16 @@ class TextChange {
+ 
+ /** @internal */
+ export class ScriptVersionCache {
++    private static readonly changeNumberThreshold = 8;
++    private static readonly changeLengthThreshold = 256;
++    private static readonly maxVersions = 8;
++
+     private changes: TextChange[] = [];
+     private readonly versions: LineIndexSnapshot[] = new Array<LineIndexSnapshot>(ScriptVersionCache.maxVersions);
+     private minVersion = 0; // no versions earlier than min version will maintain change history
+ 
+     private currentVersion = 0;
+ 
+-    private static readonly changeNumberThreshold = 8;
+-    private static readonly changeLengthThreshold = 256;
+-    private static readonly maxVersions = 8;
+-
+     private versionToIndex(version: number) {
+         if (version < this.minVersion || version > this.currentVersion) {
+             return undefined;
+diff --git a/src/services/services.ts b/src/services/services.ts
+index 03e2fcf8f2..4872a6afb5 100644
+--- a/src/services/services.ts
++++ b/src/services/services.ts
+@@ -484,9 +484,9 @@ class IdentifierObject extends TokenOrIdentifierObject implements Identifier {
+ }
+ IdentifierObject.prototype.kind = SyntaxKind.Identifier;
+ class PrivateIdentifierObject extends TokenOrIdentifierObject implements PrivateIdentifier {
+-    public kind!: SyntaxKind.PrivateIdentifier;
++    public kind: SyntaxKind.PrivateIdentifier = SyntaxKind.PrivateIdentifier;
+     public escapedText!: __String;
+-    public symbol!: Symbol;
++    // public symbol!: Symbol;
+     _primaryExpressionBrand: any;
+     _memberExpressionBrand: any;
+     _leftHandSideExpressionBrand: any;
+diff --git a/src/testRunner/_namespaces/Harness.ts b/src/testRunner/_namespaces/Harness.ts
+index caf03e950a..aff7e44d98 100644
+--- a/src/testRunner/_namespaces/Harness.ts
++++ b/src/testRunner/_namespaces/Harness.ts
+@@ -11,3 +11,8 @@ export * from "../compilerRunner";
+ export * from "../externalCompileRunner";
+ export * from "../test262Runner";
+ export * from "../runner";
++
++
++// Must be after runner.
++// NOTE: if emitting CJS, comment this out, and uncomment the one in runner.ts.
++import "./tests";
+diff --git a/src/testRunner/runner.ts b/src/testRunner/runner.ts
+index afce965527..0aec1a0136 100644
+--- a/src/testRunner/runner.ts
++++ b/src/testRunner/runner.ts
+@@ -293,4 +293,5 @@ function startTestEnvironment() {
+ startTestEnvironment();
+ 
+ // This brings in all of the unittests.
+-import "./_namespaces/tests";
++// NOTE: if emitting CJS, uncomment this, and comment out the one in Harness.ts.
++// import "./_namespaces/tests";
+diff --git a/src/tsconfig-base.json b/src/tsconfig-base.json
+index d3ece6a19d..bae7684eed 100644
+--- a/src/tsconfig-base.json
++++ b/src/tsconfig-base.json
+@@ -10,6 +10,7 @@
+         "sourceMap": true,
+         "composite": true,
+         "noEmitOnError": true,
++        // "emitDeclarationOnly": true,
+ 
+         "strictNullChecks": true,
+         "noImplicitAny": true,
+-- 
+2.37.1
+
