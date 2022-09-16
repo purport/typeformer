@@ -187,5 +187,5 @@ index 3835540d9c..b66338f42e 100644
  // is to guard against crashes that cannot be intercepted with protected blocks and
  // code in tsserver already can handle normal cases, like non-existing folders.
 -- 
-2.37.1
+2.37.3
 

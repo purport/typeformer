@@ -25,5 +25,5 @@ index 2ea9622d72..114e47e238 100644
          // eslint-plugin-import
          "import/no-extraneous-dependencies": ["error", { "optionalDependencies": false }],
 -- 
-2.37.1
+2.37.3
 
