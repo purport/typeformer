@@ -23,7 +23,7 @@ using plain files and still produce a runnable system.
  src/debug/tsconfig.json                       |    7 +-
  .../_namespaces/ts.server.ts                  |    3 -
  src/dynamicImportCompat/_namespaces/ts.ts     |    4 -
- .../dynamicImportCompat.ts                    |   17 +-
+ .../dynamicImportCompat.ts                    |    2 +-
  src/dynamicImportCompat/tsconfig.json         |    8 +-
  src/harness/fourslashImpl.ts                  |    6 +-
  src/server/scriptVersionCache.ts              |    8 +-
@@ -38,7 +38,7 @@ using plain files and still produce a runnable system.
  src/watchGuard/tsconfig.json                  |    4 +-
  src/watchGuard/watchGuard.ts                  |    2 +-
  src/webServer/webServer.ts                    |   26 +-
- 31 files changed, 2212 insertions(+), 527 deletions(-)
+ 31 files changed, 2197 insertions(+), 527 deletions(-)
  delete mode 100644 scripts/build/prepend.js
  delete mode 100644 src/debug/_namespaces/Debug.ts
  rename src/debug/{dbg.ts => compilerDebug.ts} (95%)
@@ -3334,28 +3334,13 @@ index 91d7693414..0000000000
 -import * as server from "./ts.server";
 -export { server };
 diff --git a/src/dynamicImportCompat/dynamicImportCompat.ts b/src/dynamicImportCompat/dynamicImportCompat.ts
-index 5981d8c7e9..b8eba788d2 100644
+index 5981d8c7e9..f89915866b 100644
 --- a/src/dynamicImportCompat/dynamicImportCompat.ts
 +++ b/src/dynamicImportCompat/dynamicImportCompat.ts
-@@ -1 +1,16 @@
+@@ -1 +1 @@
 -export const dynamicImport = (id: string) => import(id);
 \ No newline at end of file
-+/*! *****************************************************************************
-+Copyright (c) Microsoft Corporation. All rights reserved.
-+Licensed under the Apache License, Version 2.0 (the "License"); you may not use
-+this file except in compliance with the License. You may obtain a copy of the
-+License at http://www.apache.org/licenses/LICENSE-2.0
-+
-+THIS CODE IS PROVIDED ON AN *AS IS* BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
-+KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION ANY IMPLIED
-+WARRANTIES OR CONDITIONS OF TITLE, FITNESS FOR A PARTICULAR PURPOSE,
-+MERCHANTABLITY OR NON-INFRINGEMENT.
-+
-+See the Apache Version 2.0 License for specific language governing permissions
-+and limitations under the License.
-+***************************************************************************** */
-+
-+(globalThis as any).dynamicImport = (id: string) => import(id);
++export const dynamicImport = (id: string) => import(id);
 diff --git a/src/dynamicImportCompat/tsconfig.json b/src/dynamicImportCompat/tsconfig.json
 index 3abacb2133..f6529d3c91 100644
 --- a/src/dynamicImportCompat/tsconfig.json

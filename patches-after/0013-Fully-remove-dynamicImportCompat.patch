@@ -1,0 +1,129 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Jake Bailey <5341706+jakebailey@users.noreply.github.com>
+Date: Mon, 19 Sep 2022 13:25:33 -0700
+Subject: [PATCH] Fully remove dynamicImportCompat
+
+---
+ Gulpfile.js                                    | 18 +++---------------
+ scripts/produceLKG.ts                          |  1 -
+ src/dynamicImportCompat/dynamicImportCompat.ts |  1 -
+ src/dynamicImportCompat/tsconfig.json          | 15 ---------------
+ src/tsconfig.json                              |  1 -
+ 5 files changed, 3 insertions(+), 33 deletions(-)
+ delete mode 100644 src/dynamicImportCompat/dynamicImportCompat.ts
+ delete mode 100644 src/dynamicImportCompat/tsconfig.json
+
+diff --git a/Gulpfile.js b/Gulpfile.js
+index 4f2d4772e7..6a7938ba42 100644
+--- a/Gulpfile.js
++++ b/Gulpfile.js
+@@ -218,9 +218,6 @@ function esbuildTask(entrypoint, outfile, exportIsTsObject = false) {
+     };
+ }
+ 
+-// TODO(jakebailey): Add this function to the non-bundle paths which
+-// don't output to the correct location. (e.g., not dynamicImportCompat).
+-
+ /**
+  * Creates a function that writes a CJS module that reexports another CJS file via
+  * `module.exports = require("...")`.
+@@ -293,17 +290,10 @@ task("watch-services").flags = {
+     "   --built": "Compile using the built version of the compiler."
+ };
+ 
+-const buildDynamicImportCompat = () => buildProject("src/dynamicImportCompat");
+-task("dynamicImportCompat", buildDynamicImportCompat);
+-
+-const cleanDynamicImportCompat = () => cleanProject("src/dynamicImportCompat");
+-const watchDynamicImportCompat = () => watchProject("src/dynamicImportCompat");
+-
+ 
+ const esbuildServer = esbuildTask("./src/tsserver/server.ts", "./built/local/tsserver.js", /* exportIsTsObject */ true);
+ 
+-const buildServerMain = () => cmdLineOptions.bundle ? esbuildServer.build() : buildProject("src/tsserver");
+-const buildServer = series(buildDynamicImportCompat, buildServerMain);
++const buildServer = () => cmdLineOptions.bundle ? esbuildServer.build() : buildProject("src/tsserver");
+ buildServer.displayName = "buildServer";
+ task("tsserver", series(preBuild, buildServer));
+ task("tsserver").description = "Builds the language server";
+@@ -311,15 +301,14 @@ task("tsserver").flags = {
+     "   --built": "Compile using the built version of the compiler."
+ };
+ 
+-const cleanServerMain = () => cmdLineOptions.bundle ? esbuildServer.clean() : cleanProject("src/tsserver");
+-const cleanServer = series(cleanDynamicImportCompat, cleanServerMain);
++const cleanServer = () => cmdLineOptions.bundle ? esbuildServer.clean() : cleanProject("src/tsserver");
+ cleanServer.displayName = "cleanServer";
+ cleanTasks.push(cleanServer);
+ task("clean-tsserver", cleanServer);
+ task("clean-tsserver").description = "Cleans outputs for the language server";
+ 
+ const watchServer = () => cmdLineOptions.bundle ? esbuildServer.watch() : watchProject("src/tsserver");
+-task("watch-tsserver", series(preBuild, parallel(watchLib, watchDiagnostics, watchDynamicImportCompat, watchServer)));
++task("watch-tsserver", series(preBuild, parallel(watchLib, watchDiagnostics, watchServer)));
+ task("watch-tsserver").description = "Watch for changes and rebuild the language server only";
+ task("watch-tsserver").flags = {
+     "   --built": "Compile using the built version of the compiler."
+@@ -591,7 +580,6 @@ const produceLKG = async () => {
+         "built/local/typescriptServices.js",
+         "built/local/typescriptServices.d.ts",
+         "built/local/tsserver.js",
+-        "built/local/dynamicImportCompat.js",
+         "built/local/typescript.js",
+         "built/local/typescript.d.ts",
+         "built/local/tsserverlibrary.js",
+diff --git a/scripts/produceLKG.ts b/scripts/produceLKG.ts
+index e4e37df028..35f0c45ea7 100644
+--- a/scripts/produceLKG.ts
++++ b/scripts/produceLKG.ts
+@@ -62,7 +62,6 @@ async function copyScriptOutputs() {
+     await copyWithCopyright("cancellationToken.js");
+     await copyWithCopyright("tsc.release.js", "tsc.js");
+     await copyWithCopyright("tsserver.js");
+-    await copyWithCopyright("dynamicImportCompat.js");
+     await copyFromBuiltLocal("tsserverlibrary.js"); // copyright added by build
+     await copyFromBuiltLocal("typescript.js"); // copyright added by build
+     await copyFromBuiltLocal("typescriptServices.js"); // copyright added by build
+diff --git a/src/dynamicImportCompat/dynamicImportCompat.ts b/src/dynamicImportCompat/dynamicImportCompat.ts
+deleted file mode 100644
+index f89915866b..0000000000
+--- a/src/dynamicImportCompat/dynamicImportCompat.ts
++++ /dev/null
+@@ -1 +0,0 @@
+-export const dynamicImport = (id: string) => import(id);
+diff --git a/src/dynamicImportCompat/tsconfig.json b/src/dynamicImportCompat/tsconfig.json
+deleted file mode 100644
+index f6529d3c91..0000000000
+--- a/src/dynamicImportCompat/tsconfig.json
++++ /dev/null
+@@ -1,15 +0,0 @@
+-{
+-    "extends": "../tsconfig-base",
+-    "compilerOptions": {
+-        "outDir": "../../built/local",
+-        "tsBuildInfoFile": "../../built/local/dynamicImportCompat.tsbuildinfo",
+-        "rootDir": ".",
+-        "target": "esnext",
+-        "module": "esnext",
+-        "lib": ["esnext"],
+-        "emitDeclarationOnly": false
+-    },
+-    "files": [
+-        "dynamicImportCompat.ts",
+-    ]
+-}
+diff --git a/src/tsconfig.json b/src/tsconfig.json
+index f70352ca5e..79de8fdaa3 100644
+--- a/src/tsconfig.json
++++ b/src/tsconfig.json
+@@ -10,7 +10,6 @@
+         { "path": "./watchGuard" },
+         { "path": "./debug" },
+         { "path": "./cancellationToken" },
+-        { "path": "./dynamicImportCompat" },
+         { "path": "./testRunner" },
+     ]
+ }
+-- 
+2.37.3
+
