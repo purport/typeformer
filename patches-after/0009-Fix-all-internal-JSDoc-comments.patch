@@ -14118,7 +14118,7 @@ index f07c1e33c9..b02eeed8f8 100644
  export function getImportKind(importingFile: SourceFile, exportKind: ExportKind, compilerOptions: CompilerOptions, forceImportKeyword?: boolean): ImportKind {
      switch (exportKind) {
 diff --git a/src/services/completions.ts b/src/services/completions.ts
-index 1f97c57e5b..f74267058e 100644
+index 818c1a12f5..f72286ad5b 100644
 --- a/src/services/completions.ts
 +++ b/src/services/completions.ts
 @@ -99,7 +99,6 @@ export const SortText = {
