@@ -601,6 +601,7 @@ export function stripNamespaces(project: Project): void {
 
                 const previous = statement.getPreviousSibling();
                 if (previous && Node.isCommentStatement(previous) && previous.getText().includes("@internal")) {
+                    // TODO: if comments are fixed in main to be JSDoc and in the right place, this will not work correctly.
                     previous.remove();
                 }
 

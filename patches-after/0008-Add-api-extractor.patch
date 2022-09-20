@@ -47,7 +47,7 @@ index bb87b72a89..d8bf3fe867 100644
  const cleanDebugTools = () => cleanProject("src/debug");
  cleanTasks.push(cleanDebugTools);
 diff --git a/package-lock.json b/package-lock.json
-index 5ccb42dcf6..e09f882d12 100644
+index d7aadc53da..d70d6613a6 100644
 --- a/package-lock.json
 +++ b/package-lock.json
 @@ -13,6 +13,7 @@
