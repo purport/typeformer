@@ -11,7 +11,7 @@ This reverts commit 8623e3ee6936bf15418fc437b45d7621ca732296.
  3 files changed, 1286 insertions(+), 7 deletions(-)
 
 diff --git a/Gulpfile.js b/Gulpfile.js
-index 18128b3915..abd0209f48 100644
+index f58d5e1994..0a4630f916 100644
 --- a/Gulpfile.js
 +++ b/Gulpfile.js
 @@ -162,14 +162,17 @@ function getCopyrightHeader() {
@@ -34,9 +34,9 @@ index 18128b3915..abd0209f48 100644
          platform: "node",
          // TODO: also specify minimal browser targets
          target: "node10", // Node 10 is the oldest benchmarker.
-@@ -206,7 +209,13 @@ function esbuildTask(entrypoint, outfile, exportIsTsObject = false) {
+@@ -205,7 +208,13 @@ function esbuildTask(entrypoint, outfile, exportIsTsObject = false) {
+     }
  
-     // TODO: these need to have better function names, for gulp.
      return {
 -        build: () => esbuild.build(options),
 +        build: async () => {
@@ -49,7 +49,7 @@ index 18128b3915..abd0209f48 100644
          clean: () => del([outfile, `${outfile}.map`]),
          watch: () => esbuild.build({ ...options, watch: true }),
      };
-@@ -238,7 +247,7 @@ cleanTasks.push(cleanDebugTools);
+@@ -237,7 +246,7 @@ cleanTasks.push(cleanDebugTools);
  const lkgPreBuild = parallel(generateLibs, series(buildScripts, generateDiagnostics, buildDebugTools));
  
  
@@ -58,7 +58,7 @@ index 18128b3915..abd0209f48 100644
  
  
  const buildTsc = () => cmdLineOptions.bundle ? esbuildTsc.build() : buildProject("src/tsc");
-@@ -260,7 +269,7 @@ const localPreBuild = parallel(generateLibs, series(buildScripts, generateDiagno
+@@ -259,7 +268,7 @@ const localPreBuild = parallel(generateLibs, series(buildScripts, generateDiagno
  // Pre-build steps to use based on supplied options.
  const preBuild = cmdLineOptions.lkg ? lkgPreBuild : localPreBuild;
  
@@ -67,7 +67,7 @@ index 18128b3915..abd0209f48 100644
  
  const buildServices = () => cmdLineOptions.bundle ? esbuildServices.build() : buildProject("src/typescript");
  
-@@ -285,7 +294,7 @@ task("watch-services").flags = {
+@@ -284,7 +293,7 @@ task("watch-services").flags = {
  };
  
  
@@ -76,7 +76,7 @@ index 18128b3915..abd0209f48 100644
  
  const buildServer = () => cmdLineOptions.bundle ? esbuildServer.build() : buildProject("src/tsserver");
  buildServer.displayName = "buildServer";
-@@ -323,7 +332,7 @@ task("watch-min").flags = {
+@@ -322,7 +331,7 @@ task("watch-min").flags = {
      "   --built": "Compile using the built version of the compiler."
  };
  
