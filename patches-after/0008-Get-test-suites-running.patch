@@ -113,10 +113,10 @@ index 5f4f365915..7f65318d68 100644
  });
  task("watch", series(preBuild, preTest, parallel(watchLib, watchDiagnostics, watchServices, watchLssl, watchTests, watchRuntests)));
 diff --git a/src/compiler/sys.ts b/src/compiler/sys.ts
-index 0dbf501863..fc267260eb 100644
+index fe178b6ee1..6a8d8fbd53 100644
 --- a/src/compiler/sys.ts
 +++ b/src/compiler/sys.ts
-@@ -1522,7 +1522,14 @@ export let sys: System = (() => {
+@@ -1525,7 +1525,14 @@ export let sys: System = (() => {
                  }
              },
              getExecutingFilePath() {

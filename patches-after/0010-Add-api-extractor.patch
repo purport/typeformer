@@ -7,12 +7,12 @@ Subject: [PATCH] Add api-extractor
  Gulpfile.js                            |  18 +
  package-lock.json                      | 571 +++++++++++++++++++++++++
  package.json                           |   1 +
- src/api-extractor-base.json            |  85 ++++
+ src/api-extractor-base.json            |  90 ++++
  src/tsserverlibrary/api-extractor.json |  16 +
  src/tsserverlibrary/tsserverlibrary.ts |   6 +-
  src/typescript/api-extractor.json      |  16 +
  src/typescript/typescript.ts           |   5 +-
- 8 files changed, 709 insertions(+), 9 deletions(-)
+ 8 files changed, 714 insertions(+), 9 deletions(-)
  create mode 100644 src/api-extractor-base.json
  create mode 100644 src/tsserverlibrary/api-extractor.json
  create mode 100644 src/typescript/api-extractor.json
@@ -796,10 +796,10 @@ index 0d80542b7f..bfdf548e27 100644
          "@types/chai": "latest",
 diff --git a/src/api-extractor-base.json b/src/api-extractor-base.json
 new file mode 100644
-index 0000000000..47949c62de
+index 0000000000..16b345d5cb
 --- /dev/null
 +++ b/src/api-extractor-base.json
-@@ -0,0 +1,85 @@
+@@ -0,0 +1,90 @@
 +{
 +    "$schema": "https://raw.githubusercontent.com/microsoft/rushstack/%40microsoft/api-extractor_v7.31.0/apps/api-extractor/src/schemas/api-extractor.schema.json",
 +    "projectFolder": "..",
@@ -861,6 +861,11 @@ index 0000000000..47949c62de
 +            },
 +            // This incorrectly fires for functions with partially internal overloads.
 +            "ae-internal-mixed-release-tag": {
++                "logLevel": "none",
++                "addToApiReportFile": false
++            },
++            // We intentionally declarations that are internal in value space, but public in type space.
++            "ae-different-release-tags": {
 +                "logLevel": "none",
 +                "addToApiReportFile": false
 +            }

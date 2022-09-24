@@ -1,0 +1,159 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Jake Bailey <5341706+jakebailey@users.noreply.github.com>
+Date: Tue, 20 Sep 2022 13:54:37 -0700
+Subject: [PATCH] Try and fix up LKG
+
+---
+ Gulpfile.js           | 24 ++++++++++-------------
+ scripts/produceLKG.ts | 45 +++++++++++++++++++++++++++++++------------
+ 2 files changed, 43 insertions(+), 26 deletions(-)
+
+diff --git a/Gulpfile.js b/Gulpfile.js
+index 0a4630f916..0b9a59635f 100644
+--- a/Gulpfile.js
++++ b/Gulpfile.js
+@@ -127,7 +127,7 @@ const buildSrc = () => buildProject("src");
+ // But, if we are bundling, we are running only d.ts emit, so maybe this is fast?
+ task("buildSrc", series(preSrc, buildSrc));
+ 
+-const apiExtractor = async () => {
++const runApiExtractor = async () => {
+     /**
+      * @param {string} configPath
+      */
+@@ -147,7 +147,9 @@ const apiExtractor = async () => {
+ };
+ 
+ // TODO(jakebailey): Some tests depend on the extracted output.
+-task("api-extractor", series(preSrc, buildSrc, apiExtractor));
++const apiExtractor = series(preSrc, buildSrc, runApiExtractor);
++apiExtractor.displayName = "api-extractor";
++task("api-extractor", apiExtractor);
+ 
+ /** @type {string | undefined} */
+ let copyrightHeader;
+@@ -567,27 +569,20 @@ const importDefinitelyTypedTests = () => exec(process.execPath, ["scripts/import
+ task("importDefinitelyTypedTests", series(buildImportDefinitelyTypedTests, importDefinitelyTypedTests));
+ task("importDefinitelyTypedTests").description = "Runs the importDefinitelyTypedTests script to copy DT's tests to the TS-internal RWC tests";
+ 
+-// TODO(jakebailey): There isn't a release build anymore; figure out what to do here.
+-// Probably just use tsc.js.
+-
+-const buildReleaseTsc = () => buildProject("src/tsc/tsconfig.release.json");
+-const cleanReleaseTsc = () => cleanProject("src/tsc/tsconfig.release.json");
+-cleanTasks.push(cleanReleaseTsc);
+-
+ const cleanBuilt = () => del("built");
+ 
+ const produceLKG = async () => {
++    // TODO(jakebailey): there are probably more files here that are needed.
+     const expectedFiles = [
+-        "built/local/tsc.release.js",
+-        "built/local/typescriptServices.js",
+-        "built/local/typescriptServices.d.ts",
++        "built/local/tsc.js",
+         "built/local/tsserver.js",
+         "built/local/typescript.js",
+         "built/local/typescript.d.ts",
+         "built/local/tsserverlibrary.js",
+         "built/local/tsserverlibrary.d.ts",
+         "built/local/typingsInstaller.js",
+-        "built/local/cancellationToken.js"
++        "built/local/cancellationToken.js",
++        "built/local/watchGuard.js",
+     ].concat(libs.map(lib => lib.target));
+     const missingFiles = expectedFiles
+         .concat(localizationTargets)
+@@ -603,7 +598,8 @@ const produceLKG = async () => {
+     }
+ };
+ 
+-task("LKG", series(lkgPreBuild, parallel(localize, buildTsc, buildServer, buildServices, buildLssl, buildOtherOutputs, buildReleaseTsc), produceLKG));
++// TODO(jakebailey): dependencies on apiExtractor a
++task("LKG", series(lkgPreBuild, parallel(localize, buildTsc, buildServer, buildServices, buildLssl, buildOtherOutputs, apiExtractor), produceLKG));
+ task("LKG").description = "Makes a new LKG out of the built js files";
+ task("LKG").flags = {
+     "   --built": "Compile using the built version of the compiler.",
+diff --git a/scripts/produceLKG.ts b/scripts/produceLKG.ts
+index 35f0c45ea7..6f41ac8fb9 100644
+--- a/scripts/produceLKG.ts
++++ b/scripts/produceLKG.ts
+@@ -17,7 +17,7 @@ async function produceLKG() {
+     await copyTypesMap();
+     await copyScriptOutputs();
+     await copyDeclarationOutputs();
+-    await buildProtocol();
++    if (1 !== 1) await buildProtocol(); // TODO(jakebailey): remove
+     await writeGitAttributes();
+ }
+ 
+@@ -29,6 +29,26 @@ async function copyLocalizedDiagnostics() {
+     const dir = await fs.readdir(source);
+     const ignoredFolders = ["enu"];
+ 
++    // TODO(jakebailey): Can we emit these files somewhere else so they are more easily skippable?
++    ignoredFolders.push(
++        "compiler",
++        "deprecatedCompat",
++        "executeCommandLine",
++        "harness",
++        "jsTyping",
++        "loggedIO",
++        "server",
++        "services",
++        "testRunner",
++        "tsc",
++        "tsserver",
++        "tsserverlibrary",
++        "typescript",
++        "typingsInstaller",
++        "typingsInstallerCore",
++        "webServer",
++    );
++
+     for (const d of dir) {
+         const fileName = path.join(source, d);
+         if (
+@@ -44,6 +64,7 @@ async function copyTypesMap() {
+     await copyFromBuiltLocal("typesMap.json"); // Cannot accommodate copyright header
+ }
+ 
++// TODO(jakebailey): Remove?
+ async function buildProtocol() {
+     const protocolScript = path.join(__dirname, "buildProtocol.js");
+     if (!fs.existsSync(protocolScript)) {
+@@ -59,20 +80,20 @@ async function buildProtocol() {
+ }
+ 
+ async function copyScriptOutputs() {
+-    await copyWithCopyright("cancellationToken.js");
+-    await copyWithCopyright("tsc.release.js", "tsc.js");
+-    await copyWithCopyright("tsserver.js");
+-    await copyFromBuiltLocal("tsserverlibrary.js"); // copyright added by build
+-    await copyFromBuiltLocal("typescript.js"); // copyright added by build
+-    await copyFromBuiltLocal("typescriptServices.js"); // copyright added by build
+-    await copyWithCopyright("typingsInstaller.js");
+-    await copyWithCopyright("watchGuard.js");
++    // TODO(jakebailey): This does not work when unbundled.
++    // TODO(jakebailey): Copyright is added by esbuild; maybe we should do it here?
++    await copyFromBuiltLocal("cancellationToken.js");
++    await copyFromBuiltLocal("tsc.js");
++    await copyFromBuiltLocal("tsserver.js");
++    await copyFromBuiltLocal("tsserverlibrary.js");
++    await copyFromBuiltLocal("typescript.js");
++    await copyFromBuiltLocal("typingsInstaller.js");
++    await copyFromBuiltLocal("watchGuard.js");
+ }
+ 
+ async function copyDeclarationOutputs() {
+-    await copyFromBuiltLocal("tsserverlibrary.d.ts"); // copyright added by build
+-    await copyFromBuiltLocal("typescript.d.ts"); // copyright added by build
+-    await copyFromBuiltLocal("typescriptServices.d.ts"); // copyright added by build
++    await copyWithCopyright("tsserverlibrary.d.ts");
++    await copyWithCopyright("typescript.d.ts");
+ }
+ 
+ async function writeGitAttributes() {
+-- 
+2.37.3
+
