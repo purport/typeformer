@@ -54,7 +54,7 @@ otherwise they won't be used by api-extractor, so move them if needed.
  src/compiler/transformers/utilities.ts        |   27 +-
  src/compiler/tsbuild.ts                       |    2 +-
  src/compiler/tsbuildPublic.ts                 |   63 +-
- src/compiler/types.ts                         | 1759 +++++++++--------
+ src/compiler/types.ts                         | 1757 +++++++++--------
  src/compiler/utilities.ts                     |  375 ++--
  src/compiler/utilitiesPublic.ts               |  187 +-
  src/compiler/visitorPublic.ts                 |   26 +-
@@ -105,7 +105,7 @@ otherwise they won't be used by api-extractor, so move them if needed.
  src/services/utilities.ts                     |   98 +-
  src/typingsInstallerCore/typingsInstaller.ts  |    8 +-
  src/webServer/webServer.ts                    |    2 +-
- 90 files changed, 2817 insertions(+), 2098 deletions(-)
+ 90 files changed, 2816 insertions(+), 2097 deletions(-)
 
 diff --git a/src/compiler/builder.ts b/src/compiler/builder.ts
 index db11537f00..04efd3a7d3 100644
@@ -244,7 +244,7 @@ index 5700cd02af..7a6109ce6b 100644
 +    /** @internal */ buildInfo?: BuildInfo
  }
 diff --git a/src/compiler/commandLineParser.ts b/src/compiler/commandLineParser.ts
-index b15291f89f..0dc93ac058 100644
+index 8d5fb21c3e..31dd774182 100644
 --- a/src/compiler/commandLineParser.ts
 +++ b/src/compiler/commandLineParser.ts
 @@ -21,7 +21,7 @@ import {
@@ -664,7 +664,7 @@ index b15291f89f..0dc93ac058 100644
      const out: CompilerOptions = {};
      for (const key in opts) {
 diff --git a/src/compiler/core.ts b/src/compiler/core.ts
-index 2e3a662665..70ccdb380f 100644
+index e7590ce90b..a0cc5b1854 100644
 --- a/src/compiler/core.ts
 +++ b/src/compiler/core.ts
 @@ -41,11 +41,12 @@ export function length(array: readonly any[] | undefined): number {
@@ -1635,7 +1635,7 @@ index 2e3a662665..70ccdb380f 100644
  export function findBestPatternMatch<T>(values: readonly T[], getPattern: (value: T) => Pattern, candidate: string): T | undefined {
      let matchedValue: T | undefined;
      // use length of prefix as betterness criteria
-@@ -2719,25 +2831,27 @@ function cartesianProductWorker<T>(arrays: readonly (readonly T[])[], result: (r
+@@ -2725,25 +2837,27 @@ function cartesianProductWorker<T>(arrays: readonly (readonly T[])[], result: (r
  }
  
  
@@ -1665,7 +1665,7 @@ index 2e3a662665..70ccdb380f 100644
   */
  export function padRight(s: string, length: number, padString: " " = " ") {
      return length <= s.length ? s : s + padString.repeat(length - s.length);
-@@ -2755,21 +2869,24 @@ export function takeWhile<T>(array: readonly T[], predicate: (element: T) => boo
+@@ -2761,21 +2875,24 @@ export function takeWhile<T>(array: readonly T[], predicate: (element: T) => boo
      return array.slice(0, index);
  }
  
@@ -1755,7 +1755,7 @@ index bb9a8d6dab..c05a05a652 100644
 +/** @internal */
  export const Set = NativeCollections.tryGetNativeSet();
 diff --git a/src/compiler/emitter.ts b/src/compiler/emitter.ts
-index b906a96bdb..30d52243c7 100644
+index bffe7b6e24..ef12089934 100644
 --- a/src/compiler/emitter.ts
 +++ b/src/compiler/emitter.ts
 @@ -81,12 +81,11 @@ import {
@@ -2113,7 +2113,7 @@ index 3efb85e75e..74cddf3152 100644
 \ No newline at end of file
 +};
 diff --git a/src/compiler/factory/nodeFactory.ts b/src/compiler/factory/nodeFactory.ts
-index df3f9c31bf..ef8e679606 100644
+index 0a80c15f80..129b0218b9 100644
 --- a/src/compiler/factory/nodeFactory.ts
 +++ b/src/compiler/factory/nodeFactory.ts
 @@ -82,7 +82,7 @@ import {
@@ -2608,7 +2608,7 @@ index e04d06a406..010b996d7a 100644
  export function createAccessorPropertySetRedirector(factory: NodeFactory, node: PropertyDeclaration, modifiers: ModifiersArray | undefined, name: PropertyName) {
      return factory.createSetAccessorDeclaration(
 diff --git a/src/compiler/moduleNameResolver.ts b/src/compiler/moduleNameResolver.ts
-index 979766cb81..245d104b9d 100644
+index b94ad863f0..f13d60743e 100644
 --- a/src/compiler/moduleNameResolver.ts
 +++ b/src/compiler/moduleNameResolver.ts
 @@ -19,13 +19,13 @@ import {
@@ -2886,7 +2886,7 @@ index 979766cb81..245d104b9d 100644
  export function isApplicableVersionedTypesKey(conditions: readonly string[], key: string) {
      if (conditions.indexOf("types") === -1) return false; // only apply versioned types conditions if the types condition is applied
      if (!startsWith(key, "types@")) return false;
-@@ -2548,12 +2553,12 @@ function mangleScopedPackageNameWithTrace(packageName: string, state: ModuleReso
+@@ -2547,12 +2552,12 @@ function mangleScopedPackageNameWithTrace(packageName: string, state: ModuleReso
      return mangled;
  }
  
@@ -2901,7 +2901,7 @@ index 979766cb81..245d104b9d 100644
  export function mangleScopedPackageName(packageName: string): string {
      if (startsWith(packageName, "@")) {
          const replaceSlash = packageName.replace(directorySeparator, mangledScopedPackageSeparator);
-@@ -2564,7 +2569,7 @@ export function mangleScopedPackageName(packageName: string): string {
+@@ -2563,7 +2568,7 @@ export function mangleScopedPackageName(packageName: string): string {
      return packageName;
  }
  
@@ -2910,7 +2910,7 @@ index 979766cb81..245d104b9d 100644
  export function getPackageNameFromTypesPackageName(mangledName: string): string {
      const withoutAtTypePrefix = removePrefix(mangledName, "@types/");
      if (withoutAtTypePrefix !== mangledName) {
-@@ -2573,7 +2578,7 @@ export function getPackageNameFromTypesPackageName(mangledName: string): string
+@@ -2572,7 +2577,7 @@ export function getPackageNameFromTypesPackageName(mangledName: string): string
      return mangledName;
  }
  
@@ -2919,7 +2919,7 @@ index 979766cb81..245d104b9d 100644
  export function unmangleScopedPackageName(typesPackageName: string): string {
      return stringContains(typesPackageName, mangledScopedPackageSeparator) ?
          "@" + typesPackageName.replace(mangledScopedPackageSeparator, directorySeparator) :
-@@ -2655,8 +2660,9 @@ export function classicNameResolver(moduleName: string, containingFile: string,
+@@ -2654,8 +2659,9 @@ export function classicNameResolver(moduleName: string, containingFile: string,
  /**
   * A host may load a module from a global cache of typings.
   * This is the minumum code needed to expose that functionality; the rest is in the host.
@@ -2949,7 +2949,7 @@ index 6a01040365..25f450cb43 100644
      moduleSymbol: Symbol,
      checker: TypeChecker,
 diff --git a/src/compiler/parser.ts b/src/compiler/parser.ts
-index 8b08767faa..351aeb7914 100644
+index 4c691e6934..24c32f7d24 100644
 --- a/src/compiler/parser.ts
 +++ b/src/compiler/parser.ts
 @@ -89,8 +89,9 @@ let SourceFileConstructor: new (kind: SyntaxKind, pos?: number, end?: number) =>
@@ -3704,7 +3704,7 @@ index 15d3c41994..ce65f1d889 100644
 \ No newline at end of file
 +    () => +(new Date());
 diff --git a/src/compiler/program.ts b/src/compiler/program.ts
-index 710df77675..6e18b7559d 100644
+index 90b25576bf..30a15b258d 100644
 --- a/src/compiler/program.ts
 +++ b/src/compiler/program.ts
 @@ -73,7 +73,7 @@ export function resolveTripleslashReference(moduleName: string, containingFile:
@@ -3779,7 +3779,7 @@ index 710df77675..6e18b7559d 100644
 +    /** @internal */ imports: SourceFile["imports"];
 +    /** @internal */ moduleAugmentations: SourceFile["moduleAugmentations"];
      impliedNodeFormat?: SourceFile["impliedNodeFormat"];
- };
+ }
  
 @@ -592,7 +592,7 @@ export function getModeForResolutionAtIndex(file: SourceFileImportsList, index:
      return getModeForUsageLocation(file, getModuleNameStringLiteralAt(file, index));
@@ -3957,7 +3957,7 @@ index 710df77675..6e18b7559d 100644
      if (index < imports.length) return imports[index];
      let augIndex = imports.length;
 diff --git a/src/compiler/resolutionCache.ts b/src/compiler/resolutionCache.ts
-index e62622b7a1..482248378e 100644
+index b9cae8aa02..a6cce70e78 100644
 --- a/src/compiler/resolutionCache.ts
 +++ b/src/compiler/resolutionCache.ts
 @@ -17,8 +17,11 @@ import {
@@ -3990,7 +3990,7 @@ index e62622b7a1..482248378e 100644
  export function canWatchDirectoryOrFile(dirPath: Path) {
      const rootLength = getRootLength(dirPath);
 diff --git a/src/compiler/scanner.ts b/src/compiler/scanner.ts
-index 40ba30600c..e9732e81fc 100644
+index 808e46ae26..52f43f66dd 100644
 --- a/src/compiler/scanner.ts
 +++ b/src/compiler/scanner.ts
 @@ -7,12 +7,12 @@ import {
@@ -4069,7 +4069,7 @@ index 40ba30600c..e9732e81fc 100644
 -/* @internal */
 +/** @internal */
  export function computeLineStarts(text: string): number[] {
-     const result: number[] = new Array();
+     const result: number[] = [];
      let pos = 0;
 @@ -396,7 +396,7 @@ export function computeLineStarts(text: string): number[] {
  }
@@ -4148,7 +4148,7 @@ index 40ba30600c..e9732e81fc 100644
  export function isIdentifierText(name: string, languageVersion: ScriptTarget | undefined, identifierVariant?: LanguageVariant): boolean {
      let ch = codePointAt(name, 0);
      if (!isIdentifierStart(ch, languageVersion)) {
-@@ -2590,7 +2590,7 @@ export function createScanner(languageVersion: ScriptTarget,
+@@ -2616,7 +2616,7 @@ export function createScanner(languageVersion: ScriptTarget,
      }
  }
  
@@ -4157,7 +4157,7 @@ index 40ba30600c..e9732e81fc 100644
  const codePointAt: (s: string, i: number) => number = (String.prototype as any).codePointAt ? (s, i) => (s as any).codePointAt(i) : function codePointAt(str, i): number {
      // from https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/codePointAt
      const size = str.length;
-@@ -2611,7 +2611,7 @@ const codePointAt: (s: string, i: number) => number = (String.prototype as any).
+@@ -2637,7 +2637,7 @@ const codePointAt: (s: string, i: number) => number = (String.prototype as any).
      return first;
  };
  
@@ -4166,7 +4166,7 @@ index 40ba30600c..e9732e81fc 100644
  function charSize(ch: number) {
      if (ch >= 0x10000) {
          return 2;
-@@ -2635,7 +2635,7 @@ function utf16EncodeAsStringFallback(codePoint: number) {
+@@ -2661,7 +2661,7 @@ function utf16EncodeAsStringFallback(codePoint: number) {
  
  const utf16EncodeAsStringWorker: (codePoint: number) => string = (String as any).fromCodePoint ? codePoint => (String as any).fromCodePoint(codePoint) : utf16EncodeAsStringFallback;
  
@@ -4502,7 +4502,7 @@ index 1f2c3ce4c0..5141d77afc 100644
  export function transformClassFields(context: TransformationContext) {
      const {
 diff --git a/src/compiler/transformers/declarations.ts b/src/compiler/transformers/declarations.ts
-index a1f5bf41b1..10581e002c 100644
+index babd5dcb09..095d395c5b 100644
 --- a/src/compiler/transformers/declarations.ts
 +++ b/src/compiler/transformers/declarations.ts
 @@ -62,7 +62,7 @@ export function isInternalDeclaration(node: Node, currentSourceFile: SourceFile)
@@ -4766,7 +4766,7 @@ index ad20ff97b4..a927555fbe 100644
 \ No newline at end of file
 +}
 diff --git a/src/compiler/tsbuildPublic.ts b/src/compiler/tsbuildPublic.ts
-index a178952c1f..bd457dda91 100644
+index 114ab0cd02..3bdfe22993 100644
 --- a/src/compiler/tsbuildPublic.ts
 +++ b/src/compiler/tsbuildPublic.ts
 @@ -37,24 +37,24 @@ export interface BuildOptions {
@@ -4901,7 +4901,7 @@ index a178952c1f..bd457dda91 100644
       *  To dispose this project and ensure that all the necessary actions are taken and state is updated accordingly
       */
 diff --git a/src/compiler/types.ts b/src/compiler/types.ts
-index a7e5ef5aea..80cc2dff7d 100644
+index 7131b16d33..638abe01cc 100644
 --- a/src/compiler/types.ts
 +++ b/src/compiler/types.ts
 @@ -8,7 +8,7 @@ import {
@@ -8117,23 +8117,23 @@ index a7e5ef5aea..80cc2dff7d 100644
  
 -/* @internal */
 +/** @internal */
- export type HasInvalidatedResolution = (sourceFile: Path) => boolean;
+ export type HasInvalidatedResolutions = (sourceFile: Path) => boolean;
 -/* @internal */
 +/** @internal */
  export type HasChangedAutomaticTypeDirectiveNames = () => boolean;
  
  export interface CompilerHost extends ModuleResolutionHost {
-@@ -7221,34 +7311,35 @@ export interface CompilerHost extends ModuleResolutionHost {
+@@ -7221,35 +7311,36 @@ export interface CompilerHost extends ModuleResolutionHost {
       */
      resolveTypeReferenceDirectives?(typeReferenceDirectiveNames: string[] | readonly FileReference[], containingFile: string, redirectedReference: ResolvedProjectReference | undefined, options: CompilerOptions, containingFileMode?: SourceFile["impliedNodeFormat"] | undefined): (ResolvedTypeReferenceDirective | undefined)[];
      getEnvironmentVariable?(name: string): string | undefined;
 -    /* @internal */ onReleaseOldSourceFile?(oldSourceFile: SourceFile, oldOptions: CompilerOptions, hasSourceFileByPath: boolean): void;
 -    /* @internal */ onReleaseParsedCommandLine?(configFileName: string, oldResolvedRef: ResolvedProjectReference | undefined, optionOptions: CompilerOptions): void;
--    /* @internal */ hasInvalidatedResolution?: HasInvalidatedResolution;
--    /* @internal */ hasChangedAutomaticTypeDirectiveNames?: HasChangedAutomaticTypeDirectiveNames;
 +    /** @internal */ onReleaseOldSourceFile?(oldSourceFile: SourceFile, oldOptions: CompilerOptions, hasSourceFileByPath: boolean): void;
 +    /** @internal */ onReleaseParsedCommandLine?(configFileName: string, oldResolvedRef: ResolvedProjectReference | undefined, optionOptions: CompilerOptions): void;
-+    /** @internal */ hasInvalidatedResolution?: HasInvalidatedResolution;
+     /** If provided along with custom resolveModuleNames or resolveTypeReferenceDirectives, used to determine if unchanged file path needs to re-resolve modules/type reference directives */
+     hasInvalidatedResolutions?(filePath: Path): boolean;
+-    /* @internal */ hasChangedAutomaticTypeDirectiveNames?: HasChangedAutomaticTypeDirectiveNames;
 +    /** @internal */ hasChangedAutomaticTypeDirectiveNames?: HasChangedAutomaticTypeDirectiveNames;
      createHash?(data: string): string;
      getParsedCommandLine?(fileName: string): ParsedCommandLine | undefined;
@@ -8172,7 +8172,7 @@ index a7e5ef5aea..80cc2dff7d 100644
  export const enum TransformFlags {
      None = 0,
  
-@@ -7343,11 +7434,11 @@ export interface SourceMapRange extends TextRange {
+@@ -7344,11 +7435,11 @@ export interface SourceMapRange extends TextRange {
  export interface SourceMapSource {
      fileName: string;
      text: string;
@@ -8186,7 +8186,7 @@ index a7e5ef5aea..80cc2dff7d 100644
  export interface EmitNode {
      annotatedNodes?: Node[];                 // Tracks Parse-tree nodes with EmitNodes for eventual cleanup.
      flags: EmitFlags;                        // Flags that customize emit
-@@ -7365,23 +7456,23 @@ export interface EmitNode {
+@@ -7366,23 +7457,23 @@ export interface EmitNode {
      typeNode?: TypeNode;                         // VariableDeclaration type
  }
  
@@ -8214,7 +8214,7 @@ index a7e5ef5aea..80cc2dff7d 100644
  export const enum SnippetKind {
      TabStop,                                // `$1`, `$2`
      Placeholder,                            // `${1:foo}`
-@@ -7419,11 +7510,11 @@ export const enum EmitFlags {
+@@ -7420,11 +7511,11 @@ export const enum EmitFlags {
      HasEndOfDeclarationMarker = 1 << 22,    // Declaration has an associated NotEmittedStatement to mark the end of the declaration
      Iterator = 1 << 23,                     // The expression to a `yield*` should be treated as an Iterator when down-leveling, not an Iterable.
      NoAsciiEscaping = 1 << 24,              // When synthesizing nodes that lack an original node or textSourceNode, we want to write the text on the node with ASCII escaping substitutions.
@@ -8231,7 +8231,7 @@ index a7e5ef5aea..80cc2dff7d 100644
  }
  
  export interface EmitHelperBase {
-@@ -7440,14 +7531,14 @@ export interface ScopedEmitHelper extends EmitHelperBase {
+@@ -7441,14 +7532,14 @@ export interface ScopedEmitHelper extends EmitHelperBase {
  
  export interface UnscopedEmitHelper extends EmitHelperBase {
      readonly scoped: false;                                         // Indicates whether the helper MUST be emitted in the current scope.
@@ -8248,7 +8248,7 @@ index a7e5ef5aea..80cc2dff7d 100644
  export type UniqueNameHandler = (baseName: string, checkFn?: (name: string) => boolean, optimistic?: boolean) => string;
  
  export type EmitHelperUniqueNameCallback = (name: string) => string;
-@@ -7455,8 +7546,9 @@ export type EmitHelperUniqueNameCallback = (name: string) => string;
+@@ -7456,8 +7547,9 @@ export type EmitHelperUniqueNameCallback = (name: string) => string;
  /**
   * Used by the checker, this enum keeps track of external emit helpers that should be type
   * checked.
@@ -8259,7 +8259,7 @@ index a7e5ef5aea..80cc2dff7d 100644
  export const enum ExternalEmitHelpers {
      Extends = 1 << 0,               // __extends (used by the ES2015 class transformation)
      Assign = 1 << 1,                // __assign (used by Jsx and ESNext object spread transformations)
-@@ -7510,7 +7602,7 @@ export const enum EmitHint {
+@@ -7511,7 +7603,7 @@ export const enum EmitHint {
      JsxAttributeValue,   // Emitting a JSX attribute value
  }
  
@@ -8268,7 +8268,7 @@ index a7e5ef5aea..80cc2dff7d 100644
  export interface SourceFileMayBeEmittedHost {
      getCompilerOptions(): CompilerOptions;
      isSourceFileFromExternalLibrary(file: SourceFile): boolean;
-@@ -7518,7 +7610,7 @@ export interface SourceFileMayBeEmittedHost {
+@@ -7519,7 +7611,7 @@ export interface SourceFileMayBeEmittedHost {
      isSourceOfProjectReferenceRedirect(fileName: string): boolean;
  }
  
@@ -8277,7 +8277,7 @@ index a7e5ef5aea..80cc2dff7d 100644
  export interface EmitHost extends ScriptReferenceHost, ModuleSpecifierResolutionHost, SourceFileMayBeEmittedHost {
      getSourceFiles(): readonly SourceFile[];
      useCaseSensitiveFileNames(): boolean;
-@@ -7541,7 +7633,7 @@ export interface EmitHost extends ScriptReferenceHost, ModuleSpecifierResolution
+@@ -7542,7 +7634,7 @@ export interface EmitHost extends ScriptReferenceHost, ModuleSpecifierResolution
      createHash?(data: string): string;
  }
  
@@ -8286,7 +8286,7 @@ index a7e5ef5aea..80cc2dff7d 100644
  export interface PropertyDescriptorAttributes {
      enumerable?: boolean | Expression;
      configurable?: boolean | Expression;
-@@ -7563,7 +7655,7 @@ export const enum OuterExpressionKinds {
+@@ -7564,7 +7656,7 @@ export const enum OuterExpressionKinds {
      ExcludeJSDocTypeAssertion = 1 << 4,
  }
  
@@ -8295,7 +8295,7 @@ index a7e5ef5aea..80cc2dff7d 100644
  export type OuterExpression =
      | ParenthesizedExpression
      | TypeAssertion
-@@ -7574,13 +7666,13 @@ export type OuterExpression =
+@@ -7575,13 +7667,13 @@ export type OuterExpression =
  
  export type TypeOfTag = "undefined" | "number" | "bigint" | "boolean" | "string" | "symbol" | "object" | "function";
  
@@ -8311,7 +8311,7 @@ index a7e5ef5aea..80cc2dff7d 100644
  export interface ParenthesizerRules {
      getParenthesizeLeftSideOfBinaryForOperator(binaryOperator: SyntaxKind): (leftSide: Expression) => Expression;
      getParenthesizeRightSideOfBinaryForOperator(binaryOperator: SyntaxKind): (rightSide: Expression) => Expression;
-@@ -7615,7 +7707,7 @@ export interface ParenthesizerRules {
+@@ -7616,7 +7708,7 @@ export interface ParenthesizerRules {
      parenthesizeTypeArguments(typeParameters: readonly TypeNode[] | undefined): NodeArray<TypeNode> | undefined;
  }
  
@@ -8320,7 +8320,7 @@ index a7e5ef5aea..80cc2dff7d 100644
  export interface NodeConverters {
      convertToFunctionBlock(node: ConciseBody, multiLine?: boolean): Block;
      convertToFunctionExpression(node: FunctionDeclaration): FunctionExpression;
-@@ -7627,7 +7719,7 @@ export interface NodeConverters {
+@@ -7628,7 +7720,7 @@ export interface NodeConverters {
      convertToAssignmentElementTarget(node: BindingOrAssignmentElementTarget): Expression;
  }
  
@@ -8329,7 +8329,7 @@ index a7e5ef5aea..80cc2dff7d 100644
  export interface GeneratedNamePart {
      /** an additional prefix to insert before the text sourced from `node` */
      prefix?: string;
-@@ -7637,10 +7729,10 @@ export interface GeneratedNamePart {
+@@ -7638,10 +7730,10 @@ export interface GeneratedNamePart {
  }
  
  export interface NodeFactory {
@@ -8344,7 +8344,7 @@ index a7e5ef5aea..80cc2dff7d 100644
      createNodeArray<T extends Node>(elements?: readonly T[], hasTrailingComma?: boolean): NodeArray<T>;
  
      //
-@@ -7650,7 +7742,7 @@ export interface NodeFactory {
+@@ -7651,7 +7743,7 @@ export interface NodeFactory {
      createNumericLiteral(value: string | number, numericLiteralFlags?: TokenFlags): NumericLiteral;
      createBigIntLiteral(value: string | PseudoBigInt): BigIntLiteral;
      createStringLiteral(text: string, isSingleQuote?: boolean): StringLiteral;
@@ -8353,7 +8353,7 @@ index a7e5ef5aea..80cc2dff7d 100644
      createStringLiteralFromNode(sourceNode: PropertyNameLiteral | PrivateIdentifier, isSingleQuote?: boolean): StringLiteral;
      createRegularExpressionLiteral(text: string): RegularExpressionLiteral;
  
-@@ -7659,8 +7751,8 @@ export interface NodeFactory {
+@@ -7660,8 +7752,8 @@ export interface NodeFactory {
      //
  
      createIdentifier(text: string): Identifier;
@@ -8364,7 +8364,7 @@ index a7e5ef5aea..80cc2dff7d 100644
  
      /**
       * Create a unique temporary variable.
-@@ -7672,7 +7764,7 @@ export interface NodeFactory {
+@@ -7673,7 +7765,7 @@ export interface NodeFactory {
       * setting `EmitFlags.ReuseTempVariableScope` on the nested function itself.
       */
      createTempVariable(recordTempVariable: ((node: Identifier) => void) | undefined, reservedInNestedScopes?: boolean): Identifier;
@@ -8373,7 +8373,7 @@ index a7e5ef5aea..80cc2dff7d 100644
  
      /**
       * Create a unique temporary variable for use in a loop.
-@@ -7684,17 +7776,17 @@ export interface NodeFactory {
+@@ -7685,17 +7777,17 @@ export interface NodeFactory {
  
      /** Create a unique name based on the supplied text. */
      createUniqueName(text: string, flags?: GeneratedIdentifierFlags): Identifier;
@@ -8395,7 +8395,7 @@ index a7e5ef5aea..80cc2dff7d 100644
  
      //
      // Punctuation
-@@ -7710,7 +7802,7 @@ export interface NodeFactory {
+@@ -7711,7 +7803,7 @@ export interface NodeFactory {
      createToken<TKind extends ModifierSyntaxKind>(token: TKind): ModifierToken<TKind>;
      createToken<TKind extends KeywordSyntaxKind>(token: TKind): KeywordToken<TKind>;
      createToken<TKind extends SyntaxKind.Unknown | SyntaxKind.EndOfFileToken>(token: TKind): Token<TKind>;
@@ -8404,7 +8404,7 @@ index a7e5ef5aea..80cc2dff7d 100644
  
      //
      // Reserved words
-@@ -7772,7 +7864,7 @@ export interface NodeFactory {
+@@ -7773,7 +7865,7 @@ export interface NodeFactory {
      createConstructSignature(typeParameters: readonly TypeParameterDeclaration[] | undefined, parameters: readonly ParameterDeclaration[], type: TypeNode | undefined): ConstructSignatureDeclaration;
      updateConstructSignature(node: ConstructSignatureDeclaration, typeParameters: NodeArray<TypeParameterDeclaration> | undefined, parameters: NodeArray<ParameterDeclaration>, type: TypeNode | undefined): ConstructSignatureDeclaration;
      createIndexSignature(modifiers: readonly Modifier[] | undefined, parameters: readonly ParameterDeclaration[], type: TypeNode): IndexSignatureDeclaration;
@@ -8413,7 +8413,7 @@ index a7e5ef5aea..80cc2dff7d 100644
      updateIndexSignature(node: IndexSignatureDeclaration, modifiers: readonly Modifier[] | undefined, parameters: readonly ParameterDeclaration[], type: TypeNode): IndexSignatureDeclaration;
      createTemplateLiteralTypeSpan(type: TypeNode, literal: TemplateMiddle | TemplateTail): TemplateLiteralTypeSpan;
      updateTemplateLiteralTypeSpan(node: TemplateLiteralTypeSpan, type: TypeNode, literal: TemplateMiddle | TemplateTail): TemplateLiteralTypeSpan;
-@@ -7899,11 +7991,11 @@ export interface NodeFactory {
+@@ -7900,11 +7992,11 @@ export interface NodeFactory {
      createTemplateTail(text: string | undefined, rawText: string, templateFlags?: TokenFlags): TemplateTail;
      createNoSubstitutionTemplateLiteral(text: string, rawText?: string): NoSubstitutionTemplateLiteral;
      createNoSubstitutionTemplateLiteral(text: string | undefined, rawText: string): NoSubstitutionTemplateLiteral;
@@ -8428,7 +8428,7 @@ index a7e5ef5aea..80cc2dff7d 100644
      updateYieldExpression(node: YieldExpression, asteriskToken: AsteriskToken | undefined, expression: Expression | undefined): YieldExpression;
      createSpreadElement(expression: Expression): SpreadElement;
      updateSpreadElement(node: SpreadElement, expression: Expression): SpreadElement;
-@@ -8021,7 +8113,7 @@ export interface NodeFactory {
+@@ -8022,7 +8114,7 @@ export interface NodeFactory {
      updateNamedExports(node: NamedExports, elements: readonly ExportSpecifier[]): NamedExports;
      createExportSpecifier(isTypeOnly: boolean, propertyName: string | Identifier | undefined, name: string | Identifier): ExportSpecifier;
      updateExportSpecifier(node: ExportSpecifier, isTypeOnly: boolean, propertyName: Identifier | undefined, name: Identifier): ExportSpecifier;
@@ -8437,7 +8437,7 @@ index a7e5ef5aea..80cc2dff7d 100644
  
      //
      // Module references
-@@ -8176,30 +8268,30 @@ export interface NodeFactory {
+@@ -8177,30 +8269,30 @@ export interface NodeFactory {
      createSourceFile(statements: readonly Statement[], endOfFileToken: EndOfFileToken, flags: NodeFlags): SourceFile;
      updateSourceFile(node: SourceFile, statements: readonly Statement[], isDeclarationFile?: boolean, referencedFiles?: readonly FileReference[], typeReferences?: readonly FileReference[], hasNoDefaultLib?: boolean, libReferences?: readonly FileReference[]): SourceFile;
  
@@ -8480,7 +8480,7 @@ index a7e5ef5aea..80cc2dff7d 100644
      createCommaListExpression(elements: readonly Expression[]): CommaListExpression;
      updateCommaListExpression(node: CommaListExpression, elements: readonly Expression[]): CommaListExpression;
      createBundle(sourceFiles: readonly SourceFile[], prepends?: readonly (UnparsedSource | InputFiles)[]): Bundle;
-@@ -8257,19 +8349,19 @@ export interface NodeFactory {
+@@ -8258,19 +8350,19 @@ export interface NodeFactory {
      createExportDefault(expression: Expression): ExportAssignment;
      createExternalModuleExport(exportName: Identifier): ExportDeclaration;
  
@@ -8513,7 +8513,7 @@ index a7e5ef5aea..80cc2dff7d 100644
      /**
       * Wraps an expression that cannot be an assignment target in an expression that can be.
       *
-@@ -8284,9 +8376,11 @@ export interface NodeFactory {
+@@ -8285,9 +8377,11 @@ export interface NodeFactory {
       *
       * @param paramName
       * @param expression
@@ -8527,7 +8527,7 @@ index a7e5ef5aea..80cc2dff7d 100644
      /**
       * Gets the internal name of a declaration. This is primarily used for declarations that can be
       * referred to by name in the body of an ES5 class function body. An internal name will *never*
-@@ -8297,8 +8391,10 @@ export interface NodeFactory {
+@@ -8298,8 +8392,10 @@ export interface NodeFactory {
       * @param node The declaration.
       * @param allowComments A value indicating whether comments may be emitted for the name.
       * @param allowSourceMaps A value indicating whether source maps may be emitted for the name.
@@ -8539,7 +8539,7 @@ index a7e5ef5aea..80cc2dff7d 100644
      /**
       * Gets the local name of a declaration. This is primarily used for declarations that can be
       * referred to by name in the declaration's immediate scope (classes, enums, namespaces). A
-@@ -8308,8 +8404,10 @@ export interface NodeFactory {
+@@ -8309,8 +8405,10 @@ export interface NodeFactory {
       * @param node The declaration.
       * @param allowComments A value indicating whether comments may be emitted for the name.
       * @param allowSourceMaps A value indicating whether source maps may be emitted for the name.
@@ -8551,7 +8551,7 @@ index a7e5ef5aea..80cc2dff7d 100644
      /**
       * Gets the export name of a declaration. This is primarily used for declarations that can be
       * referred to by name in the declaration's immediate scope (classes, enums, namespaces). An
-@@ -8319,16 +8417,20 @@ export interface NodeFactory {
+@@ -8320,16 +8418,20 @@ export interface NodeFactory {
       * @param node The declaration.
       * @param allowComments A value indicating whether comments may be emitted for the name.
       * @param allowSourceMaps A value indicating whether source maps may be emitted for the name.
@@ -8574,7 +8574,7 @@ index a7e5ef5aea..80cc2dff7d 100644
      /**
       * Gets a namespace-qualified name for use in expressions.
       *
-@@ -8336,8 +8438,10 @@ export interface NodeFactory {
+@@ -8337,8 +8439,10 @@ export interface NodeFactory {
       * @param name The name.
       * @param allowComments A value indicating whether comments may be emitted for the name.
       * @param allowSourceMaps A value indicating whether source maps may be emitted for the name.
@@ -8586,7 +8586,7 @@ index a7e5ef5aea..80cc2dff7d 100644
      /**
       * Gets the exported name of a declaration for use in expressions.
       *
-@@ -8348,62 +8452,76 @@ export interface NodeFactory {
+@@ -8349,62 +8453,76 @@ export interface NodeFactory {
       * @param node The declaration.
       * @param allowComments A value indicating whether comments may be emitted for the name.
       * @param allowSourceMaps A value indicating whether source maps may be emitted for the name.
@@ -8677,7 +8677,7 @@ index a7e5ef5aea..80cc2dff7d 100644
  export const enum LexicalEnvironmentFlags {
      None = 0,
      InParameters = 1 << 0, // currently visiting a parameter list
-@@ -8419,8 +8537,8 @@ export interface CoreTransformationContext {
+@@ -8420,8 +8538,8 @@ export interface CoreTransformationContext {
      /** Starts a new lexical environment. */
      startLexicalEnvironment(): void;
  
@@ -8688,7 +8688,7 @@ index a7e5ef5aea..80cc2dff7d 100644
  
      /** Suspends the current lexical environment, usually after visiting a parameter list. */
      suspendLexicalEnvironment(): void;
-@@ -8437,21 +8555,24 @@ export interface CoreTransformationContext {
+@@ -8438,21 +8556,24 @@ export interface CoreTransformationContext {
      /** Hoists a variable declaration to the containing scope. */
      hoistVariableDeclaration(node: Identifier): void;
  
@@ -8721,7 +8721,7 @@ index a7e5ef5aea..80cc2dff7d 100644
  
      /** Records a request for a non-scoped emit helper in the current context. */
      requestEmitHelper(helper: EmitHelper): void;
-@@ -8495,7 +8616,7 @@ export interface TransformationContext extends CoreTransformationContext {
+@@ -8496,7 +8617,7 @@ export interface TransformationContext extends CoreTransformationContext {
       */
      onEmitNode: (hint: EmitHint, node: Node, emitCallback: (hint: EmitHint, node: Node) => void) => void;
  
@@ -8730,7 +8730,7 @@ index a7e5ef5aea..80cc2dff7d 100644
  }
  
  export interface TransformationResult<T extends Node> {
-@@ -8590,14 +8711,14 @@ export interface Printer {
+@@ -8591,14 +8712,14 @@ export interface Printer {
       * Prints a bundle of source files as-is, without any emit transformations.
       */
      printBundle(bundle: Bundle): string;
@@ -8751,7 +8751,7 @@ index a7e5ef5aea..80cc2dff7d 100644
  export const enum BundleFileSectionKind {
      Prologue = "prologue",
      EmitHelpers = "emitHelpers",
-@@ -8613,51 +8734,51 @@ export const enum BundleFileSectionKind {
+@@ -8614,51 +8735,51 @@ export const enum BundleFileSectionKind {
      // comments?
  }
  
@@ -8812,7 +8812,7 @@ index a7e5ef5aea..80cc2dff7d 100644
  export type BundleFileSection =
      BundleFilePrologue
      | BundleFileEmitHelpers
-@@ -8666,31 +8787,31 @@ export type BundleFileSection =
+@@ -8667,31 +8788,31 @@ export type BundleFileSection =
      | BundleFilePrepend
      | BundleFileTextLike;
  
@@ -8849,7 +8849,7 @@ index a7e5ef5aea..80cc2dff7d 100644
  export interface BundleFileInfo {
      sections: BundleFileSection[];
      hash?: string;
-@@ -8698,7 +8819,7 @@ export interface BundleFileInfo {
+@@ -8699,7 +8820,7 @@ export interface BundleFileInfo {
      sources?: SourceFileInfo;
  }
  
@@ -8858,7 +8858,7 @@ index a7e5ef5aea..80cc2dff7d 100644
  export interface BundleBuildInfo {
      js?: BundleFileInfo;
      dts?: BundleFileInfo;
-@@ -8706,7 +8827,7 @@ export interface BundleBuildInfo {
+@@ -8707,7 +8828,7 @@ export interface BundleBuildInfo {
      sourceFiles: readonly string[];
  }
  
@@ -8867,7 +8867,7 @@ index a7e5ef5aea..80cc2dff7d 100644
  export interface BuildInfo {
      bundle?: BundleBuildInfo;
      program?: ProgramBuildInfo;
-@@ -8761,16 +8882,16 @@ export interface PrintHandlers {
+@@ -8762,16 +8883,16 @@ export interface PrintHandlers {
       * ```
       */
      substituteNode?(hint: EmitHint, node: Node): Node;
@@ -8894,7 +8894,7 @@ index a7e5ef5aea..80cc2dff7d 100644
  }
  
  export interface PrinterOptions {
-@@ -8778,23 +8899,23 @@ export interface PrinterOptions {
+@@ -8779,23 +8900,23 @@ export interface PrinterOptions {
      newLine?: NewLineKind;
      omitTrailingSemicolon?: boolean;
      noEmitHelpers?: boolean;
@@ -8935,7 +8935,7 @@ index a7e5ef5aea..80cc2dff7d 100644
  export interface RawSourceMap {
      version: 3;
      file: string;
-@@ -8807,8 +8928,9 @@ export interface RawSourceMap {
+@@ -8808,8 +8929,9 @@ export interface RawSourceMap {
  
  /**
   * Generates a source map.
@@ -8946,7 +8946,7 @@ index a7e5ef5aea..80cc2dff7d 100644
  export interface SourceMapGenerator {
      getSources(): readonly string[];
      /**
-@@ -8845,7 +8967,7 @@ export interface SourceMapGenerator {
+@@ -8846,7 +8968,7 @@ export interface SourceMapGenerator {
      toString(): string;
  }
  
@@ -8955,7 +8955,7 @@ index a7e5ef5aea..80cc2dff7d 100644
  export interface DocumentPositionMapperHost {
      getSourceFileLike(fileName: string): SourceFileLike | undefined;
      getCanonicalFileName(path: string): string;
-@@ -8854,20 +8976,21 @@ export interface DocumentPositionMapperHost {
+@@ -8855,20 +8977,21 @@ export interface DocumentPositionMapperHost {
  
  /**
   * Maps positions between source and generated files.
@@ -8980,7 +8980,7 @@ index a7e5ef5aea..80cc2dff7d 100644
  export interface EmitTextWriter extends SymbolWriter {
      write(s: string): void;
      writeTrailingSemicolon(text: string): void;
-@@ -8891,12 +9014,12 @@ export interface GetEffectiveTypeRootsHost {
+@@ -8892,12 +9015,12 @@ export interface GetEffectiveTypeRootsHost {
      getCurrentDirectory?(): string;
  }
  
@@ -8995,7 +8995,7 @@ index a7e5ef5aea..80cc2dff7d 100644
  export interface ModuleSpecifierResolutionHost {
      useCaseSensitiveFileNames?(): boolean;
      fileExists(path: string): boolean;
-@@ -8916,26 +9039,26 @@ export interface ModuleSpecifierResolutionHost {
+@@ -8917,26 +9040,26 @@ export interface ModuleSpecifierResolutionHost {
      getFileIncludeReasons(): MultiMap<Path, FileIncludeReason>;
  }
  
@@ -9026,7 +9026,7 @@ index a7e5ef5aea..80cc2dff7d 100644
  export interface ModuleSpecifierCache {
      get(fromFileName: Path, toFileName: Path, preferences: UserPreferences, options: ModuleSpecifierOptions): Readonly<ResolvedModuleSpecifierInfo> | undefined;
      set(fromFileName: Path, toFileName: Path, preferences: UserPreferences, options: ModuleSpecifierOptions, modulePaths: readonly ModulePath[], moduleSpecifiers: readonly string[]): void;
-@@ -8946,7 +9069,7 @@ export interface ModuleSpecifierCache {
+@@ -8947,7 +9070,7 @@ export interface ModuleSpecifierCache {
  }
  
  // Note: this used to be deprecated in our public API, but is still used internally
@@ -9035,7 +9035,7 @@ index a7e5ef5aea..80cc2dff7d 100644
  export interface SymbolTracker {
      // Called when the symbol writer encounters a symbol to write.  Currently only used by the
      // declaration emitter to help determine if it should patch up the final declaration file
-@@ -8976,7 +9099,7 @@ export interface TextChangeRange {
+@@ -8977,7 +9100,7 @@ export interface TextChangeRange {
      newLength: number;
  }
  
@@ -9044,7 +9044,7 @@ index a7e5ef5aea..80cc2dff7d 100644
  export interface DiagnosticCollection {
      // Adds a diagnostic to this diagnostic collection.
      add(diagnostic: Diagnostic): void;
-@@ -9085,7 +9208,7 @@ export const enum ListFormat {
+@@ -9086,7 +9209,7 @@ export const enum ListFormat {
      JSDocComment = MultiLine | AsteriskDelimited,
  }
  
@@ -9053,7 +9053,7 @@ index a7e5ef5aea..80cc2dff7d 100644
  export const enum PragmaKindFlags {
      None            =      0,
      /**
-@@ -9109,14 +9232,14 @@ export const enum PragmaKindFlags {
+@@ -9110,14 +9233,14 @@ export const enum PragmaKindFlags {
      Default = All,
  }
  
@@ -9070,7 +9070,7 @@ index a7e5ef5aea..80cc2dff7d 100644
  export interface PragmaDefinition<T1 extends string = string, T2 extends string = string, T3 extends string = string, T4 extends string = string> {
      args?:
          | readonly [PragmaArgumentSpecification<T1>]
-@@ -9129,7 +9252,7 @@ export interface PragmaDefinition<T1 extends string = string, T2 extends string
+@@ -9130,7 +9253,7 @@ export interface PragmaDefinition<T1 extends string = string, T2 extends string
  
  // While not strictly a type, this is here because `PragmaMap` needs to be here to be used with `SourceFile`, and we don't
  //  fancy effectively defining it twice, once in value-space and once in type-space
@@ -9079,7 +9079,7 @@ index a7e5ef5aea..80cc2dff7d 100644
  export const commentPragmas = {
      "reference": {
          args: [
-@@ -9173,43 +9296,44 @@ export const commentPragmas = {
+@@ -9174,43 +9297,44 @@ export const commentPragmas = {
      },
  } as const;
  
@@ -9133,7 +9133,7 @@ index a7e5ef5aea..80cc2dff7d 100644
  export interface ReadonlyPragmaMap extends ReadonlyESMap<string, PragmaPseudoMap[keyof PragmaPseudoMap] | PragmaPseudoMap[keyof PragmaPseudoMap][]> {
      get<TKey extends keyof PragmaPseudoMap>(key: TKey): PragmaPseudoMap[TKey] | PragmaPseudoMap[TKey][];
      forEach(action: <TKey extends keyof PragmaPseudoMap>(value: PragmaPseudoMap[TKey] | PragmaPseudoMap[TKey][], key: TKey) => void): void;
-@@ -9219,15 +9343,16 @@ export interface ReadonlyPragmaMap extends ReadonlyESMap<string, PragmaPseudoMap
+@@ -9220,15 +9344,16 @@ export interface ReadonlyPragmaMap extends ReadonlyESMap<string, PragmaPseudoMap
   * A strongly-typed es6 map of pragma entries, the values of which are either a single argument
   * value (if only one was found), or an array of multiple argument values if the pragma is present
   * in multiple places
@@ -9152,7 +9152,7 @@ index a7e5ef5aea..80cc2dff7d 100644
  export interface CommentDirectivesMap {
      getUnusedExpectations(): CommentDirective[];
      markUsed(matchedLine: number): boolean;
-@@ -9271,7 +9396,7 @@ export interface PseudoBigInt {
+@@ -9272,7 +9397,7 @@ export interface PseudoBigInt {
      base10Value: string;
  }
  
@@ -9162,7 +9162,7 @@ index a7e5ef5aea..80cc2dff7d 100644
      enqueue(...items: T[]): void;
      dequeue(): T;
 diff --git a/src/compiler/utilities.ts b/src/compiler/utilities.ts
-index 9c8b7a6fdd..5003b1ad9b 100644
+index b08cd06e1c..560a78a818 100644
 --- a/src/compiler/utilities.ts
 +++ b/src/compiler/utilities.ts
 @@ -212,10 +212,11 @@ export function forEachAncestor<T>(node: Node, callback: (n: Node) => T | undefi
@@ -10373,7 +10373,7 @@ index 9c8b7a6fdd..5003b1ad9b 100644
      return name === "Infinity" || name === "-Infinity" || name === "NaN";
  }
 diff --git a/src/compiler/utilitiesPublic.ts b/src/compiler/utilitiesPublic.ts
-index cc4c16867f..df6bec6235 100644
+index 046ee571a4..4ef6c79ebd 100644
 --- a/src/compiler/utilitiesPublic.ts
 +++ b/src/compiler/utilitiesPublic.ts
 @@ -96,7 +96,7 @@ export function textSpanContainsPosition(span: TextSpan, position: number) {
@@ -10545,7 +10545,7 @@ index cc4c16867f..df6bec6235 100644
 -/* @internal */
 +/** @internal */
  export function isNodeArray<T extends Node>(array: readonly T[]): array is NodeArray<T> {
-     return array.hasOwnProperty("pos") && array.hasOwnProperty("end");
+     return hasProperty(array, "pos") && hasProperty(array, "end");
  }
  
  // Literals
@@ -11263,7 +11263,7 @@ index df9e9506f6..81f48515e7 100644
  export function createWatchCompilerHostOfFilesAndCompilerOptions<T extends BuilderProgram = EmitAndSemanticDiagnosticsBuilderProgram>({
      rootFiles, options, watchOptions, projectReferences,
 diff --git a/src/compiler/watchPublic.ts b/src/compiler/watchPublic.ts
-index ca5186aa17..6f7bd74aef 100644
+index 04e4426214..c54d14e0b0 100644
 --- a/src/compiler/watchPublic.ts
 +++ b/src/compiler/watchPublic.ts
 @@ -25,7 +25,7 @@ export interface ReadBuildProgramHost {
@@ -11275,7 +11275,7 @@ index ca5186aa17..6f7bd74aef 100644
      getBuildInfo?(fileName: string, configFilePath: string | undefined): BuildInfo | undefined;
  }
  export function readBuilderProgram(compilerOptions: CompilerOptions, host: ReadBuildProgramHost) {
-@@ -139,9 +139,11 @@ export interface ProgramHost<T extends BuilderProgram> {
+@@ -141,9 +141,11 @@ export interface ProgramHost<T extends BuilderProgram> {
       */
      getModuleResolutionCache?(): ModuleResolutionCache | undefined;
  }
@@ -11290,7 +11290,7 @@ index ca5186aa17..6f7bd74aef 100644
  export interface ProgramHost<T extends BuilderProgram> {
      // TODO: GH#18217 Optional methods are frequently asserted
      createDirectory?(path: string): void;
-@@ -202,8 +204,9 @@ export interface WatchCompilerHostOfConfigFile<T extends BuilderProgram> extends
+@@ -204,8 +206,9 @@ export interface WatchCompilerHostOfConfigFile<T extends BuilderProgram> extends
  
  /**
   * Host to create watch with config file that is already parsed (from tsc)
@@ -11301,7 +11301,7 @@ index ca5186aa17..6f7bd74aef 100644
  export interface WatchCompilerHostOfConfigFile<T extends BuilderProgram> extends WatchCompilerHost<T> {
      configFileParsingResult?: ParsedCommandLine;
      extendedConfigCache?: Map<ExtendedConfigCacheEntry>;
-@@ -212,8 +215,11 @@ export interface WatchCompilerHostOfConfigFile<T extends BuilderProgram> extends
+@@ -214,8 +217,11 @@ export interface WatchCompilerHostOfConfigFile<T extends BuilderProgram> extends
  export interface Watch<T> {
      /** Synchronize with host and get updated program */
      getProgram(): T;
@@ -11619,10 +11619,10 @@ index 4d948b5b75..013e32553c 100644
 +/** @internal */
  export type TypingInstallerResponseUnion = SetTypings | InvalidateCachedTypings | TypesRegistryResponse | PackageInstalledResponse | InstallTypes | InitializationFailedResponse;
 diff --git a/src/server/editorServices.ts b/src/server/editorServices.ts
-index 78b7a20d9a..2580708404 100644
+index b59a533db1..1ae9921a3c 100644
 --- a/src/server/editorServices.ts
 +++ b/src/server/editorServices.ts
-@@ -35,7 +35,7 @@ import {
+@@ -36,7 +36,7 @@ import {
  } from "./_namespaces/ts";
  
  export const maxProgramSizeForNonTsFiles = 20 * 1024 * 1024;
@@ -11631,7 +11631,7 @@ index 78b7a20d9a..2580708404 100644
  export const maxFileSize = 4 * 1024 * 1024;
  
  export const ProjectsUpdatedInBackgroundEvent = "projectsUpdatedInBackground";
-@@ -185,7 +185,7 @@ export type ProjectServiceEvent =
+@@ -186,7 +186,7 @@ export type ProjectServiceEvent =
  
  export type ProjectServiceEventHandler = (event: ProjectServiceEvent) => void;
  
@@ -11640,7 +11640,7 @@ index 78b7a20d9a..2580708404 100644
  export type PerformanceEventHandler = (event: PerformanceEvent) => void;
  
  export interface SafeList {
-@@ -329,7 +329,7 @@ export function convertScriptKindName(scriptKindName: protocol.ScriptKindName) {
+@@ -330,7 +330,7 @@ export function convertScriptKindName(scriptKindName: protocol.ScriptKindName) {
      }
  }
  
@@ -11649,7 +11649,7 @@ index 78b7a20d9a..2580708404 100644
  export function convertUserPreferences(preferences: protocol.UserPreferences): UserPreferences {
      const { lazyConfiguredProjectsFromExternalProject, ...userPreferences } = preferences;
      return userPreferences;
-@@ -395,7 +395,7 @@ function findProjectByName<T extends Project>(projectName: string, projects: T[]
+@@ -396,7 +396,7 @@ function findProjectByName<T extends Project>(projectName: string, projects: T[]
  
  const noopConfigFileWatcher: FileWatcher = { close: noop };
  
@@ -11658,7 +11658,7 @@ index 78b7a20d9a..2580708404 100644
  interface ConfigFileExistenceInfo {
      /**
       * Cached value of existence of config file
-@@ -467,8 +467,11 @@ function isAncestorConfigFileInfo(infoOrFileNameOrConfig: OpenScriptInfoOrClosed
+@@ -468,8 +468,11 @@ function isAncestorConfigFileInfo(infoOrFileNameOrConfig: OpenScriptInfoOrClosed
      return !!(infoOrFileNameOrConfig as AncestorConfigFileInfo).configFileInfo;
  }
  
@@ -11672,7 +11672,7 @@ index 78b7a20d9a..2580708404 100644
  export enum ProjectReferenceProjectLoadKind {
      /** Find existing project for project reference */
      Find,
-@@ -478,14 +481,14 @@ export enum ProjectReferenceProjectLoadKind {
+@@ -479,14 +482,14 @@ export enum ProjectReferenceProjectLoadKind {
      FindCreateLoad
  }
  
@@ -11689,7 +11689,7 @@ index 78b7a20d9a..2580708404 100644
  export function forEachResolvedProjectReferenceProject<T>(
      project: ConfiguredProject,
      fileName: string | undefined,
-@@ -639,14 +642,17 @@ function isScriptInfoWatchedFromNodeModules(info: ScriptInfo) {
+@@ -640,14 +643,17 @@ function isScriptInfoWatchedFromNodeModules(info: ScriptInfo) {
      return !info.isScriptOpen() && info.mTime !== undefined;
  }
  
@@ -11710,7 +11710,7 @@ index 78b7a20d9a..2580708404 100644
  export function updateProjectIfDirty(project: Project) {
      project.invalidateResolutionsOfFailedLookupLocations();
      return project.dirty && project.updateGraph();
-@@ -658,7 +664,7 @@ function setProjectOptionsUsed(project: ConfiguredProject | ExternalProject) {
+@@ -659,7 +665,7 @@ function setProjectOptionsUsed(project: ConfiguredProject | ExternalProject) {
      }
  }
  
@@ -11719,7 +11719,7 @@ index 78b7a20d9a..2580708404 100644
  export interface OpenFileArguments {
      fileName: string;
      content?: string;
-@@ -667,7 +673,7 @@ export interface OpenFileArguments {
+@@ -668,7 +674,7 @@ export interface OpenFileArguments {
      projectRootPath?: string;
  }
  
@@ -11728,7 +11728,7 @@ index 78b7a20d9a..2580708404 100644
  export interface ChangeFileArguments {
      fileName: string;
      changes: Iterator<TextChange>;
-@@ -678,7 +684,7 @@ export interface WatchOptionsAndErrors {
+@@ -679,7 +685,7 @@ export interface WatchOptionsAndErrors {
      errors: Diagnostic[] | undefined;
  }
  
@@ -11737,7 +11737,7 @@ index 78b7a20d9a..2580708404 100644
  export interface ParsedConfig{
      cachedDirectoryStructureHost: CachedDirectoryStructureHost;
      /**
-@@ -703,16 +709,16 @@ function createProjectNameFactoryWithCounter(nameFactory: (counter: number) => s
+@@ -704,16 +710,16 @@ function createProjectNameFactoryWithCounter(nameFactory: (counter: number) => s
  
  export class ProjectService {
  
@@ -11757,7 +11757,7 @@ index 78b7a20d9a..2580708404 100644
      readonly filenameToScriptInfo = new Map<string, ScriptInfo>();
      private readonly nodeModulesWatchers = new Map<string, NodeModulesWatcher>();
      /**
-@@ -727,7 +733,7 @@ export class ProjectService {
+@@ -728,7 +734,7 @@ export class ProjectService {
      /**
       * Map to the real path of the infos
       */
@@ -11766,7 +11766,7 @@ index 78b7a20d9a..2580708404 100644
      readonly realpathToScriptInfos: MultiMap<Path, ScriptInfo> | undefined;
      /**
       * maps external project file name to list of config files that were the part of this project
-@@ -746,17 +752,17 @@ export class ProjectService {
+@@ -747,17 +753,17 @@ export class ProjectService {
       * projects specified by a tsconfig.json file
       */
      readonly configuredProjects: Map<ConfiguredProject> = new Map<string, ConfiguredProject>();
@@ -11788,7 +11788,7 @@ index 78b7a20d9a..2580708404 100644
      readonly configFileForOpenFiles: ESMap<Path, NormalizedPath | false> = new Map();
      /**
       * Map of open files that are opened without complete path but have projectRoot as current directory
-@@ -780,15 +786,15 @@ export class ProjectService {
+@@ -781,15 +787,15 @@ export class ProjectService {
       * - Or it is present if we have configured project open with config file at that location
       *   In this case the exists property is always true
       */
@@ -11807,7 +11807,7 @@ index 78b7a20d9a..2580708404 100644
      pendingEnsureProjectForOpenFiles = false;
  
      readonly currentDirectory: NormalizedPath;
-@@ -819,21 +825,21 @@ export class ProjectService {
+@@ -820,21 +826,21 @@ export class ProjectService {
      /** Tracks projects that we have already sent telemetry for. */
      private readonly seenProjects = new Map<string, true>();
  
@@ -11836,7 +11836,7 @@ index 78b7a20d9a..2580708404 100644
      readonly session: Session<unknown> | undefined;
  
  
-@@ -916,39 +922,39 @@ export class ProjectService {
+@@ -917,39 +923,39 @@ export class ProjectService {
          return toPath(fileName, this.currentDirectory, this.toCanonicalFileName);
      }
  
@@ -11883,7 +11883,7 @@ index 78b7a20d9a..2580708404 100644
      onUpdateLanguageServiceStateForProject(project: Project, languageServiceEnabled: boolean) {
          if (!this.eventHandler) {
              return;
-@@ -1007,7 +1013,7 @@ export class ProjectService {
+@@ -1008,7 +1014,7 @@ export class ProjectService {
          }
      }
  
@@ -11892,7 +11892,7 @@ index 78b7a20d9a..2580708404 100644
      delayEnsureProjectForOpenFiles() {
          if (!this.openFiles.size) return;
          this.pendingEnsureProjectForOpenFiles = true;
-@@ -1040,12 +1046,12 @@ export class ProjectService {
+@@ -1041,12 +1047,12 @@ export class ProjectService {
          }
      }
  
@@ -11907,7 +11907,7 @@ index 78b7a20d9a..2580708404 100644
      sendProjectsUpdatedInBackgroundEvent() {
          if (!this.eventHandler) {
              return;
-@@ -1060,7 +1066,7 @@ export class ProjectService {
+@@ -1061,7 +1067,7 @@ export class ProjectService {
          this.eventHandler(event);
      }
  
@@ -11916,7 +11916,7 @@ index 78b7a20d9a..2580708404 100644
      sendLargeFileReferencedEvent(file: string, fileSize: number) {
          if (!this.eventHandler) {
              return;
-@@ -1073,7 +1079,7 @@ export class ProjectService {
+@@ -1074,7 +1080,7 @@ export class ProjectService {
          this.eventHandler(event);
      }
  
@@ -11925,7 +11925,7 @@ index 78b7a20d9a..2580708404 100644
      sendProjectLoadingStartEvent(project: ConfiguredProject, reason: string) {
          if (!this.eventHandler) {
              return;
-@@ -1086,7 +1092,7 @@ export class ProjectService {
+@@ -1087,7 +1093,7 @@ export class ProjectService {
          this.eventHandler(event);
      }
  
@@ -11934,7 +11934,7 @@ index 78b7a20d9a..2580708404 100644
      sendProjectLoadingFinishEvent(project: ConfiguredProject) {
          if (!this.eventHandler || !project.sendLoadingProjectFinish) {
              return;
-@@ -1100,14 +1106,14 @@ export class ProjectService {
+@@ -1101,14 +1107,14 @@ export class ProjectService {
          this.eventHandler(event);
      }
  
@@ -11951,7 +11951,7 @@ index 78b7a20d9a..2580708404 100644
      delayUpdateProjectGraphAndEnsureProjectStructureForOpenFiles(project: Project) {
          this.delayUpdateProjectGraph(project);
          this.delayEnsureProjectForOpenFiles();
-@@ -1181,14 +1187,14 @@ export class ProjectService {
+@@ -1182,14 +1188,14 @@ export class ProjectService {
          return this.findExternalProjectByProjectName(projectName) || this.findConfiguredProjectByProjectName(toNormalizedPath(projectName));
      }
  
@@ -11968,23 +11968,23 @@ index 78b7a20d9a..2580708404 100644
      forEachEnabledProject(cb: (project: Project) => void) {
          this.forEachProject(project => {
              if (!project.isOrphan() && project.languageServiceEnabled) {
-@@ -1201,13 +1207,13 @@ export class ProjectService {
+@@ -1202,13 +1208,13 @@ export class ProjectService {
          return ensureProject ? this.ensureDefaultProjectForFile(fileName) : this.tryGetDefaultProjectForFile(fileName);
      }
  
 -    /* @internal */
 +    /** @internal */
-     tryGetDefaultProjectForFile(fileName: NormalizedPath): Project | undefined {
-         const scriptInfo = this.getScriptInfoForNormalizedPath(fileName);
+     tryGetDefaultProjectForFile(fileNameOrScriptInfo: NormalizedPath | ScriptInfo): Project | undefined {
+         const scriptInfo = isString(fileNameOrScriptInfo) ? this.getScriptInfoForNormalizedPath(fileNameOrScriptInfo) : fileNameOrScriptInfo;
          return scriptInfo && !scriptInfo.isOrphan() ? scriptInfo.getDefaultProject() : undefined;
      }
  
 -    /* @internal */
 +    /** @internal */
-     ensureDefaultProjectForFile(fileName: NormalizedPath): Project {
-         return this.tryGetDefaultProjectForFile(fileName) || this.doEnsureDefaultProjectForFile(fileName);
+     ensureDefaultProjectForFile(fileNameOrScriptInfo: NormalizedPath | ScriptInfo): Project {
+         return this.tryGetDefaultProjectForFile(fileNameOrScriptInfo) || this.doEnsureDefaultProjectForFile(fileNameOrScriptInfo);
      }
-@@ -1336,7 +1342,7 @@ export class ProjectService {
+@@ -1339,7 +1345,7 @@ export class ProjectService {
      /**
       * This is to watch whenever files are added or removed to the wildcard directories
       */
@@ -11993,7 +11993,7 @@ index 78b7a20d9a..2580708404 100644
      private watchWildcardDirectory(directory: Path, flags: WatchDirectoryFlags, configFileName: NormalizedPath, config: ParsedConfig) {
          return this.watchFactory.watchDirectory(
              directory,
-@@ -1402,7 +1408,7 @@ export class ProjectService {
+@@ -1405,7 +1411,7 @@ export class ProjectService {
          );
      }
  
@@ -12002,7 +12002,7 @@ index 78b7a20d9a..2580708404 100644
      private delayUpdateProjectsFromParsedConfigOnConfigFileChange(canonicalConfigFilePath: NormalizedPath, reloadReason: string) {
          const configFileExistenceInfo = this.configFileExistenceInfoCache.get(canonicalConfigFilePath);
          if (!configFileExistenceInfo?.config) return false;
-@@ -1431,7 +1437,7 @@ export class ProjectService {
+@@ -1434,7 +1440,7 @@ export class ProjectService {
          return scheduledAnyProjectUpdate;
      }
  
@@ -12011,7 +12011,7 @@ index 78b7a20d9a..2580708404 100644
      private onConfigFileChanged(canonicalConfigFilePath: NormalizedPath, eventKind: FileWatcherEventKind) {
          const configFileExistenceInfo = this.configFileExistenceInfoCache.get(canonicalConfigFilePath)!;
          if (eventKind === FileWatcherEventKind.Deleted) {
-@@ -1515,7 +1521,7 @@ export class ProjectService {
+@@ -1518,7 +1524,7 @@ export class ProjectService {
          }
      }
  
@@ -12020,7 +12020,7 @@ index 78b7a20d9a..2580708404 100644
      assignOrphanScriptInfoToInferredProject(info: ScriptInfo, projectRootPath: NormalizedPath | undefined) {
          Debug.assert(info.isOrphan());
  
-@@ -1701,7 +1707,7 @@ export class ProjectService {
+@@ -1704,7 +1710,7 @@ export class ProjectService {
          return exists;
      }
  
@@ -12029,7 +12029,7 @@ index 78b7a20d9a..2580708404 100644
      private createConfigFileWatcherForParsedConfig(configFileName: NormalizedPath, canonicalConfigFilePath: NormalizedPath, forProject: ConfiguredProject) {
          const configFileExistenceInfo = this.configFileExistenceInfoCache.get(canonicalConfigFilePath)!;
          // When watching config file for parsed config, remove the noopFileWatcher that can be created for open files impacted by config file and watch for real
-@@ -1728,7 +1734,7 @@ export class ProjectService {
+@@ -1731,7 +1737,7 @@ export class ProjectService {
              forEachEntry(configFileExistenceInfo.openFilesImpactedByConfigFile, identity);
      }
  
@@ -12038,7 +12038,7 @@ index 78b7a20d9a..2580708404 100644
      releaseParsedConfig(canonicalConfigFilePath: NormalizedPath, forProject: ConfiguredProject) {
          const configFileExistenceInfo = this.configFileExistenceInfoCache.get(canonicalConfigFilePath)!;
          if (!configFileExistenceInfo.config?.projects.delete(forProject.canonicalConfigFilePath)) return;
-@@ -1766,7 +1772,7 @@ export class ProjectService {
+@@ -1769,7 +1775,7 @@ export class ProjectService {
       * Close the config file watcher in the cached ConfigFileExistenceInfo
       *   if there arent any open files that are root of inferred project and there is no parsed config held by any project
       */
@@ -12047,7 +12047,7 @@ index 78b7a20d9a..2580708404 100644
      private closeConfigFileWatcherOnReleaseOfOpenFile(configFileExistenceInfo: ConfigFileExistenceInfo) {
          // Close the config file watcher if there are no more open files that are root of inferred project
          // or if there are no projects that need to watch this config file existence info
-@@ -1814,7 +1820,7 @@ export class ProjectService {
+@@ -1817,7 +1823,7 @@ export class ProjectService {
      /**
       * This is called by inferred project whenever script info is added as a root
       */
@@ -12056,7 +12056,7 @@ index 78b7a20d9a..2580708404 100644
      startWatchingConfigFilesForInferredProjectRoot(info: ScriptInfo) {
          Debug.assert(info.isScriptOpen());
          this.forEachConfigFileLocation(info, (canonicalConfigFilePath, configFileName) => {
-@@ -1844,7 +1850,7 @@ export class ProjectService {
+@@ -1847,7 +1853,7 @@ export class ProjectService {
      /**
       * This is called by inferred project whenever root script info is removed from it
       */
@@ -12065,7 +12065,7 @@ index 78b7a20d9a..2580708404 100644
      stopWatchingConfigFilesForInferredProjectRoot(info: ScriptInfo) {
          this.forEachConfigFileLocation(info, canonicalConfigFilePath => {
              const configFileExistenceInfo = this.configFileExistenceInfoCache.get(canonicalConfigFilePath);
-@@ -1913,7 +1919,7 @@ export class ProjectService {
+@@ -1916,7 +1922,7 @@ export class ProjectService {
          return undefined;
      }
  
@@ -12074,7 +12074,7 @@ index 78b7a20d9a..2580708404 100644
      findDefaultConfiguredProject(info: ScriptInfo) {
          if (!info.isScriptOpen()) return undefined;
          const configFileName = this.getConfigFileNameForFile(info);
-@@ -1977,7 +1983,7 @@ export class ProjectService {
+@@ -1980,7 +1986,7 @@ export class ProjectService {
          this.logger.endGroup();
      }
  
@@ -12083,7 +12083,7 @@ index 78b7a20d9a..2580708404 100644
      findConfiguredProjectByProjectName(configFileName: NormalizedPath): ConfiguredProject | undefined {
          // make sure that casing of config file name is consistent
          const canonicalConfigFilePath = asNormalizedPath(this.toCanonicalFileName(configFileName));
-@@ -2048,7 +2054,7 @@ export class ProjectService {
+@@ -2051,7 +2057,7 @@ export class ProjectService {
          return project;
      }
  
@@ -12092,7 +12092,7 @@ index 78b7a20d9a..2580708404 100644
      sendProjectTelemetry(project: ExternalProject | ConfiguredProject): void {
          if (this.seenProjects.has(project.projectName)) {
              setProjectOptionsUsed(project);
-@@ -2102,7 +2108,7 @@ export class ProjectService {
+@@ -2105,7 +2111,7 @@ export class ProjectService {
          project.setTypeAcquisition(typeAcquisition);
      }
  
@@ -12101,7 +12101,7 @@ index 78b7a20d9a..2580708404 100644
      createConfiguredProject(configFileName: NormalizedPath) {
          tracing?.instant(tracing.Phase.Session, "createConfiguredProject", { configFilePath: configFileName });
          this.logger.info(`Creating configuration project ${configFileName}`);
-@@ -2135,7 +2141,7 @@ export class ProjectService {
+@@ -2138,7 +2144,7 @@ export class ProjectService {
          return project;
      }
  
@@ -12110,7 +12110,7 @@ index 78b7a20d9a..2580708404 100644
      private createConfiguredProjectWithDelayLoad(configFileName: NormalizedPath, reason: string) {
          const project = this.createConfiguredProject(configFileName);
          project.pendingReload = ConfigFileProgramReloadLevel.Full;
-@@ -2143,14 +2149,14 @@ export class ProjectService {
+@@ -2146,14 +2152,14 @@ export class ProjectService {
          return project;
      }
  
@@ -12127,7 +12127,7 @@ index 78b7a20d9a..2580708404 100644
      private createLoadAndUpdateConfiguredProject(configFileName: NormalizedPath, reason: string) {
          const project = this.createAndLoadConfiguredProject(configFileName, reason);
          project.updateGraph();
-@@ -2160,7 +2166,7 @@ export class ProjectService {
+@@ -2163,7 +2169,7 @@ export class ProjectService {
      /**
       * Read the config file of the project, and update the project root file names.
       */
@@ -12136,7 +12136,7 @@ index 78b7a20d9a..2580708404 100644
      private loadConfiguredProject(project: ConfiguredProject, reason: string) {
          tracing?.push(tracing.Phase.Session, "loadConfiguredProject", { configFilePath: project.canonicalConfigFilePath });
          this.sendProjectLoadingStartEvent(project, reason);
-@@ -2207,7 +2213,7 @@ export class ProjectService {
+@@ -2210,7 +2216,7 @@ export class ProjectService {
          tracing?.pop();
      }
  
@@ -12145,7 +12145,7 @@ index 78b7a20d9a..2580708404 100644
      ensureParsedConfigUptoDate(configFilename: NormalizedPath, canonicalConfigFilePath: NormalizedPath, configFileExistenceInfo: ConfigFileExistenceInfo, forProject: ConfiguredProject): ConfigFileExistenceInfo {
          if (configFileExistenceInfo.config) {
              if (!configFileExistenceInfo.config.reloadLevel) return configFileExistenceInfo;
-@@ -2299,7 +2305,7 @@ export class ProjectService {
+@@ -2302,7 +2308,7 @@ export class ProjectService {
          return configFileExistenceInfo;
      }
  
@@ -12154,7 +12154,7 @@ index 78b7a20d9a..2580708404 100644
      watchWildcards(configFileName: NormalizedPath, { exists, config }: ConfigFileExistenceInfo, forProject: ConfiguredProject) {
          config!.projects.set(forProject.canonicalConfigFilePath, true);
          if (exists) {
-@@ -2320,7 +2326,7 @@ export class ProjectService {
+@@ -2323,7 +2329,7 @@ export class ProjectService {
          }
      }
  
@@ -12163,7 +12163,7 @@ index 78b7a20d9a..2580708404 100644
      stopWatchingWildCards(canonicalConfigFilePath: NormalizedPath, forProject: ConfiguredProject) {
          const configFileExistenceInfo = this.configFileExistenceInfoCache.get(canonicalConfigFilePath)!;
          if (!configFileExistenceInfo.config ||
-@@ -2426,7 +2432,7 @@ export class ProjectService {
+@@ -2429,7 +2435,7 @@ export class ProjectService {
      /**
       * Reload the file names from config file specs and update the project graph
       */
@@ -12172,7 +12172,7 @@ index 78b7a20d9a..2580708404 100644
      reloadFileNamesOfConfiguredProject(project: ConfiguredProject) {
          const fileNames = this.reloadFileNamesOfParsedConfig(project.getConfigFilePath(), this.configFileExistenceInfoCache.get(project.canonicalConfigFilePath)!.config!);
          project.updateErrorOnNoInputFiles(fileNames);
-@@ -2434,7 +2440,7 @@ export class ProjectService {
+@@ -2437,7 +2443,7 @@ export class ProjectService {
          return project.updateGraph();
      }
  
@@ -12181,7 +12181,7 @@ index 78b7a20d9a..2580708404 100644
      private reloadFileNamesOfParsedConfig(configFileName: NormalizedPath, config: ParsedConfig) {
          if (config.reloadLevel === undefined) return config.parsedCommandLine!.fileNames;
          Debug.assert(config.reloadLevel === ConfigFileProgramReloadLevel.Partial);
-@@ -2450,7 +2456,7 @@ export class ProjectService {
+@@ -2453,7 +2459,7 @@ export class ProjectService {
          return fileNames;
      }
  
@@ -12190,7 +12190,7 @@ index 78b7a20d9a..2580708404 100644
      setFileNamesOfAutoImportProviderProject(project: AutoImportProviderProject, fileNames: string[]) {
          this.updateNonInferredProjectFiles(project, fileNames, fileNamePropertyReader);
      }
-@@ -2458,7 +2464,7 @@ export class ProjectService {
+@@ -2461,7 +2467,7 @@ export class ProjectService {
      /**
       * Read the config file of the project again by clearing the cache and update the project graph
       */
@@ -12199,7 +12199,7 @@ index 78b7a20d9a..2580708404 100644
      reloadConfiguredProject(project: ConfiguredProject, reason: string, isInitialLoad: boolean, clearSemanticCache: boolean) {
          // At this point, there is no reason to not have configFile in the host
          const host = project.getCachedDirectoryStructureHost();
-@@ -2476,7 +2482,7 @@ export class ProjectService {
+@@ -2479,7 +2485,7 @@ export class ProjectService {
          this.sendConfigFileDiagEvent(project, configFileName);
      }
  
@@ -12208,7 +12208,7 @@ index 78b7a20d9a..2580708404 100644
      private clearSemanticCache(project: Project) {
          project.resolutionCache.clear();
          project.getLanguageService(/*ensureSynchronized*/ false).cleanupSemanticCache();
-@@ -2593,7 +2599,7 @@ export class ProjectService {
+@@ -2596,7 +2602,7 @@ export class ProjectService {
          return project;
      }
  
@@ -12217,7 +12217,7 @@ index 78b7a20d9a..2580708404 100644
      getOrCreateScriptInfoNotOpenedByClient(uncheckedFileName: string, currentDirectory: string, hostToQueryFileExistsOn: DirectoryStructureHost) {
          return this.getOrCreateScriptInfoNotOpenedByClientForNormalizedPath(
              toNormalizedPath(uncheckedFileName), currentDirectory, /*scriptKind*/ undefined,
-@@ -2605,7 +2611,7 @@ export class ProjectService {
+@@ -2608,7 +2614,7 @@ export class ProjectService {
          return this.getScriptInfoForNormalizedPath(toNormalizedPath(uncheckedFileName));
      }
  
@@ -12226,7 +12226,7 @@ index 78b7a20d9a..2580708404 100644
      getScriptInfoOrConfig(uncheckedFileName: string): ScriptInfoOrConfig | undefined {
          const path = toNormalizedPath(uncheckedFileName);
          const info = this.getScriptInfoForNormalizedPath(path);
-@@ -2614,7 +2620,7 @@ export class ProjectService {
+@@ -2617,7 +2623,7 @@ export class ProjectService {
          return configProject && configProject.getCompilerOptions().configFile;
      }
  
@@ -12235,7 +12235,7 @@ index 78b7a20d9a..2580708404 100644
      logErrorForScriptInfoNotFound(fileName: string): void {
          const names = arrayFrom(this.filenameToScriptInfo.entries()).map(([path, scriptInfo]) => ({ path, fileName: scriptInfo.fileName }));
          this.logger.msg(`Could not find file ${JSON.stringify(fileName)}.\nAll files are: ${JSON.stringify(names)}`, Msg.Err);
-@@ -2624,7 +2630,7 @@ export class ProjectService {
+@@ -2627,7 +2633,7 @@ export class ProjectService {
       * Returns the projects that contain script info through SymLink
       * Note that this does not return projects in info.containingProjects
       */
@@ -12244,7 +12244,7 @@ index 78b7a20d9a..2580708404 100644
      getSymlinkedProjects(info: ScriptInfo): MultiMap<Path, Project> | undefined {
          let projects: MultiMap<Path, Project> | undefined;
          if (this.realpathToScriptInfos) {
-@@ -2737,7 +2743,7 @@ export class ProjectService {
+@@ -2740,7 +2746,7 @@ export class ProjectService {
          return result;
      }
  
@@ -12253,7 +12253,7 @@ index 78b7a20d9a..2580708404 100644
      watchPackageJsonsInNodeModules(dir: Path, project: Project): FileWatcher {
          const watcher = this.nodeModulesWatchers.get(dir) || this.createNodeModulesWatcher(dir);
          (watcher.affectedModuleSpecifierCacheProjects ||= new Set()).add(project.getProjectName());
-@@ -2865,7 +2871,7 @@ export class ProjectService {
+@@ -2868,7 +2874,7 @@ export class ProjectService {
          return this.filenameToScriptInfo.get(fileName);
      }
  
@@ -12262,7 +12262,7 @@ index 78b7a20d9a..2580708404 100644
      getDocumentPositionMapper(project: Project, generatedFileName: string, sourceFileName?: string): DocumentPositionMapper | undefined {
          // Since declaration info and map file watches arent updating project's directory structure host (which can cache file structure) use host
          const declarationInfo = this.getOrCreateScriptInfoNotOpenedByClient(generatedFileName, project.currentDirectory, this.host);
-@@ -2974,7 +2980,7 @@ export class ProjectService {
+@@ -2977,7 +2983,7 @@ export class ProjectService {
          return fileWatcher;
      }
  
@@ -12271,7 +12271,7 @@ index 78b7a20d9a..2580708404 100644
      getSourceFileLike(fileName: string, projectNameOrProject: string | Project, declarationInfo?: ScriptInfo) {
          const project = (projectNameOrProject as Project).projectName ? projectNameOrProject as Project : this.findProject(projectNameOrProject as string);
          if (project) {
-@@ -3015,7 +3021,7 @@ export class ProjectService {
+@@ -3018,7 +3024,7 @@ export class ProjectService {
          return info.sourceFileLike;
      }
  
@@ -12280,7 +12280,7 @@ index 78b7a20d9a..2580708404 100644
      setPerformanceEventHandler(performanceEventHandler: PerformanceEventHandler) {
          this.performanceEventHandler = performanceEventHandler;
      }
-@@ -3073,12 +3079,12 @@ export class ProjectService {
+@@ -3076,12 +3082,12 @@ export class ProjectService {
          }
      }
  
@@ -12295,7 +12295,7 @@ index 78b7a20d9a..2580708404 100644
      private getWatchOptionsFromProjectWatchOptions(projectOptions: WatchOptions | undefined) {
          return projectOptions && this.hostConfiguration.watchOptions ?
              { ...this.hostConfiguration.watchOptions, ...projectOptions } :
-@@ -3268,7 +3274,7 @@ export class ProjectService {
+@@ -3271,7 +3277,7 @@ export class ProjectService {
          return this.openClientFileWithNormalizedPath(toNormalizedPath(fileName), fileContent, scriptKind, /*hasMixedContent*/ false, projectRootPath ? toNormalizedPath(projectRootPath) : undefined);
      }
  
@@ -12304,7 +12304,7 @@ index 78b7a20d9a..2580708404 100644
      getOriginalLocationEnsuringConfiguredProject(project: Project, location: DocumentPosition): DocumentPosition | undefined {
          const isSourceOfProjectReferenceRedirect = project.isSourceOfProjectReferenceRedirect(location.fileName);
          const originalLocation = isSourceOfProjectReferenceRedirect ?
-@@ -3499,7 +3505,7 @@ export class ProjectService {
+@@ -3502,7 +3508,7 @@ export class ProjectService {
          }
      }
  
@@ -12313,7 +12313,7 @@ index 78b7a20d9a..2580708404 100644
      loadAncestorProjectTree(forProjects?: ReadonlyCollection<string>) {
          forProjects = forProjects || mapDefinedEntries(
              this.configuredProjects,
-@@ -3698,7 +3704,7 @@ export class ProjectService {
+@@ -3701,7 +3707,7 @@ export class ProjectService {
       * @param filename is absolute pathname
       */
      closeClientFile(uncheckedFileName: string): void;
@@ -12322,7 +12322,7 @@ index 78b7a20d9a..2580708404 100644
      closeClientFile(uncheckedFileName: string, skipAssignOrphanScriptInfosToInferredProject: true): boolean;
      closeClientFile(uncheckedFileName: string, skipAssignOrphanScriptInfosToInferredProject?: true) {
          const info = this.getScriptInfoForNormalizedPath(toNormalizedPath(uncheckedFileName));
-@@ -3721,7 +3727,7 @@ export class ProjectService {
+@@ -3724,7 +3730,7 @@ export class ProjectService {
          }
      }
  
@@ -12331,7 +12331,7 @@ index 78b7a20d9a..2580708404 100644
      synchronizeProjectList(knownProjects: protocol.ProjectVersionInfo[], includeProjectReferenceRedirectInfo?: boolean): ProjectFilesWithTSDiagnostics[] {
          const files: ProjectFilesWithTSDiagnostics[] = [];
          this.collectChanges(knownProjects, this.externalProjects, includeProjectReferenceRedirectInfo, files);
-@@ -3730,7 +3736,7 @@ export class ProjectService {
+@@ -3733,7 +3739,7 @@ export class ProjectService {
          return files;
      }
  
@@ -12340,7 +12340,7 @@ index 78b7a20d9a..2580708404 100644
      applyChangesInOpenFiles(openFiles: Iterator<OpenFileArguments> | undefined, changedFiles?: Iterator<ChangeFileArguments>, closedFiles?: string[]): void {
          let openScriptInfos: ScriptInfo[] | undefined;
          let assignOrphanScriptInfosToInferredProject = false;
-@@ -3793,7 +3799,7 @@ export class ProjectService {
+@@ -3796,7 +3802,7 @@ export class ProjectService {
          }
      }
  
@@ -12349,7 +12349,7 @@ index 78b7a20d9a..2580708404 100644
      applyChangesToFile(scriptInfo: ScriptInfo, changes: Iterator<TextChange>) {
          while (true) {
              const iterResult = changes.next();
-@@ -4101,7 +4107,7 @@ export class ProjectService {
+@@ -4104,7 +4110,7 @@ export class ProjectService {
          return false;
      }
  
@@ -12358,7 +12358,7 @@ index 78b7a20d9a..2580708404 100644
      requestEnablePlugin(project: Project, pluginConfigEntry: PluginImport, searchPaths: string[], pluginConfigOverrides: Map<any> | undefined) {
          if (!this.host.importPlugin && !this.host.require) {
              this.logger.info("Plugins were requested but not running in environment that supports 'require'. Nothing will be loaded");
-@@ -4128,12 +4134,12 @@ export class ProjectService {
+@@ -4131,12 +4137,12 @@ export class ProjectService {
          project.endEnablePlugin(project.beginEnablePluginSync(pluginConfigEntry, searchPaths, pluginConfigOverrides));
      }
  
@@ -12373,7 +12373,7 @@ index 78b7a20d9a..2580708404 100644
      hasPendingPluginEnablements() {
          return !!this.currentPluginEnablementPromise;
      }
-@@ -4141,7 +4147,7 @@ export class ProjectService {
+@@ -4144,7 +4150,7 @@ export class ProjectService {
      /**
       * Waits for any ongoing plugin enablement requests to complete.
       */
@@ -12382,7 +12382,7 @@ index 78b7a20d9a..2580708404 100644
      async waitForPendingPlugins() {
          while (this.currentPluginEnablementPromise) {
              await this.currentPluginEnablementPromise;
-@@ -4151,7 +4157,7 @@ export class ProjectService {
+@@ -4154,7 +4160,7 @@ export class ProjectService {
      /**
       * Starts enabling any requested plugins without waiting for the result.
       */
@@ -12391,7 +12391,7 @@ index 78b7a20d9a..2580708404 100644
      enableRequestedPlugins() {
          if (this.pendingPluginEnablements) {
              void this.enableRequestedPluginsAsync();
-@@ -4219,7 +4225,7 @@ export class ProjectService {
+@@ -4222,7 +4228,7 @@ export class ProjectService {
          this.currentPluginConfigOverrides.set(args.pluginName, args.configuration);
      }
  
@@ -12400,7 +12400,7 @@ index 78b7a20d9a..2580708404 100644
      getPackageJsonsVisibleToFile(fileName: string, rootDir?: string): readonly ProjectPackageJsonInfo[] {
          const packageJsonCache = this.packageJsonCache;
          const rootPath = rootDir && this.toPath(rootDir);
-@@ -4247,7 +4253,7 @@ export class ProjectService {
+@@ -4250,7 +4256,7 @@ export class ProjectService {
          return result;
      }
  
@@ -12409,7 +12409,7 @@ index 78b7a20d9a..2580708404 100644
      getNearestAncestorDirectoryWithPackageJson(fileName: string): string | undefined {
          return forEachAncestorDirectory(fileName, directory => {
              switch (this.packageJsonCache.directoryHasPackageJson(this.toPath(directory))) {
-@@ -4261,7 +4267,7 @@ export class ProjectService {
+@@ -4264,7 +4270,7 @@ export class ProjectService {
          });
      }
  
@@ -12418,7 +12418,7 @@ index 78b7a20d9a..2580708404 100644
      private watchPackageJsonFile(path: Path) {
          const watchers = this.packageJsonFilesMap || (this.packageJsonFilesMap = new Map());
          if (!watchers.has(path)) {
-@@ -4291,13 +4297,13 @@ export class ProjectService {
+@@ -4294,13 +4300,13 @@ export class ProjectService {
          }
      }
  
@@ -12434,7 +12434,7 @@ index 78b7a20d9a..2580708404 100644
      includePackageJsonAutoImports(): PackageJsonAutoImportPreference {
          switch (this.hostConfiguration.preferences.includePackageJsonAutoImports) {
              case "on": return PackageJsonAutoImportPreference.On;
-@@ -4306,7 +4312,7 @@ export class ProjectService {
+@@ -4309,7 +4315,7 @@ export class ProjectService {
          }
      }
  
@@ -12443,7 +12443,7 @@ index 78b7a20d9a..2580708404 100644
      private invalidateProjectPackageJson(packageJsonPath: Path | undefined) {
          this.configuredProjects.forEach(invalidate);
          this.inferredProjects.forEach(invalidate);
-@@ -4321,7 +4327,7 @@ export class ProjectService {
+@@ -4324,7 +4330,7 @@ export class ProjectService {
          }
      }
  
@@ -12452,7 +12452,7 @@ index 78b7a20d9a..2580708404 100644
      getIncompleteCompletionsCache() {
          return this.incompleteCompletionsCache ||= createIncompleteCompletionsCache();
      }
-@@ -4342,9 +4348,9 @@ function createIncompleteCompletionsCache(): IncompleteCompletionsCache {
+@@ -4345,9 +4351,9 @@ function createIncompleteCompletionsCache(): IncompleteCompletionsCache {
      };
  }
  
@@ -12465,7 +12465,7 @@ index 78b7a20d9a..2580708404 100644
      return (config as TsConfigSourceFile).kind !== undefined;
  }
 diff --git a/src/server/project.ts b/src/server/project.ts
-index 11f84dae88..5a0a48a176 100644
+index 314306382d..648c7b2612 100644
 --- a/src/server/project.ts
 +++ b/src/server/project.ts
 @@ -39,10 +39,10 @@ export enum ProjectKind {
@@ -12559,7 +12559,7 @@ index 11f84dae88..5a0a48a176 100644
  
 -    /*@internal*/
 +    /** @internal */
-     hasInvalidatedResolution: HasInvalidatedResolution | undefined;
+     hasInvalidatedResolutions: HasInvalidatedResolutions | undefined;
  
 -    /*@internal*/
 +    /** @internal */
@@ -14003,10 +14003,10 @@ index aa160e17d2..25c77fe3d4 100644
          if (this.sourceMapFilePath && !isString(this.sourceMapFilePath)) {
              closeFileWatcherOf(this.sourceMapFilePath);
 diff --git a/src/server/session.ts b/src/server/session.ts
-index 15e09d7bc2..9200a281c8 100644
+index 7e99c899a1..282d963e76 100644
 --- a/src/server/session.ts
 +++ b/src/server/session.ts
-@@ -3531,7 +3531,7 @@ export interface HandlerResponse {
+@@ -3529,7 +3529,7 @@ export interface HandlerResponse {
      responseRequired?: boolean;
  }
  
@@ -14227,10 +14227,10 @@ index 7b8c7e1dbb..5ffb74881c 100644
      const classifications = getEncodedSemanticClassifications(program, cancellationToken, sourceFile, span);
  
 diff --git a/src/services/codefixes/helpers.ts b/src/services/codefixes/helpers.ts
-index c7bcd9840b..19cbe51830 100644
+index dacfd89765..c54f6da012 100644
 --- a/src/services/codefixes/helpers.ts
 +++ b/src/services/codefixes/helpers.ts
-@@ -17,13 +17,14 @@ import {
+@@ -18,13 +18,14 @@ import {
  } from "../_namespaces/ts";
  import { ImportAdder } from "../_namespaces/ts.codefix";
  
@@ -14246,7 +14246,7 @@ index c7bcd9840b..19cbe51830 100644
   */
  export function createMissingMemberNodes(
      classDeclaration: ClassLikeDeclaration,
-@@ -64,10 +65,11 @@ export const enum PreserveOptionalFlags {
+@@ -65,10 +66,11 @@ export const enum PreserveOptionalFlags {
      All     = Method | Property
  }
  
@@ -14259,7 +14259,7 @@ index c7bcd9840b..19cbe51830 100644
   */
  export function addNewNodeForMemberSymbol(
      symbol: Symbol,
-@@ -728,11 +730,12 @@ export function findJsonProperty(obj: ObjectLiteralExpression, name: string): Pr
+@@ -729,11 +731,12 @@ export function findJsonProperty(obj: ObjectLiteralExpression, name: string): Pr
      return find(obj.properties, (p): p is PropertyAssignment => isPropertyAssignment(p) && !!p.name && isStringLiteral(p.name) && p.name.text === name);
  }
  
@@ -14315,10 +14315,10 @@ index f07c1e33c9..b02eeed8f8 100644
  export function getImportKind(importingFile: SourceFile, exportKind: ExportKind, compilerOptions: CompilerOptions, forceImportKeyword?: boolean): ImportKind {
      switch (exportKind) {
 diff --git a/src/services/completions.ts b/src/services/completions.ts
-index 818c1a12f5..f72286ad5b 100644
+index 27b51f4e81..86de7d17e3 100644
 --- a/src/services/completions.ts
 +++ b/src/services/completions.ts
-@@ -99,7 +99,6 @@ export const SortText = {
+@@ -100,7 +100,6 @@ export const SortText = {
      },
  };
  
@@ -14326,7 +14326,7 @@ index 818c1a12f5..f72286ad5b 100644
  /**
   * Special values for `CompletionInfo['source']` used to disambiguate
   * completion items with the same `name`. (Each completion item must
-@@ -110,6 +109,8 @@ export const SortText = {
+@@ -111,6 +110,8 @@ export const SortText = {
   * is the module specifier of the suggestion. To avoid collisions,
   * the values here should not be a module specifier we would ever
   * generate for an auto-import.
@@ -14493,7 +14493,7 @@ index d9c6214828..89f9c3ad9f 100644
      const symbolName = checker.symbolToString(symbol); // Do not get scoped name, just the name of the symbol
      const symbolKind = SymbolDisplay.getSymbolKind(checker, symbol, node);
 diff --git a/src/services/importTracker.ts b/src/services/importTracker.ts
-index a95a9beadc..020bc712d9 100644
+index 21d318d2b5..33b2162189 100644
 --- a/src/services/importTracker.ts
 +++ b/src/services/importTracker.ts
 @@ -29,8 +29,11 @@ export interface ImportsResult {
@@ -14688,7 +14688,7 @@ index acb6048a1c..a49c9f248d 100644
      const { length } = span;
      if (length === 0 && !invoked) {
 diff --git a/src/services/refactors/helpers.ts b/src/services/refactors/helpers.ts
-index ed7658941d..39f6a16276 100644
+index 24ffc608fa..acafb54f1e 100644
 --- a/src/services/refactors/helpers.ts
 +++ b/src/services/refactors/helpers.ts
 @@ -1,23 +1,27 @@
@@ -14701,7 +14701,7 @@ index ed7658941d..39f6a16276 100644
   */
  export interface RefactorErrorInfo {
      error: string;
- };
+ }
  
 -/** @internal */
  /**
@@ -14723,7 +14723,7 @@ index ed7658941d..39f6a16276 100644
  export function refactorKindBeginsWith(known: string, requested: string | undefined): boolean {
      if(!requested) return true;
 diff --git a/src/services/services.ts b/src/services/services.ts
-index a5ae54eeab..03e2fcf8f2 100644
+index f485826e9a..d70b3868b8 100644
 --- a/src/services/services.ts
 +++ b/src/services/services.ts
 @@ -473,7 +473,7 @@ class IdentifierObject extends TokenOrIdentifierObject implements Identifier {
@@ -14939,7 +14939,7 @@ index d588995353..47c881cae0 100644
      // Lazily create this value to fix module loading errors.
      commandLineOptionsStringToEnum = commandLineOptionsStringToEnum ||
 diff --git a/src/services/types.ts b/src/services/types.ts
-index 73e309c515..3b621f2260 100644
+index d051509047..cba0ce0247 100644
 --- a/src/services/types.ts
 +++ b/src/services/types.ts
 @@ -15,10 +15,10 @@ declare module "../compiler/types" {
@@ -15054,11 +15054,11 @@ index 73e309c515..3b621f2260 100644
      resolveModuleNames?(moduleNames: string[], containingFile: string, reusedNames: string[] | undefined, redirectedReference: ResolvedProjectReference | undefined, options: CompilerOptions, containingSourceFile?: SourceFile): (ResolvedModule | undefined)[];
      getResolvedModuleWithFailedLookupLocationsFromCache?(modulename: string, containingFile: string, resolutionMode?: ModuleKind.CommonJS | ModuleKind.ESNext): ResolvedModuleWithFailedLookupLocations | undefined;
      resolveTypeReferenceDirectives?(typeDirectiveNames: string[] | FileReference[], containingFile: string, redirectedReference: ResolvedProjectReference | undefined, options: CompilerOptions, containingFileMode?: SourceFile["impliedNodeFormat"] | undefined): (ResolvedTypeReferenceDirective | undefined)[];
--    /* @internal */ hasInvalidatedResolution?: HasInvalidatedResolution;
+-    /* @internal */ hasInvalidatedResolutions?: HasInvalidatedResolutions;
 -    /* @internal */ hasChangedAutomaticTypeDirectiveNames?: HasChangedAutomaticTypeDirectiveNames;
 -    /* @internal */ getGlobalTypingsCacheLocation?(): string | undefined;
 -    /* @internal */ getSymlinkCache?(files?: readonly SourceFile[]): SymlinkCache;
-+    /** @internal */ hasInvalidatedResolution?: HasInvalidatedResolution;
++    /** @internal */ hasInvalidatedResolutions?: HasInvalidatedResolutions;
 +    /** @internal */ hasChangedAutomaticTypeDirectiveNames?: HasChangedAutomaticTypeDirectiveNames;
 +    /** @internal */ getGlobalTypingsCacheLocation?(): string | undefined;
 +    /** @internal */ getSymlinkCache?(files?: readonly SourceFile[]): SymlinkCache;

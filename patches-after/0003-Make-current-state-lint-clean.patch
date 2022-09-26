@@ -11,10 +11,10 @@ Subject: [PATCH] Make current state lint-clean
  4 files changed, 7 insertions(+), 8 deletions(-)
 
 diff --git a/src/server/editorServices.ts b/src/server/editorServices.ts
-index 899759fce3..78b7a20d9a 100644
+index 833c970de8..b59a533db1 100644
 --- a/src/server/editorServices.ts
 +++ b/src/server/editorServices.ts
-@@ -2076,7 +2076,7 @@ export class ProjectService {
+@@ -2079,7 +2079,7 @@ export class ProjectService {
              configFileName: configFileName(),
              projectType: project instanceof ExternalProject ? "external" : "configured",
              languageServiceEnabled: project.languageServiceEnabled,
@@ -24,10 +24,10 @@ index 899759fce3..78b7a20d9a 100644
          this.eventHandler({ eventName: ProjectInfoTelemetryEvent, data });
  
 diff --git a/src/server/session.ts b/src/server/session.ts
-index c1070c4ac2..15e09d7bc2 100644
+index 6a47051785..7e99c899a1 100644
 --- a/src/server/session.ts
 +++ b/src/server/session.ts
-@@ -2953,7 +2953,7 @@ export class Session<TMessage = string> implements EventSender {
+@@ -2951,7 +2951,7 @@ export class Session<TMessage = string> implements EventSender {
  
      private handlers = new Map(getEntries<(request: protocol.Request) => HandlerResponse>({
          [CommandNames.Status]: () => {

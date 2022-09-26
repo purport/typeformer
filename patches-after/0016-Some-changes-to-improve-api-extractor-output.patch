@@ -14,7 +14,7 @@ Subject: [PATCH] Some changes to improve api-extractor output
  7 files changed, 12 insertions(+), 12 deletions(-)
 
 diff --git a/src/compiler/program.ts b/src/compiler/program.ts
-index 6e18b7559d..0de0ef3b47 100644
+index 30a15b258d..dd9fc1b805 100644
 --- a/src/compiler/program.ts
 +++ b/src/compiler/program.ts
 @@ -570,7 +570,7 @@ export interface SourceFileImportsList {
@@ -36,7 +36,7 @@ index 6e18b7559d..0de0ef3b47 100644
      if ((isImportDeclaration(usage.parent) || isExportDeclaration(usage.parent))) {
          const isTypeOnly = isExclusivelyTypeOnlyImportOrExport(usage.parent);
 diff --git a/src/compiler/tsbuildPublic.ts b/src/compiler/tsbuildPublic.ts
-index bd457dda91..d880794009 100644
+index 3bdfe22993..463a9a217a 100644
 --- a/src/compiler/tsbuildPublic.ts
 +++ b/src/compiler/tsbuildPublic.ts
 @@ -194,7 +194,7 @@ export function createBuilderStatusReporter(system: System, pretty?: boolean): D
@@ -65,10 +65,10 @@ index bd457dda91..d880794009 100644
      const watchHost = createWatchHost(system, reportWatchStatus);
      copyProperties(host, watchHost);
 diff --git a/src/compiler/types.ts b/src/compiler/types.ts
-index 80cc2dff7d..233ec5b1d9 100644
+index 638abe01cc..20c1cb7459 100644
 --- a/src/compiler/types.ts
 +++ b/src/compiler/types.ts
-@@ -9306,7 +9306,7 @@ type PragmaArgTypeOptional<TDesc, TName extends string> =
+@@ -9307,7 +9307,7 @@ type PragmaArgTypeOptional<TDesc, TName extends string> =
          : {[K in TName]: PragmaArgTypeMaybeCapture<TDesc>};
  
  /** @internal */
@@ -78,7 +78,7 @@ index 80cc2dff7d..233ec5b1d9 100644
  
  /** @internal */
 diff --git a/src/compiler/watchPublic.ts b/src/compiler/watchPublic.ts
-index 6f7bd74aef..f43b5837e9 100644
+index c54d14e0b0..b183c3415c 100644
 --- a/src/compiler/watchPublic.ts
 +++ b/src/compiler/watchPublic.ts
 @@ -28,7 +28,7 @@ export interface ReadBuildProgramHost {
@@ -118,10 +118,10 @@ index d85748d14d..1eeba2f53b 100644
  
  /** Maps each ordinal in a set of overload definitions to a function that can be used to bind its arguments. */
 diff --git a/src/services/codefixes/helpers.ts b/src/services/codefixes/helpers.ts
-index 51f9161fed..da311e8181 100644
+index a233736159..b9b3eeb6f5 100644
 --- a/src/services/codefixes/helpers.ts
 +++ b/src/services/codefixes/helpers.ts
-@@ -416,7 +416,8 @@ export function createSignatureDeclarationFromCallExpression(
+@@ -417,7 +417,8 @@ export function createSignatureDeclarationFromCallExpression(
      }
  }
  

@@ -917,7 +917,7 @@ index 90c49fbb88..7f2c76fedd 100644
  interface File {
      name: string;
 diff --git a/src/testRunner/unittests/reuseProgramStructure.ts b/src/testRunner/unittests/reuseProgramStructure.ts
-index 7891de1f11..b597538f08 100644
+index fbbcaf7595..28fd3300f5 100644
 --- a/src/testRunner/unittests/reuseProgramStructure.ts
 +++ b/src/testRunner/unittests/reuseProgramStructure.ts
 @@ -1,215 +1,6 @@
@@ -1153,10 +1153,10 @@ index 19398777e3..8ef9fd038b 100644
  function verifyPathRecognizedAsDynamic(path: string) {
      const file: ts.projectSystem.File = {
 diff --git a/src/testRunner/unittests/tsserver/helpers.ts b/src/testRunner/unittests/tsserver/helpers.ts
-index 5c451157f2..055ca6ae6c 100644
+index 28c1f2137e..bb6879b387 100644
 --- a/src/testRunner/unittests/tsserver/helpers.ts
 +++ b/src/testRunner/unittests/tsserver/helpers.ts
-@@ -938,3 +938,15 @@ export function verifyGetErrScenario(scenario: VerifyGetErrScenario) {
+@@ -939,3 +939,15 @@ export function verifyGetErrScenario(scenario: VerifyGetErrScenario) {
      verifyErrorsUsingGeterrForProject(scenario);
      verifyErrorsUsingSyncMethods(scenario);
  }

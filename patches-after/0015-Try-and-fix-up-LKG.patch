@@ -9,7 +9,7 @@ Subject: [PATCH] Try and fix up LKG
  2 files changed, 43 insertions(+), 26 deletions(-)
 
 diff --git a/Gulpfile.js b/Gulpfile.js
-index 0a4630f916..0b9a59635f 100644
+index 5e95203b7c..7d8507c9b2 100644
 --- a/Gulpfile.js
 +++ b/Gulpfile.js
 @@ -127,7 +127,7 @@ const buildSrc = () => buildProject("src");
@@ -32,7 +32,7 @@ index 0a4630f916..0b9a59635f 100644
  
  /** @type {string | undefined} */
  let copyrightHeader;
-@@ -567,27 +569,20 @@ const importDefinitelyTypedTests = () => exec(process.execPath, ["scripts/import
+@@ -589,27 +591,20 @@ const importDefinitelyTypedTests = () => exec(process.execPath, ["scripts/import
  task("importDefinitelyTypedTests", series(buildImportDefinitelyTypedTests, importDefinitelyTypedTests));
  task("importDefinitelyTypedTests").description = "Runs the importDefinitelyTypedTests script to copy DT's tests to the TS-internal RWC tests";
  
@@ -64,7 +64,7 @@ index 0a4630f916..0b9a59635f 100644
      ].concat(libs.map(lib => lib.target));
      const missingFiles = expectedFiles
          .concat(localizationTargets)
-@@ -603,7 +598,8 @@ const produceLKG = async () => {
+@@ -625,7 +620,8 @@ const produceLKG = async () => {
      }
  };
  

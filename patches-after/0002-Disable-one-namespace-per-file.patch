@@ -11,10 +11,10 @@ merge it into any other files.
  1 file changed, 2 insertions(+), 1 deletion(-)
 
 diff --git a/.eslintrc.json b/.eslintrc.json
-index 2ea9622d72..114e47e238 100644
+index 1711f8592a..88374be52c 100644
 --- a/.eslintrc.json
 +++ b/.eslintrc.json
-@@ -94,7 +94,8 @@
+@@ -98,7 +98,8 @@
          "local/simple-indent": "error",
          "local/debug-assert": "error",
          "local/no-keywords": "error",

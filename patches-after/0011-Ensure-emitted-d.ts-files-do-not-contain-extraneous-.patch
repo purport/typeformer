@@ -1646,19 +1646,19 @@ index db5f894683..b3ec867dab 100644
  /** @deprecated Use `factory.createToken` or the factory supplied by your transformation context instead. */
  export const createToken = Debug.deprecate(function createToken<TKind extends SyntaxKind>(kind: TKind): Token<TKind> {
 diff --git a/src/server/editorServices.ts b/src/server/editorServices.ts
-index 2580708404..b935faca54 100644
+index 1ae9921a3c..547ab56186 100644
 --- a/src/server/editorServices.ts
 +++ b/src/server/editorServices.ts
 @@ -28,7 +28,7 @@ import {
-     parsePackageName, Path, PerformanceEvent, PluginImport, PollingInterval, ProjectPackageJsonInfo, ProjectReference,
-     ReadMapFile, ReadonlyCollection, removeFileExtension, removeIgnoredPath, removeMinAndVersionNumbers,
-     ResolvedProjectReference, resolveProjectReferencePath, returnNoopFileWatcher, returnTrue, ScriptKind, Set,
--    SharedExtendedConfigFileWatcher, some, SourceFile, startsWith, Ternary, TextChange, toFileNameLowerCase, toPath,
-+    SharedExtendedConfigFileWatcher, some, SourceFile, SourceFileLike, startsWith, Ternary, TextChange, toFileNameLowerCase, toPath,
-     tracing, tryAddToSet, tryReadFile, TsConfigSourceFile, TypeAcquisition, typeAcquisitionDeclarations,
-     unorderedRemoveItem, updateSharedExtendedConfigFileWatcher, updateWatchingWildcardDirectories, UserPreferences,
-     version, WatchDirectoryFlags, WatchFactory, WatchLogLevel, WatchOptions, WatchType, WildcardDirectoryWatcher,
-@@ -2981,7 +2981,7 @@ export class ProjectService {
+     parseJsonSourceFileConfigFileContent, parseJsonText, parsePackageName, Path, PerformanceEvent, PluginImport,
+     PollingInterval, ProjectPackageJsonInfo, ProjectReference, ReadMapFile, ReadonlyCollection, removeFileExtension,
+     removeIgnoredPath, removeMinAndVersionNumbers, ResolvedProjectReference, resolveProjectReferencePath,
+-    returnNoopFileWatcher, returnTrue, ScriptKind, Set, SharedExtendedConfigFileWatcher, some, SourceFile, startsWith,
++    returnNoopFileWatcher, returnTrue, ScriptKind, Set, SharedExtendedConfigFileWatcher, some, SourceFile, SourceFileLike, startsWith,
+     Ternary, TextChange, toFileNameLowerCase, toPath, tracing, tryAddToSet, tryReadFile, TsConfigSourceFile,
+     TypeAcquisition, typeAcquisitionDeclarations, unorderedRemoveItem, updateSharedExtendedConfigFileWatcher,
+     updateWatchingWildcardDirectories, UserPreferences, version, WatchDirectoryFlags, WatchFactory, WatchLogLevel,
+@@ -2984,7 +2984,7 @@ export class ProjectService {
      }
  
      /** @internal */
@@ -1668,19 +1668,19 @@ index 2580708404..b935faca54 100644
          if (project) {
              const path = project.toPath(fileName);
 diff --git a/src/services/codefixes/helpers.ts b/src/services/codefixes/helpers.ts
-index 19cbe51830..51f9161fed 100644
+index c54f6da012..a233736159 100644
 --- a/src/services/codefixes/helpers.ts
 +++ b/src/services/codefixes/helpers.ts
 @@ -8,7 +8,7 @@ import {
-     isAutoAccessorPropertyDeclaration, isFunctionDeclaration, isFunctionExpression, isGetAccessorDeclaration,
-     isIdentifier, isImportTypeNode, isInJSFile, isLiteralImportTypeNode, isMethodDeclaration, isObjectLiteralExpression,
-     isPropertyAccessExpression, isPropertyAssignment, isSetAccessorDeclaration, isStringLiteral, isYieldExpression,
--    LanguageServiceHost, length, map, Map, MethodDeclaration, Modifier, ModifierFlags, Node, NodeArray,
-+    LanguageServiceHost, length, map, Map, MethodDeclaration, MethodSignature, Modifier, ModifierFlags, Node, NodeArray,
-     NodeBuilderFlags, NodeFlags, nullTransformationContext, ObjectFlags, ObjectLiteralExpression, ObjectType,
-     ParameterDeclaration, Program, PropertyAssignment, PropertyDeclaration, PropertyName, QuotePreference, sameMap,
-     ScriptTarget, Set, SetAccessorDeclaration, setTextRange, Signature, SignatureDeclaration, signatureHasRestParameter,
-@@ -352,7 +352,7 @@ export function createSignatureDeclarationFromCallExpression(
+     IntersectionType, isArrowFunction, isAutoAccessorPropertyDeclaration, isFunctionDeclaration, isFunctionExpression,
+     isGetAccessorDeclaration, isIdentifier, isImportTypeNode, isInJSFile, isLiteralImportTypeNode, isMethodDeclaration,
+     isObjectLiteralExpression, isPropertyAccessExpression, isPropertyAssignment, isSetAccessorDeclaration,
+-    isStringLiteral, isYieldExpression, LanguageServiceHost, length, map, Map, MethodDeclaration, Modifier,
++    isStringLiteral, isYieldExpression, LanguageServiceHost, length, map, Map, MethodDeclaration, MethodSignature, Modifier,
+     ModifierFlags, Node, NodeArray, NodeBuilderFlags, NodeFlags, nullTransformationContext, ObjectFlags,
+     ObjectLiteralExpression, ObjectType, ParameterDeclaration, Program, PropertyAssignment, PropertyDeclaration,
+     PropertyName, QuotePreference, sameMap, ScriptTarget, Set, SetAccessorDeclaration, setTextRange, Signature,
+@@ -353,7 +353,7 @@ export function createSignatureDeclarationFromCallExpression(
      name: Identifier | string,
      modifierFlags: ModifierFlags,
      contextNode: Node

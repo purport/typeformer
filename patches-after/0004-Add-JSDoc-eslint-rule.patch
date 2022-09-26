@@ -10,10 +10,10 @@ Subject: [PATCH] Add JSDoc eslint rule
  create mode 100644 scripts/eslint/rules/jsdoc-format.js
 
 diff --git a/.eslintrc.json b/.eslintrc.json
-index 114e47e238..a5c61076cf 100644
+index 88374be52c..695c2ffc57 100644
 --- a/.eslintrc.json
 +++ b/.eslintrc.json
-@@ -96,6 +96,7 @@
+@@ -100,6 +100,7 @@
          "local/no-keywords": "error",
          // TOOD(jakebailey): delete; no longer relavent after modules.
          // "local/one-namespace-per-file": "error",
