@@ -5,14 +5,28 @@ Subject: [PATCH] Remove typescriptServices project
 
 This project is the same as the (soon added) typescript project.
 ---
+ src/harness/harnessIO.ts                     |  2 --
  src/typescriptServices/_namespaces/ts.ts     |  7 -------
  src/typescriptServices/tsconfig.json         | 16 ----------------
  src/typescriptServices/typescriptServices.ts | 16 ----------------
- 3 files changed, 39 deletions(-)
+ 4 files changed, 41 deletions(-)
  delete mode 100644 src/typescriptServices/_namespaces/ts.ts
  delete mode 100644 src/typescriptServices/tsconfig.json
  delete mode 100644 src/typescriptServices/typescriptServices.ts
 
+diff --git a/src/harness/harnessIO.ts b/src/harness/harnessIO.ts
+index 67dc20b87d..76976eab1e 100644
+--- a/src/harness/harnessIO.ts
++++ b/src/harness/harnessIO.ts
+@@ -185,8 +185,6 @@ if (IO.tryEnableSourceMapsForHost && /^development$/i.test(IO.getEnvironmentVari
+ }
+ 
+ export const libFolder = "built/local/";
+-const tcServicesFileName = ts.combinePaths(libFolder, "typescriptServices.js");
+-export const tcServicesFile = IO.readFile(tcServicesFileName) + IO.newLine() + `//# sourceURL=${IO.resolvePath(tcServicesFileName)}`;
+ 
+ export type SourceMapEmitterCallback = (
+     emittedFile: string,
 diff --git a/src/typescriptServices/_namespaces/ts.ts b/src/typescriptServices/_namespaces/ts.ts
 deleted file mode 100644
 index dc05210189..0000000000

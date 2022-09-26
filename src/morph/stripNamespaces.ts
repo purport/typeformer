@@ -400,6 +400,8 @@ export function stripNamespaces(project: Project): void {
         // Export each nested namespace as objects via:
         //     import * as bar from "./foo.bar"
         //     export { bar }
+        // Note: we use this form because `export * as bar from "./foo.bar"` is not supported by api-extractor.
+        // If we don't end up using it, or the feature is added, we can change this.
         const partsThis = FileUtils.getBaseName(filename)
             .slice(0, FileUtils.getBaseName(filename).length - FileUtils.getExtension(filename).length)
             .split(".");
