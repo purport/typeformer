@@ -1,0 +1,86 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Jake Bailey <5341706+jakebailey@users.noreply.github.com>
+Date: Mon, 26 Sep 2022 16:44:27 -0700
+Subject: [PATCH] Consolidate checks that test if the current environment is
+ Node
+
+---
+ src/compiler/performanceCore.ts |  4 ++--
+ src/compiler/sys.ts             | 15 ++++++++++++---
+ src/services/globalThisShim.ts  |  4 ++--
+ 3 files changed, 16 insertions(+), 7 deletions(-)
+
+diff --git a/src/compiler/performanceCore.ts b/src/compiler/performanceCore.ts
+index ce65f1d889..3788da62b9 100644
+--- a/src/compiler/performanceCore.ts
++++ b/src/compiler/performanceCore.ts
+@@ -1,4 +1,4 @@
+-import { Version, VersionRange } from "./_namespaces/ts";
++import { isNodeLikeSystem, Version, VersionRange } from "./_namespaces/ts";
+ 
+ // The following definitions provide the minimum compatible support for the Web Performance User Timings API
+ // between browsers and NodeJS:
+@@ -80,7 +80,7 @@ function tryGetWebPerformanceHooks(): PerformanceHooks | undefined {
+ }
+ 
+ function tryGetNodePerformanceHooks(): PerformanceHooks | undefined {
+-    if (typeof process !== "undefined" && process.nextTick && !process.browser && typeof module === "object" && typeof require === "function") {
++    if (isNodeLikeSystem()) {
+         try {
+             let performance: Performance;
+             const { performance: nodePerformance, PerformanceObserver } = require("perf_hooks") as typeof import("perf_hooks");
+diff --git a/src/compiler/sys.ts b/src/compiler/sys.ts
+index 97e8a2fee2..7f463fd88b 100644
+--- a/src/compiler/sys.ts
++++ b/src/compiler/sys.ts
+@@ -1429,6 +1429,17 @@ export function getNodeMajorVersion(): number | undefined {
+     return parseInt(version.substring(1, dot));
+ }
+ 
++/** @internal */
++export function isNodeLikeSystem(): boolean {
++    // Note: we don't use the presence of `require` to check if we are in Node;
++    // when bundled using esbuild, this function will be rewritten to `__require`
++    // and definitely exist.
++    return typeof process !== "undefined"
++        && process.nextTick
++        && !process.browser
++        && typeof module === "object";
++}
++
+ // TODO: GH#18217 this is used as if it's certainly defined in many places.
+ // eslint-disable-next-line prefer-const
+ export let sys: System = (() => {
+@@ -1978,9 +1989,7 @@ export let sys: System = (() => {
+     }
+ 
+     let sys: System | undefined;
+-    if (typeof process !== "undefined" && process.nextTick && !process.browser && typeof require !== "undefined") {
+-        // process and process.nextTick checks if current environment is node-like
+-        // process.browser check excludes webpack and browserify
++    if (isNodeLikeSystem()) {
+         sys = getNodeSystem();
+     }
+     if (sys) {
+diff --git a/src/services/globalThisShim.ts b/src/services/globalThisShim.ts
+index 9a8978bdb2..757442fb55 100644
+--- a/src/services/globalThisShim.ts
++++ b/src/services/globalThisShim.ts
+@@ -1,4 +1,4 @@
+-import { TypeScriptServicesFactory, versionMajorMinor } from "./_namespaces/ts";
++import { isNodeLikeSystem, TypeScriptServicesFactory, versionMajorMinor } from "./_namespaces/ts";
+ 
+ // We polyfill `globalThis` here so re can reliably patch the global scope
+ // in the contexts we want to in the same way across script and module formats
+@@ -47,7 +47,7 @@ declare global {
+ 
+ // if `process` is undefined, we're probably not running in node - patch legacy members onto the global scope
+ // @ts-ignore
+-if (typeof process === "undefined" || process.browser) {
++if (!isNodeLikeSystem()) {
+     /// TODO: this is used by VS, clean this up on both sides of the interface
+ 
+     //@ts-ignore
+-- 
+2.37.3
+
