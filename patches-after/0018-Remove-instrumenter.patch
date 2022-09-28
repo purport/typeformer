@@ -23,10 +23,10 @@ old source-level modification script tacked onto the real tsc.
  delete mode 100644 src/loggedIO/tsconfig-tsc-instrumented.json
 
 diff --git a/Gulpfile.js b/Gulpfile.js
-index a5a8e303b5..0f8113d92f 100644
+index 6a633f27d9..1a1a41f357 100644
 --- a/Gulpfile.js
 +++ b/Gulpfile.js
-@@ -567,23 +567,6 @@ task("baseline-accept").description = "Makes the most recent test results the ne
+@@ -566,23 +566,6 @@ task("baseline-accept").description = "Makes the most recent test results the ne
  task("baseline-accept-rwc", () => baselineAccept(localRwcBaseline, refRwcBaseline));
  task("baseline-accept-rwc").description = "Makes the most recent rwc test results the new baseline, overwriting the old baseline";
  
