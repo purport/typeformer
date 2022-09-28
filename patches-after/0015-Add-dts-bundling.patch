@@ -33,7 +33,7 @@ index cdf20ba5a2..4ba9e15206 100644
  scripts/processDiagnosticMessages.js
  scripts/produceLKG.js
 diff --git a/Gulpfile.js b/Gulpfile.js
-index 79939b403e..741e2379e0 100644
+index 2ccbe65837..f34e61427c 100644
 --- a/Gulpfile.js
 +++ b/Gulpfile.js
 @@ -127,6 +127,22 @@ const buildSrc = () => buildProject("src");
