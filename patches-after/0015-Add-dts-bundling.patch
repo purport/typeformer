@@ -6,7 +6,7 @@ Subject: [PATCH] Add dts bundling
 ---
  .gitignore                                    |     1 +
  Gulpfile.js                                   |    38 +-
- scripts/dtsBundler.ts                         |   205 +
+ scripts/dtsBundler.ts                         |   210 +
  src/compiler/commandLineParser.ts             |     2 +-
  src/compiler/factory/utilities.ts             |    11 +-
  src/compiler/moduleNameResolver.ts            |     8 +-
@@ -62,7 +62,7 @@ Subject: [PATCH] Add dts bundling
  tests/baselines/reference/APISample_linter.js |    24 +-
  .../reference/api/tsserverlibrary.d.ts        | 10874 ++++++++--------
  tests/baselines/reference/api/typescript.d.ts |  3195 +++--
- 58 files changed, 7644 insertions(+), 7705 deletions(-)
+ 58 files changed, 7649 insertions(+), 7705 deletions(-)
  create mode 100644 scripts/dtsBundler.ts
 
 diff --git a/.gitignore b/.gitignore
@@ -197,10 +197,17 @@ index 79939b403e..09494f331a 100644
      "   --built": "Compile using the built version of the compiler.",
 diff --git a/scripts/dtsBundler.ts b/scripts/dtsBundler.ts
 new file mode 100644
-index 0000000000..86c87fe972
+index 0000000000..8c581b0fa1
 --- /dev/null
 +++ b/scripts/dtsBundler.ts
-@@ -0,0 +1,205 @@
+@@ -0,0 +1,210 @@
++/**
++ * WARNING: this is a very, very rudimentary d.ts bundler; it only works
++ * in the TS project thanks to our history using namespaces, which has
++ * prevented us from duplicating names across files, and allows us to
++ * bundle as namespaces again, even though the project is modules.
++ */
++
 +import * as assert from "assert";
 +import * as fs from "fs";
 +import * as path from "path";
@@ -351,9 +358,7 @@ index 0000000000..86c87fe972
 +            continue;
 +        }
 +
-+        if (!me.declarations?.length) {
-+            continue;
-+        }
++        assert(me.declarations?.length);
 +
 +        if (me.flags & ts.SymbolFlags.Alias) {
 +            const resolved = typeChecker.getAliasedSymbol(me);
