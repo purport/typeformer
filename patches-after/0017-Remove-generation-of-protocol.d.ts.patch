@@ -221,7 +221,7 @@ index 2cc843d457..0000000000
 -const outputFile = process.argv[4];
 -writeProtocolFile(outputFile, protocolTs, typeScriptServicesDts);
 diff --git a/scripts/produceLKG.ts b/scripts/produceLKG.ts
-index 6f41ac8fb9..17aacb167e 100644
+index e18b694d10..1df84ed324 100644
 --- a/scripts/produceLKG.ts
 +++ b/scripts/produceLKG.ts
 @@ -17,7 +17,6 @@ async function produceLKG() {
@@ -232,7 +232,7 @@ index 6f41ac8fb9..17aacb167e 100644
      await writeGitAttributes();
  }
  
-@@ -64,21 +63,6 @@ async function copyTypesMap() {
+@@ -65,21 +64,6 @@ async function copyTypesMap() {
      await copyFromBuiltLocal("typesMap.json"); // Cannot accommodate copyright header
  }
  

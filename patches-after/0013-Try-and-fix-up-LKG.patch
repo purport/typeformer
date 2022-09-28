@@ -5,8 +5,8 @@ Subject: [PATCH] Try and fix up LKG
 
 ---
  Gulpfile.js           | 18 ++++++-----------
- scripts/produceLKG.ts | 45 +++++++++++++++++++++++++++++++------------
- 2 files changed, 39 insertions(+), 24 deletions(-)
+ scripts/produceLKG.ts | 46 ++++++++++++++++++++++++++++++++-----------
+ 2 files changed, 40 insertions(+), 24 deletions(-)
 
 diff --git a/Gulpfile.js b/Gulpfile.js
 index 78291b90a0..2ccbe65837 100644
@@ -55,7 +55,7 @@ index 78291b90a0..2ccbe65837 100644
  task("LKG").flags = {
      "   --built": "Compile using the built version of the compiler.",
 diff --git a/scripts/produceLKG.ts b/scripts/produceLKG.ts
-index 35f0c45ea7..6f41ac8fb9 100644
+index 35f0c45ea7..e18b694d10 100644
 --- a/scripts/produceLKG.ts
 +++ b/scripts/produceLKG.ts
 @@ -17,7 +17,7 @@ async function produceLKG() {
@@ -67,11 +67,12 @@ index 35f0c45ea7..6f41ac8fb9 100644
      await writeGitAttributes();
  }
  
-@@ -29,6 +29,26 @@ async function copyLocalizedDiagnostics() {
+@@ -29,6 +29,27 @@ async function copyLocalizedDiagnostics() {
      const dir = await fs.readdir(source);
      const ignoredFolders = ["enu"];
  
-+    // TODO(jakebailey): Can we emit these files somewhere else so they are more easily skippable?
++    // TODO(jakebailey): Instead of ignoring folders, we should keep a list of
++    // the localizationTargets somewhere that can be used by multiple modules.
 +    ignoredFolders.push(
 +        "compiler",
 +        "deprecatedCompat",
@@ -94,7 +95,7 @@ index 35f0c45ea7..6f41ac8fb9 100644
      for (const d of dir) {
          const fileName = path.join(source, d);
          if (
-@@ -44,6 +64,7 @@ async function copyTypesMap() {
+@@ -44,6 +65,7 @@ async function copyTypesMap() {
      await copyFromBuiltLocal("typesMap.json"); // Cannot accommodate copyright header
  }
  
@@ -102,7 +103,7 @@ index 35f0c45ea7..6f41ac8fb9 100644
  async function buildProtocol() {
      const protocolScript = path.join(__dirname, "buildProtocol.js");
      if (!fs.existsSync(protocolScript)) {
-@@ -59,20 +80,20 @@ async function buildProtocol() {
+@@ -59,20 +81,20 @@ async function buildProtocol() {
  }
  
  async function copyScriptOutputs() {
