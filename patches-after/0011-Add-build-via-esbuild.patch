@@ -1881,14 +1881,14 @@ index afce965527..28bfd96983 100644
 +    require("./_namespaces/tests");
 +}
 diff --git a/src/tsconfig-base.json b/src/tsconfig-base.json
-index d3ece6a19d..8b167bf410 100644
+index d3ece6a19d..c07487870f 100644
 --- a/src/tsconfig-base.json
 +++ b/src/tsconfig-base.json
 @@ -10,6 +10,7 @@
          "sourceMap": true,
          "composite": true,
          "noEmitOnError": true,
-+        "emitDeclarationOnly": false,
++        "emitDeclarationOnly": true,
  
          "strictNullChecks": true,
          "noImplicitAny": true,
