@@ -5,8 +5,9 @@ Subject: [PATCH] Clean up some TODOs
 
 ---
  Gulpfile.js           | 86 +++++++++++++++++++++++++------------------
+ scripts/dtsBundler.ts |  2 -
  scripts/produceLKG.ts | 16 ++++----
- 2 files changed, 58 insertions(+), 44 deletions(-)
+ 3 files changed, 58 insertions(+), 46 deletions(-)
 
 diff --git a/Gulpfile.js b/Gulpfile.js
 index a880d46cfb..3729da386c 100644
@@ -241,6 +242,19 @@ index a880d46cfb..3729da386c 100644
  const configureNightly = () => exec(process.execPath, ["scripts/configurePrerelease.js", "dev", "package.json", "src/compiler/corePublic.ts"]);
  task("configure-nightly", series(buildScripts, configureNightly));
  task("configure-nightly").description = "Runs scripts/configurePrerelease.ts to prepare a build for nightly publishing";
+diff --git a/scripts/dtsBundler.ts b/scripts/dtsBundler.ts
+index a362327a4b..ceb937ac67 100644
+--- a/scripts/dtsBundler.ts
++++ b/scripts/dtsBundler.ts
+@@ -61,8 +61,6 @@ function getDeclarationStatement(node: ts.Declaration): ts.Statement | undefined
+ 
+ const nullTransformationContext: ts.TransformationContext = (ts as any).nullTransformationContext;
+ 
+-// TODO(jakebailey): I can't seem to figure out how to load the real tsconfig, so, this will have to do.
+-// But, why don't we get trailing commas?
+ const program = ts.createProgram([entrypoint], { target: ts.ScriptTarget.ES5 });
+ 
+ const typeChecker = program.getTypeChecker();
 diff --git a/scripts/produceLKG.ts b/scripts/produceLKG.ts
 index 1df84ed324..d8b7062bb4 100644
 --- a/scripts/produceLKG.ts
