@@ -1,0 +1,157 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Jake Bailey <5341706+jakebailey@users.noreply.github.com>
+Date: Wed, 28 Sep 2022 12:24:54 -0700
+Subject: [PATCH] Remove instrumenter
+
+This infrastructure is used to create new RWC tests by making an
+"instrumented" tsc executable that outputs IO information.
+
+Per internal discussion, we don't think we need this sort of thing
+anymore, so remove it rather than try to make it work.
+
+If we wanted to make it work, I'd add a new entrypoint to the tsc
+project which calls the logged IO code directly, which matches what the
+old source-level modification script tacked onto the real tsc.
+---
+ Gulpfile.js                                 | 17 --------
+ src/instrumenter/instrumenter.ts            | 43 ---------------------
+ src/instrumenter/tsconfig.json              | 15 -------
+ src/loggedIO/tsconfig-tsc-instrumented.json | 26 -------------
+ 4 files changed, 101 deletions(-)
+ delete mode 100644 src/instrumenter/instrumenter.ts
+ delete mode 100644 src/instrumenter/tsconfig.json
+ delete mode 100644 src/loggedIO/tsconfig-tsc-instrumented.json
+
+diff --git a/Gulpfile.js b/Gulpfile.js
+index a5a8e303b5..0f8113d92f 100644
+--- a/Gulpfile.js
++++ b/Gulpfile.js
+@@ -567,23 +567,6 @@ task("baseline-accept").description = "Makes the most recent test results the ne
+ task("baseline-accept-rwc", () => baselineAccept(localRwcBaseline, refRwcBaseline));
+ task("baseline-accept-rwc").description = "Makes the most recent rwc test results the new baseline, overwriting the old baseline";
+ 
+-// TODO(jakebailey): figure out what tsc-instrumented and such are for and what do to with them.
+-
+-const buildLoggedIO = () => buildProject("src/loggedIO/tsconfig-tsc-instrumented.json");
+-const cleanLoggedIO = () => del("built/local/loggedIO.js");
+-cleanTasks.push(cleanLoggedIO);
+-
+-const buildInstrumenter = () => buildProject("src/instrumenter");
+-const cleanInstrumenter = () => cleanProject("src/instrumenter");
+-cleanTasks.push(cleanInstrumenter);
+-
+-const tscInstrumented = () => exec(process.execPath, ["built/local/instrumenter.js", "record", cmdLineOptions.tests || "iocapture", "built/local/tsc.js"]);
+-task("tsc-instrumented", series(lkgPreBuild, parallel(localize, buildTsc, buildServer, buildServices, buildLssl, buildLoggedIO, buildInstrumenter), tscInstrumented));
+-task("tsc-instrumented").description = "Builds an instrumented tsc.js";
+-task("tsc-instrumented").flags = {
+-    "-t --tests=<testname>": "The test to run."
+-};
+-
+ // TODO(rbuckton): Determine if we still need this task. Depending on a relative
+ //                 path here seems like a bad idea.
+ const updateSublime = () => src(["built/local/tsserver.js", "built/local/tsserver.js.map"])
+diff --git a/src/instrumenter/instrumenter.ts b/src/instrumenter/instrumenter.ts
+deleted file mode 100644
+index 641d173456..0000000000
+--- a/src/instrumenter/instrumenter.ts
++++ /dev/null
+@@ -1,43 +0,0 @@
+-import * as fs from "fs";
+-import * as path from "path";
+-
+-function instrumentForRecording(fn: string, tscPath: string) {
+-    instrument(tscPath, `
+-ts.sys = Playback.wrapSystem(ts.sys);
+-ts.sys.startRecord("${ fn }");`, `ts.sys.endRecord();`);
+-}
+-
+-function instrumentForReplay(logFilename: string, tscPath: string) {
+-    instrument(tscPath, `
+-ts.sys = Playback.wrapSystem(ts.sys);
+-ts.sys.startReplay("${ logFilename }");`);
+-}
+-
+-function instrument(tscPath: string, prepareCode: string, cleanupCode = "") {
+-    const bak = `${tscPath}.bak`;
+-    const filename = fs.existsSync(bak) ? bak : tscPath;
+-    const tscContent = fs.readFileSync(filename, "utf-8");
+-    fs.writeFileSync(bak, tscContent);
+-    const loggerContent = fs.readFileSync(path.resolve(path.dirname(tscPath) + "/loggedIO.js"), "utf-8");
+-    const invocationLine = "ts.executeCommandLine(ts.sys, ts.noop, ts.sys.args);";
+-    const index1 = tscContent.indexOf(invocationLine);
+-    if (index1 < 0) {
+-        throw new Error(`Could not find ${invocationLine}`);
+-    }
+-    const index2 = index1 + invocationLine.length;
+-    const newContent = tscContent.substr(0, index1) + loggerContent + prepareCode + invocationLine + cleanupCode + tscContent.substr(index2) + "\r\n";
+-    fs.writeFileSync(tscPath, newContent);
+-}
+-
+-const isJson = (arg: string) => arg.indexOf(".json") > 0;
+-
+-const record = process.argv.indexOf("record");
+-const tscPath = process.argv[process.argv.length - 1];
+-if (record >= 0) {
+-    console.log(`Instrumenting ${tscPath} for recording`);
+-    instrumentForRecording(process.argv[record + 1], tscPath);
+-}
+-else if (process.argv.some(isJson)) {
+-    const filename = process.argv.filter(isJson)[0];
+-    instrumentForReplay(filename, tscPath);
+-}
+diff --git a/src/instrumenter/tsconfig.json b/src/instrumenter/tsconfig.json
+deleted file mode 100644
+index b20d49e47c..0000000000
+--- a/src/instrumenter/tsconfig.json
++++ /dev/null
+@@ -1,15 +0,0 @@
+-{
+-    "compilerOptions": {
+-        "module": "commonjs",
+-        "target": "es5",
+-        "lib": [
+-            "es6",
+-            "dom",
+-            "scripthost"
+-        ],
+-        "outDir": "../../built/local/instrumenter"
+-    },
+-    "files": [
+-        "instrumenter.ts"
+-    ]
+-}
+diff --git a/src/loggedIO/tsconfig-tsc-instrumented.json b/src/loggedIO/tsconfig-tsc-instrumented.json
+deleted file mode 100644
+index 65159c293a..0000000000
+--- a/src/loggedIO/tsconfig-tsc-instrumented.json
++++ /dev/null
+@@ -1,26 +0,0 @@
+-{
+-    // TODO: ???
+-    "extends": "../tsconfig-base",
+-    "compilerOptions": {
+-        "outDir": "../../built/local/loggedIO",
+-        "types": [
+-            "node", "mocha", "chai"
+-        ],
+-        "lib": [
+-            "es6",
+-            "scripthost"
+-        ]
+-    },
+-    "references": [
+-        { "path": "../compiler" },
+-        { "path": "../services" },
+-        { "path": "../jsTyping" },
+-        { "path": "../server" },
+-        { "path": "../typingsInstallerCore" },
+-        { "path": "../harness" },
+-    ],
+-
+-    "files": [
+-        "loggedIO.ts"
+-    ]
+-}
+-- 
+2.37.3
+
