@@ -5,13 +5,13 @@ Subject: [PATCH] Add babel for let/const lowering
 
 This reverts commit 8623e3ee6936bf15418fc437b45d7621ca732296.
 ---
- Gulpfile.js       |   24 +-
+ Gulpfile.js       |   25 +-
  package-lock.json | 1267 +++++++++++++++++++++++++++++++++++++++++++++
  package.json      |    3 +
- 3 files changed, 1287 insertions(+), 7 deletions(-)
+ 3 files changed, 1288 insertions(+), 7 deletions(-)
 
 diff --git a/Gulpfile.js b/Gulpfile.js
-index 1626668388..78291b90a0 100644
+index 1626668388..b5f47b8e3b 100644
 --- a/Gulpfile.js
 +++ b/Gulpfile.js
 @@ -140,14 +140,17 @@ function getCopyrightHeader() {
@@ -34,7 +34,7 @@ index 1626668388..78291b90a0 100644
          platform: "node",
          // TODO: also specify minimal browser targets
          target: "node10", // Node 10 is the oldest benchmarker.
-@@ -183,7 +186,14 @@ function esbuildTask(entrypoint, outfile, exportIsTsObject = false) {
+@@ -183,7 +186,15 @@ function esbuildTask(entrypoint, outfile, exportIsTsObject = false) {
      }
  
      return {
@@ -42,7 +42,8 @@ index 1626668388..78291b90a0 100644
 +        build: async () => {
 +            await esbuild.build(options);
 +            if (performanceMatters) {
-+                // TODO: we could use ts.transpileModule for this, but running babel is faster to get this singular transform.
++                // TODO(jakebailey): we could use ts.transpileModule for this, but running babel is faster to get this singular transform.
++                // If we did use ts.transpileModule, we'd need ts.ScriptTarget.ES5, which also will downlevel arrow functions, for-of, spread, etc.
 +                await exec(process.execPath, ["./node_modules/@babel/cli/bin/babel.js", preBabel, "--out-file", outfile, "--plugins", "@babel/plugin-transform-block-scoping", "--compact", "false", "--source-maps"]);
 +                await del([preBabel, `${preBabel}.map`]);
 +            }
@@ -50,7 +51,7 @@ index 1626668388..78291b90a0 100644
          clean: () => del([outfile, `${outfile}.map`]),
          watch: () => esbuild.build({ ...options, watch: true }),
      };
-@@ -211,7 +221,7 @@ cleanTasks.push(cleanDebugTools);
+@@ -211,7 +222,7 @@ cleanTasks.push(cleanDebugTools);
  const lkgPreBuild = parallel(generateLibs, series(buildScripts, generateDiagnostics, buildDebugTools));
  
  
@@ -59,7 +60,7 @@ index 1626668388..78291b90a0 100644
  
  
  const buildTsc = () => {
-@@ -238,7 +248,7 @@ const localPreBuild = parallel(generateLibs, series(buildScripts, generateDiagno
+@@ -238,7 +249,7 @@ const localPreBuild = parallel(generateLibs, series(buildScripts, generateDiagno
  // Pre-build steps to use based on supplied options.
  const preBuild = cmdLineOptions.lkg ? lkgPreBuild : localPreBuild;
  
@@ -68,7 +69,7 @@ index 1626668388..78291b90a0 100644
  
  // TODO(jakebailey): rename this; no longer "services".
  const buildServices = () => {
-@@ -268,7 +278,7 @@ task("watch-services").flags = {
+@@ -268,7 +279,7 @@ task("watch-services").flags = {
  };
  
  
@@ -77,7 +78,7 @@ index 1626668388..78291b90a0 100644
  
  const buildServer = () => {
      if (cmdLineOptions.bundle) return esbuildServer.build();
-@@ -311,7 +321,7 @@ task("watch-min").flags = {
+@@ -311,7 +322,7 @@ task("watch-min").flags = {
      "   --built": "Compile using the built version of the compiler."
  };
  

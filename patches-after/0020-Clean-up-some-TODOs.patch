@@ -9,7 +9,7 @@ Subject: [PATCH] Clean up some TODOs
  2 files changed, 58 insertions(+), 44 deletions(-)
 
 diff --git a/Gulpfile.js b/Gulpfile.js
-index 1a1a41f357..ce8cfca16f 100644
+index a880d46cfb..3729da386c 100644
 --- a/Gulpfile.js
 +++ b/Gulpfile.js
 @@ -19,7 +19,8 @@ const copyright = "CopyrightNotice.txt";
@@ -56,7 +56,7 @@ index 1a1a41f357..ce8cfca16f 100644
      };
  
      if (exportIsTsObject) {
-@@ -238,11 +236,12 @@ const lkgPreBuild = parallel(generateLibs, series(buildScripts, generateDiagnost
+@@ -239,11 +237,12 @@ const lkgPreBuild = parallel(generateLibs, series(buildScripts, generateDiagnost
  
  
  const esbuildTsc = esbuildTask("./src/tsc/tsc.ts", "./built/local/tsc.js", /* exportIsTsObject */ true, /* performanceMatters */ true);
@@ -70,7 +70,7 @@ index 1a1a41f357..ce8cfca16f 100644
      return buildProject("src/tsc");
  };
  task("tsc", series(lkgPreBuild, buildTsc));
-@@ -253,8 +252,11 @@ cleanTasks.push(cleanTsc);
+@@ -254,8 +253,11 @@ cleanTasks.push(cleanTsc);
  task("clean-tsc", cleanTsc);
  task("clean-tsc").description = "Cleans outputs for the command-line compiler";
  
@@ -84,7 +84,7 @@ index 1a1a41f357..ce8cfca16f 100644
  task("watch-tsc", series(lkgPreBuild, parallel(watchLib, watchDiagnostics, watchTsc)));
  task("watch-tsc").description = "Watch for changes and rebuild the command-line compiler only.";
  
-@@ -264,15 +266,15 @@ const localPreBuild = parallel(generateLibs, series(buildScripts, generateDiagno
+@@ -265,15 +267,15 @@ const localPreBuild = parallel(generateLibs, series(buildScripts, generateDiagno
  // Pre-build steps to use based on supplied options.
  const preBuild = cmdLineOptions.lkg ? lkgPreBuild : localPreBuild;
  
@@ -103,7 +103,7 @@ index 1a1a41f357..ce8cfca16f 100644
      return buildServicesProject();
  };
  
-@@ -288,8 +290,11 @@ cleanTasks.push(cleanServices);
+@@ -289,8 +291,11 @@ cleanTasks.push(cleanServices);
  task("clean-services", cleanServices);
  task("clean-services").description = "Cleans outputs for the language service";
  
@@ -117,7 +117,7 @@ index 1a1a41f357..ce8cfca16f 100644
  task("watch-services", series(preBuild, parallel(watchLib, watchDiagnostics, watchServices)));
  task("watch-services").description = "Watches for changes and rebuild language service only";
  task("watch-services").flags = {
-@@ -301,10 +306,11 @@ task("dts-services", series(preBuild, buildServicesProject, dtsServices));
+@@ -302,10 +307,11 @@ task("dts-services", series(preBuild, buildServicesProject, dtsServices));
  task("dts-services").description = "Builds typescript.d.ts";
  
  const esbuildServer = esbuildTask("./src/tsserver/server.ts", "./built/local/tsserver.js", /* exportIsTsObject */ true, /* performanceMatters */ true);
@@ -130,7 +130,7 @@ index 1a1a41f357..ce8cfca16f 100644
      return buildProject("src/tsserver");
  };
  buildServer.displayName = "buildServer";
-@@ -320,8 +326,11 @@ cleanTasks.push(cleanServer);
+@@ -321,8 +327,11 @@ cleanTasks.push(cleanServer);
  task("clean-tsserver", cleanServer);
  task("clean-tsserver").description = "Cleans outputs for the language server";
  
@@ -144,7 +144,7 @@ index 1a1a41f357..ce8cfca16f 100644
  task("watch-tsserver", series(preBuild, parallel(watchLib, watchDiagnostics, watchServer)));
  task("watch-tsserver").description = "Watch for changes and rebuild the language server only";
  task("watch-tsserver").flags = {
-@@ -344,11 +353,12 @@ task("watch-min").flags = {
+@@ -345,11 +354,12 @@ task("watch-min").flags = {
  };
  
  const esbuildLssl = esbuildTask("./src/tsserverlibrary/tsserverlibrary.ts", "./built/local/tsserverlibrary.js", /* exportIsTsObject */ true, /* performanceMatters */ true);
@@ -158,7 +158,7 @@ index 1a1a41f357..ce8cfca16f 100644
      return buildLsslProject();
  };
  task("lssl", series(preBuild, buildLssl));
-@@ -362,9 +372,11 @@ cleanTasks.push(cleanLssl);
+@@ -363,9 +373,11 @@ cleanTasks.push(cleanLssl);
  task("clean-lssl", cleanLssl);
  task("clean-lssl").description = "Clean outputs for the language service server library";
  
@@ -173,7 +173,7 @@ index 1a1a41f357..ce8cfca16f 100644
  task("watch-lssl", series(preBuild, parallel(watchLib, watchDiagnostics, watchLssl)));
  task("watch-lssl").description = "Watch for changes and rebuild tsserverlibrary only";
  task("watch-lssl").flags = {
-@@ -381,10 +393,11 @@ task("dts", dts);
+@@ -382,10 +394,11 @@ task("dts", dts);
  
  const testRunner = "./built/local/run.js";
  const esbuildTests = esbuildTask("./src/testRunner/_namespaces/Harness.ts", testRunner);
@@ -186,7 +186,7 @@ index 1a1a41f357..ce8cfca16f 100644
      return buildProject("src/testRunner");
  };
  task("tests", series(preBuild, parallel(buildLssl, buildTests)));
-@@ -398,8 +411,11 @@ cleanTasks.push(cleanTests);
+@@ -399,8 +412,11 @@ cleanTasks.push(cleanTests);
  task("clean-tests", cleanTests);
  task("clean-tests").description = "Cleans the outputs for the test infrastructure";
  
@@ -200,7 +200,7 @@ index 1a1a41f357..ce8cfca16f 100644
  
  const buildEslintRules = () => buildProject("scripts/eslint");
  task("build-eslint-rules", buildEslintRules);
-@@ -451,7 +467,6 @@ const esbuildTypingsInstaller = esbuildTask("./src/typingsInstaller/nodeTypingsI
+@@ -452,7 +468,6 @@ const esbuildTypingsInstaller = esbuildTask("./src/typingsInstaller/nodeTypingsI
  
  const buildTypingsInstaller = () => {
      if (cmdLineOptions.bundle) return esbuildTypingsInstaller.build();
@@ -208,7 +208,7 @@ index 1a1a41f357..ce8cfca16f 100644
      writeCJSReexport("./built/typingsInstaller/nodeTypingsInstaller.js", "./built/local/typingsInstaller.js");
      return buildProject("src/typingsInstaller");
  };
-@@ -585,16 +600,19 @@ task("importDefinitelyTypedTests").description = "Runs the importDefinitelyTyped
+@@ -586,16 +601,19 @@ task("importDefinitelyTypedTests").description = "Runs the importDefinitelyTyped
  const cleanBuilt = () => del("built");
  
  const produceLKG = async () => {
@@ -232,7 +232,7 @@ index 1a1a41f357..ce8cfca16f 100644
          "built/local/watchGuard.js",
      ].concat(libs.map(lib => lib.target));
      const missingFiles = expectedFiles
-@@ -625,8 +643,6 @@ task("generate-spec").description = "Generates a Markdown version of the Languag
+@@ -626,8 +644,6 @@ task("generate-spec").description = "Generates a Markdown version of the Languag
  task("clean", series(parallel(cleanTasks), cleanBuilt));
  task("clean").description = "Cleans build outputs";
  
