@@ -8,62 +8,16 @@ Subject: [PATCH] Add dts bundling
  Gulpfile.js                                   |    45 +-
  scripts/build/options.js                      |     6 +-
  scripts/dtsBundler.ts                         |   221 +
- src/compiler/commandLineParser.ts             |     2 +-
- src/compiler/factory/utilities.ts             |    11 +-
- src/compiler/moduleNameResolver.ts            |     8 +-
- src/compiler/parser.ts                        |     2 +-
- src/compiler/perfLogger.ts                    |    34 +-
- src/compiler/program.ts                       |     8 +-
- src/compiler/resolutionCache.ts               |     6 +-
- src/compiler/sys.ts                           |     4 +-
- src/compiler/tracing.ts                       |     9 +-
- src/compiler/transformers/classFields.ts      |     4 +-
- src/compiler/transformers/es2015.ts           |     4 +-
- src/compiler/transformers/es2016.ts           |     4 +-
- src/compiler/transformers/es2017.ts           |     3 +-
- src/compiler/transformers/es2018.ts           |     4 +-
- src/compiler/transformers/es2019.ts           |     3 +-
- src/compiler/transformers/es2020.ts           |     4 +-
- src/compiler/transformers/es2021.ts           |     4 +-
- src/compiler/transformers/es5.ts              |     3 +-
- src/compiler/transformers/esnext.ts           |     3 +-
- src/compiler/transformers/generators.ts       |     4 +-
- src/compiler/transformers/jsx.ts              |     4 +-
- src/compiler/transformers/legacyDecorators.ts |     4 +-
- .../transformers/module/esnextAnd2015.ts      |     4 +-
- src/compiler/transformers/module/module.ts    |     3 +-
- src/compiler/transformers/module/system.ts    |     4 +-
- src/compiler/transformers/taggedTemplate.ts   |     3 +-
- src/compiler/transformers/typeSerializer.ts   |     6 +-
- src/compiler/transformers/utilities.ts        |     4 +-
- src/compiler/tsbuildPublic.ts                 |     6 +-
- src/compiler/types.ts                         |    16 +-
- src/compiler/utilities.ts                     |     7 +-
- src/compiler/watchPublic.ts                   |     4 +-
- src/compiler/watchUtilities.ts                |     3 +-
  .../4.0/nodeFactoryTopLevelExports.ts         |   592 +-
- src/deprecatedCompat/deprecations.ts          |    81 +-
- src/server/editorServices.ts                  |     6 +-
- src/server/scriptVersionCache.ts              |    15 +-
- .../codefixes/annotateWithTypeFromJSDoc.ts    |     3 +-
- src/services/codefixes/generateAccessors.ts   |    19 +-
- src/services/codefixes/helpers.ts             |    10 +-
- src/services/completions.ts                   |    32 +-
- src/services/getEditsForFileRename.ts         |     8 +-
- src/services/organizeImports.ts               |     9 +-
- src/services/refactors/extractSymbol.ts       |    11 +-
- src/services/sourcemaps.ts                    |     2 +-
- src/services/symbolDisplay.ts                 |     3 +-
- src/services/textChanges.ts                   |     3 +-
- src/services/transform.ts                     |     5 +-
+ src/services/transform.ts                     |     6 +-
  src/tsserverlibrary/tsserverlibrary.ts        |     6 +-
  src/typescript/typescript.ts                  |     5 +-
  .../baselines/reference/APISample_compile.js  |     2 +-
  tests/baselines/reference/APISample_jsdoc.js  |     8 +-
  tests/baselines/reference/APISample_linter.js |    24 +-
- .../reference/api/tsserverlibrary.d.ts        | 10994 ++++++++--------
- tests/baselines/reference/api/typescript.d.ts |  3331 +++--
- 59 files changed, 7799 insertions(+), 7835 deletions(-)
+ .../reference/api/tsserverlibrary.d.ts        | 10974 ++++++++--------
+ tests/baselines/reference/api/typescript.d.ts |  3271 +++--
+ 13 files changed, 7501 insertions(+), 7660 deletions(-)
  create mode 100644 scripts/dtsBundler.ts
 
 diff --git a/.gitignore b/.gitignore
@@ -79,7 +33,7 @@ index cdf20ba5a2..4ba9e15206 100644
  scripts/processDiagnosticMessages.js
  scripts/produceLKG.js
 diff --git a/Gulpfile.js b/Gulpfile.js
-index 79939b403e..792753e0f8 100644
+index 79939b403e..741e2379e0 100644
 --- a/Gulpfile.js
 +++ b/Gulpfile.js
 @@ -127,6 +127,22 @@ const buildSrc = () => buildProject("src");
@@ -160,7 +114,7 @@ index 79939b403e..792753e0f8 100644
 +task("dts-lssl").description = "Builds tsserverlibrary.d.ts";
 +
 +// TODO(jakebailey): this is probably not efficient, but, gulp.
-+const dts = series(preBuild, parallel(dtsServices, dtsLssl));
++const dts = series(preBuild, parallel(buildServicesProject, buildLsslProject), parallel(dtsServices, dtsLssl));
 +task("dts", dts);
 +
  const testRunner = "./built/local/run.js";
@@ -460,817 +414,6 @@ index 0000000000..a362327a4b
 +}
 +
 +fs.writeFileSync(output, outputContents);
-diff --git a/src/compiler/commandLineParser.ts b/src/compiler/commandLineParser.ts
-index 31dd774182..2ed978e2d6 100644
---- a/src/compiler/commandLineParser.ts
-+++ b/src/compiler/commandLineParser.ts
-@@ -2081,7 +2081,7 @@ function getTsconfigRootOptionsMap() {
- }
- 
- /** @internal */
--interface JsonConversionNotifier {
-+export interface JsonConversionNotifier {
-     /**
-      * Notifies parent option object is being set with the optionKey and a valid optionValue
-      * Currently it notifies only if there is element with type object (parentOption) and
-diff --git a/src/compiler/factory/utilities.ts b/src/compiler/factory/utilities.ts
-index 010b996d7a..b6c97f8f3b 100644
---- a/src/compiler/factory/utilities.ts
-+++ b/src/compiler/factory/utilities.ts
-@@ -2,11 +2,12 @@ import {
-     AccessorDeclaration, addEmitFlags, AdditiveOperator, AdditiveOperatorOrHigher, AssertionLevel,
-     AssignmentOperatorOrHigher, BinaryExpression, BinaryOperator, BinaryOperatorToken, BindingOrAssignmentElement,
-     BindingOrAssignmentElementRestIndicator, BindingOrAssignmentElementTarget, BindingOrAssignmentPattern,
--    BitwiseOperator, BitwiseOperatorOrHigher, BooleanLiteral, CharacterCodes, CommaListExpression,
-+    BitwiseOperator, BitwiseOperatorOrHigher, Block, BooleanLiteral, CharacterCodes, CommaListExpression,
-     compareStringsCaseSensitive, CompilerOptions, Debug, Declaration, EmitFlags, EmitHelperFactory, EmitHost,
-     EmitResolver, EntityName, EqualityOperator, EqualityOperatorOrHigher, ExclamationToken, ExponentiationOperator,
-     ExportDeclaration, Expression, ExpressionStatement, externalHelpersModuleNameText, first, firstOrUndefined,
-     ForInitializer, GeneratedIdentifier, GeneratedIdentifierFlags, GeneratedNamePart, GeneratedPrivateIdentifier,
-+    GetAccessorDeclaration,
-     getAllAccessorDeclarations, getEmitFlags, getEmitHelpers, getEmitModuleKind, getESModuleInterop,
-     getExternalModuleName, getExternalModuleNameFromPath, getJSDocType, getJSDocTypeTag, getModifiers,
-     getNamespaceDeclarationNode, getOrCreateEmitNode, getOriginalNode, getParseTreeNode,
-@@ -26,7 +27,7 @@ import {
-     NumericLiteral, ObjectLiteralElementLike, ObjectLiteralExpression, or, OuterExpression, OuterExpressionKinds,
-     outFile, parseNodeFactory, PlusToken, PostfixUnaryExpression, PrefixUnaryExpression, PrivateIdentifier,
-     PropertyAssignment, PropertyDeclaration, PropertyName, pushIfUnique, QuestionToken, ReadonlyKeyword,
--    RelationalOperator, RelationalOperatorOrHigher, setOriginalNode, setParent, setStartsOnNewLine, setTextRange,
-+    RelationalOperator, RelationalOperatorOrHigher, SetAccessorDeclaration, setOriginalNode, setParent, setStartsOnNewLine, setTextRange,
-     ShiftOperator, ShiftOperatorOrHigher, ShorthandPropertyAssignment, some, SourceFile, Statement, StringLiteral,
-     SyntaxKind, TextRange, ThisTypeNode, Token, TypeNode, TypeParameterDeclaration,
- } from "../_namespaces/ts";
-@@ -185,7 +186,7 @@ export function createForOfBindingStatement(factory: NodeFactory, node: ForIniti
- }
- 
- /** @internal */
--export function insertLeadingStatement(factory: NodeFactory, dest: Statement, source: Statement) {
-+export function insertLeadingStatement(factory: NodeFactory, dest: Statement, source: Statement): Block {
-     if (isBlock(dest)) {
-         return factory.updateBlock(dest, setTextRange(factory.createNodeArray([source, ...dest.statements]), dest.statements));
-     }
-@@ -1456,7 +1457,7 @@ export function createAccessorPropertyBackingField(factory: NodeFactory, node: P
-  *
-  * @internal
-  */
--export function createAccessorPropertyGetRedirector(factory: NodeFactory, node: PropertyDeclaration, modifiers: ModifiersArray | undefined, name: PropertyName) {
-+export function createAccessorPropertyGetRedirector(factory: NodeFactory, node: PropertyDeclaration, modifiers: ModifiersArray | undefined, name: PropertyName): GetAccessorDeclaration {
-     return factory.createGetAccessorDeclaration(
-         modifiers,
-         name,
-@@ -1478,7 +1479,7 @@ export function createAccessorPropertyGetRedirector(factory: NodeFactory, node:
-  *
-  * @internal
-  */
--export function createAccessorPropertySetRedirector(factory: NodeFactory, node: PropertyDeclaration, modifiers: ModifiersArray | undefined, name: PropertyName) {
-+export function createAccessorPropertySetRedirector(factory: NodeFactory, node: PropertyDeclaration, modifiers: ModifiersArray | undefined, name: PropertyName): SetAccessorDeclaration {
-     return factory.createSetAccessorDeclaration(
-         modifiers,
-         name,
-diff --git a/src/compiler/moduleNameResolver.ts b/src/compiler/moduleNameResolver.ts
-index f13d60743e..9e62af0806 100644
---- a/src/compiler/moduleNameResolver.ts
-+++ b/src/compiler/moduleNameResolver.ts
-@@ -128,7 +128,7 @@ function createResolvedModuleWithFailedLookupLocations(
- }
- 
- /** @internal */
--interface ModuleResolutionState {
-+export interface ModuleResolutionState {
-     host: ModuleResolutionHost;
-     compilerOptions: CompilerOptions;
-     traceEnabled: boolean;
-@@ -146,7 +146,7 @@ interface ModuleResolutionState {
-  *
-  * @internal
-  */
--interface PackageJsonPathFields {
-+export interface PackageJsonPathFields {
-     typings?: string;
-     types?: string;
-     typesVersions?: MapLike<MapLike<string[]>>;
-@@ -226,7 +226,7 @@ function readPackageJsonTypesVersionsField(jsonContent: PackageJson, state: Modu
- }
- 
- /** @internal */
--interface VersionPaths {
-+export interface VersionPaths {
-     version: string;
-     paths: MapLike<string[]>;
- }
-@@ -1281,7 +1281,7 @@ export function resolveJSModule(moduleName: string, initialDir: string, host: Mo
- }
- 
- /** @internal */
--enum NodeResolutionFeatures {
-+export enum NodeResolutionFeatures {
-     None = 0,
-     // resolving `#local` names in your own package.json
-     Imports = 1 << 1,
-diff --git a/src/compiler/parser.ts b/src/compiler/parser.ts
-index 24c32f7d24..804c65a975 100644
---- a/src/compiler/parser.ts
-+++ b/src/compiler/parser.ts
-@@ -9831,7 +9831,7 @@ export function processCommentPragmas(context: PragmaContext, sourceText: string
- }
- 
- /** @internal */
--type PragmaDiagnosticReporter = (pos: number, length: number, message: DiagnosticMessage) => void;
-+export type PragmaDiagnosticReporter = (pos: number, length: number, message: DiagnosticMessage) => void;
- 
- /** @internal */
- export function processPragmasIntoFields(context: PragmaContext, reportDiagnostic: PragmaDiagnosticReporter): void {
-diff --git a/src/compiler/perfLogger.ts b/src/compiler/perfLogger.ts
-index 34a59208d6..41f33e0e2a 100644
---- a/src/compiler/perfLogger.ts
-+++ b/src/compiler/perfLogger.ts
-@@ -1,6 +1,38 @@
- import { noop } from "./_namespaces/ts";
- 
--type PerfLogger = typeof import("@microsoft/typescript-etw");
-+/** @internal */
-+export interface PerfLogger {
-+    logEvent(msg: string): void;
-+    logErrEvent(msg: string): void;
-+    logPerfEvent(msg: string): void;
-+    logInfoEvent(msg: string): void;
-+    logStartCommand(command: string, msg: string): void;
-+    logStopCommand(command: string, msg: string): void;
-+    logStartUpdateProgram(msg: string): void;
-+    logStopUpdateProgram(msg: string): void;
-+    logStartUpdateGraph(): void;
-+    logStopUpdateGraph(): void;
-+    logStartResolveModule(name: string): void;
-+    logStopResolveModule(success: string): void;
-+    logStartParseSourceFile(filename: string): void;
-+    logStopParseSourceFile(): void;
-+    logStartReadFile(filename: string): void;
-+    logStopReadFile(): void;
-+    logStartBindFile(filename: string): void;
-+    logStopBindFile(): void;
-+    logStartScheduledOperation(operationId: string): void;
-+    logStopScheduledOperation(): void;
-+}
-+
-+type ImportedPerfLogger = typeof import("@microsoft/typescript-etw");
-+
-+// Assert that our PerfLogger type is compatible with the library.
-+// Doing this keeps the above import expression out of our emitted d.ts file.
-+const _perfLoggerCorrectType: PerfLogger extends ImportedPerfLogger ? true : false = true;
-+
-+// eslint-disable-next-line @typescript-eslint/no-unused-expressions
-+_perfLoggerCorrectType;
-+
- const nullLogger: PerfLogger = {
-     logEvent: noop,
-     logErrEvent: noop,
-diff --git a/src/compiler/program.ts b/src/compiler/program.ts
-index 30a15b258d..bf6af85b0f 100644
---- a/src/compiler/program.ts
-+++ b/src/compiler/program.ts
-@@ -210,7 +210,7 @@ export function createCompilerHostWorker(options: CompilerOptions, setParentNode
- }
- 
- /** @internal */
--interface CompilerHostLikeForCache {
-+export interface CompilerHostLikeForCache {
-     fileExists(fileName: string): boolean;
-     readFile(fileName: string, encoding?: string): string | undefined;
-     directoryExists?(directory: string): boolean;
-@@ -570,7 +570,7 @@ export interface SourceFileImportsList {
-  * Calculates the resulting resolution mode for some reference in some file - this is generally the explicitly
-  * provided resolution mode in the reference, unless one is not present, in which case it is the mode of the containing file.
-  */
--export function getModeForFileReference(ref: FileReference | string, containingFileMode: SourceFile["impliedNodeFormat"]) {
-+export function getModeForFileReference(ref: FileReference | string, containingFileMode: SourceFile["impliedNodeFormat"]): ModuleKind.CommonJS | ModuleKind.ESNext | undefined {
-     return (isString(ref) ? containingFileMode : ref.resolutionMode) || containingFileMode;
- }
- 
-@@ -612,7 +612,7 @@ export function isExclusivelyTypeOnlyImportOrExport(decl: ImportDeclaration | Ex
-  * @param usage The module reference string
-  * @returns The final resolution mode of the import
-  */
--export function getModeForUsageLocation(file: {impliedNodeFormat?: SourceFile["impliedNodeFormat"]}, usage: StringLiteralLike) {
-+export function getModeForUsageLocation(file: {impliedNodeFormat?: SourceFile["impliedNodeFormat"]}, usage: StringLiteralLike): ModuleKind.CommonJS | ModuleKind.ESNext | undefined {
-     if (file.impliedNodeFormat === undefined) return undefined;
-     if ((isImportDeclaration(usage.parent) || isExportDeclaration(usage.parent))) {
-         const isTypeOnly = isExclusivelyTypeOnlyImportOrExport(usage.parent);
-@@ -4318,7 +4318,7 @@ export function filterSemanticDiagnostics(diagnostic: readonly Diagnostic[], opt
- }
- 
- /** @internal */
--interface CompilerHostLike {
-+export interface CompilerHostLike {
-     useCaseSensitiveFileNames(): boolean;
-     getCurrentDirectory(): string;
-     fileExists(fileName: string): boolean;
-diff --git a/src/compiler/resolutionCache.ts b/src/compiler/resolutionCache.ts
-index a6cce70e78..103676d271 100644
---- a/src/compiler/resolutionCache.ts
-+++ b/src/compiler/resolutionCache.ts
-@@ -51,7 +51,8 @@ export interface ResolutionCache {
-     clear(): void;
- }
- 
--interface ResolutionWithFailedLookupLocations {
-+/** @internal */
-+export interface ResolutionWithFailedLookupLocations {
-     readonly failedLookupLocations: string[];
-     readonly affectingLocations: string[];
-     isInvalidated?: boolean;
-@@ -65,7 +66,8 @@ interface ResolutionWithResolvedFileName {
-     packagetId?: PackageId;
- }
- 
--interface CachedResolvedModuleWithFailedLookupLocations extends ResolvedModuleWithFailedLookupLocations, ResolutionWithFailedLookupLocations {
-+/** @internal */
-+export interface CachedResolvedModuleWithFailedLookupLocations extends ResolvedModuleWithFailedLookupLocations, ResolutionWithFailedLookupLocations {
- }
- 
- interface CachedResolvedTypeReferenceDirectiveWithFailedLookupLocations extends ResolvedTypeReferenceDirectiveWithFailedLookupLocations, ResolutionWithFailedLookupLocations {
-diff --git a/src/compiler/sys.ts b/src/compiler/sys.ts
-index 7f463fd88b..fce13ef242 100644
---- a/src/compiler/sys.ts
-+++ b/src/compiler/sys.ts
-@@ -1262,7 +1262,7 @@ export function patchWriteFileEnsuringDirectory(sys: System) {
- export type BufferEncoding = "ascii" | "utf8" | "utf-8" | "utf16le" | "ucs2" | "ucs-2" | "base64" | "latin1" | "binary" | "hex";
- 
- /** @internal */
--interface NodeBuffer extends Uint8Array {
-+export interface NodeBuffer extends Uint8Array {
-     constructor: any;
-     write(str: string, encoding?: BufferEncoding): number;
-     write(str: string, offset: number, encoding?: BufferEncoding): number;
-@@ -1338,7 +1338,7 @@ interface NodeBuffer extends Uint8Array {
- }
- 
- /** @internal */
--interface Buffer extends NodeBuffer { }
-+export interface Buffer extends NodeBuffer { }
- 
- // TODO: GH#18217 Methods on System are often used as if they are certainly defined
- export interface System {
-diff --git a/src/compiler/tracing.ts b/src/compiler/tracing.ts
-index 087a86cf18..3ddf6e3470 100644
---- a/src/compiler/tracing.ts
-+++ b/src/compiler/tracing.ts
-@@ -13,8 +13,13 @@ import {
- export let tracing: typeof tracingEnabled | undefined;
- // enable the above using startTracing()
- 
--// `tracingEnabled` should never be used directly, only through the above
--namespace tracingEnabled { // eslint-disable-line local/one-namespace-per-file
-+
-+/**
-+ * `tracingEnabled` should never be used directly, only through the above
-+ *
-+ * @internal
-+ */
-+export namespace tracingEnabled { // eslint-disable-line local/one-namespace-per-file
-     type Mode = "project" | "build" | "server";
- 
-     let fs: typeof import("fs");
-diff --git a/src/compiler/transformers/classFields.ts b/src/compiler/transformers/classFields.ts
-index 5141d77afc..28be1f5f87 100644
---- a/src/compiler/transformers/classFields.ts
-+++ b/src/compiler/transformers/classFields.ts
-@@ -33,7 +33,7 @@ import {
-     startOnNewLine, Statement, SuperProperty, SyntaxKind, TaggedTemplateExpression, ThisExpression,
-     TransformationContext, TransformFlags, tryGetTextOfPropertyName, UnderscoreEscapedMap, unescapeLeadingUnderscores,
-     VariableStatement, visitArray, visitEachChild, visitFunctionBody, visitIterationBody, visitNode, visitNodes,
--    visitParameterList, VisitResult,
-+    visitParameterList, VisitResult, Bundle,
- } from "../_namespaces/ts";
- 
- const enum ClassPropertySubstitutionFlags {
-@@ -168,7 +168,7 @@ const enum ClassFacts {
-  *
-  * @internal
-  */
--export function transformClassFields(context: TransformationContext) {
-+export function transformClassFields(context: TransformationContext): (x: SourceFile | Bundle) => SourceFile | Bundle {
-     const {
-         factory,
-         hoistVariableDeclaration,
-diff --git a/src/compiler/transformers/es2015.ts b/src/compiler/transformers/es2015.ts
-index a9d33f2d4c..db01bdeec4 100644
---- a/src/compiler/transformers/es2015.ts
-+++ b/src/compiler/transformers/es2015.ts
-@@ -33,7 +33,7 @@ import {
-     SyntaxKind, TaggedTemplateExpression, takeWhile, TemplateExpression, TextRange, TokenFlags, TransformationContext,
-     TransformFlags, tryCast, unescapeLeadingUnderscores, unwrapInnermostStatementOfLabel, VariableDeclaration,
-     VariableDeclarationList, VariableStatement, visitEachChild, visitNode, visitNodes, visitParameterList, VisitResult,
--    VoidExpression, WhileStatement, YieldExpression,
-+    VoidExpression, WhileStatement, YieldExpression, Bundle,
- } from "../_namespaces/ts";
- 
- const enum ES2015SubstitutionFlags {
-@@ -299,7 +299,7 @@ function createSpreadSegment(kind: SpreadSegmentKind, expression: Expression): S
- }
- 
- /** @internal */
--export function transformES2015(context: TransformationContext) {
-+export function transformES2015(context: TransformationContext): (x: SourceFile | Bundle) => SourceFile | Bundle {
-     const {
-         factory,
-         getEmitHelperFactory: emitHelpers,
-diff --git a/src/compiler/transformers/es2016.ts b/src/compiler/transformers/es2016.ts
-index 0d4b95afa8..ca3bbbb980 100644
---- a/src/compiler/transformers/es2016.ts
-+++ b/src/compiler/transformers/es2016.ts
-@@ -1,11 +1,11 @@
- import {
--    BinaryExpression, chainBundle, Expression, isElementAccessExpression, isExpression, isPropertyAccessExpression,
-+    BinaryExpression, Bundle, chainBundle, Expression, isElementAccessExpression, isExpression, isPropertyAccessExpression,
-     Node, setTextRange, SourceFile, SyntaxKind, TransformationContext, TransformFlags, visitEachChild, visitNode,
-     VisitResult,
- } from "../_namespaces/ts";
- 
- /** @internal */
--export function transformES2016(context: TransformationContext) {
-+export function transformES2016(context: TransformationContext): (x: SourceFile | Bundle) => SourceFile | Bundle {
-     const {
-         factory,
-         hoistVariableDeclaration
-diff --git a/src/compiler/transformers/es2017.ts b/src/compiler/transformers/es2017.ts
-index 193eea75be..3f36d8c450 100644
---- a/src/compiler/transformers/es2017.ts
-+++ b/src/compiler/transformers/es2017.ts
-@@ -15,6 +15,7 @@ import {
-     TypeReferenceSerializationKind, unescapeLeadingUnderscores, VariableDeclaration, VariableDeclarationList,
-     VariableStatement, visitEachChild, visitFunctionBody, visitIterationBody, visitNode, visitNodes, visitParameterList,
-     VisitResult,
-+    Bundle,
- } from "../_namespaces/ts";
- 
- type SuperContainer = ClassDeclaration | MethodDeclaration | GetAccessorDeclaration | SetAccessorDeclaration | ConstructorDeclaration;
-@@ -30,7 +31,7 @@ const enum ContextFlags {
- }
- 
- /** @internal */
--export function transformES2017(context: TransformationContext) {
-+export function transformES2017(context: TransformationContext): (x: SourceFile | Bundle) => SourceFile | Bundle {
-     const {
-         factory,
-         getEmitHelperFactory: emitHelpers,
-diff --git a/src/compiler/transformers/es2018.ts b/src/compiler/transformers/es2018.ts
-index ee7f2cbc93..d45f5a37b4 100644
---- a/src/compiler/transformers/es2018.ts
-+++ b/src/compiler/transformers/es2018.ts
-@@ -17,7 +17,7 @@ import {
-     SourceFile, startOnNewLine, Statement, SyntaxKind, TaggedTemplateExpression, TextRange, Token,
-     TransformationContext, TransformFlags, unwrapInnermostStatementOfLabel, VariableDeclaration, VariableStatement,
-     visitEachChild, visitIterationBody, visitLexicalEnvironment, visitNode, visitNodes, visitParameterList, VisitResult,
--    VoidExpression, YieldExpression,
-+    VoidExpression, YieldExpression, Bundle,
- } from "../_namespaces/ts";
- 
- const enum ESNextSubstitutionFlags {
-@@ -58,7 +58,7 @@ const enum HierarchyFacts {
- }
- 
- /** @internal */
--export function transformES2018(context: TransformationContext) {
-+export function transformES2018(context: TransformationContext): (x: SourceFile | Bundle) => SourceFile | Bundle {
-     const {
-         factory,
-         getEmitHelperFactory: emitHelpers,
-diff --git a/src/compiler/transformers/es2019.ts b/src/compiler/transformers/es2019.ts
-index 921a2ea33d..eaeb2f19d5 100644
---- a/src/compiler/transformers/es2019.ts
-+++ b/src/compiler/transformers/es2019.ts
-@@ -1,10 +1,11 @@
- import {
-+    Bundle,
-     CatchClause, chainBundle, isBlock, Node, SourceFile, SyntaxKind, TransformationContext, TransformFlags,
-     visitEachChild, visitNode, VisitResult,
- } from "../_namespaces/ts";
- 
- /** @internal */
--export function transformES2019(context: TransformationContext) {
-+export function transformES2019(context: TransformationContext): (x: SourceFile | Bundle) => SourceFile | Bundle {
-     const factory = context.factory;
-     return chainBundle(context, transformSourceFile);
- 
-diff --git a/src/compiler/transformers/es2020.ts b/src/compiler/transformers/es2020.ts
-index 79be9cae32..ec48ca9433 100644
---- a/src/compiler/transformers/es2020.ts
-+++ b/src/compiler/transformers/es2020.ts
-@@ -1,5 +1,5 @@
- import {
--    AccessExpression, addEmitFlags, BinaryExpression, CallExpression, cast, chainBundle, Debug, DeleteExpression,
-+    AccessExpression, addEmitFlags, BinaryExpression, Bundle, CallExpression, cast, chainBundle, Debug, DeleteExpression,
-     EmitFlags, Expression, isCallChain, isExpression, isGeneratedIdentifier, isIdentifier, isNonNullChain,
-     isOptionalChain, isParenthesizedExpression, isSimpleCopiableExpression, isSyntheticReference,
-     isTaggedTemplateExpression, Node, OptionalChain, OuterExpressionKinds, ParenthesizedExpression, setOriginalNode,
-@@ -8,7 +8,7 @@ import {
- } from "../_namespaces/ts";
- 
- /** @internal */
--export function transformES2020(context: TransformationContext) {
-+export function transformES2020(context: TransformationContext): (x: SourceFile | Bundle) => SourceFile | Bundle {
-     const {
-         factory,
-         hoistVariableDeclaration,
-diff --git a/src/compiler/transformers/es2021.ts b/src/compiler/transformers/es2021.ts
-index 68ce3c81c4..a63e4688a7 100644
---- a/src/compiler/transformers/es2021.ts
-+++ b/src/compiler/transformers/es2021.ts
-@@ -1,5 +1,5 @@
- import {
--    AssignmentExpression, BinaryExpression, chainBundle, getNonAssignmentOperatorForCompoundAssignment,
-+    AssignmentExpression, BinaryExpression, Bundle, chainBundle, getNonAssignmentOperatorForCompoundAssignment,
-     isAccessExpression, isExpression, isLeftHandSideExpression, isLogicalOrCoalescingAssignmentExpression,
-     isPropertyAccessExpression, isSimpleCopiableExpression, LogicalOrCoalescingAssignmentOperator, Node,
-     skipParentheses, SourceFile, SyntaxKind, Token, TransformationContext, TransformFlags, visitEachChild, visitNode,
-@@ -7,7 +7,7 @@ import {
- } from "../_namespaces/ts";
- 
- /** @internal */
--export function transformES2021(context: TransformationContext) {
-+export function transformES2021(context: TransformationContext): (x: SourceFile | Bundle) => SourceFile | Bundle {
-     const {
-         hoistVariableDeclaration,
-         factory
-diff --git a/src/compiler/transformers/es5.ts b/src/compiler/transformers/es5.ts
-index cd7eb47d1e..8dd340255a 100644
---- a/src/compiler/transformers/es5.ts
-+++ b/src/compiler/transformers/es5.ts
-@@ -1,4 +1,5 @@
- import {
-+    Bundle,
-     chainBundle, EmitHint, Expression, getOriginalNodeId, Identifier, idText, isIdentifier, isPrivateIdentifier,
-     isPropertyAccessExpression, isPropertyAssignment, JsxClosingElement, JsxEmit, JsxOpeningElement,
-     JsxSelfClosingElement, Node, nodeIsSynthesized, PropertyAccessExpression, PropertyAssignment, setTextRange,
-@@ -12,7 +13,7 @@ import {
-  *
-  * @internal
-  */
--export function transformES5(context: TransformationContext) {
-+export function transformES5(context: TransformationContext): (x: SourceFile | Bundle) => SourceFile | Bundle {
-     const { factory } = context;
-     const compilerOptions = context.getCompilerOptions();
- 
-diff --git a/src/compiler/transformers/esnext.ts b/src/compiler/transformers/esnext.ts
-index 9cc1b5e739..770153e4e6 100644
---- a/src/compiler/transformers/esnext.ts
-+++ b/src/compiler/transformers/esnext.ts
-@@ -1,9 +1,10 @@
- import {
-+    Bundle,
-     chainBundle, Node, SourceFile, TransformationContext, TransformFlags, visitEachChild, VisitResult,
- } from "../_namespaces/ts";
- 
- /** @internal */
--export function transformESNext(context: TransformationContext) {
-+export function transformESNext(context: TransformationContext): (x: SourceFile | Bundle) => SourceFile | Bundle {
-   return chainBundle(context, transformSourceFile);
- 
-   function transformSourceFile(node: SourceFile) {
-diff --git a/src/compiler/transformers/generators.ts b/src/compiler/transformers/generators.ts
-index 9c62a751da..ef5550a83a 100644
---- a/src/compiler/transformers/generators.ts
-+++ b/src/compiler/transformers/generators.ts
-@@ -1,6 +1,6 @@
- import {
-     AccessorDeclaration, addEmitHelpers, addSyntheticTrailingComment, ArrayLiteralExpression, Associativity,
--    BinaryExpression, Block, BreakStatement, CallExpression, CaseClause, chainBundle, CommaListExpression,
-+    BinaryExpression, Block, BreakStatement, Bundle, CallExpression, CaseClause, chainBundle, CommaListExpression,
-     ConditionalExpression, ContinueStatement, createExpressionForObjectLiteralElementLike, Debug, DoStatement,
-     ElementAccessExpression, EmitFlags, EmitHint, ESMap, Expression, ExpressionStatement, forEach, ForInStatement,
-     ForStatement, FunctionDeclaration, FunctionExpression, getEmitFlags, getEmitScriptTarget,
-@@ -247,7 +247,7 @@ function getInstructionName(instruction: Instruction): string {
- }
- 
- /** @internal */
--export function transformGenerators(context: TransformationContext) {
-+export function transformGenerators(context: TransformationContext): (x: SourceFile | Bundle) => SourceFile | Bundle {
-     const {
-         factory,
-         getEmitHelperFactory: emitHelpers,
-diff --git a/src/compiler/transformers/jsx.ts b/src/compiler/transformers/jsx.ts
-index 5e02c2ce92..37152cfe6a 100644
---- a/src/compiler/transformers/jsx.ts
-+++ b/src/compiler/transformers/jsx.ts
-@@ -1,5 +1,5 @@
- import {
--    addEmitHelpers, arrayFrom, chainBundle, createExpressionForJsxElement, createExpressionForJsxFragment,
-+    addEmitHelpers, arrayFrom, Bundle, chainBundle, createExpressionForJsxElement, createExpressionForJsxFragment,
-     createExpressionFromEntityName, createJsxFactoryExpression, Debug, emptyArray, Expression, filter, find, flatten,
-     GeneratedIdentifierFlags, getEmitScriptTarget, getEntries, getJSXImplicitImportBase, getJSXRuntimeImport,
-     getLineAndCharacterOfPosition, getOriginalNode, getSemanticJsxChildren, Identifier, idText, ImportSpecifier,
-@@ -14,7 +14,7 @@ import {
- } from "../_namespaces/ts";
- 
- /** @internal */
--export function transformJsx(context: TransformationContext) {
-+export function transformJsx(context: TransformationContext): (x: SourceFile | Bundle) => SourceFile | Bundle {
-     interface PerFileState {
-         importSpecifier?: string;
-         filenameDeclaration?: VariableDeclaration & { name: Identifier; };
-diff --git a/src/compiler/transformers/legacyDecorators.ts b/src/compiler/transformers/legacyDecorators.ts
-index 52ddcf5a62..be6c0615ee 100644
---- a/src/compiler/transformers/legacyDecorators.ts
-+++ b/src/compiler/transformers/legacyDecorators.ts
-@@ -1,5 +1,5 @@
- import {
--    addEmitHelpers, addRange, AllDecorators, append, canHaveDecorators, chainBundle, childIsDecorated, ClassDeclaration,
-+    addEmitHelpers, addRange, AllDecorators, append, Bundle, canHaveDecorators, chainBundle, childIsDecorated, ClassDeclaration,
-     ClassElement, ClassExpression, ClassLikeDeclaration, classOrConstructorParameterIsDecorated, ConstructorDeclaration,
-     Decorator, elideNodes, EmitFlags, EmitHint, EnumMember, Expression, filter, flatMap, GetAccessorDeclaration,
-     getAllDecoratorsOfClass, getAllDecoratorsOfClassElement, getEmitFlags, getEmitScriptTarget, getOriginalNodeId,
-@@ -14,7 +14,7 @@ import {
- } from "../_namespaces/ts";
- 
- /** @internal */
--export function transformLegacyDecorators(context: TransformationContext) {
-+export function transformLegacyDecorators(context: TransformationContext): (x: SourceFile | Bundle) => SourceFile | Bundle {
-     const {
-         factory,
-         getEmitHelperFactory: emitHelpers,
-diff --git a/src/compiler/transformers/module/esnextAnd2015.ts b/src/compiler/transformers/module/esnextAnd2015.ts
-index ead5ee8eea..ec9d36cc2e 100644
---- a/src/compiler/transformers/module/esnextAnd2015.ts
-+++ b/src/compiler/transformers/module/esnextAnd2015.ts
-@@ -1,5 +1,5 @@
- import {
--    addRange, append, chainBundle, createEmptyExports, createExternalHelpersImportDeclarationIfNeeded, Debug, EmitFlags,
-+    addRange, append, Bundle, chainBundle, createEmptyExports, createExternalHelpersImportDeclarationIfNeeded, Debug, EmitFlags,
-     EmitHint, ESMap, ExportAssignment, ExportDeclaration, Expression, GeneratedIdentifierFlags, getEmitFlags,
-     getEmitModuleKind, getEmitScriptTarget, getExternalModuleNameLiteral, hasSyntacticModifier, Identifier, idText,
-     ImportDeclaration, ImportEqualsDeclaration, insertStatementsAfterCustomPrologue,
-@@ -10,7 +10,7 @@ import {
- } from "../../_namespaces/ts";
- 
- /** @internal */
--export function transformECMAScriptModule(context: TransformationContext) {
-+export function transformECMAScriptModule(context: TransformationContext): (x: SourceFile | Bundle) => SourceFile | Bundle {
-     const {
-         factory,
-         getEmitHelperFactory: emitHelpers,
-diff --git a/src/compiler/transformers/module/module.ts b/src/compiler/transformers/module/module.ts
-index 0b9c5ad57b..cb3b73b777 100644
---- a/src/compiler/transformers/module/module.ts
-+++ b/src/compiler/transformers/module/module.ts
-@@ -1,5 +1,6 @@
- import {
-     addEmitFlags, addEmitHelper, addEmitHelpers, addRange, append, ArrowFunction, BinaryExpression, BindingElement,
-+    Bundle,
-     CallExpression, chainBundle, ClassDeclaration, collectExternalModuleInfo, Debug, Declaration,
-     DestructuringAssignment, EmitFlags, EmitHelper, EmitHint, emptyArray, EndOfDeclarationMarker, ExportAssignment,
-     ExportDeclaration, Expression, ExpressionStatement, ExternalModuleInfo, firstOrUndefined,
-@@ -27,7 +28,7 @@ import {
- } from "../../_namespaces/ts";
- 
- /** @internal */
--export function transformModule(context: TransformationContext) {
-+export function transformModule(context: TransformationContext): (x: SourceFile | Bundle) => SourceFile | Bundle {
-     interface AsynchronousDependencies {
-         aliasedModuleNames: Expression[];
-         unaliasedModuleNames: Expression[];
-diff --git a/src/compiler/transformers/module/system.ts b/src/compiler/transformers/module/system.ts
-index 977d7efdfa..a6e9e90d2b 100644
---- a/src/compiler/transformers/module/system.ts
-+++ b/src/compiler/transformers/module/system.ts
-@@ -1,5 +1,5 @@
- import {
--    addRange, append, BinaryExpression, BindingElement, Block, CaseBlock, CaseClause, CaseOrDefaultClause, CatchClause,
-+    addRange, append, BinaryExpression, BindingElement, Block, Bundle, CaseBlock, CaseClause, CaseOrDefaultClause, CatchClause,
-     chainBundle, ClassDeclaration, collectExternalModuleInfo, Debug, Declaration, DefaultClause,
-     DestructuringAssignment, DoStatement, EmitFlags, EmitHint, EndOfDeclarationMarker, ExportAssignment,
-     ExportDeclaration, Expression, ExpressionStatement, ExternalModuleInfo, firstOrUndefined,
-@@ -25,7 +25,7 @@ import {
- } from "../../_namespaces/ts";
- 
- /** @internal */
--export function transformSystemModule(context: TransformationContext) {
-+export function transformSystemModule(context: TransformationContext): (x: SourceFile | Bundle) => SourceFile | Bundle {
-     interface DependencyGroup {
-         name: StringLiteral;
-         externalImports: (ImportDeclaration | ImportEqualsDeclaration | ExportDeclaration)[];
-diff --git a/src/compiler/transformers/taggedTemplate.ts b/src/compiler/transformers/taggedTemplate.ts
-index ffce659146..dddd501043 100644
---- a/src/compiler/transformers/taggedTemplate.ts
-+++ b/src/compiler/transformers/taggedTemplate.ts
-@@ -1,4 +1,5 @@
- import {
-+    CallExpression,
-     Debug, Expression, factory, getSourceTextOfNodeFromSourceFile, hasInvalidEscape, Identifier, isExpression,
-     isExternalModule, isNoSubstitutionTemplateLiteral, NoSubstitutionTemplateLiteral, setTextRange, SourceFile,
-     SyntaxKind, TaggedTemplateExpression, TemplateHead, TemplateLiteralLikeNode, TemplateMiddle, TemplateTail,
-@@ -18,7 +19,7 @@ export function processTaggedTemplateExpression(
-     visitor: Visitor,
-     currentSourceFile: SourceFile,
-     recordTaggedTemplateString: (temp: Identifier) => void,
--    level: ProcessLevel) {
-+    level: ProcessLevel): TaggedTemplateExpression | CallExpression {
- 
-     // Visit the tag expression
-     const tag = visitNode(node.tag, visitor, isExpression);
-diff --git a/src/compiler/transformers/typeSerializer.ts b/src/compiler/transformers/typeSerializer.ts
-index 7548d159c5..98a97b54bb 100644
---- a/src/compiler/transformers/typeSerializer.ts
-+++ b/src/compiler/transformers/typeSerializer.ts
-@@ -14,14 +14,16 @@ import {
-     VoidExpression,
- } from "../_namespaces/ts";
- 
--type SerializedEntityName =
-+/** @internal */
-+export type SerializedEntityName =
-     | Identifier // Globals (i.e., `String`, `Number`, etc.)
-  // Globals (i.e., `String`, `Number`, etc.)
-     | PropertyAccessEntityNameExpression // `A.B`
-  // `A.B`
-     ;
- 
--type SerializedTypeNode =
-+/** @internal */
-+export type SerializedTypeNode =
-     | SerializedEntityName
-     | ConditionalExpression // Type Reference or Global fallback
-  // Type Reference or Global fallback
-diff --git a/src/compiler/transformers/utilities.ts b/src/compiler/transformers/utilities.ts
-index 4460f4fc45..862bdf7c8b 100644
---- a/src/compiler/transformers/utilities.ts
-+++ b/src/compiler/transformers/utilities.ts
-@@ -12,7 +12,7 @@ import {
-     isPrivateIdentifier, isPropertyDeclaration, isStatic, isStringLiteralLike, isSuperCall, LogicalOperatorOrHigher,
-     map, Map, MethodDeclaration, ModifierFlags, NamedImportBindings, NamespaceExport, Node, NodeArray,
-     parameterIsThisKeyword, PrivateIdentifierAccessorDeclaration, PrivateIdentifierAutoAccessorPropertyDeclaration,
--    PrivateIdentifierMethodDeclaration, PropertyDeclaration, skipParentheses, some, SourceFile, Statement, SyntaxKind,
-+    PrivateIdentifierMethodDeclaration, PropertyDeclaration, skipParentheses, some, SourceFile, Statement, SuperCall, SyntaxKind,
-     TransformationContext, VariableDeclaration, VariableStatement,
- } from "../_namespaces/ts";
- 
-@@ -332,7 +332,7 @@ export function getNonAssignmentOperatorForCompoundAssignment(kind: CompoundAssi
-  *
-  * @internal
-  */
--export function getSuperCallFromStatement(statement: Statement) {
-+export function getSuperCallFromStatement(statement: Statement): SuperCall | undefined {
-     if (!isExpressionStatement(statement)) {
-         return undefined;
-     }
-diff --git a/src/compiler/tsbuildPublic.ts b/src/compiler/tsbuildPublic.ts
-index 5e0a7a7166..b7f1e75398 100644
---- a/src/compiler/tsbuildPublic.ts
-+++ b/src/compiler/tsbuildPublic.ts
-@@ -194,7 +194,7 @@ export function createBuilderStatusReporter(system: System, pretty?: boolean): D
-     };
- }
- 
--function createSolutionBuilderHostBase<T extends BuilderProgram>(system: System, createProgram: CreateProgram<T> | undefined, reportDiagnostic?: DiagnosticReporter, reportSolutionBuilderStatus?: DiagnosticReporter) {
-+function createSolutionBuilderHostBase<T extends BuilderProgram>(system: System, createProgram: CreateProgram<T> | undefined, reportDiagnostic?: DiagnosticReporter, reportSolutionBuilderStatus?: DiagnosticReporter): SolutionBuilderHostBase<T> {
-     const host = createProgramHost(system, createProgram) as SolutionBuilderHostBase<T>;
-     host.getModifiedTime = system.getModifiedTime ? path => system.getModifiedTime!(path) : returnUndefined;
-     host.setModifiedTime = system.setModifiedTime ? (path, date) => system.setModifiedTime!(path, date) : noop;
-@@ -205,13 +205,13 @@ function createSolutionBuilderHostBase<T extends BuilderProgram>(system: System,
-     return host;
- }
- 
--export function createSolutionBuilderHost<T extends BuilderProgram = EmitAndSemanticDiagnosticsBuilderProgram>(system = sys, createProgram?: CreateProgram<T>, reportDiagnostic?: DiagnosticReporter, reportSolutionBuilderStatus?: DiagnosticReporter, reportErrorSummary?: ReportEmitErrorSummary) {
-+export function createSolutionBuilderHost<T extends BuilderProgram = EmitAndSemanticDiagnosticsBuilderProgram>(system: System = sys, createProgram?: CreateProgram<T>, reportDiagnostic?: DiagnosticReporter, reportSolutionBuilderStatus?: DiagnosticReporter, reportErrorSummary?: ReportEmitErrorSummary): SolutionBuilderHost<T> {
-     const host = createSolutionBuilderHostBase(system, createProgram, reportDiagnostic, reportSolutionBuilderStatus) as SolutionBuilderHost<T>;
-     host.reportErrorSummary = reportErrorSummary;
-     return host;
- }
- 
--export function createSolutionBuilderWithWatchHost<T extends BuilderProgram = EmitAndSemanticDiagnosticsBuilderProgram>(system = sys, createProgram?: CreateProgram<T>, reportDiagnostic?: DiagnosticReporter, reportSolutionBuilderStatus?: DiagnosticReporter, reportWatchStatus?: WatchStatusReporter) {
-+export function createSolutionBuilderWithWatchHost<T extends BuilderProgram = EmitAndSemanticDiagnosticsBuilderProgram>(system: System = sys, createProgram?: CreateProgram<T>, reportDiagnostic?: DiagnosticReporter, reportSolutionBuilderStatus?: DiagnosticReporter, reportWatchStatus?: WatchStatusReporter): SolutionBuilderWithWatchHost<T> {
-     const host = createSolutionBuilderHostBase(system, createProgram, reportDiagnostic, reportSolutionBuilderStatus) as SolutionBuilderWithWatchHost<T>;
-     const watchHost = createWatchHost(system, reportWatchStatus);
-     copyProperties(host, watchHost);
-diff --git a/src/compiler/types.ts b/src/compiler/types.ts
-index 638abe01cc..c67350b23f 100644
---- a/src/compiler/types.ts
-+++ b/src/compiler/types.ts
-@@ -5085,7 +5085,7 @@ export interface SymbolWalker {
- 
- // This was previously deprecated in our public API, but is still used internally
- /** @internal */
--interface SymbolWriter extends SymbolTracker {
-+export interface SymbolWriter extends SymbolTracker {
-     writeKeyword(text: string): void;
-     writeOperator(text: string): void;
-     writePunctuation(text: string): void;
-@@ -9234,7 +9234,7 @@ export const enum PragmaKindFlags {
- }
- 
- /** @internal */
--interface PragmaArgumentSpecification<TName extends string> {
-+export interface PragmaArgumentSpecification<TName extends string> {
-     name: TName; // Determines the name of the key in the resulting parsed type, type parameter to cause literal type inference
-     optional?: boolean;
-     captureSpan?: boolean;
-@@ -9298,20 +9298,20 @@ export const commentPragmas = {
- } as const;
- 
- /** @internal */
--type PragmaArgTypeMaybeCapture<TDesc> = TDesc extends {captureSpan: true} ? {value: string, pos: number, end: number} : string;
-+export type PragmaArgTypeMaybeCapture<TDesc> = TDesc extends {captureSpan: true} ? {value: string, pos: number, end: number} : string;
- 
- /** @internal */
--type PragmaArgTypeOptional<TDesc, TName extends string> =
-+export type PragmaArgTypeOptional<TDesc, TName extends string> =
-     TDesc extends {optional: true}
-         ? {[K in TName]?: PragmaArgTypeMaybeCapture<TDesc>}
-         : {[K in TName]: PragmaArgTypeMaybeCapture<TDesc>};
- 
- /** @internal */
--type UnionToIntersection<U> =
-+export type UnionToIntersection<U> =
-         (U extends any ? (k: U) => void : never) extends ((k: infer I) => void) ? I : never;
- 
- /** @internal */
--type ArgumentDefinitionToFieldUnion<T extends readonly PragmaArgumentSpecification<any>[]> = {
-+export type ArgumentDefinitionToFieldUnion<T extends readonly PragmaArgumentSpecification<any>[]> = {
-     [K in keyof T]: PragmaArgTypeOptional<T[K], T[K] extends {name: infer TName} ? TName extends string ? TName : never : never>
- }[Extract<keyof T, number>]; // The mapped type maps over only the tuple members, but this reindex gets _all_ members - by extracting only `number` keys, we get only the tuple members
- 
-@@ -9320,13 +9320,13 @@ type ArgumentDefinitionToFieldUnion<T extends readonly PragmaArgumentSpecificati
-  *
-  * @internal
-  */
--type PragmaArgumentType<KPrag extends keyof ConcretePragmaSpecs> =
-+ export type PragmaArgumentType<KPrag extends keyof ConcretePragmaSpecs> =
-     ConcretePragmaSpecs[KPrag] extends { args: readonly PragmaArgumentSpecification<any>[] }
-         ? UnionToIntersection<ArgumentDefinitionToFieldUnion<ConcretePragmaSpecs[KPrag]["args"]>>
-         : never;
- 
- /** @internal */
--type ConcretePragmaSpecs = typeof commentPragmas;
-+export type ConcretePragmaSpecs = typeof commentPragmas;
- 
- /** @internal */
- export type PragmaPseudoMap = {[K in keyof ConcretePragmaSpecs]: {arguments: PragmaArgumentType<K>, range: CommentRange}};
-diff --git a/src/compiler/utilities.ts b/src/compiler/utilities.ts
-index 560a78a818..97620b9c89 100644
---- a/src/compiler/utilities.ts
-+++ b/src/compiler/utilities.ts
-@@ -721,7 +721,8 @@ export function getEmitFlags(node: Node): EmitFlags {
-     return emitNode && emitNode.flags || 0;
- }
- 
--interface ScriptTargetFeatures {
-+/** @internal */
-+export interface ScriptTargetFeatures {
-     [key: string]: { [key: string]: string[] | undefined };
- }
- 
-@@ -6743,14 +6744,14 @@ export function formatStringFromArgs(text: string, args: ArrayLike<string | numb
- let localizedDiagnosticMessages: MapLike<string> | undefined;
- 
- /** @internal */
--export function setLocalizedDiagnosticMessages(messages: typeof localizedDiagnosticMessages) {
-+export function setLocalizedDiagnosticMessages(messages: MapLike<string> | undefined) {
-     localizedDiagnosticMessages = messages;
- }
- 
- /** @internal */
- // If the localized messages json is unset, and if given function use it to set the json
- 
--export function maybeSetLocalizedDiagnosticMessages(getMessages: undefined | (() => typeof localizedDiagnosticMessages)) {
-+export function maybeSetLocalizedDiagnosticMessages(getMessages: undefined | (() => MapLike<string> | undefined)) {
-     if (!localizedDiagnosticMessages && getMessages) {
-         localizedDiagnosticMessages = getMessages();
-     }
-diff --git a/src/compiler/watchPublic.ts b/src/compiler/watchPublic.ts
-index c54d14e0b0..b183c3415c 100644
---- a/src/compiler/watchPublic.ts
-+++ b/src/compiler/watchPublic.ts
-@@ -28,7 +28,7 @@ export interface ReadBuildProgramHost {
-     /** @internal */
-     getBuildInfo?(fileName: string, configFilePath: string | undefined): BuildInfo | undefined;
- }
--export function readBuilderProgram(compilerOptions: CompilerOptions, host: ReadBuildProgramHost) {
-+export function readBuilderProgram(compilerOptions: CompilerOptions, host: ReadBuildProgramHost): EmitAndSemanticDiagnosticsBuilderProgram | undefined {
-     const buildInfoPath = getTsBuildInfoEmitOutputFilePath(compilerOptions);
-     if (!buildInfoPath) return undefined;
-     let buildInfo;
-@@ -45,7 +45,7 @@ export function readBuilderProgram(compilerOptions: CompilerOptions, host: ReadB
-     return createBuilderProgramUsingProgramBuildInfo(buildInfo.program, buildInfoPath, host);
- }
- 
--export function createIncrementalCompilerHost(options: CompilerOptions, system = sys): CompilerHost {
-+export function createIncrementalCompilerHost(options: CompilerOptions, system: System = sys): CompilerHost {
-     const host = createCompilerHostWorker(options, /*setParentNodes*/ undefined, system);
-     host.createHash = maybeBind(system, system.createHash);
-     host.disableUseFileVersionAsSignature = system.disableUseFileVersionAsSignature;
-diff --git a/src/compiler/watchUtilities.ts b/src/compiler/watchUtilities.ts
-index 5dce173af6..0a06364c12 100644
---- a/src/compiler/watchUtilities.ts
-+++ b/src/compiler/watchUtilities.ts
-@@ -30,7 +30,8 @@ export interface DirectoryStructureHost {
-     writeFile?(path: string, data: string, writeByteOrderMark?: boolean): void;
- }
- 
--interface FileAndDirectoryExistence {
-+/** @internal */
-+export interface FileAndDirectoryExistence {
-     fileExists: boolean;
-     directoryExists: boolean;
- }
 diff --git a/src/deprecatedCompat/4.0/nodeFactoryTopLevelExports.ts b/src/deprecatedCompat/4.0/nodeFactoryTopLevelExports.ts
 index db5f894683..b3ec867dab 100644
 --- a/src/deprecatedCompat/4.0/nodeFactoryTopLevelExports.ts
@@ -2469,531 +1612,19 @@ index db5f894683..b3ec867dab 100644
  
  /** @deprecated Use `factory.createToken` or the factory supplied by your transformation context instead. */
  export const createToken = Debug.deprecate(function createToken<TKind extends SyntaxKind>(kind: TKind): Token<TKind> {
-diff --git a/src/deprecatedCompat/deprecations.ts b/src/deprecatedCompat/deprecations.ts
-index d85748d14d..20ac933563 100644
---- a/src/deprecatedCompat/deprecations.ts
-+++ b/src/deprecatedCompat/deprecations.ts
-@@ -1,4 +1,4 @@
--import { Debug, DeprecationOptions, hasProperty } from "./_namespaces/ts";
-+import { Debug, DeprecationOptions, hasProperty, UnionToIntersection } from "./_namespaces/ts";
- 
- // The following are deprecations for the public API. Deprecated exports are removed from the compiler itself
- // and compatible implementations are added here, along with an appropriate deprecation warning using
-@@ -12,31 +12,58 @@ import { Debug, DeprecationOptions, hasProperty } from "./_namespaces/ts";
- //
- // Once we have determined enough time has passed after a deprecation has been marked as `"warn"` or `"error"`, it will be removed from the public API.
- 
--/** Defines a list of overloads by ordinal */
--type OverloadDefinitions = { readonly [P in number]: (...args: any[]) => any; };
--
--/** A function that returns the ordinal of the overload that matches the provided arguments */
--type OverloadBinder<T extends OverloadDefinitions> = (args: OverloadParameters<T>) => OverloadKeys<T> | undefined;
--
--/** Extracts the ordinals from an set of overload definitions. */
--type OverloadKeys<T extends OverloadDefinitions> = Extract<keyof T, number>;
--
--/** Extracts a union of the potential parameter lists for each overload. */
--type OverloadParameters<T extends OverloadDefinitions> = Parameters<{ [P in OverloadKeys<T>]: T[P]; }[OverloadKeys<T>]>;
-+/**
-+ * Defines a list of overloads by ordinal
-+ *
-+ * @internal
-+ */
-+export type OverloadDefinitions = { readonly [P in number]: (...args: any[]) => any; };
-+
-+/**
-+ * A function that returns the ordinal of the overload that matches the provided arguments
-+ *
-+ * @internal
-+ */
-+export type OverloadBinder<T extends OverloadDefinitions> = (args: OverloadParameters<T>) => OverloadKeys<T> | undefined;
-+
-+/**
-+ * Extracts the ordinals from an set of overload definitions.
-+ *
-+ * @internal
-+ */
-+export type OverloadKeys<T extends OverloadDefinitions> = Extract<keyof T, number>;
-+
-+/**
-+ * Extracts a union of the potential parameter lists for each overload.
-+ *
-+ * @internal
-+ */
-+export type OverloadParameters<T extends OverloadDefinitions> = Parameters<{ [P in OverloadKeys<T>]: T[P]; }[OverloadKeys<T>]>;
- 
- // NOTE: the following doesn't work in TS 4.4 (the current LKG in main), so we have to use UnionToIntersection for now
--/** Constructs an intersection of each overload in a set of overload definitions. */
- // type OverloadFunction<T extends OverloadDefinitions, R extends ((...args: any[]) => any)[] = [], O = unknown> =
- //     R["length"] extends keyof T ? OverloadFunction<T, [...R, T[R["length"]]], O & T[R["length"]]> :
- //     unknown extends O ? never : O;
--type UnionToIntersection<T> = (T extends any ? (x: T) => any : never) extends (x: infer R) => any ? R : never;
--type OverloadFunction<T extends OverloadDefinitions> = UnionToIntersection<T[keyof T]>;
--
--/** Maps each ordinal in a set of overload definitions to a function that can be used to bind its arguments. */
--type OverloadBinders<T extends OverloadDefinitions> = { [P in OverloadKeys<T>]: (args: OverloadParameters<T>) => boolean | undefined; };
--
--/** Defines deprecations for specific overloads by ordinal. */
--type OverloadDeprecations<T extends OverloadDefinitions> = { [P in OverloadKeys<T>]?: DeprecationOptions; };
-+/**
-+ * Constructs an intersection of each overload in a set of overload definitions.
-+ *
-+ * @internal
-+ */
-+export type OverloadFunction<T extends OverloadDefinitions> = UnionToIntersection<T[keyof T]>;
-+
-+/**
-+ * Maps each ordinal in a set of overload definitions to a function that can be used to bind its arguments.
-+ *
-+ * @internal
-+ */
-+export type OverloadBinders<T extends OverloadDefinitions> = { [P in OverloadKeys<T>]: (args: OverloadParameters<T>) => boolean | undefined; };
-+
-+/**
-+ * Defines deprecations for specific overloads by ordinal.
-+ *
-+ * @internal
-+ */
-+export type OverloadDeprecations<T extends OverloadDefinitions> = { [P in OverloadKeys<T>]?: DeprecationOptions; };
- 
- /** @internal */
- export function createOverload<T extends OverloadDefinitions>(name: string, overloads: T, binder: OverloadBinders<T>, deprecations?: OverloadDeprecations<T>) {
-@@ -75,19 +102,23 @@ function createBinder<T extends OverloadDefinitions>(overloads: T, binder: Overl
-     };
- }
- 
--interface OverloadBuilder {
-+/** @internal */
-+export interface OverloadBuilder {
-     overload<T extends OverloadDefinitions>(overloads: T): BindableOverloadBuilder<T>;
- }
- 
--interface BindableOverloadBuilder<T extends OverloadDefinitions> {
-+/** @internal */
-+export interface BindableOverloadBuilder<T extends OverloadDefinitions> {
-     bind(binder: OverloadBinders<T>): BoundOverloadBuilder<T>;
- }
- 
--interface FinishableOverloadBuilder<T extends OverloadDefinitions> {
-+/** @internal */
-+export interface FinishableOverloadBuilder<T extends OverloadDefinitions> {
-     finish(): OverloadFunction<T>;
- }
- 
--interface BoundOverloadBuilder<T extends OverloadDefinitions> extends FinishableOverloadBuilder<T> {
-+/** @internal */
-+export interface BoundOverloadBuilder<T extends OverloadDefinitions> extends FinishableOverloadBuilder<T> {
-     deprecate(deprecations: OverloadDeprecations<T>): FinishableOverloadBuilder<T>;
- }
- 
-diff --git a/src/server/editorServices.ts b/src/server/editorServices.ts
-index 1ae9921a3c..b3e91f685e 100644
---- a/src/server/editorServices.ts
-+++ b/src/server/editorServices.ts
-@@ -28,7 +28,7 @@ import {
-     parseJsonSourceFileConfigFileContent, parseJsonText, parsePackageName, Path, PerformanceEvent, PluginImport,
-     PollingInterval, ProjectPackageJsonInfo, ProjectReference, ReadMapFile, ReadonlyCollection, removeFileExtension,
-     removeIgnoredPath, removeMinAndVersionNumbers, ResolvedProjectReference, resolveProjectReferencePath,
--    returnNoopFileWatcher, returnTrue, ScriptKind, Set, SharedExtendedConfigFileWatcher, some, SourceFile, startsWith,
-+    returnNoopFileWatcher, returnTrue, ScriptKind, Set, SharedExtendedConfigFileWatcher, some, SourceFile, SourceFileLike, startsWith,
-     Ternary, TextChange, toFileNameLowerCase, toPath, tracing, tryAddToSet, tryReadFile, TsConfigSourceFile,
-     TypeAcquisition, typeAcquisitionDeclarations, unorderedRemoveItem, updateSharedExtendedConfigFileWatcher,
-     updateWatchingWildcardDirectories, UserPreferences, version, WatchDirectoryFlags, WatchFactory, WatchLogLevel,
-@@ -397,7 +397,7 @@ function findProjectByName<T extends Project>(projectName: string, projects: T[]
- const noopConfigFileWatcher: FileWatcher = { close: noop };
- 
- /** @internal */
--interface ConfigFileExistenceInfo {
-+export interface ConfigFileExistenceInfo {
-     /**
-      * Cached value of existence of config file
-      * It is true if there is configured project open for this file.
-@@ -2984,7 +2984,7 @@ export class ProjectService {
-     }
- 
-     /** @internal */
--    getSourceFileLike(fileName: string, projectNameOrProject: string | Project, declarationInfo?: ScriptInfo) {
-+    getSourceFileLike(fileName: string, projectNameOrProject: string | Project, declarationInfo?: ScriptInfo): SourceFileLike | undefined {
-         const project = (projectNameOrProject as Project).projectName ? projectNameOrProject as Project : this.findProject(projectNameOrProject as string);
-         if (project) {
-             const path = project.toPath(fileName);
-diff --git a/src/server/scriptVersionCache.ts b/src/server/scriptVersionCache.ts
-index 13a2fbe6a0..fc828b3f8c 100644
---- a/src/server/scriptVersionCache.ts
-+++ b/src/server/scriptVersionCache.ts
-@@ -6,7 +6,8 @@ import { emptyArray, protocol } from "./_namespaces/ts.server";
- 
- const lineCollectionCapacity = 4;
- 
--interface LineCollection {
-+/** @internal */
-+export interface LineCollection {
-     charCount(): number;
-     lineCount(): number;
-     isLeaf(): this is LineLeaf;
-@@ -19,7 +20,8 @@ export interface AbsolutePositionAndLineText {
-     lineText: string | undefined;
- }
- 
--const enum CharRangeSection {
-+/** @internal */
-+export const enum CharRangeSection {
-     PreStart,
-     Start,
-     Entire,
-@@ -28,7 +30,8 @@ const enum CharRangeSection {
-     PostEnd
- }
- 
--interface LineIndexWalker {
-+/** @internal */
-+export interface LineIndexWalker {
-     goSubtree: boolean;
-     done: boolean;
-     leaf(relativeStart: number, relativeLength: number, lineCollection: LineLeaf): void;
-@@ -568,7 +571,8 @@ export class LineIndex {
-     }
- }
- 
--class LineNode implements LineCollection {
-+/** @internal */
-+export class LineNode implements LineCollection {
-     totalChars = 0;
-     totalLines = 0;
- 
-@@ -819,7 +823,8 @@ class LineNode implements LineCollection {
-     }
- }
- 
--class LineLeaf implements LineCollection {
-+/** @internal */
-+export class LineLeaf implements LineCollection {
-     constructor(public text: string) {
-     }
- 
-diff --git a/src/services/codefixes/annotateWithTypeFromJSDoc.ts b/src/services/codefixes/annotateWithTypeFromJSDoc.ts
-index 8003b4a713..8220c43714 100644
---- a/src/services/codefixes/annotateWithTypeFromJSDoc.ts
-+++ b/src/services/codefixes/annotateWithTypeFromJSDoc.ts
-@@ -32,7 +32,8 @@ function getDeclaration(file: SourceFile, pos: number): DeclarationWithType | un
-     return tryCast(isParameter(name.parent) ? name.parent.parent : name.parent, parameterShouldGetTypeFromJSDoc);
- }
- 
--type DeclarationWithType =
-+/** @internal */
-+export type DeclarationWithType =
-     | FunctionLikeDeclaration
-     | VariableDeclaration
-     | PropertySignature
-diff --git a/src/services/codefixes/generateAccessors.ts b/src/services/codefixes/generateAccessors.ts
-index 1ae126ddfa..50366542a9 100644
---- a/src/services/codefixes/generateAccessors.ts
-+++ b/src/services/codefixes/generateAccessors.ts
-@@ -11,12 +11,19 @@ import {
-     SymbolFlags, SyntaxKind, textChanges, TypeChecker, TypeNode,
- } from "../_namespaces/ts";
- 
--type AcceptedDeclaration = ParameterPropertyDeclaration | PropertyDeclaration | PropertyAssignment;
--type AcceptedNameType = Identifier | StringLiteral;
--type ContainerDeclaration = ClassLikeDeclaration | ObjectLiteralExpression;
- 
--type Info = AccessorInfo | refactor.RefactorErrorInfo;
--interface AccessorInfo {
-+/** @internal */
-+export type AcceptedDeclaration = ParameterPropertyDeclaration | PropertyDeclaration | PropertyAssignment;
-+/** @internal */
-+export type AcceptedNameType = Identifier | StringLiteral;
-+/** @internal */
-+export type ContainerDeclaration = ClassLikeDeclaration | ObjectLiteralExpression;
-+
-+/** @internal */
-+export type AccessorOrRefactorErrorInfo = AccessorInfo | refactor.RefactorErrorInfo;
-+
-+/** @internal */
-+export interface AccessorInfo {
-     readonly container: ContainerDeclaration;
-     readonly isStatic: boolean;
-     readonly isReadonly: boolean;
-@@ -117,7 +124,7 @@ function prepareModifierFlagsForField(modifierFlags: ModifierFlags): ModifierFla
- }
- 
- /** @internal */
--export function getAccessorConvertiblePropertyAtPosition(file: SourceFile, program: Program, start: number, end: number, considerEmptySpans = true): Info | undefined {
-+export function getAccessorConvertiblePropertyAtPosition(file: SourceFile, program: Program, start: number, end: number, considerEmptySpans = true): AccessorOrRefactorErrorInfo | undefined {
-     const node = getTokenAtPosition(file, start);
-     const cursorRequest = start === end && considerEmptySpans;
-     const declaration = findAncestor(node.parent, isAcceptedDeclaration);
-diff --git a/src/services/codefixes/helpers.ts b/src/services/codefixes/helpers.ts
-index c54f6da012..d523d8567b 100644
---- a/src/services/codefixes/helpers.ts
-+++ b/src/services/codefixes/helpers.ts
-@@ -8,7 +8,7 @@ import {
-     IntersectionType, isArrowFunction, isAutoAccessorPropertyDeclaration, isFunctionDeclaration, isFunctionExpression,
-     isGetAccessorDeclaration, isIdentifier, isImportTypeNode, isInJSFile, isLiteralImportTypeNode, isMethodDeclaration,
-     isObjectLiteralExpression, isPropertyAccessExpression, isPropertyAssignment, isSetAccessorDeclaration,
--    isStringLiteral, isYieldExpression, LanguageServiceHost, length, map, Map, MethodDeclaration, Modifier,
-+    isStringLiteral, isYieldExpression, LanguageServiceHost, length, map, Map, MethodDeclaration, MethodSignature, Modifier,
-     ModifierFlags, Node, NodeArray, NodeBuilderFlags, NodeFlags, nullTransformationContext, ObjectFlags,
-     ObjectLiteralExpression, ObjectType, ParameterDeclaration, Program, PropertyAssignment, PropertyDeclaration,
-     PropertyName, QuotePreference, sameMap, ScriptTarget, Set, SetAccessorDeclaration, setTextRange, Signature,
-@@ -57,7 +57,8 @@ export interface TypeConstructionContext {
-     host: LanguageServiceHost;
- }
- 
--type AddNode = PropertyDeclaration | GetAccessorDeclaration | SetAccessorDeclaration | MethodDeclaration | FunctionExpression | ArrowFunction;
-+/** @internal */
-+export type AddNode = PropertyDeclaration | GetAccessorDeclaration | SetAccessorDeclaration | MethodDeclaration | FunctionExpression | ArrowFunction;
- 
- /** @internal */
- export const enum PreserveOptionalFlags {
-@@ -353,7 +354,7 @@ export function createSignatureDeclarationFromCallExpression(
-     name: Identifier | string,
-     modifierFlags: ModifierFlags,
-     contextNode: Node
--) {
-+): MethodDeclaration | MethodSignature | FunctionDeclaration {
-     const quotePreference = getQuotePreference(context.sourceFile, context.preferences);
-     const scriptTarget = getEmitScriptTarget(context.program.getCompilerOptions());
-     const tracker = getNoopSymbolTrackerWithResolver(context);
-@@ -417,7 +418,8 @@ export function createSignatureDeclarationFromCallExpression(
-     }
- }
- 
--interface ArgumentTypeParameterAndConstraint {
-+/** @internal */
-+export interface ArgumentTypeParameterAndConstraint {
-     argumentType: Type;
-     constraint?: TypeNode;
- }
-diff --git a/src/services/completions.ts b/src/services/completions.ts
-index 86de7d17e3..f3e4f3f2ec 100644
---- a/src/services/completions.ts
-+++ b/src/services/completions.ts
-@@ -124,7 +124,8 @@ export enum CompletionSource {
-     ObjectLiteralMethodSnippet = "ObjectLiteralMethodSnippet/",
- }
- 
--const enum SymbolOriginInfoKind {
-+/** @internal */
-+export const enum SymbolOriginInfoKind {
-     ThisType            = 1 << 0,
-     SymbolMember        = 1 << 1,
-     Export              = 1 << 2,
-@@ -138,7 +139,8 @@ const enum SymbolOriginInfoKind {
-     SymbolMemberExport   = SymbolMember | Export,
- }
- 
--interface SymbolOriginInfo {
-+/** @internal */
-+export interface SymbolOriginInfo {
-     kind: SymbolOriginInfoKind;
-     isDefaultExport?: boolean;
-     isFromPackageJson?: boolean;
-@@ -210,18 +212,25 @@ function originIsObjectLiteralMethod(origin: SymbolOriginInfo | undefined): orig
-     return !!(origin && origin.kind & SymbolOriginInfoKind.ObjectLiteralMethod);
- }
- 
--interface UniqueNameSet {
-+/** @internal */
-+export interface UniqueNameSet {
-     add(name: string): void;
-     has(name: string): boolean;
- }
- 
- /**
-  * Map from symbol index in `symbols` -> SymbolOriginInfo.
-+ *
-+ * @internal
-  */
--type SymbolOriginInfoMap = Record<number, SymbolOriginInfo>;
-+export type SymbolOriginInfoMap = Record<number, SymbolOriginInfo>;
- 
--/** Map from symbol id -> SortText. */
--type SymbolSortTextMap = (SortText | undefined)[];
-+/**
-+ * Map from symbol id -> SortText.
-+ *
-+ * @internal
-+ */
-+export type SymbolSortTextMap = (SortText | undefined)[];
- 
- const enum KeywordCompletionFilters {
-     None,                           // No keywords
-@@ -1881,8 +1890,12 @@ export function getCompletionEntrySymbol(
- }
- 
- const enum CompletionDataKind { Data, JsDocTagName, JsDocTag, JsDocParameterName, Keywords }
--/** true: after the `=` sign but no identifier has been typed yet. Else is the Identifier after the initializer. */
--type IsJsxInitializer = boolean | Identifier;
-+/**
-+ * true: after the `=` sign but no identifier has been typed yet. Else is the Identifier after the initializer.
-+ *
-+ * @internal
-+ */
-+export type IsJsxInitializer = boolean | Identifier;
- interface CompletionData {
-     readonly kind: CompletionDataKind.Data;
-     readonly symbols: readonly Symbol[];
-@@ -4319,7 +4332,8 @@ function tryGetObjectLiteralContextualType(node: ObjectLiteralExpression, typeCh
-     return undefined;
- }
- 
--interface ImportStatementCompletionInfo {
-+/** @internal */
-+export interface ImportStatementCompletionInfo {
-     isKeywordOnlyCompletion: boolean;
-     keywordCompletion: TokenSyntaxKind | undefined;
-     isNewIdentifierLocation: boolean;
-diff --git a/src/services/getEditsForFileRename.ts b/src/services/getEditsForFileRename.ts
-index bdd1ac357d..2c2096a860 100644
---- a/src/services/getEditsForFileRename.ts
-+++ b/src/services/getEditsForFileRename.ts
-@@ -30,8 +30,12 @@ export function getEditsForFileRename(
-     });
- }
- 
--/** If 'path' refers to an old directory, returns path in the new directory. */
--type PathUpdater = (path: string) => string | undefined;
-+/**
-+ * If 'path' refers to an old directory, returns path in the new directory.
-+ *
-+ * @internal
-+ */
-+export type PathUpdater = (path: string) => string | undefined;
- // exported for tests
- /** @internal */
- export function getPathUpdater(oldFileOrDirPath: string, newFileOrDirPath: string, getCanonicalFileName: GetCanonicalFileName, sourceMapper: SourceMapper | undefined): PathUpdater {
-diff --git a/src/services/organizeImports.ts b/src/services/organizeImports.ts
-index 8dd382f0e9..d2643e23ea 100644
---- a/src/services/organizeImports.ts
-+++ b/src/services/organizeImports.ts
-@@ -1,6 +1,7 @@
- import {
-     AnyImportOrRequireStatement, arrayIsSorted, binarySearch, compareBooleans, compareStringsCaseInsensitive,
--    compareValues, createScanner, emptyArray, ExportDeclaration, ExportSpecifier, Expression, factory,
-+    compareValues, Comparison, createScanner, emptyArray, ExportDeclaration, ExportSpecifier, Expression, factory,
-+    FileTextChanges,
-     FindAllReferences, flatMap, formatting, getNewLineOrDefaultFromHost, group, Identifier, identity, ImportDeclaration,
-     ImportOrExportSpecifier, ImportSpecifier, isAmbientModule, isExportDeclaration, isExternalModuleNameRelative,
-     isExternalModuleReference, isImportDeclaration, isNamedExports, isNamedImports, isNamespaceImport, isString,
-@@ -24,7 +25,7 @@ export function organizeImports(
-     program: Program,
-     preferences: UserPreferences,
-     skipDestructiveCodeActions?: boolean
--) {
-+): FileTextChanges[] {
-     const changeTracker = textChanges.ChangeTracker.fromContext({ host, formatContext, preferences });
- 
-     const coalesceAndOrganizeImports = (importGroup: readonly ImportDeclaration[]) => stableSort(
-@@ -468,7 +469,7 @@ function sortSpecifiers<T extends ImportOrExportSpecifier>(specifiers: readonly
- }
- 
- /** @internal */
--export function compareImportOrExportSpecifiers<T extends ImportOrExportSpecifier>(s1: T, s2: T) {
-+export function compareImportOrExportSpecifiers<T extends ImportOrExportSpecifier>(s1: T, s2: T): Comparison {
-     return compareBooleans(s1.isTypeOnly, s2.isTypeOnly)
-         || compareIdentifiers(s1.propertyName || s1.name, s2.propertyName || s2.name)
-         || compareIdentifiers(s1.name, s2.name);
-@@ -525,7 +526,7 @@ export function getImportSpecifierInsertionIndex(sortedImports: SortedReadonlyAr
- }
- 
- /** @internal */
--export function compareImportsOrRequireStatements(s1: AnyImportOrRequireStatement, s2: AnyImportOrRequireStatement) {
-+export function compareImportsOrRequireStatements(s1: AnyImportOrRequireStatement, s2: AnyImportOrRequireStatement): Comparison {
-     return compareModuleSpecifiers(getModuleSpecifierExpression(s1), getModuleSpecifierExpression(s2)) || compareImportKind(s1, s2);
- }
- 
-diff --git a/src/services/refactors/extractSymbol.ts b/src/services/refactors/extractSymbol.ts
-index a49c9f248d..9a702aa1a7 100644
---- a/src/services/refactors/extractSymbol.ts
-+++ b/src/services/refactors/extractSymbol.ts
-@@ -255,7 +255,8 @@ export namespace Messages {
-     export const cannotExtractFunctionsContainingThisToMethod = createMessage("Cannot extract functions containing this to method");
- }
- 
--enum RangeFacts {
-+/** @internal */
-+export enum RangeFacts {
-     None = 0,
-     HasReturn = 1 << 0,
-     IsGenerator = 1 << 1,
-@@ -270,8 +271,10 @@ enum RangeFacts {
- 
- /**
-  * Represents an expression or a list of statements that should be extracted with some extra information
-+ *
-+ * @internal
-  */
--interface TargetRange {
-+export interface TargetRange {
-     readonly range: Expression | Statement[];
-     readonly facts: RangeFacts;
-     /**
-@@ -287,8 +290,10 @@ interface TargetRange {
- 
- /**
-  * Result of 'getRangeToExtract' operation: contains either a range or a list of errors
-+ *
-+ * @internal
-  */
--type RangeToExtract = {
-+export type RangeToExtract = {
-     readonly targetRange?: never;
-     readonly errors: readonly Diagnostic[];
- } | {
-diff --git a/src/services/sourcemaps.ts b/src/services/sourcemaps.ts
-index 73079ef532..8a80b02ffb 100644
---- a/src/services/sourcemaps.ts
-+++ b/src/services/sourcemaps.ts
-@@ -155,7 +155,7 @@ export function getDocumentPositionMapper(
-     host: DocumentPositionMapperHost,
-     generatedFileName: string,
-     generatedFileLineInfo: LineInfo,
--    readMapFile: ReadMapFile) {
-+    readMapFile: ReadMapFile): DocumentPositionMapper | undefined {
-     let mapFileName = tryGetSourceMappingURL(generatedFileLineInfo);
-     if (mapFileName) {
-         const match = base64UrlRegExp.exec(mapFileName);
-diff --git a/src/services/symbolDisplay.ts b/src/services/symbolDisplay.ts
-index 78d07e625d..ce70ddb0dc 100644
---- a/src/services/symbolDisplay.ts
-+++ b/src/services/symbolDisplay.ts
-@@ -149,7 +149,8 @@ export function getSymbolModifiers(typeChecker: TypeChecker, symbol: Symbol): st
-     return modifiers.size > 0 ? arrayFrom(modifiers.values()).join(",") : ScriptElementKindModifier.none;
- }
- 
--interface SymbolDisplayPartsDocumentationAndSymbolKind {
-+/** @internal */
-+export interface SymbolDisplayPartsDocumentationAndSymbolKind {
-     displayParts: SymbolDisplayPart[];
-     documentation: SymbolDisplayPart[];
-     symbolKind: ScriptElementKind;
-diff --git a/src/services/textChanges.ts b/src/services/textChanges.ts
-index 2ddc725e83..4673304be2 100644
---- a/src/services/textChanges.ts
-+++ b/src/services/textChanges.ts
-@@ -1192,7 +1192,8 @@ function assignPositionsToNodeArray(nodes: NodeArray<any>, visitor: Visitor, tes
-     return nodeArray;
- }
- 
--interface TextChangesWriter extends EmitTextWriter, PrintHandlers {}
-+/** @internal */
-+export interface TextChangesWriter extends EmitTextWriter, PrintHandlers {}
- 
- /** @internal */
- export function createWriter(newLine: string): TextChangesWriter {
 diff --git a/src/services/transform.ts b/src/services/transform.ts
-index f6fb9314ac..04ad279c73 100644
+index f6fb9314ac..f76326ea3f 100644
 --- a/src/services/transform.ts
 +++ b/src/services/transform.ts
-@@ -1,5 +1,6 @@
+@@ -1,6 +1,6 @@
  import {
      CompilerOptions, concatenate, DiagnosticWithLocation, factory, fixupCompilerOptions, isArray, Node,
-+    TransformationResult,
-     TransformerFactory, transformNodes,
+-    TransformerFactory, transformNodes,
++    TransformationResult, TransformerFactory, transformNodes,
  } from "./_namespaces/ts";
  
-@@ -9,11 +10,11 @@ import {
+ /**
+@@ -9,11 +9,11 @@ import {
   * @param transformers An array of `TransformerFactory` callbacks used to process the transformation.
   * @param compilerOptions Optional compiler options.
   */
@@ -3134,7 +1765,7 @@ index 69eab7271e..185a346d3a 100644
      delint(sourceFile);
  });
 diff --git a/tests/baselines/reference/api/tsserverlibrary.d.ts b/tests/baselines/reference/api/tsserverlibrary.d.ts
-index 575116ceed..886700632d 100644
+index 575116ceed..18a7418c66 100644
 --- a/tests/baselines/reference/api/tsserverlibrary.d.ts
 +++ b/tests/baselines/reference/api/tsserverlibrary.d.ts
 @@ -14,6 +14,3930 @@ and limitations under the License.
@@ -10907,7 +9538,7 @@ index 575116ceed..886700632d 100644
       * provided resolution mode in the reference, unless one is not present, in which case it is the mode of the containing file.
       */
 -    export function getModeForFileReference(ref: FileReference | string, containingFileMode: SourceFile["impliedNodeFormat"]): ModuleKind.CommonJS | ModuleKind.ESNext | undefined;
-+    function getModeForFileReference(ref: FileReference | string, containingFileMode: SourceFile["impliedNodeFormat"]): ModuleKind.CommonJS | ModuleKind.ESNext | undefined;
++    function getModeForFileReference(ref: FileReference | string, containingFileMode: SourceFile["impliedNodeFormat"]): ts.ModuleKind.CommonJS | ts.ModuleKind.ESNext | undefined;
      /**
       * Calculates the final resolution mode for an import at some index within a file's imports list. This is generally the explicitly
       * defined mode of the import if provided, or, if not, the mode of the containing file (with some exceptions: import=require is always commonjs, dynamic import is always esm).
@@ -10927,8 +9558,9 @@ index 575116ceed..886700632d 100644
 -    export function getModeForUsageLocation(file: {
 +    function getModeForUsageLocation(file: {
          impliedNodeFormat?: SourceFile["impliedNodeFormat"];
-     }, usage: StringLiteralLike): ModuleKind.CommonJS | ModuleKind.ESNext | undefined;
+-    }, usage: StringLiteralLike): ModuleKind.CommonJS | ModuleKind.ESNext | undefined;
 -    export function getConfigFileParsingDiagnostics(configFileParseResult: ParsedCommandLine): readonly Diagnostic[];
++    }, usage: StringLiteralLike): ts.ModuleKind.CommonJS | ts.ModuleKind.ESNext | undefined;
 +    function getConfigFileParsingDiagnostics(configFileParseResult: ParsedCommandLine): readonly Diagnostic[];
      /**
       * A function for determining if a given file is esm or cjs format, assuming modern node module resolution rules, as configured by the
@@ -11011,8 +9643,8 @@ index 575116ceed..886700632d 100644
           */
          emitNextAffectedFile(writeFile?: WriteFileCallback, cancellationToken?: CancellationToken, emitOnlyDtsFiles?: boolean, customTransformers?: CustomTransformers): AffectedFileResult<EmitResult>;
      }
-+    function readBuilderProgram(compilerOptions: CompilerOptions, host: ReadBuildProgramHost): EmitAndSemanticDiagnosticsBuilderProgram | undefined;
-+    function createIncrementalCompilerHost(options: CompilerOptions, system?: System): CompilerHost;
++    function readBuilderProgram(compilerOptions: CompilerOptions, host: ReadBuildProgramHost): ts.EmitAndSemanticDiagnosticsBuilderProgram | undefined;
++    function createIncrementalCompilerHost(options: CompilerOptions, system?: ts.System): CompilerHost;
 +    function createIncrementalProgram<T extends BuilderProgram = EmitAndSemanticDiagnosticsBuilderProgram>({ rootNames, options, configFileParsingDiagnostics, projectReferences, host, createProgram }: IncrementalProgramOptions<T>): T;
      /**
 -     * Create the builder to manage semantic diagnostics and cache them
@@ -11077,8 +9709,8 @@ index 575116ceed..886700632d 100644
 -}
 -declare namespace ts {
 +    function createBuilderStatusReporter(system: System, pretty?: boolean): DiagnosticReporter;
-+    function createSolutionBuilderHost<T extends BuilderProgram = EmitAndSemanticDiagnosticsBuilderProgram>(system?: System, createProgram?: CreateProgram<T>, reportDiagnostic?: DiagnosticReporter, reportSolutionBuilderStatus?: DiagnosticReporter, reportErrorSummary?: ReportEmitErrorSummary): SolutionBuilderHost<T>;
-+    function createSolutionBuilderWithWatchHost<T extends BuilderProgram = EmitAndSemanticDiagnosticsBuilderProgram>(system?: System, createProgram?: CreateProgram<T>, reportDiagnostic?: DiagnosticReporter, reportSolutionBuilderStatus?: DiagnosticReporter, reportWatchStatus?: WatchStatusReporter): SolutionBuilderWithWatchHost<T>;
++    function createSolutionBuilderHost<T extends BuilderProgram = EmitAndSemanticDiagnosticsBuilderProgram>(system?: ts.System, createProgram?: CreateProgram<T>, reportDiagnostic?: DiagnosticReporter, reportSolutionBuilderStatus?: DiagnosticReporter, reportErrorSummary?: ReportEmitErrorSummary): ts.SolutionBuilderHost<T>;
++    function createSolutionBuilderWithWatchHost<T extends BuilderProgram = EmitAndSemanticDiagnosticsBuilderProgram>(system?: ts.System, createProgram?: CreateProgram<T>, reportDiagnostic?: DiagnosticReporter, reportSolutionBuilderStatus?: DiagnosticReporter, reportWatchStatus?: WatchStatusReporter): ts.SolutionBuilderWithWatchHost<T>;
 +    function createSolutionBuilder<T extends BuilderProgram>(host: SolutionBuilderHost<T>, rootNames: readonly string[], defaultOptions: BuildOptions): SolutionBuilder<T>;
 +    function createSolutionBuilderWithWatch<T extends BuilderProgram>(host: SolutionBuilderWithWatchHost<T>, rootNames: readonly string[], defaultOptions: BuildOptions, baseWatchOptions?: WatchOptions): SolutionBuilder<T>;
      interface BuildOptions {
@@ -11310,7 +9942,7 @@ index 575116ceed..886700632d 100644
          releaseDocument(fileName: string, compilationSettings: CompilerOptions, scriptKind?: ScriptKind): void;
          /**
           * Informs the DocumentRegistry that a file is not needed any longer.
-@@ -6984,4649 +11026,640 @@ declare namespace ts {
+@@ -6984,12 +11026,9 @@ declare namespace ts {
      type DocumentRegistryBucketKey = string & {
          __bucketKey: any;
      };
@@ -11320,19 +9952,15 @@ index 575116ceed..886700632d 100644
      function preProcessFile(sourceText: string, readImportFiles?: boolean, detectJavaScriptImports?: boolean): PreProcessedFileInfo;
 -}
 -declare namespace ts {
--    interface TranspileOptions {
--        compilerOptions?: CompilerOptions;
--        fileName?: string;
--        reportDiagnostics?: boolean;
--        moduleName?: string;
--        renamedDependencies?: MapLike<string>;
--        transformers?: CustomTransformers;
--    }
--    interface TranspileOutput {
--        outputText: string;
--        diagnostics?: Diagnostic[];
--        sourceMapText?: string;
--    }
++    function transpileModule(input: string, transpileOptions: TranspileOptions): TranspileOutput;
++    function transpile(input: string, compilerOptions?: CompilerOptions, fileName?: string, diagnostics?: Diagnostic[], moduleName?: string): string;
+     interface TranspileOptions {
+         compilerOptions?: CompilerOptions;
+         fileName?: string;
+@@ -7003,4630 +11042,624 @@ declare namespace ts {
+         diagnostics?: Diagnostic[];
+         sourceMapText?: string;
+     }
 -    function transpileModule(input: string, transpileOptions: TranspileOptions): TranspileOutput;
 -    function transpile(input: string, compilerOptions?: CompilerOptions, fileName?: string, diagnostics?: Diagnostic[], moduleName?: string): string;
 -}
@@ -14559,16 +13187,7 @@ index 575116ceed..886700632d 100644
 -        getModuleResolutionHostForAutoImportProvider(): never;
 -        getProjectReferences(): readonly ProjectReference[] | undefined;
 -        getTypeAcquisition(): TypeAcquisition;
-+    function transpileModule(input: string, transpileOptions: TranspileOptions): TranspileOutput;
-+    function transpile(input: string, compilerOptions?: CompilerOptions, fileName?: string, diagnostics?: Diagnostic[], moduleName?: string): string;
-+    interface TranspileOptions {
-+        compilerOptions?: CompilerOptions;
-+        fileName?: string;
-+        reportDiagnostics?: boolean;
-+        moduleName?: string;
-+        renamedDependencies?: MapLike<string>;
-+        transformers?: CustomTransformers;
-     }
+-    }
 -    /**
 -     * If a file is opened, the server will look for a tsconfig (or jsconfig)
 -     * and if successful create a ConfiguredProject for it.
@@ -14598,11 +13217,7 @@ index 575116ceed..886700632d 100644
 -        setProjectErrors(projectErrors: Diagnostic[]): void;
 -        close(): void;
 -        getEffectiveTypeRoots(): string[];
-+    interface TranspileOutput {
-+        outputText: string;
-+        diagnostics?: Diagnostic[];
-+        sourceMapText?: string;
-     }
+-    }
 +    function toEditorSettings(options: EditorOptions | EditorSettings): EditorSettings;
 +    function displayPartsToString(displayParts: SymbolDisplayPart[] | undefined): string;
 +    function getDefaultCompilerOptions(): CompilerOptions;
@@ -16548,7 +15163,7 @@ index 575116ceed..886700632d 100644
 +export = ts;
 \ No newline at end of file
 diff --git a/tests/baselines/reference/api/typescript.d.ts b/tests/baselines/reference/api/typescript.d.ts
-index 0e6b2559af..ce715867e3 100644
+index 0e6b2559af..acc96b9abe 100644
 --- a/tests/baselines/reference/api/typescript.d.ts
 +++ b/tests/baselines/reference/api/typescript.d.ts
 @@ -46,7 +46,10 @@ declare namespace ts {
@@ -20426,7 +19041,7 @@ index 0e6b2559af..ce715867e3 100644
       * provided resolution mode in the reference, unless one is not present, in which case it is the mode of the containing file.
       */
 -    export function getModeForFileReference(ref: FileReference | string, containingFileMode: SourceFile["impliedNodeFormat"]): ModuleKind.CommonJS | ModuleKind.ESNext | undefined;
-+    function getModeForFileReference(ref: FileReference | string, containingFileMode: SourceFile["impliedNodeFormat"]): ModuleKind.CommonJS | ModuleKind.ESNext | undefined;
++    function getModeForFileReference(ref: FileReference | string, containingFileMode: SourceFile["impliedNodeFormat"]): ts.ModuleKind.CommonJS | ts.ModuleKind.ESNext | undefined;
      /**
       * Calculates the final resolution mode for an import at some index within a file's imports list. This is generally the explicitly
       * defined mode of the import if provided, or, if not, the mode of the containing file (with some exceptions: import=require is always commonjs, dynamic import is always esm).
@@ -20446,8 +19061,9 @@ index 0e6b2559af..ce715867e3 100644
 -    export function getModeForUsageLocation(file: {
 +    function getModeForUsageLocation(file: {
          impliedNodeFormat?: SourceFile["impliedNodeFormat"];
-     }, usage: StringLiteralLike): ModuleKind.CommonJS | ModuleKind.ESNext | undefined;
+-    }, usage: StringLiteralLike): ModuleKind.CommonJS | ModuleKind.ESNext | undefined;
 -    export function getConfigFileParsingDiagnostics(configFileParseResult: ParsedCommandLine): readonly Diagnostic[];
++    }, usage: StringLiteralLike): ts.ModuleKind.CommonJS | ts.ModuleKind.ESNext | undefined;
 +    function getConfigFileParsingDiagnostics(configFileParseResult: ParsedCommandLine): readonly Diagnostic[];
      /**
       * A function for determining if a given file is esm or cjs format, assuming modern node module resolution rules, as configured by the
@@ -20530,8 +19146,8 @@ index 0e6b2559af..ce715867e3 100644
           */
          emitNextAffectedFile(writeFile?: WriteFileCallback, cancellationToken?: CancellationToken, emitOnlyDtsFiles?: boolean, customTransformers?: CustomTransformers): AffectedFileResult<EmitResult>;
      }
-+    function readBuilderProgram(compilerOptions: CompilerOptions, host: ReadBuildProgramHost): EmitAndSemanticDiagnosticsBuilderProgram | undefined;
-+    function createIncrementalCompilerHost(options: CompilerOptions, system?: System): CompilerHost;
++    function readBuilderProgram(compilerOptions: CompilerOptions, host: ReadBuildProgramHost): ts.EmitAndSemanticDiagnosticsBuilderProgram | undefined;
++    function createIncrementalCompilerHost(options: CompilerOptions, system?: ts.System): CompilerHost;
 +    function createIncrementalProgram<T extends BuilderProgram = EmitAndSemanticDiagnosticsBuilderProgram>({ rootNames, options, configFileParsingDiagnostics, projectReferences, host, createProgram }: IncrementalProgramOptions<T>): T;
      /**
 -     * Create the builder to manage semantic diagnostics and cache them
@@ -20596,8 +19212,8 @@ index 0e6b2559af..ce715867e3 100644
 -}
 -declare namespace ts {
 +    function createBuilderStatusReporter(system: System, pretty?: boolean): DiagnosticReporter;
-+    function createSolutionBuilderHost<T extends BuilderProgram = EmitAndSemanticDiagnosticsBuilderProgram>(system?: System, createProgram?: CreateProgram<T>, reportDiagnostic?: DiagnosticReporter, reportSolutionBuilderStatus?: DiagnosticReporter, reportErrorSummary?: ReportEmitErrorSummary): SolutionBuilderHost<T>;
-+    function createSolutionBuilderWithWatchHost<T extends BuilderProgram = EmitAndSemanticDiagnosticsBuilderProgram>(system?: System, createProgram?: CreateProgram<T>, reportDiagnostic?: DiagnosticReporter, reportSolutionBuilderStatus?: DiagnosticReporter, reportWatchStatus?: WatchStatusReporter): SolutionBuilderWithWatchHost<T>;
++    function createSolutionBuilderHost<T extends BuilderProgram = EmitAndSemanticDiagnosticsBuilderProgram>(system?: ts.System, createProgram?: CreateProgram<T>, reportDiagnostic?: DiagnosticReporter, reportSolutionBuilderStatus?: DiagnosticReporter, reportErrorSummary?: ReportEmitErrorSummary): ts.SolutionBuilderHost<T>;
++    function createSolutionBuilderWithWatchHost<T extends BuilderProgram = EmitAndSemanticDiagnosticsBuilderProgram>(system?: ts.System, createProgram?: CreateProgram<T>, reportDiagnostic?: DiagnosticReporter, reportSolutionBuilderStatus?: DiagnosticReporter, reportWatchStatus?: WatchStatusReporter): ts.SolutionBuilderWithWatchHost<T>;
 +    function createSolutionBuilder<T extends BuilderProgram>(host: SolutionBuilderHost<T>, rootNames: readonly string[], defaultOptions: BuildOptions): SolutionBuilder<T>;
 +    function createSolutionBuilderWithWatch<T extends BuilderProgram>(host: SolutionBuilderWithWatchHost<T>, rootNames: readonly string[], defaultOptions: BuildOptions, baseWatchOptions?: WatchOptions): SolutionBuilder<T>;
      interface BuildOptions {
@@ -20618,7 +19234,7 @@ index 0e6b2559af..ce715867e3 100644
      enum InvalidatedProjectKind {
          Build = 0,
          UpdateBundle = 1,
-@@ -5609,199 +5882,122 @@ declare namespace ts {
+@@ -5609,165 +5882,88 @@ declare namespace ts {
          emit(writeFile?: WriteFileCallback, customTransformers?: CustomTransformers): EmitResult | BuildInvalidedProject<T> | undefined;
      }
      type InvalidatedProject<T extends BuilderProgram> = UpdateOutputFileStampsProject | BuildInvalidedProject<T> | UpdateBundleProject<T>;
@@ -20696,6 +19312,90 @@ index 0e6b2559af..ce715867e3 100644
 -        readonly typings: string[];
 -        readonly unresolvedImports: SortedReadonlyArray<string>;
 -        readonly kind: ActionSet;
+-    }
+-}
+-declare namespace ts {
+-    interface Node {
+-        getSourceFile(): SourceFile;
+-        getChildCount(sourceFile?: SourceFile): number;
+-        getChildAt(index: number, sourceFile?: SourceFile): Node;
+-        getChildren(sourceFile?: SourceFile): Node[];
+-        getStart(sourceFile?: SourceFile, includeJsDocComment?: boolean): number;
+-        getFullStart(): number;
+-        getEnd(): number;
+-        getWidth(sourceFile?: SourceFileLike): number;
+-        getFullWidth(): number;
+-        getLeadingTriviaWidth(sourceFile?: SourceFile): number;
+-        getFullText(sourceFile?: SourceFile): string;
+-        getText(sourceFile?: SourceFile): string;
+-        getFirstToken(sourceFile?: SourceFile): Node | undefined;
+-        getLastToken(sourceFile?: SourceFile): Node | undefined;
+-        forEachChild<T>(cbNode: (node: Node) => T | undefined, cbNodeArray?: (nodes: NodeArray<Node>) => T | undefined): T | undefined;
+-    }
+-    interface Identifier {
+-        readonly text: string;
+-    }
+-    interface PrivateIdentifier {
+-        readonly text: string;
+-    }
+-    interface Symbol {
+-        readonly name: string;
+-        getFlags(): SymbolFlags;
+-        getEscapedName(): __String;
+-        getName(): string;
+-        getDeclarations(): Declaration[] | undefined;
+-        getDocumentationComment(typeChecker: TypeChecker | undefined): SymbolDisplayPart[];
+-        getJsDocTags(checker?: TypeChecker): JSDocTagInfo[];
+-    }
+-    interface Type {
+-        getFlags(): TypeFlags;
+-        getSymbol(): Symbol | undefined;
+-        getProperties(): Symbol[];
+-        getProperty(propertyName: string): Symbol | undefined;
+-        getApparentProperties(): Symbol[];
+-        getCallSignatures(): readonly Signature[];
+-        getConstructSignatures(): readonly Signature[];
+-        getStringIndexType(): Type | undefined;
+-        getNumberIndexType(): Type | undefined;
+-        getBaseTypes(): BaseType[] | undefined;
+-        getNonNullableType(): Type;
+-        getConstraint(): Type | undefined;
+-        getDefault(): Type | undefined;
+-        isUnion(): this is UnionType;
+-        isIntersection(): this is IntersectionType;
+-        isUnionOrIntersection(): this is UnionOrIntersectionType;
+-        isLiteral(): this is LiteralType;
+-        isStringLiteral(): this is StringLiteralType;
+-        isNumberLiteral(): this is NumberLiteralType;
+-        isTypeParameter(): this is TypeParameter;
+-        isClassOrInterface(): this is InterfaceType;
+-        isClass(): this is InterfaceType;
+-        isIndexType(): this is IndexType;
+-    }
+-    interface TypeReference {
+-        typeArguments?: readonly Type[];
+-    }
+-    interface Signature {
+-        getDeclaration(): SignatureDeclaration;
+-        getTypeParameters(): TypeParameter[] | undefined;
+-        getParameters(): Symbol[];
+-        getTypeParameterAtPosition(pos: number): Type;
+-        getReturnType(): Type;
+-        getDocumentationComment(typeChecker: TypeChecker | undefined): SymbolDisplayPart[];
+-        getJsDocTags(): JSDocTagInfo[];
+-    }
+-    interface SourceFile {
+-        getLineAndCharacterOfPosition(pos: number): LineAndCharacter;
+-        getLineEndOfPosition(pos: number): number;
+-        getLineStarts(): readonly number[];
+-        getPositionOfLineAndCharacter(line: number, character: number): number;
+-        update(newText: string, textChangeRange: TextChangeRange): SourceFile;
+-    }
+-    interface SourceFileLike {
+-        getLineAndCharacterOfPosition(pos: number): LineAndCharacter;
+-    }
+-    interface SourceMapSource {
+-        getLineAndCharacterOfPosition(pos: number): LineAndCharacter;
 +    namespace server {
 +        type ActionSet = "action::set";
 +        type ActionInvalidate = "action::invalidate";
@@ -20777,159 +19477,10 @@ index 0e6b2559af..ce715867e3 100644
 +    }
 +    namespace formatting {
      }
--}
--declare namespace ts {
--    interface Node {
--        getSourceFile(): SourceFile;
--        getChildCount(sourceFile?: SourceFile): number;
--        getChildAt(index: number, sourceFile?: SourceFile): Node;
--        getChildren(sourceFile?: SourceFile): Node[];
--        getStart(sourceFile?: SourceFile, includeJsDocComment?: boolean): number;
--        getFullStart(): number;
--        getEnd(): number;
--        getWidth(sourceFile?: SourceFileLike): number;
--        getFullWidth(): number;
--        getLeadingTriviaWidth(sourceFile?: SourceFile): number;
--        getFullText(sourceFile?: SourceFile): string;
--        getText(sourceFile?: SourceFile): string;
--        getFirstToken(sourceFile?: SourceFile): Node | undefined;
--        getLastToken(sourceFile?: SourceFile): Node | undefined;
--        forEachChild<T>(cbNode: (node: Node) => T | undefined, cbNodeArray?: (nodes: NodeArray<Node>) => T | undefined): T | undefined;
 +    function getDefaultFormatCodeSettings(newLineCharacter?: string): FormatCodeSettings;
-+    /**
-+     * Represents an immutable snapshot of a script at a specified time.Once acquired, the
-+     * snapshot is observably immutable. i.e. the same calls with the same parameters will return
-+     * the same values.
-+     */
-+    interface IScriptSnapshot {
-+        /** Gets a portion of the script snapshot specified by [start, end). */
-+        getText(start: number, end: number): string;
-+        /** Gets the length of this script snapshot. */
-+        getLength(): number;
-+        /**
-+         * Gets the TextChangeRange that describe how the text changed between this text and
-+         * an older version.  This information is used by the incremental parser to determine
-+         * what sections of the script need to be re-parsed.  'undefined' can be returned if the
-+         * change range cannot be determined.  However, in that case, incremental parsing will
-+         * not happen and the entire document will be re - parsed.
-+         */
-+        getChangeRange(oldSnapshot: IScriptSnapshot): TextChangeRange | undefined;
-+        /** Releases all resources held by this script snapshot */
-+        dispose?(): void;
-     }
--    interface Identifier {
--        readonly text: string;
-+    namespace ScriptSnapshot {
-+        function fromString(text: string): IScriptSnapshot;
-     }
--    interface PrivateIdentifier {
--        readonly text: string;
-+    interface PreProcessedFileInfo {
-+        referencedFiles: FileReference[];
-+        typeReferenceDirectives: FileReference[];
-+        libReferenceDirectives: FileReference[];
-+        importedFiles: FileReference[];
-+        ambientExternalModules?: string[];
-+        isLibFile: boolean;
-     }
--    interface Symbol {
--        readonly name: string;
--        getFlags(): SymbolFlags;
--        getEscapedName(): __String;
--        getName(): string;
--        getDeclarations(): Declaration[] | undefined;
--        getDocumentationComment(typeChecker: TypeChecker | undefined): SymbolDisplayPart[];
--        getJsDocTags(checker?: TypeChecker): JSDocTagInfo[];
--    }
--    interface Type {
--        getFlags(): TypeFlags;
--        getSymbol(): Symbol | undefined;
--        getProperties(): Symbol[];
--        getProperty(propertyName: string): Symbol | undefined;
--        getApparentProperties(): Symbol[];
--        getCallSignatures(): readonly Signature[];
--        getConstructSignatures(): readonly Signature[];
--        getStringIndexType(): Type | undefined;
--        getNumberIndexType(): Type | undefined;
--        getBaseTypes(): BaseType[] | undefined;
--        getNonNullableType(): Type;
--        getConstraint(): Type | undefined;
--        getDefault(): Type | undefined;
--        isUnion(): this is UnionType;
--        isIntersection(): this is IntersectionType;
--        isUnionOrIntersection(): this is UnionOrIntersectionType;
--        isLiteral(): this is LiteralType;
--        isStringLiteral(): this is StringLiteralType;
--        isNumberLiteral(): this is NumberLiteralType;
--        isTypeParameter(): this is TypeParameter;
--        isClassOrInterface(): this is InterfaceType;
--        isClass(): this is InterfaceType;
--        isIndexType(): this is IndexType;
--    }
--    interface TypeReference {
--        typeArguments?: readonly Type[];
--    }
--    interface Signature {
--        getDeclaration(): SignatureDeclaration;
--        getTypeParameters(): TypeParameter[] | undefined;
--        getParameters(): Symbol[];
--        getTypeParameterAtPosition(pos: number): Type;
--        getReturnType(): Type;
--        getDocumentationComment(typeChecker: TypeChecker | undefined): SymbolDisplayPart[];
--        getJsDocTags(): JSDocTagInfo[];
--    }
--    interface SourceFile {
--        getLineAndCharacterOfPosition(pos: number): LineAndCharacter;
--        getLineEndOfPosition(pos: number): number;
--        getLineStarts(): readonly number[];
--        getPositionOfLineAndCharacter(line: number, character: number): number;
--        update(newText: string, textChangeRange: TextChangeRange): SourceFile;
--    }
--    interface SourceFileLike {
--        getLineAndCharacterOfPosition(pos: number): LineAndCharacter;
--    }
--    interface SourceMapSource {
--        getLineAndCharacterOfPosition(pos: number): LineAndCharacter;
--    }
--    /**
--     * Represents an immutable snapshot of a script at a specified time.Once acquired, the
--     * snapshot is observably immutable. i.e. the same calls with the same parameters will return
--     * the same values.
--     */
--    interface IScriptSnapshot {
--        /** Gets a portion of the script snapshot specified by [start, end). */
--        getText(start: number, end: number): string;
--        /** Gets the length of this script snapshot. */
--        getLength(): number;
--        /**
--         * Gets the TextChangeRange that describe how the text changed between this text and
--         * an older version.  This information is used by the incremental parser to determine
--         * what sections of the script need to be re-parsed.  'undefined' can be returned if the
--         * change range cannot be determined.  However, in that case, incremental parsing will
--         * not happen and the entire document will be re - parsed.
--         */
--        getChangeRange(oldSnapshot: IScriptSnapshot): TextChangeRange | undefined;
--        /** Releases all resources held by this script snapshot */
--        dispose?(): void;
--    }
--    namespace ScriptSnapshot {
--        function fromString(text: string): IScriptSnapshot;
--    }
--    interface PreProcessedFileInfo {
--        referencedFiles: FileReference[];
--        typeReferenceDirectives: FileReference[];
--        libReferenceDirectives: FileReference[];
--        importedFiles: FileReference[];
--        ambientExternalModules?: string[];
--        isLibFile: boolean;
--    }
--    interface HostCancellationToken {
--        isCancellationRequested(): boolean;
-+    interface HostCancellationToken {
-+        isCancellationRequested(): boolean;
-     }
-     interface InstallPackageOptions {
-         fileName: Path;
+     /**
+      * Represents an immutable snapshot of a script at a specified time.Once acquired, the
+      * snapshot is observably immutable. i.e. the same calls with the same parameters will return
 @@ -6403,7 +6599,6 @@ declare namespace ts {
          readonly indentMultiLineObjectLiteralBeginningOnBlankLine?: boolean;
          readonly semicolons?: SemicolonPreference;

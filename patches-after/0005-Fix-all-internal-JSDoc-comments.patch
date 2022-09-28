@@ -92,7 +92,7 @@ otherwise they won't be used by api-extractor, so move them if needed.
  src/services/goToDefinition.ts                |    7 +-
  src/services/importTracker.ts                 |   17 +-
  src/services/jsDoc.ts                         |    3 +-
- src/services/organizeImports.ts               |   18 +-
+ src/services/organizeImports.ts               |   16 +-
  src/services/refactorProvider.ts              |    7 +-
  src/services/refactors/extractSymbol.ts       |   15 +-
  src/services/refactors/helpers.ts             |   10 +-
@@ -105,7 +105,7 @@ otherwise they won't be used by api-extractor, so move them if needed.
  src/services/utilities.ts                     |   98 +-
  src/typingsInstallerCore/typingsInstaller.ts  |    8 +-
  src/webServer/webServer.ts                    |    2 +-
- 90 files changed, 2816 insertions(+), 2097 deletions(-)
+ 90 files changed, 2815 insertions(+), 2096 deletions(-)
 
 diff --git a/src/compiler/builder.ts b/src/compiler/builder.ts
 index db11537f00..04efd3a7d3 100644
@@ -14562,7 +14562,7 @@ index 703d6adcb0..edf2e55178 100644
  export function getDocCommentTemplateAtPosition(newLine: string, sourceFile: SourceFile, position: number, options?: DocCommentTemplateOptions): TextInsertion | undefined {
      const tokenAtPos = getTokenAtPosition(sourceFile, position);
 diff --git a/src/services/organizeImports.ts b/src/services/organizeImports.ts
-index 52f38aed88..8dd382f0e9 100644
+index 52f38aed88..0fd3f67795 100644
 --- a/src/services/organizeImports.ts
 +++ b/src/services/organizeImports.ts
 @@ -9,12 +9,13 @@ import {
@@ -14604,22 +14604,20 @@ index 52f38aed88..8dd382f0e9 100644
   */
  export function coalesceExports(exportGroup: readonly ExportDeclaration[]) {
      if (exportGroup.length === 0) {
-@@ -471,9 +474,12 @@ export function compareImportOrExportSpecifiers<T extends ImportOrExportSpecifie
+@@ -471,8 +474,11 @@ export function compareImportOrExportSpecifiers<T extends ImportOrExportSpecifie
          || compareIdentifiers(s1.name, s2.name);
  }
  
 -/* internal */ // Exported for testing
 -/** @internal */
--export function compareModuleSpecifiers(m1: Expression | undefined, m2: Expression | undefined) {
 +/**
 + * Exported for testing
 + *
 + * @internal
 + */
-+export function compareModuleSpecifiers(m1: Expression | undefined, m2: Expression | undefined): Comparison {
+ export function compareModuleSpecifiers(m1: Expression | undefined, m2: Expression | undefined) {
      const name1 = m1 === undefined ? undefined : getExternalModuleName(m1);
      const name2 = m2 === undefined ? undefined : getExternalModuleName(m2);
-     return compareBooleans(name1 === undefined, name2 === undefined) ||
 diff --git a/src/services/refactorProvider.ts b/src/services/refactorProvider.ts
 index 41f9b72547..3fb1751875 100644
 --- a/src/services/refactorProvider.ts
