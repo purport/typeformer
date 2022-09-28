@@ -321,7 +321,7 @@ index 5d3cb4f032..a70b4d47d7 100644
      "references": [
          { "path": "../compiler" },
 diff --git a/src/testRunner/tsconfig.json b/src/testRunner/tsconfig.json
-index 6b0df52366..f18213b5a0 100644
+index d1893ff3b1..f491d8de36 100644
 --- a/src/testRunner/tsconfig.json
 +++ b/src/testRunner/tsconfig.json
 @@ -1,10 +1,7 @@

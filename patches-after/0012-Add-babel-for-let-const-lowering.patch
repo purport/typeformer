@@ -87,7 +87,7 @@ index f44aca61bd..58a7b1c599 100644
  const buildLssl = () => {
      if (cmdLineOptions.bundle) return esbuildLssl.build();
 diff --git a/package-lock.json b/package-lock.json
-index c09200552d..2a14638ca0 100644
+index 9fbc782b66..e8adc58236 100644
 --- a/package-lock.json
 +++ b/package-lock.json
 @@ -13,6 +13,9 @@

@@ -4766,7 +4766,7 @@ index ad20ff97b4..a927555fbe 100644
 \ No newline at end of file
 +}
 diff --git a/src/compiler/tsbuildPublic.ts b/src/compiler/tsbuildPublic.ts
-index 114ab0cd02..3bdfe22993 100644
+index 79c85ab944..5e0a7a7166 100644
 --- a/src/compiler/tsbuildPublic.ts
 +++ b/src/compiler/tsbuildPublic.ts
 @@ -37,24 +37,24 @@ export interface BuildOptions {

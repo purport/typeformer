@@ -8,11 +8,11 @@ Subject: [PATCH] Get test suites running
  src/compiler/sys.ts                           |   9 +-
  src/server/_namespaces/ts.server.ts           |   4 +-
  src/testRunner/_namespaces/Harness.ts         |   6 +-
- src/testRunner/_namespaces/tests.ts           | 186 ++++++++++++++
+ src/testRunner/_namespaces/tests.ts           | 187 ++++++++++++++
  .../_namespaces/ts.projectSystem.ts           |  66 -----
  src/testRunner/_namespaces/ts.server.ts       |   1 -
  src/testRunner/_namespaces/ts.textStorage.ts  |   2 +-
- src/testRunner/_namespaces/ts.ts              |  83 +-----
+ src/testRunner/_namespaces/ts.ts              |  84 +-----
  src/testRunner/_namespaces/ts.tscWatch.ts     |  25 --
  src/testRunner/parallel/host.ts               |   2 +-
  src/testRunner/runner.ts                      |   3 +
@@ -23,7 +23,7 @@ Subject: [PATCH] Get test suites running
  .../unittests/tsserver/dynamicFiles.ts        |   6 +-
  src/testRunner/unittests/tsserver/helpers.ts  |  12 +
  .../unittests/tsserver/projectReferences.ts   |   8 +-
- 19 files changed, 495 insertions(+), 434 deletions(-)
+ 19 files changed, 496 insertions(+), 435 deletions(-)
  create mode 100644 src/testRunner/_namespaces/tests.ts
  create mode 100644 src/testRunner/unittests/helpers.ts
 
@@ -172,10 +172,10 @@ index eeef44fbd7..caf03e950a 100644
 -export { Parallel };
 diff --git a/src/testRunner/_namespaces/tests.ts b/src/testRunner/_namespaces/tests.ts
 new file mode 100644
-index 0000000000..26a4f7378d
+index 0000000000..0c8cba942b
 --- /dev/null
 +++ b/src/testRunner/_namespaces/tests.ts
-@@ -0,0 +1,186 @@
+@@ -0,0 +1,187 @@
 +// Tests; see tsconfig.json list
 +
 +import "../unittests/asserts";
@@ -252,6 +252,7 @@ index 0000000000..26a4f7378d
 +import "../unittests/tsbuild/lateBoundSymbol";
 +import "../unittests/tsbuild/moduleResolution";
 +import "../unittests/tsbuild/moduleSpecifiers";
++import "../unittests/tsbuild/noEmit";
 +import "../unittests/tsbuild/noEmitOnError";
 +import "../unittests/tsbuild/outFile";
 +import "../unittests/tsbuild/outputPaths";
@@ -455,10 +456,10 @@ index 1243be98ae..5e49478c4d 100644
 -export * from "../unittests/tsserver/textStorage";
 +export {};
 diff --git a/src/testRunner/_namespaces/ts.ts b/src/testRunner/_namespaces/ts.ts
-index bc8b00ea69..060d53dcda 100644
+index 04425918ec..060d53dcda 100644
 --- a/src/testRunner/_namespaces/ts.ts
 +++ b/src/testRunner/_namespaces/ts.ts
-@@ -10,86 +10,15 @@ export * from "../../typingsInstallerCore/_namespaces/ts";
+@@ -10,87 +10,15 @@ export * from "../../typingsInstallerCore/_namespaces/ts";
  export * from "../../deprecatedCompat/_namespaces/ts";
  export * from "../../harness/_namespaces/ts";
  export * from "../../loggedIO/_namespaces/ts";
@@ -519,6 +520,7 @@ index bc8b00ea69..060d53dcda 100644
 -export * from "../unittests/tsbuild/javascriptProjectEmit";
 -export * from "../unittests/tsbuild/lateBoundSymbol";
 -export * from "../unittests/tsbuild/moduleSpecifiers";
+-export * from "../unittests/tsbuild/noEmit";
 -export * from "../unittests/tsbuild/noEmitOnError";
 -export * from "../unittests/tsbuild/outFile";
 -export * from "../unittests/tsbuild/outputPaths";
@@ -609,7 +611,7 @@ index ff59c4e752..afce965527 100644
 +// This brings in all of the unittests.
 +import "./_namespaces/tests";
 diff --git a/src/testRunner/tsconfig.json b/src/testRunner/tsconfig.json
-index 2f2c360e2b..6b0df52366 100644
+index 706e395b71..d1893ff3b1 100644
 --- a/src/testRunner/tsconfig.json
 +++ b/src/testRunner/tsconfig.json
 @@ -50,6 +50,7 @@
@@ -620,7 +622,7 @@ index 2f2c360e2b..6b0df52366 100644
          "unittests/services/extract/helpers.ts",
          "unittests/tsbuild/helpers.ts",
          "unittests/tsc/helpers.ts",
-@@ -261,6 +262,7 @@
+@@ -262,6 +263,7 @@
          "_namespaces/ts.tscWatch.ts",
          "_namespaces/ts.projectSystem.ts",
          "_namespaces/ts.server.ts",

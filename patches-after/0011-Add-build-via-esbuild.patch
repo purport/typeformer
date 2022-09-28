@@ -590,7 +590,7 @@ index bb87b72a89..f44aca61bd 100644
  task("configure-nightly", series(buildScripts, configureNightly));
  task("configure-nightly").description = "Runs scripts/configurePrerelease.ts to prepare a build for nightly publishing";
 diff --git a/package-lock.json b/package-lock.json
-index d9d0105cd2..c09200552d 100644
+index c0806c4857..9fbc782b66 100644
 --- a/package-lock.json
 +++ b/package-lock.json
 @@ -40,6 +40,7 @@

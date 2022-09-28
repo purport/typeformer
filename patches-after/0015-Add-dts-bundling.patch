@@ -1068,7 +1068,7 @@ index 4460f4fc45..862bdf7c8b 100644
          return undefined;
      }
 diff --git a/src/compiler/tsbuildPublic.ts b/src/compiler/tsbuildPublic.ts
-index 3bdfe22993..463a9a217a 100644
+index 5e0a7a7166..b7f1e75398 100644
 --- a/src/compiler/tsbuildPublic.ts
 +++ b/src/compiler/tsbuildPublic.ts
 @@ -194,7 +194,7 @@ export function createBuilderStatusReporter(system: System, pretty?: boolean): D
