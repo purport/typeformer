@@ -1,0 +1,246 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Jake Bailey <5341706+jakebailey@users.noreply.github.com>
+Date: Fri, 30 Sep 2022 13:26:38 -0700
+Subject: [PATCH] Remove ref files from testRunner
+
+---
+ src/testRunner/_namespaces/FourSlash.ts      |  1 -
+ src/testRunner/_namespaces/Playback.ts       |  1 -
+ src/testRunner/_namespaces/Utils.ts          |  1 -
+ src/testRunner/_namespaces/compiler.ts       |  1 -
+ src/testRunner/_namespaces/documents.ts      |  1 -
+ src/testRunner/_namespaces/evaluator.ts      |  1 -
+ src/testRunner/_namespaces/fakes.ts          |  1 -
+ src/testRunner/_namespaces/ts.textStorage.ts |  3 ---
+ src/testRunner/_namespaces/ts.ts             |  2 --
+ src/testRunner/_namespaces/vfs.ts            |  1 -
+ src/testRunner/_namespaces/vpath.ts          |  1 -
+ src/testRunner/compilerRef.ts                |  2 --
+ src/testRunner/documentsRef.ts               |  2 --
+ src/testRunner/evaluatorRef.ts               |  2 --
+ src/testRunner/fakesRef.ts                   |  2 --
+ src/testRunner/fourslashRef.ts               |  2 --
+ src/testRunner/playbackRef.ts                |  2 --
+ src/testRunner/tsconfig.json                 | 11 -----------
+ src/testRunner/utilsRef.ts                   |  2 --
+ src/testRunner/vfsRef.ts                     |  2 --
+ src/testRunner/vpathRef.ts                   |  2 --
+ 21 files changed, 43 deletions(-)
+ delete mode 100644 src/testRunner/_namespaces/ts.textStorage.ts
+ delete mode 100644 src/testRunner/compilerRef.ts
+ delete mode 100644 src/testRunner/documentsRef.ts
+ delete mode 100644 src/testRunner/evaluatorRef.ts
+ delete mode 100644 src/testRunner/fakesRef.ts
+ delete mode 100644 src/testRunner/fourslashRef.ts
+ delete mode 100644 src/testRunner/playbackRef.ts
+ delete mode 100644 src/testRunner/utilsRef.ts
+ delete mode 100644 src/testRunner/vfsRef.ts
+ delete mode 100644 src/testRunner/vpathRef.ts
+
+diff --git a/src/testRunner/_namespaces/FourSlash.ts b/src/testRunner/_namespaces/FourSlash.ts
+index b314d7d2e2..b81535c48f 100644
+--- a/src/testRunner/_namespaces/FourSlash.ts
++++ b/src/testRunner/_namespaces/FourSlash.ts
+@@ -1,4 +1,3 @@
+ /* Generated file to emulate the FourSlash namespace. */
+ 
+ export * from "../../harness/_namespaces/FourSlash";
+-export * from "../fourslashRef";
+diff --git a/src/testRunner/_namespaces/Playback.ts b/src/testRunner/_namespaces/Playback.ts
+index 756f8f0e4e..90e7eae5f1 100644
+--- a/src/testRunner/_namespaces/Playback.ts
++++ b/src/testRunner/_namespaces/Playback.ts
+@@ -1,4 +1,3 @@
+ /* Generated file to emulate the Playback namespace. */
+ 
+ export * from "../../loggedIO/_namespaces/Playback";
+-export * from "../playbackRef";
+diff --git a/src/testRunner/_namespaces/Utils.ts b/src/testRunner/_namespaces/Utils.ts
+index 69e9f1e29d..f7bd754263 100644
+--- a/src/testRunner/_namespaces/Utils.ts
++++ b/src/testRunner/_namespaces/Utils.ts
+@@ -1,4 +1,3 @@
+ /* Generated file to emulate the Utils namespace. */
+ 
+ export * from "../../harness/_namespaces/Utils";
+-export * from "../utilsRef";
+diff --git a/src/testRunner/_namespaces/compiler.ts b/src/testRunner/_namespaces/compiler.ts
+index b0836c2749..62e194d597 100644
+--- a/src/testRunner/_namespaces/compiler.ts
++++ b/src/testRunner/_namespaces/compiler.ts
+@@ -1,4 +1,3 @@
+ /* Generated file to emulate the compiler namespace. */
+ 
+ export * from "../../harness/_namespaces/compiler";
+-export * from "../compilerRef";
+diff --git a/src/testRunner/_namespaces/documents.ts b/src/testRunner/_namespaces/documents.ts
+index ceeb38f29c..bf76b1332f 100644
+--- a/src/testRunner/_namespaces/documents.ts
++++ b/src/testRunner/_namespaces/documents.ts
+@@ -1,4 +1,3 @@
+ /* Generated file to emulate the documents namespace. */
+ 
+ export * from "../../harness/_namespaces/documents";
+-export * from "../documentsRef";
+diff --git a/src/testRunner/_namespaces/evaluator.ts b/src/testRunner/_namespaces/evaluator.ts
+index 26676e38c3..9710863c9b 100644
+--- a/src/testRunner/_namespaces/evaluator.ts
++++ b/src/testRunner/_namespaces/evaluator.ts
+@@ -1,4 +1,3 @@
+ /* Generated file to emulate the evaluator namespace. */
+ 
+ export * from "../../harness/_namespaces/evaluator";
+-export * from "../evaluatorRef";
+diff --git a/src/testRunner/_namespaces/fakes.ts b/src/testRunner/_namespaces/fakes.ts
+index f783f8f72b..1b6c51d409 100644
+--- a/src/testRunner/_namespaces/fakes.ts
++++ b/src/testRunner/_namespaces/fakes.ts
+@@ -1,4 +1,3 @@
+ /* Generated file to emulate the fakes namespace. */
+ 
+ export * from "../../harness/_namespaces/fakes";
+-export * from "../fakesRef";
+diff --git a/src/testRunner/_namespaces/ts.textStorage.ts b/src/testRunner/_namespaces/ts.textStorage.ts
+deleted file mode 100644
+index 5e49478c4d..0000000000
+--- a/src/testRunner/_namespaces/ts.textStorage.ts
++++ /dev/null
+@@ -1,3 +0,0 @@
+-/* Generated file to emulate the ts.textStorage namespace. */
+-
+-export {};
+diff --git a/src/testRunner/_namespaces/ts.ts b/src/testRunner/_namespaces/ts.ts
+index 060d53dcda..d763d9b829 100644
+--- a/src/testRunner/_namespaces/ts.ts
++++ b/src/testRunner/_namespaces/ts.ts
+@@ -16,8 +16,6 @@ import * as server from "./ts.server";
+ export { server };
+ import * as projectSystem from "./ts.projectSystem";
+ export { projectSystem };
+-import * as textStorage from "./ts.textStorage";
+-export { textStorage };
+ export * from "../unittests/helpers";
+ export * from "../unittests/services/extract/helpers";
+ export * from "../unittests/tsbuild/helpers";
+diff --git a/src/testRunner/_namespaces/vfs.ts b/src/testRunner/_namespaces/vfs.ts
+index 3a8b4f1e4a..5fe2e7d936 100644
+--- a/src/testRunner/_namespaces/vfs.ts
++++ b/src/testRunner/_namespaces/vfs.ts
+@@ -1,4 +1,3 @@
+ /* Generated file to emulate the vfs namespace. */
+ 
+ export * from "../../harness/_namespaces/vfs";
+-export * from "../vfsRef";
+diff --git a/src/testRunner/_namespaces/vpath.ts b/src/testRunner/_namespaces/vpath.ts
+index 4b1fd139b3..9ae8ad3777 100644
+--- a/src/testRunner/_namespaces/vpath.ts
++++ b/src/testRunner/_namespaces/vpath.ts
+@@ -1,4 +1,3 @@
+ /* Generated file to emulate the vpath namespace. */
+ 
+ export * from "../../harness/_namespaces/vpath";
+-export * from "../vpathRef";
+diff --git a/src/testRunner/compilerRef.ts b/src/testRunner/compilerRef.ts
+deleted file mode 100644
+index c524071b84..0000000000
+--- a/src/testRunner/compilerRef.ts
++++ /dev/null
+@@ -1,2 +0,0 @@
+-// empty ref to compiler so it can be referenced by unittests
+-export { };
+diff --git a/src/testRunner/documentsRef.ts b/src/testRunner/documentsRef.ts
+deleted file mode 100644
+index e1abbfb2d9..0000000000
+--- a/src/testRunner/documentsRef.ts
++++ /dev/null
+@@ -1,2 +0,0 @@
+-// empty ref to documents so it can be referenced by unittests
+-export { };
+diff --git a/src/testRunner/evaluatorRef.ts b/src/testRunner/evaluatorRef.ts
+deleted file mode 100644
+index 965acc02d9..0000000000
+--- a/src/testRunner/evaluatorRef.ts
++++ /dev/null
+@@ -1,2 +0,0 @@
+-// empty ref to evaluator so it can be referenced by unittests
+-export { };
+diff --git a/src/testRunner/fakesRef.ts b/src/testRunner/fakesRef.ts
+deleted file mode 100644
+index ef7d690d5b..0000000000
+--- a/src/testRunner/fakesRef.ts
++++ /dev/null
+@@ -1,2 +0,0 @@
+-// empty ref to fakes so it can be referenced by unittests
+-export { };
+diff --git a/src/testRunner/fourslashRef.ts b/src/testRunner/fourslashRef.ts
+deleted file mode 100644
+index 7436f5ad2d..0000000000
+--- a/src/testRunner/fourslashRef.ts
++++ /dev/null
+@@ -1,2 +0,0 @@
+-// empty ref to FourSlash so it can be referenced by unittests
+-export { };
+diff --git a/src/testRunner/playbackRef.ts b/src/testRunner/playbackRef.ts
+deleted file mode 100644
+index 9a46d5740c..0000000000
+--- a/src/testRunner/playbackRef.ts
++++ /dev/null
+@@ -1,2 +0,0 @@
+-// empty ref to Playback so it can be referenced by unittests
+-export { };
+diff --git a/src/testRunner/tsconfig.json b/src/testRunner/tsconfig.json
+index f491d8de36..1b0ddd4fc0 100644
+--- a/src/testRunner/tsconfig.json
++++ b/src/testRunner/tsconfig.json
+@@ -24,16 +24,6 @@
+     ],
+ 
+     "files": [
+-        "compilerRef.ts",
+-        "evaluatorRef.ts",
+-        "fakesRef.ts",
+-        "vpathRef.ts",
+-        "vfsRef.ts",
+-        "fourslashRef.ts",
+-        "playbackRef.ts",
+-        "utilsRef.ts",
+-        "documentsRef.ts",
+-
+         "fourslashRunner.ts",
+         "compilerRunner.ts",
+         "projectsRunner.ts",
+@@ -260,7 +250,6 @@
+         "_namespaces/ts.tscWatch.ts",
+         "_namespaces/ts.projectSystem.ts",
+         "_namespaces/ts.server.ts",
+-        "_namespaces/ts.textStorage.ts",
+         "_namespaces/tests.ts"
+     ]
+ }
+diff --git a/src/testRunner/utilsRef.ts b/src/testRunner/utilsRef.ts
+deleted file mode 100644
+index 02df007be1..0000000000
+--- a/src/testRunner/utilsRef.ts
++++ /dev/null
+@@ -1,2 +0,0 @@
+-// empty ref to Utils so it can be referenced by unittests
+-export { };
+diff --git a/src/testRunner/vfsRef.ts b/src/testRunner/vfsRef.ts
+deleted file mode 100644
+index 7a9130a0d9..0000000000
+--- a/src/testRunner/vfsRef.ts
++++ /dev/null
+@@ -1,2 +0,0 @@
+-// empty ref to vfs so it can be referenced by unittests
+-export { };
+diff --git a/src/testRunner/vpathRef.ts b/src/testRunner/vpathRef.ts
+deleted file mode 100644
+index 13cb846ee5..0000000000
+--- a/src/testRunner/vpathRef.ts
++++ /dev/null
+@@ -1,2 +0,0 @@
+-// empty ref to vpath so it can be referenced by unittests
+-export { };
+-- 
+2.37.3
+
