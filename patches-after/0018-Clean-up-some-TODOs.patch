@@ -4,36 +4,17 @@ Date: Wed, 28 Sep 2022 13:33:18 -0700
 Subject: [PATCH] Clean up some TODOs
 
 ---
- Gulpfile.js           | 83 ++++++++++++++++++++++++++-----------------
+ Gulpfile.js           | 72 +++++++++++++++++++++++++++----------------
  scripts/dtsBundler.ts |  2 --
- scripts/produceLKG.ts | 16 ++++-----
- 3 files changed, 57 insertions(+), 44 deletions(-)
+ scripts/produceLKG.ts | 16 +++++-----
+ 3 files changed, 52 insertions(+), 38 deletions(-)
 
 diff --git a/Gulpfile.js b/Gulpfile.js
-index 238930c729..3e218323c2 100644
+index bbfbafa674..6363a3d78c 100644
 --- a/Gulpfile.js
 +++ b/Gulpfile.js
-@@ -19,7 +19,8 @@ const copyright = "CopyrightNotice.txt";
- const cleanTasks = [];
- 
- 
--// TODO(jakebailey): This is really gross. Waiting on: https://github.com/microsoft/TypeScript/issues/25613
-+// TODO(jakebailey): This is really gross. Waiting on https://github.com/microsoft/TypeScript/issues/25613,
-+// or at least control over noEmit / emitDeclarationOnly in build mode.
- let currentlyBuilding = 0;
- let oldTsconfigBase;
- 
-@@ -166,18 +167,16 @@ function esbuildTask(entrypoint, outfile, exportIsTsObject = false, performanceM
-         bundle: true,
-         outfile: performanceMatters ? preBabel : outfile,
-         platform: "node",
--        // TODO: also specify minimal browser targets
--        target: "node10", // Node 10 is the oldest benchmarker.
-+        target: "es2018", // This covers Node 10.
-         format: "cjs",
-         sourcemap: true,
--        external: ["./node_modules/*"], // TODO(jakebailey): does the test runner import relatively from scripts?
-+        external: ["./node_modules/*"],
+@@ -171,8 +171,8 @@ function esbuildTask(entrypoint, outfile, exportIsTsObject = false, performanceM
+         external: ["./node_modules/*"],
          conditions: ["require"],
          supported: {
 -            // "const-and-let": false, // Unfortunately, no: https://github.com/evanw/esbuild/issues/297
@@ -41,13 +22,9 @@ index 238930c729..3e218323c2 100644
 +            // "const-and-let": false, // https://github.com/evanw/esbuild/issues/297
 +            "object-rest-spread": false, // Performance enhancement, see: https://github.com/evanw/esbuild/releases/tag/v0.14.46
          },
--        // legalComments: "none", // TODO(jakebailey): enable once we add copyright headers to our source files.
--        // logLevel: "info",
-+        // legalComments: "none", // If we add copyright headers to the source files, uncomment.
+         // legalComments: "none", // If we add copyright headers to the source files, uncomment.
      };
- 
-     if (exportIsTsObject) {
-@@ -237,11 +236,12 @@ const lkgPreBuild = parallel(generateLibs, series(buildScripts, generateDiagnost
+@@ -252,11 +252,12 @@ const lkgPreBuild = parallel(generateLibs, series(buildScripts, generateDiagnost
  
  
  const esbuildTsc = esbuildTask("./src/tsc/tsc.ts", "./built/local/tsc.js", /* exportIsTsObject */ true, /* performanceMatters */ true);
@@ -61,7 +38,7 @@ index 238930c729..3e218323c2 100644
      return buildProject("src/tsc");
  };
  task("tsc", series(lkgPreBuild, buildTsc));
-@@ -252,8 +252,11 @@ cleanTasks.push(cleanTsc);
+@@ -267,8 +268,11 @@ cleanTasks.push(cleanTsc);
  task("clean-tsc", cleanTsc);
  task("clean-tsc").description = "Cleans outputs for the command-line compiler";
  
@@ -75,7 +52,7 @@ index 238930c729..3e218323c2 100644
  task("watch-tsc", series(lkgPreBuild, parallel(watchLib, watchDiagnostics, watchTsc)));
  task("watch-tsc").description = "Watch for changes and rebuild the command-line compiler only.";
  
-@@ -263,15 +266,15 @@ const localPreBuild = parallel(generateLibs, series(buildScripts, generateDiagno
+@@ -278,15 +282,15 @@ const localPreBuild = parallel(generateLibs, series(buildScripts, generateDiagno
  // Pre-build steps to use based on supplied options.
  const preBuild = cmdLineOptions.lkg ? lkgPreBuild : localPreBuild;
  
@@ -94,7 +71,7 @@ index 238930c729..3e218323c2 100644
      return buildServicesProject();
  };
  
-@@ -287,8 +290,11 @@ cleanTasks.push(cleanServices);
+@@ -302,8 +306,11 @@ cleanTasks.push(cleanServices);
  task("clean-services", cleanServices);
  task("clean-services").description = "Cleans outputs for the language service";
  
@@ -108,7 +85,7 @@ index 238930c729..3e218323c2 100644
  task("watch-services", series(preBuild, parallel(watchLib, watchDiagnostics, watchServices)));
  task("watch-services").description = "Watches for changes and rebuild language service only";
  task("watch-services").flags = {
-@@ -300,10 +306,11 @@ task("dts-services", series(preBuild, buildServicesProject, dtsServices));
+@@ -315,10 +322,11 @@ task("dts-services", series(preBuild, buildServicesProject, dtsServices));
  task("dts-services").description = "Builds typescript.d.ts";
  
  const esbuildServer = esbuildTask("./src/tsserver/server.ts", "./built/local/tsserver.js", /* exportIsTsObject */ true, /* performanceMatters */ true);
@@ -121,7 +98,7 @@ index 238930c729..3e218323c2 100644
      return buildProject("src/tsserver");
  };
  buildServer.displayName = "buildServer";
-@@ -319,8 +326,11 @@ cleanTasks.push(cleanServer);
+@@ -334,8 +342,11 @@ cleanTasks.push(cleanServer);
  task("clean-tsserver", cleanServer);
  task("clean-tsserver").description = "Cleans outputs for the language server";
  
@@ -135,7 +112,7 @@ index 238930c729..3e218323c2 100644
  task("watch-tsserver", series(preBuild, parallel(watchLib, watchDiagnostics, watchServer)));
  task("watch-tsserver").description = "Watch for changes and rebuild the language server only";
  task("watch-tsserver").flags = {
-@@ -343,11 +353,12 @@ task("watch-min").flags = {
+@@ -358,11 +369,12 @@ task("watch-min").flags = {
  };
  
  const esbuildLssl = esbuildTask("./src/tsserverlibrary/tsserverlibrary.ts", "./built/local/tsserverlibrary.js", /* exportIsTsObject */ true, /* performanceMatters */ true);
@@ -149,7 +126,7 @@ index 238930c729..3e218323c2 100644
      return buildLsslProject();
  };
  task("lssl", series(preBuild, buildLssl));
-@@ -361,9 +372,11 @@ cleanTasks.push(cleanLssl);
+@@ -376,9 +388,11 @@ cleanTasks.push(cleanLssl);
  task("clean-lssl", cleanLssl);
  task("clean-lssl").description = "Clean outputs for the language service server library";
  
@@ -164,7 +141,7 @@ index 238930c729..3e218323c2 100644
  task("watch-lssl", series(preBuild, parallel(watchLib, watchDiagnostics, watchLssl)));
  task("watch-lssl").description = "Watch for changes and rebuild tsserverlibrary only";
  task("watch-lssl").flags = {
-@@ -380,10 +393,11 @@ task("dts", dts);
+@@ -395,10 +409,11 @@ task("dts", dts);
  
  const testRunner = "./built/local/run.js";
  const esbuildTests = esbuildTask("./src/testRunner/_namespaces/Harness.ts", testRunner);
@@ -177,7 +154,7 @@ index 238930c729..3e218323c2 100644
      return buildProject("src/testRunner");
  };
  task("tests", series(preBuild, parallel(buildLssl, buildTests)));
-@@ -397,8 +411,11 @@ cleanTasks.push(cleanTests);
+@@ -412,8 +427,11 @@ cleanTasks.push(cleanTests);
  task("clean-tests", cleanTests);
  task("clean-tests").description = "Cleans the outputs for the test infrastructure";
  
@@ -191,7 +168,7 @@ index 238930c729..3e218323c2 100644
  
  const buildEslintRules = () => buildProject("scripts/eslint");
  task("build-eslint-rules", buildEslintRules);
-@@ -450,7 +467,6 @@ const esbuildTypingsInstaller = esbuildTask("./src/typingsInstaller/nodeTypingsI
+@@ -465,7 +483,6 @@ const esbuildTypingsInstaller = esbuildTask("./src/typingsInstaller/nodeTypingsI
  
  const buildTypingsInstaller = () => {
      if (cmdLineOptions.bundle) return esbuildTypingsInstaller.build();
@@ -199,7 +176,7 @@ index 238930c729..3e218323c2 100644
      writeCJSReexport("./built/typingsInstaller/nodeTypingsInstaller.js", "./built/local/typingsInstaller.js");
      return buildProject("src/typingsInstaller");
  };
-@@ -584,16 +600,19 @@ task("importDefinitelyTypedTests").description = "Runs the importDefinitelyTyped
+@@ -599,16 +616,19 @@ task("importDefinitelyTypedTests").description = "Runs the importDefinitelyTyped
  const cleanBuilt = () => del("built");
  
  const produceLKG = async () => {
@@ -223,7 +200,7 @@ index 238930c729..3e218323c2 100644
          "built/local/watchGuard.js",
      ].concat(libs.map(lib => lib.target));
      const missingFiles = expectedFiles
-@@ -624,8 +643,6 @@ task("generate-spec").description = "Generates a Markdown version of the Languag
+@@ -639,8 +659,6 @@ task("generate-spec").description = "Generates a Markdown version of the Languag
  task("clean", series(parallel(cleanTasks), cleanBuilt));
  task("clean").description = "Cleans build outputs";
  
