@@ -1,0 +1,74 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Jake Bailey <5341706+jakebailey@users.noreply.github.com>
+Date: Mon, 3 Oct 2022 14:38:58 -0700
+Subject: [PATCH] Restore self-compilation using built compiler in CI tests
+
+---
+ Gulpfile.js               |  3 +++
+ scripts/build/projects.js |  2 +-
+ scripts/build/tests.js    | 22 +++++++++++-----------
+ 3 files changed, 15 insertions(+), 12 deletions(-)
+
+diff --git a/Gulpfile.js b/Gulpfile.js
+index 74d54ad193..066b23aaa1 100644
+--- a/Gulpfile.js
++++ b/Gulpfile.js
+@@ -126,6 +126,9 @@ const buildSrc = () => buildProject("src");
+ 
+ task("build-src", series(preSrc, buildSrc));
+ 
++const cleanSrc = () => cleanProject("src");
++task("clean-src", series(preSrc, cleanSrc));
++
+ /**
+  * @param {string} entrypoint
+  * @param {string} output
+diff --git a/scripts/build/projects.js b/scripts/build/projects.js
+index 55559e9d1b..d3053c8de2 100644
+--- a/scripts/build/projects.js
++++ b/scripts/build/projects.js
+@@ -32,7 +32,7 @@ class ProjectQueue {
+ 
+ const execTsc = (/** @type {string[]} */ ...args) =>
+     exec(process.execPath,
+-         [resolve(findUpRoot(), cmdLineOptions.lkg ? "./lib/tsc" : "./built/local/tsc"),
++         [resolve(findUpRoot(), cmdLineOptions.lkg ? "./lib/tsc.js" : "./built/local/tsc.js"),
+           "-b", ...args],
+          { hidePrompt: true });
+ 
+diff --git a/scripts/build/tests.js b/scripts/build/tests.js
+index f656034347..f1fb14a24a 100644
+--- a/scripts/build/tests.js
++++ b/scripts/build/tests.js
+@@ -123,17 +123,17 @@ async function runConsoleTests(runJs, defaultReporter, runInParallel, watchMode)
+             errorStatus = exitCode;
+             error = new Error(`Process exited with status code ${errorStatus}.`);
+         }
+-        // else if (cmdLineOptions.ci) {
+-        //     // finally, do a sanity check and build the compiler with the built version of itself
+-        //     log.info("Starting sanity check build...");
+-        //     // Cleanup everything except lint rules (we'll need those later and would rather not waste time rebuilding them)
+-        //     await exec("gulp", ["clean-tsc", "clean-services", "clean-tsserver", "clean-lssl", "clean-tests"]);
+-        //     const { exitCode } = await exec("gulp", ["local", "--lkg=false"]);
+-        //     if (exitCode !== 0) {
+-        //         errorStatus = exitCode;
+-        //         error = new Error(`Sanity check build process exited with status code ${errorStatus}.`);
+-        //     }
+-        // }
++        else if (cmdLineOptions.ci) {
++            // finally, do a sanity check and build the compiler with the built version of itself
++            log.info("Starting sanity check build...");
++            // Cleanup everything except lint rules (we'll need those later and would rather not waste time rebuilding them)
++            await exec("gulp", ["clean-src"]);
++            const { exitCode } = await exec("gulp", ["build-src", "--built"]);
++            if (exitCode !== 0) {
++                errorStatus = exitCode;
++                error = new Error(`Sanity check build process exited with status code ${errorStatus}.`);
++            }
++        }
+     }
+     catch (e) {
+         errorStatus = undefined;
+-- 
+2.38.0
+

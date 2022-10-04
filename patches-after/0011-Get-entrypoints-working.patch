@@ -1,0 +1,599 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Jake Bailey <5341706+jakebailey@users.noreply.github.com>
+Date: Fri, 2 Sep 2022 15:53:02 -0700
+Subject: [PATCH] Get entrypoints working
+
+---
+ Gulpfile.js                                  | 14 ++++++-------
+ src/cancellationToken/tsconfig.json          | 10 ++--------
+ src/compiler/tsconfig.json                   |  2 +-
+ src/compiler/tsconfig.release.json           | 10 ----------
+ src/debug/tsconfig.json                      |  6 ++----
+ src/deprecatedCompat/tsconfig.json           |  4 ++--
+ src/dynamicImportCompat/tsconfig.json        |  9 +++------
+ src/executeCommandLine/tsconfig.json         |  2 +-
+ src/executeCommandLine/tsconfig.release.json | 11 ----------
+ src/harness/tsconfig.json                    |  2 +-
+ src/jsTyping/tsconfig.json                   |  2 +-
+ src/loggedIO/tsconfig.json                   |  2 +-
+ src/server/tsconfig.json                     |  4 +---
+ src/services/tsconfig.json                   |  2 +-
+ src/testRunner/tsconfig.json                 |  7 ++-----
+ src/tsc/_namespaces/ts.ts                    |  1 -
+ src/tsc/tsconfig.json                        |  4 ++--
+ src/tsc/tsconfig.release.json                | 17 ----------------
+ src/tsconfig-base.json                       |  1 -
+ src/tsconfig-library-base.json               | 10 ----------
+ src/tsconfig-noncomposite-base.json          |  9 ---------
+ src/tsconfig.json                            |  4 +++-
+ src/tsserver/nodeServer.ts                   |  3 ++-
+ src/tsserver/tsconfig.json                   |  4 ++--
+ src/tsserverlibrary/_namespaces/ts.server.ts |  1 -
+ src/tsserverlibrary/tsconfig.json            |  4 ++--
+ src/tsserverlibrary/tsserverlibrary.ts       |  6 +++++-
+ src/typescript/_namespaces/ts.ts             |  6 ++++++
+ src/typescript/tsconfig.json                 | 16 +++++++++++++++
+ src/typescript/typescript.ts                 | 21 ++++++++++++++++++++
+ src/typingsInstaller/tsconfig.json           |  5 ++---
+ src/typingsInstallerCore/tsconfig.json       |  2 +-
+ src/watchGuard/tsconfig.json                 |  6 ++----
+ src/webServer/tsconfig.json                  |  4 +---
+ 34 files changed, 90 insertions(+), 121 deletions(-)
+ delete mode 100644 src/compiler/tsconfig.release.json
+ delete mode 100644 src/executeCommandLine/tsconfig.release.json
+ delete mode 100644 src/tsc/tsconfig.release.json
+ delete mode 100644 src/tsconfig-library-base.json
+ delete mode 100644 src/tsconfig-noncomposite-base.json
+ create mode 100644 src/typescript/_namespaces/ts.ts
+ create mode 100644 src/typescript/tsconfig.json
+ create mode 100644 src/typescript/typescript.ts
+
+diff --git a/Gulpfile.js b/Gulpfile.js
+index 031330dc19..df8b38ea48 100644
+--- a/Gulpfile.js
++++ b/Gulpfile.js
+@@ -164,12 +164,12 @@ const buildServices = (() => {
+         .pipe(rename("typescript.d.ts"))
+         .pipe(dest("built/local"));
+ 
+-    // create typescript_standalone.d.ts
+-    const createTypescriptStandaloneDts = () => src("built/local/typescriptServices.d.ts")
+-        .pipe(newer("built/local/typescript_standalone.d.ts"))
+-        .pipe(transform(content => content.replace(/declare (namespace|module) ts/g, 'declare module "typescript"')))
+-        .pipe(rename("typescript_standalone.d.ts"))
+-        .pipe(dest("built/local"));
++    // // create typescript_standalone.d.ts
++    // const createTypescriptStandaloneDts = () => src("built/local/typescriptServices.d.ts")
++    //     .pipe(newer("built/local/typescript_standalone.d.ts"))
++    //     .pipe(transform(content => content.replace(/declare (namespace|module) ts/g, 'declare module "typescript"')))
++    //     .pipe(rename("typescript_standalone.d.ts"))
++    //     .pipe(dest("built/local"));
+ 
+     return series(
+         buildTypescriptServicesOut,
+@@ -177,7 +177,7 @@ const buildServices = (() => {
+         createTypescriptServicesDts,
+         createTypescriptJs,
+         createTypescriptDts,
+-        createTypescriptStandaloneDts,
++        // createTypescriptStandaloneDts,
+     );
+ })();
+ task("services", series(preBuild, buildServices));
+diff --git a/src/cancellationToken/tsconfig.json b/src/cancellationToken/tsconfig.json
+index 6d27fe45cf..76eca8f56c 100644
+--- a/src/cancellationToken/tsconfig.json
++++ b/src/cancellationToken/tsconfig.json
+@@ -1,13 +1,7 @@
+ {
+-    "extends": "../tsconfig-noncomposite-base",
++    "extends": "../tsconfig-base",
+     "compilerOptions": {
+-        "outDir": "../../built/local/",
+-        "rootDir": ".",
+-        "composite": false,
+-        "declaration": false,
+-        "declarationMap": false,
+-        "removeComments": true,
+-        "incremental": false,
++        "outDir": "../../built/local/cancellationToken",
+         "module": "commonjs",
+         "types": [
+             "node"
+diff --git a/src/compiler/tsconfig.json b/src/compiler/tsconfig.json
+index df2979bb39..3aa3f85519 100644
+--- a/src/compiler/tsconfig.json
++++ b/src/compiler/tsconfig.json
+@@ -1,7 +1,7 @@
+ {
+     "extends": "../tsconfig-base",
+     "compilerOptions": {
+-        "outDir": "../../built/local",
++        "outDir": "../../built/local/compiler",
+         "types": ["node"]
+     },
+ 
+diff --git a/src/compiler/tsconfig.release.json b/src/compiler/tsconfig.release.json
+deleted file mode 100644
+index ecbc53d780..0000000000
+--- a/src/compiler/tsconfig.release.json
++++ /dev/null
+@@ -1,10 +0,0 @@
+-{
+-    "extends": "./tsconfig.json",
+-    "compilerOptions": {
+-        "outDir": "../../built/local/release",
+-        "removeComments": true,
+-        "preserveConstEnums": false
+-    },
+-    "references": [
+-    ]
+-}
+diff --git a/src/debug/tsconfig.json b/src/debug/tsconfig.json
+index 45353e0557..4f9a47f5af 100644
+--- a/src/debug/tsconfig.json
++++ b/src/debug/tsconfig.json
+@@ -1,11 +1,9 @@
+ {
+-    "extends": "../tsconfig-library-base",
++    "extends": "../tsconfig-base",
+     "compilerOptions": {
+         "target": "es2019",
+         "lib": ["es2019"],
+-        "outDir": "../../built/local",
+-        "declaration": false,
+-        "sourceMap": true
++        "outDir": "../../built/local/debug"
+     },
+     "files": [
+         "dbg.ts",
+diff --git a/src/deprecatedCompat/tsconfig.json b/src/deprecatedCompat/tsconfig.json
+index 5eecec15a0..f393a95585 100644
+--- a/src/deprecatedCompat/tsconfig.json
++++ b/src/deprecatedCompat/tsconfig.json
+@@ -1,7 +1,7 @@
+ {
+     "extends": "../tsconfig-base",
+     "compilerOptions": {
+-        "outDir": "../../built/local",
++        "outDir": "../../built/local/deprecatedCompat",
+         "experimentalDecorators": true
+     },
+     "references": [
+@@ -19,4 +19,4 @@
+         "4.8/mergeDecoratorsAndModifiers.ts",
+         "_namespaces/ts.ts"
+     ]
+-}
+\ No newline at end of file
++}
+diff --git a/src/dynamicImportCompat/tsconfig.json b/src/dynamicImportCompat/tsconfig.json
+index 5ae4980fda..3abacb2133 100644
+--- a/src/dynamicImportCompat/tsconfig.json
++++ b/src/dynamicImportCompat/tsconfig.json
+@@ -1,14 +1,11 @@
+ {
+-    "extends": "../tsconfig-library-base",
++    "extends": "../tsconfig-base",
+     "compilerOptions": {
+-        "outDir": "../../built/local",
++        "outDir": "../../built/local/dynamicImportCompat",
+         "rootDir": ".",
+         "target": "esnext",
+         "module": "esnext",
+-        "lib": ["esnext"],
+-        "declaration": false,
+-        "sourceMap": true,
+-        "tsBuildInfoFile": "../../built/local/dynamicImportCompat.tsbuildinfo"
++        "lib": ["esnext"]
+     },
+     "files": [
+         "dynamicImportCompat.ts",
+diff --git a/src/executeCommandLine/tsconfig.json b/src/executeCommandLine/tsconfig.json
+index 88eed2c43f..21e791dfdc 100644
+--- a/src/executeCommandLine/tsconfig.json
++++ b/src/executeCommandLine/tsconfig.json
+@@ -1,7 +1,7 @@
+ {
+     "extends": "../tsconfig-base",
+     "compilerOptions": {
+-        "outDir": "../../built/local"
++        "outDir": "../../built/local/executeCommandLine"
+     },
+ 
+     "references": [
+diff --git a/src/executeCommandLine/tsconfig.release.json b/src/executeCommandLine/tsconfig.release.json
+deleted file mode 100644
+index 57ae0adbf5..0000000000
+--- a/src/executeCommandLine/tsconfig.release.json
++++ /dev/null
+@@ -1,11 +0,0 @@
+-{
+-    "extends": "./tsconfig.json",
+-    "compilerOptions": {
+-        "outDir": "../../built/local/release",
+-        "removeComments": true,
+-        "preserveConstEnums": false
+-    },
+-    "references": [
+-        { "path": "../compiler/tsconfig.release.json" }
+-    ]
+-}
+diff --git a/src/harness/tsconfig.json b/src/harness/tsconfig.json
+index 55091a17fb..718b0fded3 100644
+--- a/src/harness/tsconfig.json
++++ b/src/harness/tsconfig.json
+@@ -1,7 +1,7 @@
+ {
+     "extends": "../tsconfig-base",
+     "compilerOptions": {
+-        "outDir": "../../built/local",
++        "outDir": "../../built/local/harness",
+         "types": [
+             "node", "mocha", "chai"
+         ],
+diff --git a/src/jsTyping/tsconfig.json b/src/jsTyping/tsconfig.json
+index 9d360f086a..986cdfb22a 100644
+--- a/src/jsTyping/tsconfig.json
++++ b/src/jsTyping/tsconfig.json
+@@ -1,7 +1,7 @@
+ {
+     "extends": "../tsconfig-base",
+     "compilerOptions": {
+-        "outDir": "../../built/local",
++        "outDir": "../../built/local/jsTyping",
+         "types": [
+             "node"
+         ],
+diff --git a/src/loggedIO/tsconfig.json b/src/loggedIO/tsconfig.json
+index 78c7a1ae48..a56535d4f3 100644
+--- a/src/loggedIO/tsconfig.json
++++ b/src/loggedIO/tsconfig.json
+@@ -1,7 +1,7 @@
+ {
+     "extends": "../tsconfig-base",
+     "compilerOptions": {
+-        "outDir": "../../built/local",
++        "outDir": "../../built/local/loggedIO",
+         "types": [
+         ],
+         "lib": [
+diff --git a/src/server/tsconfig.json b/src/server/tsconfig.json
+index 8fac9006b0..433d3b581e 100644
+--- a/src/server/tsconfig.json
++++ b/src/server/tsconfig.json
+@@ -1,9 +1,7 @@
+ {
+     "extends": "../tsconfig-base",
+     "compilerOptions": {
+-        "removeComments": false,
+-        "outDir": "../../built/local",
+-        "preserveConstEnums": true,
++        "outDir": "../../built/local/server",
+         "types": [
+             "node"
+         ]
+diff --git a/src/services/tsconfig.json b/src/services/tsconfig.json
+index 5d3cb4f032..a70b4d47d7 100644
+--- a/src/services/tsconfig.json
++++ b/src/services/tsconfig.json
+@@ -1,7 +1,7 @@
+ {
+     "extends": "../tsconfig-base",
+     "compilerOptions": {
+-        "outDir": "../../built/local"
++        "outDir": "../../built/local/services"
+     },
+     "references": [
+         { "path": "../compiler" },
+diff --git a/src/testRunner/tsconfig.json b/src/testRunner/tsconfig.json
+index d1893ff3b1..f491d8de36 100644
+--- a/src/testRunner/tsconfig.json
++++ b/src/testRunner/tsconfig.json
+@@ -1,10 +1,7 @@
+ {
+-    "extends": "../tsconfig-noncomposite-base",
++    "extends": "../tsconfig-base",
+     "compilerOptions": {
+-        "outDir": "../../built/local",
+-        "composite": false,
+-        "declaration": false,
+-        "declarationMap": false,
++        "outDir": "../../built/local/testRunner",
+         "types": [
+             "node", "mocha", "chai"
+         ],
+diff --git a/src/tsc/_namespaces/ts.ts b/src/tsc/_namespaces/ts.ts
+index 8579e4a93b..8e361ae718 100644
+--- a/src/tsc/_namespaces/ts.ts
++++ b/src/tsc/_namespaces/ts.ts
+@@ -2,4 +2,3 @@
+ 
+ export * from "../../compiler/_namespaces/ts";
+ export * from "../../executeCommandLine/_namespaces/ts";
+-export * from "../tsc";
+diff --git a/src/tsc/tsconfig.json b/src/tsc/tsconfig.json
+index 205112c6f8..8937be39f1 100644
+--- a/src/tsc/tsconfig.json
++++ b/src/tsc/tsconfig.json
+@@ -1,7 +1,7 @@
+ {
+-    "extends": "../tsconfig-noncomposite-base",
++    "extends": "../tsconfig-base",
+     "compilerOptions": {
+-        "outDir": "../../built/local"
++        "outDir": "../../built/local/tsc"
+     },
+     "files": [
+         "tsc.ts",
+diff --git a/src/tsc/tsconfig.release.json b/src/tsc/tsconfig.release.json
+deleted file mode 100644
+index 8ddc790faf..0000000000
+--- a/src/tsc/tsconfig.release.json
++++ /dev/null
+@@ -1,17 +0,0 @@
+-{
+-    "extends": "./tsconfig.json",
+-    "compilerOptions": {
+-        "outDir": "../../built/local/release",
+-        "stripInternal": true,
+-        "preserveConstEnums": false,
+-        "declaration": false,
+-        "declarationMap": false,
+-        "sourceMap": false,
+-        "composite": false,
+-        "incremental": true
+-    },
+-    "references": [
+-        { "path": "../compiler/tsconfig.release.json" },
+-        { "path": "../executeCommandLine/tsconfig.release.json" }
+-    ]
+-}
+diff --git a/src/tsconfig-base.json b/src/tsconfig-base.json
+index 51cf414728..d3ece6a19d 100644
+--- a/src/tsconfig-base.json
++++ b/src/tsconfig-base.json
+@@ -4,7 +4,6 @@
+         "lib": ["es2015.iterable", "es2015.generator", "es5"],
+         "target": "es5",
+         "moduleResolution": "node",
+-        "rootDir": ".",
+ 
+         "declaration": true,
+         "declarationMap": true,
+diff --git a/src/tsconfig-library-base.json b/src/tsconfig-library-base.json
+deleted file mode 100644
+index f4ded3f16c..0000000000
+--- a/src/tsconfig-library-base.json
++++ /dev/null
+@@ -1,10 +0,0 @@
+-{
+-    "extends": "./tsconfig-base",
+-    "compilerOptions": {
+-        "declarationMap": false,
+-        "composite": false,
+-        "incremental":  true,
+-        "declaration": true,
+-        "stripInternal":  true
+-    }
+-}
+diff --git a/src/tsconfig-noncomposite-base.json b/src/tsconfig-noncomposite-base.json
+deleted file mode 100644
+index 879a038f5a..0000000000
+--- a/src/tsconfig-noncomposite-base.json
++++ /dev/null
+@@ -1,9 +0,0 @@
+-{
+-    "extends": "./tsconfig-base",
+-    "compilerOptions": {
+-        "declaration": false,
+-        "declarationMap": false,
+-        "composite": false,
+-        "incremental": true
+-    }
+-}
+diff --git a/src/tsconfig.json b/src/tsconfig.json
+index a8ae1655e8..f70352ca5e 100644
+--- a/src/tsconfig.json
++++ b/src/tsconfig.json
+@@ -4,11 +4,13 @@
+     "references": [
+         { "path": "./tsc" },
+         { "path": "./tsserver" },
++        { "path": "./tsserverlibrary" },
++        { "path": "./typescript" },
+         { "path": "./typingsInstaller" },
+         { "path": "./watchGuard" },
+         { "path": "./debug" },
+         { "path": "./cancellationToken" },
+         { "path": "./dynamicImportCompat" },
+-        { "path": "./testRunner" }
++        { "path": "./testRunner" },
+     ]
+ }
+diff --git a/src/tsserver/nodeServer.ts b/src/tsserver/nodeServer.ts
+index 7be2e3c49e..9ea213f134 100644
+--- a/src/tsserver/nodeServer.ts
++++ b/src/tsserver/nodeServer.ts
+@@ -525,7 +525,8 @@ function startNodeSession(options: StartSessionOptions, logger: Logger, cancella
+                 }
+             }
+ 
+-            this.installer = childProcess.fork(combinePaths(__dirname, "typingsInstaller.js"), args, { execArgv });
++            // TODO(jakebailey): fix this for module transform
++            this.installer = childProcess.fork(combinePaths(__dirname, "..", "typingsInstaller", "nodeTypingsInstaller.js"), args, { execArgv });
+             this.installer.on("message", m => this.handleMessage(m));
+ 
+             // We have to schedule this event to the next tick
+diff --git a/src/tsserver/tsconfig.json b/src/tsserver/tsconfig.json
+index 3631224da5..b702499283 100644
+--- a/src/tsserver/tsconfig.json
++++ b/src/tsserver/tsconfig.json
+@@ -1,8 +1,8 @@
+ {
+-    "extends": "../tsconfig-noncomposite-base",
++    "extends": "../tsconfig-base",
+  
+     "compilerOptions": {
+-        "outDir": "../../built/local",
++        "outDir": "../../built/local/tsserver",
+         "types": [
+             "node"
+         ]
+diff --git a/src/tsserverlibrary/_namespaces/ts.server.ts b/src/tsserverlibrary/_namespaces/ts.server.ts
+index fb916b71f4..21b0d0335f 100644
+--- a/src/tsserverlibrary/_namespaces/ts.server.ts
++++ b/src/tsserverlibrary/_namespaces/ts.server.ts
+@@ -2,4 +2,3 @@
+ 
+ export * from "../../jsTyping/_namespaces/ts.server";
+ export * from "../../server/_namespaces/ts.server";
+-export * from "../tsserverlibrary";
+diff --git a/src/tsserverlibrary/tsconfig.json b/src/tsserverlibrary/tsconfig.json
+index 84e469faca..5855c7d50e 100644
+--- a/src/tsserverlibrary/tsconfig.json
++++ b/src/tsserverlibrary/tsconfig.json
+@@ -1,7 +1,7 @@
+ {
+-    "extends": "../tsconfig-library-base",
++    "extends": "../tsconfig-base",
+     "compilerOptions": {
+-        "outDir": "../../built/local"
++        "outDir": "../../built/local/tsserverlibrary"
+     },
+     "files": [
+         "tsserverlibrary.ts",
+diff --git a/src/tsserverlibrary/tsserverlibrary.ts b/src/tsserverlibrary/tsserverlibrary.ts
+index 8aa07479d7..bd73794b37 100644
+--- a/src/tsserverlibrary/tsserverlibrary.ts
++++ b/src/tsserverlibrary/tsserverlibrary.ts
+@@ -1 +1,5 @@
+-export { };
++import * as ts from "./_namespaces/ts";
++
++// TODO(jakebailey): replace const enum with enum in d.ts
++
++export = ts;
+diff --git a/src/typescript/_namespaces/ts.ts b/src/typescript/_namespaces/ts.ts
+new file mode 100644
+index 0000000000..e55b264380
+--- /dev/null
++++ b/src/typescript/_namespaces/ts.ts
+@@ -0,0 +1,6 @@
++/* Generated file to emulate the ts namespace. */
++
++export * from "../../compiler/_namespaces/ts";
++export * from "../../jsTyping/_namespaces/ts";
++export * from "../../services/_namespaces/ts";
++export * from "../../deprecatedCompat/_namespaces/ts";
+diff --git a/src/typescript/tsconfig.json b/src/typescript/tsconfig.json
+new file mode 100644
+index 0000000000..f30722cadc
+--- /dev/null
++++ b/src/typescript/tsconfig.json
+@@ -0,0 +1,16 @@
++{
++    "extends": "../tsconfig-base",
++    "compilerOptions": {
++        "outDir": "../../built/local/typescript"
++    },
++    "files": [
++        "typescript.ts",
++        "_namespaces/ts.ts"
++    ],
++    "references": [
++        { "path": "../compiler" },
++        { "path": "../jsTyping" },
++        { "path": "../services" },
++        { "path": "../deprecatedCompat" }
++    ]
++}
+diff --git a/src/typescript/typescript.ts b/src/typescript/typescript.ts
+new file mode 100644
+index 0000000000..c9862f6a73
+--- /dev/null
++++ b/src/typescript/typescript.ts
+@@ -0,0 +1,21 @@
++import * as ts from "./_namespaces/ts";
++import { Debug, LogLevel } from "./_namespaces/ts";
++
++// TODO(jakebailey): replace const enum with enum in d.ts
++
++// enable deprecation logging
++declare const console: any;
++if (typeof console !== "undefined") {
++    Debug.loggingHost = {
++        log(level, s) {
++            switch (level) {
++                case LogLevel.Error: return console.error(s);
++                case LogLevel.Warning: return console.warn(s);
++                case LogLevel.Info: return console.log(s);
++                case LogLevel.Verbose: return console.log(s);
++            }
++        }
++    };
++}
++
++export = ts;
+diff --git a/src/typingsInstaller/tsconfig.json b/src/typingsInstaller/tsconfig.json
+index ce1cd04846..88bfb976fa 100644
+--- a/src/typingsInstaller/tsconfig.json
++++ b/src/typingsInstaller/tsconfig.json
+@@ -1,8 +1,7 @@
+ {
+-    "extends": "../tsconfig-noncomposite-base",
++    "extends": "../tsconfig-base",
+     "compilerOptions": {
+-        "removeComments": true,
+-        "outDir": "../../built/local",
++        "outDir": "../../built/local/typingsInstaller",
+         "types": [
+             "node"
+         ],
+diff --git a/src/typingsInstallerCore/tsconfig.json b/src/typingsInstallerCore/tsconfig.json
+index f1001c80d4..d823be6e92 100644
+--- a/src/typingsInstallerCore/tsconfig.json
++++ b/src/typingsInstallerCore/tsconfig.json
+@@ -1,7 +1,7 @@
+ {
+     "extends": "../tsconfig-base",
+     "compilerOptions": {
+-        "outDir": "../../built/local",
++        "outDir": "../../built/local/typingsInstallerCore",
+         "types": [
+             "node"
+         ],
+diff --git a/src/watchGuard/tsconfig.json b/src/watchGuard/tsconfig.json
+index 0950720474..eb1607930c 100644
+--- a/src/watchGuard/tsconfig.json
++++ b/src/watchGuard/tsconfig.json
+@@ -1,9 +1,7 @@
+ {
+-    "extends": "../tsconfig-noncomposite-base",
++    "extends": "../tsconfig-base",
+     "compilerOptions": {
+-        "removeComments": true,
+-        "incremental":  false,
+-        "outDir": "../../built/local",
++        "outDir": "../../built/local/watchGuard",
+         "types": [
+             "node"
+         ],
+diff --git a/src/webServer/tsconfig.json b/src/webServer/tsconfig.json
+index 6adb452472..e1c5a2a827 100644
+--- a/src/webServer/tsconfig.json
++++ b/src/webServer/tsconfig.json
+@@ -1,9 +1,7 @@
+ {
+     "extends": "../tsconfig-base",
+     "compilerOptions": {
+-        "removeComments": false,
+-        "outDir": "../../built/local",
+-        "preserveConstEnums": true,
++        "outDir": "../../built/local/webServer",
+         "types": [
+             "node"
+         ]
+-- 
+2.38.0
+
