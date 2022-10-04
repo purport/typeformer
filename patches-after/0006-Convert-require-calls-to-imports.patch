@@ -7,13 +7,12 @@ Subject: [PATCH] Convert require calls to imports
  src/cancellationToken/cancellationToken.ts     |  2 +-
  src/harness/findUpDir.ts                       |  4 ++--
  src/harness/harnessGlobals.ts                  | 18 ++++++++----------
- src/instrumenter/instrumenter.ts               |  4 ++--
  src/testRunner/externalCompileRunner.ts        |  8 ++++----
  .../unittests/services/languageService.ts      |  4 ++--
  src/testRunner/unittests/tsserver/session.ts   |  4 ++--
  src/typingsInstaller/nodeTypingsInstaller.ts   | 13 +++----------
  src/watchGuard/watchGuard.ts                   |  3 ++-
- 9 files changed, 26 insertions(+), 34 deletions(-)
+ 8 files changed, 24 insertions(+), 32 deletions(-)
 
 diff --git a/src/cancellationToken/cancellationToken.ts b/src/cancellationToken/cancellationToken.ts
 index aaa19750b8..57c82e7522 100644
@@ -80,18 +79,6 @@ index 97c363e95f..9de9537181 100644
 -// This way, everything that ends up importing `ts` downstream also imports this file and picks up its augmentation
 \ No newline at end of file
 +// This way, everything that ends up importing `ts` downstream also imports this file and picks up its augmentation
-diff --git a/src/instrumenter/instrumenter.ts b/src/instrumenter/instrumenter.ts
-index c7cbb8d3ec..641d173456 100644
---- a/src/instrumenter/instrumenter.ts
-+++ b/src/instrumenter/instrumenter.ts
-@@ -1,5 +1,5 @@
--import fs = require("fs");
--import path = require("path");
-+import * as fs from "fs";
-+import * as path from "path";
- 
- function instrumentForRecording(fn: string, tscPath: string) {
-     instrument(tscPath, `
 diff --git a/src/testRunner/externalCompileRunner.ts b/src/testRunner/externalCompileRunner.ts
 index 93c9cce362..766b939ab4 100644
 --- a/src/testRunner/externalCompileRunner.ts

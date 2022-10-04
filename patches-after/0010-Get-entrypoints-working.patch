@@ -14,9 +14,7 @@ Subject: [PATCH] Get entrypoints working
  src/executeCommandLine/tsconfig.json         |  2 +-
  src/executeCommandLine/tsconfig.release.json | 11 ----------
  src/harness/tsconfig.json                    |  2 +-
- src/instrumenter/tsconfig.json               |  5 ++---
  src/jsTyping/tsconfig.json                   |  2 +-
- src/loggedIO/tsconfig-tsc-instrumented.json  |  3 ++-
  src/loggedIO/tsconfig.json                   |  2 +-
  src/server/tsconfig.json                     |  4 +---
  src/services/tsconfig.json                   |  2 +-
@@ -40,7 +38,7 @@ Subject: [PATCH] Get entrypoints working
  src/typingsInstallerCore/tsconfig.json       |  2 +-
  src/watchGuard/tsconfig.json                 |  6 ++----
  src/webServer/tsconfig.json                  |  4 +---
- 36 files changed, 94 insertions(+), 125 deletions(-)
+ 34 files changed, 90 insertions(+), 121 deletions(-)
  delete mode 100644 src/compiler/tsconfig.release.json
  delete mode 100644 src/executeCommandLine/tsconfig.release.json
  delete mode 100644 src/tsc/tsconfig.release.json
@@ -51,7 +49,7 @@ Subject: [PATCH] Get entrypoints working
  create mode 100644 src/typescript/typescript.ts
 
 diff --git a/Gulpfile.js b/Gulpfile.js
-index 7f65318d68..bb87b72a89 100644
+index beddc384bd..4f5178e7d0 100644
 --- a/Gulpfile.js
 +++ b/Gulpfile.js
 @@ -166,12 +166,12 @@ const buildServices = (() => {
@@ -234,24 +232,6 @@ index 55091a17fb..718b0fded3 100644
          "types": [
              "node", "mocha", "chai"
          ],
-diff --git a/src/instrumenter/tsconfig.json b/src/instrumenter/tsconfig.json
-index 2f5b33f9e7..b20d49e47c 100644
---- a/src/instrumenter/tsconfig.json
-+++ b/src/instrumenter/tsconfig.json
-@@ -7,10 +7,9 @@
-             "dom",
-             "scripthost"
-         ],
--        "outDir": "../../built/local",
--        "sourceMap": true
-+        "outDir": "../../built/local/instrumenter"
-     },
-     "files": [
-         "instrumenter.ts"
-     ]
--}
-\ No newline at end of file
-+}
 diff --git a/src/jsTyping/tsconfig.json b/src/jsTyping/tsconfig.json
 index 9d360f086a..986cdfb22a 100644
 --- a/src/jsTyping/tsconfig.json
@@ -264,20 +244,6 @@ index 9d360f086a..986cdfb22a 100644
 +        "outDir": "../../built/local/jsTyping",
          "types": [
              "node"
-         ],
-diff --git a/src/loggedIO/tsconfig-tsc-instrumented.json b/src/loggedIO/tsconfig-tsc-instrumented.json
-index 1c6576c83c..65159c293a 100644
---- a/src/loggedIO/tsconfig-tsc-instrumented.json
-+++ b/src/loggedIO/tsconfig-tsc-instrumented.json
-@@ -1,7 +1,8 @@
- {
-+    // TODO: ???
-     "extends": "../tsconfig-base",
-     "compilerOptions": {
--        "outDir": "../../built/local",
-+        "outDir": "../../built/local/loggedIO",
-         "types": [
-             "node", "mocha", "chai"
          ],
 diff --git a/src/loggedIO/tsconfig.json b/src/loggedIO/tsconfig.json
 index 78c7a1ae48..a56535d4f3 100644

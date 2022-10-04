@@ -24,7 +24,7 @@ index 833c970de8..b59a533db1 100644
          this.eventHandler({ eventName: ProjectInfoTelemetryEvent, data });
  
 diff --git a/src/server/session.ts b/src/server/session.ts
-index 6a47051785..7e99c899a1 100644
+index 7b24f02a0d..726fd29d95 100644
 --- a/src/server/session.ts
 +++ b/src/server/session.ts
 @@ -2951,7 +2951,7 @@ export class Session<TMessage = string> implements EventSender {
@@ -37,7 +37,7 @@ index 6a47051785..7e99c899a1 100644
          },
          [CommandNames.OpenExternalProject]: (request: protocol.OpenExternalProjectRequest) => {
 diff --git a/src/services/utilities.ts b/src/services/utilities.ts
-index e863b33dbc..098e371166 100644
+index 2030e0f474..b6303d440c 100644
 --- a/src/services/utilities.ts
 +++ b/src/services/utilities.ts
 @@ -75,8 +75,8 @@ declare global {

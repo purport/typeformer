@@ -5,13 +5,13 @@ Subject: [PATCH] Add babel for let/const lowering
 
 This reverts commit 8623e3ee6936bf15418fc437b45d7621ca732296.
 ---
- Gulpfile.js       |   25 +-
+ Gulpfile.js       |   30 +-
  package-lock.json | 1267 +++++++++++++++++++++++++++++++++++++++++++++
  package.json      |    3 +
- 3 files changed, 1288 insertions(+), 7 deletions(-)
+ 3 files changed, 1288 insertions(+), 12 deletions(-)
 
 diff --git a/Gulpfile.js b/Gulpfile.js
-index 1626668388..b5f47b8e3b 100644
+index 080691c505..aefa8a5227 100644
 --- a/Gulpfile.js
 +++ b/Gulpfile.js
 @@ -140,14 +140,17 @@ function getCopyrightHeader() {
@@ -78,17 +78,22 @@ index 1626668388..b5f47b8e3b 100644
  
  const buildServer = () => {
      if (cmdLineOptions.bundle) return esbuildServer.build();
-@@ -311,7 +322,7 @@ task("watch-min").flags = {
+@@ -311,12 +322,7 @@ task("watch-min").flags = {
      "   --built": "Compile using the built version of the compiler."
  };
  
--const esbuildLssl = esbuildTask("./src/tsserverlibrary/tsserverlibrary.ts", "./built/local/tsserverlibrary.js", /* exportIsTsObject */ true);
+-const buildLssl = (() => {
+-    // TODO(jakebailey): fix this for modules
+-    return cb => {
+-        console.log("!!!TODO!!! buildLssl");
+-        cb();
+-    };
 +const esbuildLssl = esbuildTask("./src/tsserverlibrary/tsserverlibrary.ts", "./built/local/tsserverlibrary.js", /* exportIsTsObject */ true, /* performanceMatters */ true);
  
  const buildLssl = () => {
      if (cmdLineOptions.bundle) return esbuildLssl.build();
 diff --git a/package-lock.json b/package-lock.json
-index 9fbc782b66..e8adc58236 100644
+index 297c74f4f8..a8b8825f67 100644
 --- a/package-lock.json
 +++ b/package-lock.json
 @@ -13,6 +13,9 @@
@@ -763,7 +768,7 @@ index 9fbc782b66..e8adc58236 100644
          "node_modules/emoji-regex": {
              "version": "8.0.0",
              "resolved": "https://registry.npmjs.org/emoji-regex/-/emoji-regex-8.0.0.tgz",
-@@ -3730,6 +4353,12 @@
+@@ -3736,6 +4359,12 @@
                  "node": ">= 0.10"
              }
          },
@@ -776,7 +781,7 @@ index 9fbc782b66..e8adc58236 100644
          "node_modules/fs.realpath": {
              "version": "1.0.0",
              "resolved": "https://registry.npmjs.org/fs.realpath/-/fs.realpath-1.0.0.tgz",
-@@ -3783,6 +4412,15 @@
+@@ -3789,6 +4418,15 @@
                  "url": "https://github.com/sponsors/ljharb"
              }
          },
@@ -792,8 +797,8 @@ index 9fbc782b66..e8adc58236 100644
          "node_modules/get-caller-file": {
              "version": "1.0.3",
              "resolved": "https://registry.npmjs.org/get-caller-file/-/get-caller-file-1.0.3.tgz",
-@@ -5299,6 +5937,12 @@
-             "integrity": "sha512-Y2/yD55y5jteOAmY50JbUZYwk3CP3wnLPEZnlR1w9oKhITrBEtAxwuWKebFf8hMrPMgbYwFoWK/lH2sBkErELw==",
+@@ -5331,6 +5969,12 @@
+             "integrity": "sha512-08bOAKweV2NUC1wqTtf3qZlnpOX/R2DU9ikpjOHs0H+ibQv3zpncVQg6um4uYtRtrwIX8M4Nh3ytK4HGlYAq7Q==",
              "dev": true
          },
 +        "node_modules/js-tokens": {
@@ -805,7 +810,7 @@ index 9fbc782b66..e8adc58236 100644
          "node_modules/js-yaml": {
              "version": "4.1.0",
              "resolved": "https://registry.npmjs.org/js-yaml/-/js-yaml-4.1.0.tgz",
-@@ -5320,6 +5964,18 @@
+@@ -5352,6 +5996,18 @@
                  "node": ">=12.0.0"
              }
          },
@@ -824,7 +829,7 @@ index 9fbc782b66..e8adc58236 100644
          "node_modules/json-schema-traverse": {
              "version": "0.4.1",
              "resolved": "https://registry.npmjs.org/json-schema-traverse/-/json-schema-traverse-0.4.1.tgz",
-@@ -5565,6 +6221,37 @@
+@@ -5597,6 +6253,37 @@
                  "es5-ext": "~0.10.2"
              }
          },
@@ -862,7 +867,7 @@ index 9fbc782b66..e8adc58236 100644
          "node_modules/make-iterator": {
              "version": "1.0.1",
              "resolved": "https://registry.npmjs.org/make-iterator/-/make-iterator-1.0.1.tgz",
-@@ -6260,6 +6947,12 @@
+@@ -6292,6 +6979,12 @@
                  }
              }
          },
@@ -875,7 +880,7 @@ index 9fbc782b66..e8adc58236 100644
          "node_modules/normalize-package-data": {
              "version": "2.5.0",
              "resolved": "https://registry.npmjs.org/normalize-package-data/-/normalize-package-data-2.5.0.tgz",
-@@ -8169,6 +8862,15 @@
+@@ -8226,6 +8919,15 @@
                  "node": ">=0.10.0"
              }
          },
@@ -891,7 +896,7 @@ index 9fbc782b66..e8adc58236 100644
          "node_modules/to-object-path": {
              "version": "0.3.0",
              "resolved": "https://registry.npmjs.org/to-object-path/-/to-object-path-0.3.0.tgz",
-@@ -8544,6 +9246,38 @@
+@@ -8601,6 +9303,38 @@
                  "yarn": "*"
              }
          },
@@ -930,7 +935,7 @@ index 9fbc782b66..e8adc58236 100644
          "node_modules/uri-js": {
              "version": "4.4.1",
              "resolved": "https://registry.npmjs.org/uri-js/-/uri-js-4.4.1.tgz",
-@@ -8925,6 +9659,386 @@
+@@ -9033,6 +9767,386 @@
          }
      },
      "dependencies": {
@@ -1317,7 +1322,7 @@ index 9fbc782b66..e8adc58236 100644
          "@es-joy/jsdoccomment": {
              "version": "0.31.0",
              "resolved": "https://registry.npmjs.org/@es-joy/jsdoccomment/-/jsdoccomment-0.31.0.tgz",
-@@ -9048,6 +10162,51 @@
+@@ -9156,6 +10270,51 @@
              "integrity": "sha512-ZnQMnLV4e7hDlUvw8H+U8ASL02SS2Gn6+9Ac3wGGLIe7+je2AeAOxPY+izIPJDfFDb7eDjev0Us8MO1iFRN8hA==",
              "dev": true
          },
@@ -1369,7 +1374,7 @@ index 9fbc782b66..e8adc58236 100644
          "@nodelib/fs.scandir": {
              "version": "2.1.5",
              "resolved": "https://registry.npmjs.org/@nodelib/fs.scandir/-/fs.scandir-2.1.5.tgz",
-@@ -9950,6 +11109,18 @@
+@@ -10058,6 +11217,18 @@
              "integrity": "sha512-qhAVI1+Av2X7qelOfAIYwXONood6XlZE/fXaBSmW/T5SzLAmCgzi+eiWE7fUvbHaeNBQH13UftjpXxsfLkMpgw==",
              "dev": true
          },
@@ -1388,7 +1393,7 @@ index 9fbc782b66..e8adc58236 100644
          "buffer-equal": {
              "version": "1.0.0",
              "resolved": "https://registry.npmjs.org/buffer-equal/-/buffer-equal-1.0.0.tgz",
-@@ -10001,6 +11172,12 @@
+@@ -10109,6 +11280,12 @@
              "integrity": "sha512-4nhGqUkc4BqbBBB4Q6zLuD7lzzrHYrjKGeYaEji/3tFR5VdJu9v+LilhGIVe8wxEJPPOeWo7eg8dwY13TZ1BNg==",
              "dev": true
          },
@@ -1401,7 +1406,7 @@ index 9fbc782b66..e8adc58236 100644
          "chai": {
              "version": "4.3.6",
              "resolved": "https://registry.npmjs.org/chai/-/chai-4.3.6.tgz",
-@@ -10248,6 +11425,12 @@
+@@ -10356,6 +11533,12 @@
                  "delayed-stream": "~1.0.0"
              }
          },
@@ -1414,7 +1419,7 @@ index 9fbc782b66..e8adc58236 100644
          "comment-parser": {
              "version": "1.3.1",
              "resolved": "https://registry.npmjs.org/comment-parser/-/comment-parser-1.3.1.tgz",
-@@ -10548,6 +11731,12 @@
+@@ -10656,6 +11839,12 @@
                  }
              }
          },
@@ -1427,7 +1432,7 @@ index 9fbc782b66..e8adc58236 100644
          "emoji-regex": {
              "version": "8.0.0",
              "resolved": "https://registry.npmjs.org/emoji-regex/-/emoji-regex-8.0.0.tgz",
-@@ -11710,6 +12899,12 @@
+@@ -11824,6 +13013,12 @@
                  "through2": "^2.0.3"
              }
          },
@@ -1440,7 +1445,7 @@ index 9fbc782b66..e8adc58236 100644
          "fs.realpath": {
              "version": "1.0.0",
              "resolved": "https://registry.npmjs.org/fs.realpath/-/fs.realpath-1.0.0.tgz",
-@@ -11747,6 +12942,12 @@
+@@ -11861,6 +13056,12 @@
              "integrity": "sha512-xckBUXyTIqT97tq2x2AMb+g163b5JFysYk0x4qxNFwbfQkmNZoiRHb6sPzI9/QV33WeuvVYBUIiD4NzNIyqaRQ==",
              "dev": true
          },
@@ -1453,8 +1458,8 @@ index 9fbc782b66..e8adc58236 100644
          "get-caller-file": {
              "version": "1.0.3",
              "resolved": "https://registry.npmjs.org/get-caller-file/-/get-caller-file-1.0.3.tgz",
-@@ -12917,6 +14118,12 @@
-             "integrity": "sha512-Y2/yD55y5jteOAmY50JbUZYwk3CP3wnLPEZnlR1w9oKhITrBEtAxwuWKebFf8hMrPMgbYwFoWK/lH2sBkErELw==",
+@@ -13053,6 +14254,12 @@
+             "integrity": "sha512-08bOAKweV2NUC1wqTtf3qZlnpOX/R2DU9ikpjOHs0H+ibQv3zpncVQg6um4uYtRtrwIX8M4Nh3ytK4HGlYAq7Q==",
              "dev": true
          },
 +        "js-tokens": {
@@ -1466,7 +1471,7 @@ index 9fbc782b66..e8adc58236 100644
          "js-yaml": {
              "version": "4.1.0",
              "resolved": "https://registry.npmjs.org/js-yaml/-/js-yaml-4.1.0.tgz",
-@@ -12932,6 +14139,12 @@
+@@ -13068,6 +14275,12 @@
              "integrity": "sha512-MgtD0ZiCDk9B+eI73BextfRrVQl0oyzRG8B2BjORts6jbunj4ScKPcyXGTbB6eXL4y9TzxCm6hyeLq/2ASzNdw==",
              "dev": true
          },
@@ -1479,7 +1484,7 @@ index 9fbc782b66..e8adc58236 100644
          "json-schema-traverse": {
              "version": "0.4.1",
              "resolved": "https://registry.npmjs.org/json-schema-traverse/-/json-schema-traverse-0.4.1.tgz",
-@@ -13131,6 +14344,30 @@
+@@ -13267,6 +14480,30 @@
                  "es5-ext": "0.10.53"
              }
          },
@@ -1510,7 +1515,7 @@ index 9fbc782b66..e8adc58236 100644
          "make-iterator": {
              "version": "1.0.1",
              "resolved": "https://registry.npmjs.org/make-iterator/-/make-iterator-1.0.1.tgz",
-@@ -13672,6 +14909,12 @@
+@@ -13808,6 +15045,12 @@
                  "whatwg-url": "^5.0.0"
              }
          },
@@ -1523,7 +1528,7 @@ index 9fbc782b66..e8adc58236 100644
          "normalize-package-data": {
              "version": "2.5.0",
              "resolved": "https://registry.npmjs.org/normalize-package-data/-/normalize-package-data-2.5.0.tgz",
-@@ -15150,6 +16393,12 @@
+@@ -15311,6 +16554,12 @@
                  "is-negated-glob": "^1.0.0"
              }
          },
@@ -1536,7 +1541,7 @@ index 9fbc782b66..e8adc58236 100644
          "to-object-path": {
              "version": "0.3.0",
              "resolved": "https://registry.npmjs.org/to-object-path/-/to-object-path-0.3.0.tgz",
-@@ -15451,6 +16700,24 @@
+@@ -15612,6 +16861,24 @@
              "integrity": "sha512-aZwGpamFO61g3OlfT7OQCHqhGnW43ieH9WZeP7QxN/G/jS4jfqUkZxoryvJgVPEcrl5NL/ggHsSmLMHuH64Lhg==",
              "dev": true
          },
@@ -1562,7 +1567,7 @@ index 9fbc782b66..e8adc58236 100644
              "version": "4.4.1",
              "resolved": "https://registry.npmjs.org/uri-js/-/uri-js-4.4.1.tgz",
 diff --git a/package.json b/package.json
-index 2f88be2729..361e6a55d2 100644
+index 8ff29ab4b8..3c640e88c9 100644
 --- a/package.json
 +++ b/package.json
 @@ -39,6 +39,9 @@

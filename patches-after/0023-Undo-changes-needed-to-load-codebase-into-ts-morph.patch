@@ -10,7 +10,7 @@ Subject: [PATCH] Undo changes needed to load codebase into ts-morph
  3 files changed, 9 insertions(+), 13 deletions(-)
 
 diff --git a/src/compiler/factory/nodeFactory.ts b/src/compiler/factory/nodeFactory.ts
-index 129b0218b9..4a384037cf 100644
+index 8249f7fe6c..a5d5e4310e 100644
 --- a/src/compiler/factory/nodeFactory.ts
 +++ b/src/compiler/factory/nodeFactory.ts
 @@ -48,7 +48,7 @@ import {

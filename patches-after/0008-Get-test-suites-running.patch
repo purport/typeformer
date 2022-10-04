@@ -28,7 +28,7 @@ Subject: [PATCH] Get test suites running
  create mode 100644 src/testRunner/unittests/helpers.ts
 
 diff --git a/Gulpfile.js b/Gulpfile.js
-index 5f4f365915..7f65318d68 100644
+index ead6442b81..beddc384bd 100644
 --- a/Gulpfile.js
 +++ b/Gulpfile.js
 @@ -19,6 +19,8 @@ const cmdLineOptions = require("./scripts/build/options");
@@ -99,7 +99,7 @@ index 5f4f365915..7f65318d68 100644
  task("runtests-parallel").description = "Runs all the tests in parallel using the built run.js file.";
  task("runtests-parallel").flags = {
      "   --light": "Run tests in light mode (fewer verifications, but tests run faster).",
-@@ -592,10 +610,10 @@ task("publish-nightly").description = "Runs `npm publish --tag next` to create a
+@@ -573,10 +591,10 @@ task("publish-nightly").description = "Runs `npm publish --tag next` to create a
  // write some kind of trigger file that indicates build completion that we could listen for instead.
  const watchRuntests = () => watch(["built/local/*.js", "tests/cases/**/*.ts", "tests/cases/**/tsconfig.json"], { delay: 5000 }, async () => {
      if (cmdLineOptions.tests || cmdLineOptions.failed) {

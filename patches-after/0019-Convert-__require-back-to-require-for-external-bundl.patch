@@ -85,7 +85,7 @@ index 3729da386c..c02cf108e5 100644
          watch: () => esbuild.build({ ...options, watch: true }),
      };
 diff --git a/package-lock.json b/package-lock.json
-index e8adc58236..3918f7ca5b 100644
+index a8b8825f67..fc3e919e0f 100644
 --- a/package-lock.json
 +++ b/package-lock.json
 @@ -17,6 +17,7 @@
@@ -144,7 +144,7 @@ index e8adc58236..3918f7ca5b 100644
          "node_modules/@types/chai": {
              "version": "4.3.3",
              "resolved": "https://registry.npmjs.org/@types/chai/-/chai-4.3.3.tgz",
-@@ -10357,6 +10399,47 @@
+@@ -10465,6 +10507,47 @@
                  "@octokit/openapi-types": "^13.11.0"
              }
          },
@@ -193,7 +193,7 @@ index e8adc58236..3918f7ca5b 100644
              "version": "4.3.3",
              "resolved": "https://registry.npmjs.org/@types/chai/-/chai-4.3.3.tgz",
 diff --git a/package.json b/package.json
-index 361e6a55d2..79cd71e425 100644
+index 3c640e88c9..2bd734db24 100644
 --- a/package.json
 +++ b/package.json
 @@ -43,6 +43,7 @@
