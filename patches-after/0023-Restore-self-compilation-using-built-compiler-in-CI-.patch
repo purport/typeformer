@@ -4,20 +4,17 @@ Date: Mon, 3 Oct 2022 14:38:58 -0700
 Subject: [PATCH] Restore self-compilation using built compiler in CI tests
 
 ---
- Gulpfile.js               |  4 +++-
+ Gulpfile.js               |  3 +++
  scripts/build/projects.js |  2 +-
  scripts/build/tests.js    | 22 +++++++++++-----------
- 3 files changed, 15 insertions(+), 13 deletions(-)
+ 3 files changed, 15 insertions(+), 12 deletions(-)
 
 diff --git a/Gulpfile.js b/Gulpfile.js
-index c02cf108e5..142cfcbb66 100644
+index 2638d2e0f7..142cfcbb66 100644
 --- a/Gulpfile.js
 +++ b/Gulpfile.js
-@@ -124,9 +124,11 @@ const localize = async () => {
- const preSrc = parallel(generateLibs, series(buildScripts, generateDiagnostics, localize));
- const buildSrc = () => buildProject("src");
+@@ -126,6 +126,9 @@ const buildSrc = () => buildProject("src");
  
--// TODO(jakebailey): add a variant of this that runs on ./built/local/tsc, with noEmit, for post-test verification.
  task("build-src", series(preSrc, buildSrc));
  
 +const cleanSrc = () => cleanProject("src");

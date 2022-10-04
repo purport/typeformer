@@ -5,16 +5,16 @@ Subject: [PATCH] Add babel for let/const lowering
 
 This reverts commit 8623e3ee6936bf15418fc437b45d7621ca732296.
 ---
- Gulpfile.js       |   30 +-
+ Gulpfile.js       |   25 +-
  package-lock.json | 1267 +++++++++++++++++++++++++++++++++++++++++++++
  package.json      |    3 +
- 3 files changed, 1288 insertions(+), 12 deletions(-)
+ 3 files changed, 1288 insertions(+), 7 deletions(-)
 
 diff --git a/Gulpfile.js b/Gulpfile.js
-index 080691c505..aefa8a5227 100644
+index 18cd8bcb49..a1f1e06d35 100644
 --- a/Gulpfile.js
 +++ b/Gulpfile.js
-@@ -140,14 +140,17 @@ function getCopyrightHeader() {
+@@ -138,14 +138,17 @@ function getCopyrightHeader() {
   * @param {string} entrypoint
   * @param {string} outfile
   * @param {boolean} exportIsTsObject True if this file exports the TS object and should have relevant code injected.
@@ -34,7 +34,7 @@ index 080691c505..aefa8a5227 100644
          platform: "node",
          // TODO: also specify minimal browser targets
          target: "node10", // Node 10 is the oldest benchmarker.
-@@ -183,7 +186,15 @@ function esbuildTask(entrypoint, outfile, exportIsTsObject = false) {
+@@ -181,7 +184,15 @@ function esbuildTask(entrypoint, outfile, exportIsTsObject = false) {
      }
  
      return {
@@ -51,7 +51,7 @@ index 080691c505..aefa8a5227 100644
          clean: () => del([outfile, `${outfile}.map`]),
          watch: () => esbuild.build({ ...options, watch: true }),
      };
-@@ -211,7 +222,7 @@ cleanTasks.push(cleanDebugTools);
+@@ -209,7 +220,7 @@ cleanTasks.push(cleanDebugTools);
  const lkgPreBuild = parallel(generateLibs, series(buildScripts, generateDiagnostics, buildDebugTools));
  
  
@@ -60,7 +60,7 @@ index 080691c505..aefa8a5227 100644
  
  
  const buildTsc = () => {
-@@ -238,7 +249,7 @@ const localPreBuild = parallel(generateLibs, series(buildScripts, generateDiagno
+@@ -236,7 +247,7 @@ const localPreBuild = parallel(generateLibs, series(buildScripts, generateDiagno
  // Pre-build steps to use based on supplied options.
  const preBuild = cmdLineOptions.lkg ? lkgPreBuild : localPreBuild;
  
@@ -69,7 +69,7 @@ index 080691c505..aefa8a5227 100644
  
  // TODO(jakebailey): rename this; no longer "services".
  const buildServices = () => {
-@@ -268,7 +279,7 @@ task("watch-services").flags = {
+@@ -266,7 +277,7 @@ task("watch-services").flags = {
  };
  
  
@@ -78,16 +78,11 @@ index 080691c505..aefa8a5227 100644
  
  const buildServer = () => {
      if (cmdLineOptions.bundle) return esbuildServer.build();
-@@ -311,12 +322,7 @@ task("watch-min").flags = {
+@@ -309,7 +320,7 @@ task("watch-min").flags = {
      "   --built": "Compile using the built version of the compiler."
  };
  
--const buildLssl = (() => {
--    // TODO(jakebailey): fix this for modules
--    return cb => {
--        console.log("!!!TODO!!! buildLssl");
--        cb();
--    };
+-const esbuildLssl = esbuildTask("./src/tsserverlibrary/tsserverlibrary.ts", "./built/local/tsserverlibrary.js", /* exportIsTsObject */ true);
 +const esbuildLssl = esbuildTask("./src/tsserverlibrary/tsserverlibrary.ts", "./built/local/tsserverlibrary.js", /* exportIsTsObject */ true, /* performanceMatters */ true);
  
  const buildLssl = () => {

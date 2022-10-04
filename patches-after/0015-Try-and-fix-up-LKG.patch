@@ -4,15 +4,15 @@ Date: Tue, 20 Sep 2022 13:54:37 -0700
 Subject: [PATCH] Try and fix up LKG
 
 ---
- Gulpfile.js           | 18 ++++++-----------
- scripts/produceLKG.ts | 46 ++++++++++++++++++++++++++++++++-----------
- 2 files changed, 40 insertions(+), 24 deletions(-)
+ Gulpfile.js           | 18 ++++++------------
+ scripts/produceLKG.ts | 43 ++++++++++++++++++++++++++++++++-----------
+ 2 files changed, 38 insertions(+), 23 deletions(-)
 
 diff --git a/Gulpfile.js b/Gulpfile.js
-index aefa8a5227..838bf4ff0d 100644
+index a1f1e06d35..b59a6eea03 100644
 --- a/Gulpfile.js
 +++ b/Gulpfile.js
-@@ -552,27 +552,20 @@ const importDefinitelyTypedTests = () => exec(process.execPath, ["scripts/import
+@@ -550,27 +550,20 @@ const importDefinitelyTypedTests = () => exec(process.execPath, ["scripts/import
  task("importDefinitelyTypedTests", series(buildImportDefinitelyTypedTests, importDefinitelyTypedTests));
  task("importDefinitelyTypedTests").description = "Runs the importDefinitelyTypedTests script to copy DT's tests to the TS-internal RWC tests";
  
@@ -44,7 +44,7 @@ index aefa8a5227..838bf4ff0d 100644
      ].concat(libs.map(lib => lib.target));
      const missingFiles = expectedFiles
          .concat(localizationTargets)
-@@ -588,7 +581,8 @@ const produceLKG = async () => {
+@@ -586,7 +579,8 @@ const produceLKG = async () => {
      }
  };
  
@@ -55,19 +55,10 @@ index aefa8a5227..838bf4ff0d 100644
  task("LKG").flags = {
      "   --built": "Compile using the built version of the compiler.",
 diff --git a/scripts/produceLKG.ts b/scripts/produceLKG.ts
-index 35f0c45ea7..e18b694d10 100644
+index 23a553631c..1df84ed324 100644
 --- a/scripts/produceLKG.ts
 +++ b/scripts/produceLKG.ts
-@@ -17,7 +17,7 @@ async function produceLKG() {
-     await copyTypesMap();
-     await copyScriptOutputs();
-     await copyDeclarationOutputs();
--    await buildProtocol();
-+    if (1 !== 1) await buildProtocol(); // TODO(jakebailey): remove
-     await writeGitAttributes();
- }
- 
-@@ -29,6 +29,27 @@ async function copyLocalizedDiagnostics() {
+@@ -28,6 +28,27 @@ async function copyLocalizedDiagnostics() {
      const dir = await fs.readdir(source);
      const ignoredFolders = ["enu"];
  
@@ -95,15 +86,7 @@ index 35f0c45ea7..e18b694d10 100644
      for (const d of dir) {
          const fileName = path.join(source, d);
          if (
-@@ -44,6 +65,7 @@ async function copyTypesMap() {
-     await copyFromBuiltLocal("typesMap.json"); // Cannot accommodate copyright header
- }
- 
-+// TODO(jakebailey): Remove?
- async function buildProtocol() {
-     const protocolScript = path.join(__dirname, "buildProtocol.js");
-     if (!fs.existsSync(protocolScript)) {
-@@ -59,20 +81,20 @@ async function buildProtocol() {
+@@ -44,20 +65,20 @@ async function copyTypesMap() {
  }
  
  async function copyScriptOutputs() {

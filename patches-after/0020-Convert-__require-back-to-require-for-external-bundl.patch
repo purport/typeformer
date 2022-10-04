@@ -12,10 +12,10 @@ Subject: [PATCH] Convert __require back to require for external bundlers
  create mode 100644 scripts/build/removeEsbuildRequire.js
 
 diff --git a/Gulpfile.js b/Gulpfile.js
-index 3729da386c..c02cf108e5 100644
+index 3e218323c2..2638d2e0f7 100644
 --- a/Gulpfile.js
 +++ b/Gulpfile.js
-@@ -159,18 +159,16 @@ function getCopyrightHeader() {
+@@ -158,18 +158,16 @@ function getCopyrightHeader() {
   * @param {boolean} performanceMatters True if this is a bundle where performance matters, so should be optimized at the cost of build time.
   */
  function esbuildTask(entrypoint, outfile, exportIsTsObject = false, performanceMatters = false) {
@@ -36,7 +36,7 @@ index 3729da386c..c02cf108e5 100644
          external: ["./node_modules/*"],
          conditions: ["require"],
          supported: {
-@@ -180,6 +178,30 @@ function esbuildTask(entrypoint, outfile, exportIsTsObject = false, performanceM
+@@ -179,6 +177,30 @@ function esbuildTask(entrypoint, outfile, exportIsTsObject = false, performanceM
          // legalComments: "none", // If we add copyright headers to the source files, uncomment.
      };
  
@@ -67,7 +67,7 @@ index 3729da386c..c02cf108e5 100644
      if (exportIsTsObject) {
          options.format = "iife"; // We use an IIFE so we can inject the code below.
          options.globalName = "ts"; // Name the variable ts, matching our old big bundle and so we can use the code below.
-@@ -200,15 +222,7 @@ function esbuildTask(entrypoint, outfile, exportIsTsObject = false, performanceM
+@@ -199,15 +221,7 @@ function esbuildTask(entrypoint, outfile, exportIsTsObject = false, performanceM
      }
  
      return {

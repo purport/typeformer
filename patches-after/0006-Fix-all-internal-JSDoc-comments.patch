@@ -2113,7 +2113,7 @@ index 3efb85e75e..74cddf3152 100644
 \ No newline at end of file
 +};
 diff --git a/src/compiler/factory/nodeFactory.ts b/src/compiler/factory/nodeFactory.ts
-index 834439e3f1..8249f7fe6c 100644
+index cd10459d1d..a5d5e4310e 100644
 --- a/src/compiler/factory/nodeFactory.ts
 +++ b/src/compiler/factory/nodeFactory.ts
 @@ -82,7 +82,7 @@ import {
@@ -15583,10 +15583,10 @@ index ad08facc3c..c404433663 100644
      return `@types/${packageName}@ts${versionMajorMinor}`;
  }
 diff --git a/src/webServer/webServer.ts b/src/webServer/webServer.ts
-index e7ed996016..ece05e4db6 100644
+index c50019081d..11980d1a0e 100644
 --- a/src/webServer/webServer.ts
 +++ b/src/webServer/webServer.ts
-@@ -225,7 +225,7 @@ export function createWebSystem(host: WebHost, args: string[], getExecutingFileP
+@@ -226,7 +226,7 @@ export function createWebSystem(host: WebHost, args: string[], getExecutingFileP
          // createSHA256Hash // telemetry of the project
  
          // Logging related
