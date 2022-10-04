@@ -4,12 +4,46 @@ Date: Wed, 7 Sep 2022 15:13:55 -0700
 Subject: [PATCH] Make current state lint-clean
 
 ---
+ src/compiler/tracing.ts         | 3 +--
+ src/loggedIO/loggedIO.ts        | 1 -
  src/server/editorServices.ts    | 2 +-
  src/server/session.ts           | 2 +-
  src/services/utilities.ts       | 4 ++--
  src/testRunner/parallel/host.ts | 7 +++----
- 4 files changed, 7 insertions(+), 8 deletions(-)
+ 6 files changed, 8 insertions(+), 11 deletions(-)
 
+diff --git a/src/compiler/tracing.ts b/src/compiler/tracing.ts
+index 087a86cf18..8082131468 100644
+--- a/src/compiler/tracing.ts
++++ b/src/compiler/tracing.ts
+@@ -7,14 +7,13 @@ import {
+ 
+ /* Tracing events for the compiler. */
+ 
+-// eslint-disable-line local/one-namespace-per-file
+ // should be used as tracing?.___
+ /** @internal */
+ export let tracing: typeof tracingEnabled | undefined;
+ // enable the above using startTracing()
+ 
+ // `tracingEnabled` should never be used directly, only through the above
+-namespace tracingEnabled { // eslint-disable-line local/one-namespace-per-file
++namespace tracingEnabled {
+     type Mode = "project" | "build" | "server";
+ 
+     let fs: typeof import("fs");
+diff --git a/src/loggedIO/loggedIO.ts b/src/loggedIO/loggedIO.ts
+index 5333de4371..f3450a2bc0 100644
+--- a/src/loggedIO/loggedIO.ts
++++ b/src/loggedIO/loggedIO.ts
+@@ -1,7 +1,6 @@
+ import * as ts from "./_namespaces/ts";
+ import * as Harness from "./_namespaces/Harness";
+ 
+-// eslint-disable-line local/one-namespace-per-file
+ interface FileInformation {
+     contents?: string;
+     contentsPath?: string;
 diff --git a/src/server/editorServices.ts b/src/server/editorServices.ts
 index 833c970de8..b59a533db1 100644
 --- a/src/server/editorServices.ts

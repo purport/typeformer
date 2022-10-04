@@ -52,7 +52,7 @@ index ce65f1d889..3788da62b9 100644
              let performance: Performance;
              const { performance: nodePerformance, PerformanceObserver } = require("perf_hooks") as typeof import("perf_hooks");
 diff --git a/src/compiler/sys.ts b/src/compiler/sys.ts
-index 97e8a2fee2..e851281899 100644
+index 356b920557..9c76344c3e 100644
 --- a/src/compiler/sys.ts
 +++ b/src/compiler/sys.ts
 @@ -2,7 +2,7 @@ import {
@@ -64,7 +64,7 @@ index 97e8a2fee2..e851281899 100644
      Map, mapDefined, matchesExclude, matchFiles, memoize, noop, normalizePath, normalizeSlashes, orderedRemoveItem,
      Path, perfLogger, PollingWatchKind, RequireResult, resolveJSModule, some, startsWith, stringContains, timestamp,
      unorderedRemoveItem, WatchDirectoryKind, WatchFileKind, WatchOptions, writeFileEnsuringDirectories,
-@@ -1978,9 +1978,7 @@ export let sys: System = (() => {
+@@ -1974,9 +1974,7 @@ export let sys: System = (() => {
      }
  
      let sys: System | undefined;

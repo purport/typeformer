@@ -91,10 +91,10 @@ index ead6442b81..031330dc19 100644
  });
  task("watch", series(preBuild, preTest, parallel(watchLib, watchDiagnostics, watchServices, watchLssl, watchTests, watchRuntests)));
 diff --git a/src/compiler/sys.ts b/src/compiler/sys.ts
-index fe178b6ee1..6a8d8fbd53 100644
+index 01b48505c8..ffacb3f1fd 100644
 --- a/src/compiler/sys.ts
 +++ b/src/compiler/sys.ts
-@@ -1525,7 +1525,14 @@ export let sys: System = (() => {
+@@ -1521,7 +1521,14 @@ export let sys: System = (() => {
                  }
              },
              getExecutingFilePath() {

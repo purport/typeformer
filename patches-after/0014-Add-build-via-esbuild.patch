@@ -1702,10 +1702,10 @@ index 591cd8945d..c766bf6875 100644
                      result.module.init(ts);
                      extendedDebugModule = result.module;
 diff --git a/src/compiler/sys.ts b/src/compiler/sys.ts
-index 6a8d8fbd53..97e8a2fee2 100644
+index ffacb3f1fd..356b920557 100644
 --- a/src/compiler/sys.ts
 +++ b/src/compiler/sys.ts
-@@ -1466,6 +1466,13 @@ export let sys: System = (() => {
+@@ -1463,6 +1463,13 @@ export let sys: System = (() => {
          const useCaseSensitiveFileNames = isFileSystemCaseSensitive();
          const fsRealpath = !!_fs.realpathSync.native ? process.platform === "win32" ? fsRealPathHandlingLongPath : _fs.realpathSync.native : _fs.realpathSync;
  
@@ -1719,7 +1719,7 @@ index 6a8d8fbd53..97e8a2fee2 100644
          const fsSupportsRecursiveFsWatch = isNode4OrLater && (process.platform === "win32" || process.platform === "darwin");
          const getCurrentDirectory = memoize(() => process.cwd());
          const { watchFile, watchDirectory } = createSystemWatchFunctions({
-@@ -1525,14 +1532,7 @@ export let sys: System = (() => {
+@@ -1521,14 +1528,7 @@ export let sys: System = (() => {
                  }
              },
              getExecutingFilePath() {
@@ -1735,7 +1735,7 @@ index 6a8d8fbd53..97e8a2fee2 100644
              },
              getCurrentDirectory,
              getDirectories,
-@@ -1571,7 +1571,10 @@ export let sys: System = (() => {
+@@ -1567,7 +1567,10 @@ export let sys: System = (() => {
              debugMode: !!process.env.NODE_INSPECTOR_IPC || !!process.env.VSCODE_INSPECTOR_OPTIONS || some(process.execArgv as string[], arg => /^--(inspect|debug)(-brk)?(=\d+)?$/i.test(arg)),
              tryEnableSourceMapsForHost() {
                  try {

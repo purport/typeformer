@@ -42,7 +42,7 @@ otherwise they won't be used by api-extractor, so move them if needed.
  src/compiler/semver.ts                        |    6 +-
  src/compiler/sourcemap.ts                     |    3 +-
  src/compiler/symbolWalker.ts                  |    4 +-
- src/compiler/sys.ts                           |   79 +-
+ src/compiler/sys.ts                           |   77 +-
  src/compiler/transformer.ts                   |    3 +-
  src/compiler/transformers/classFields.ts      |    3 +-
  src/compiler/transformers/declarations.ts     |    5 +-
@@ -105,7 +105,7 @@ otherwise they won't be used by api-extractor, so move them if needed.
  src/services/utilities.ts                     |   98 +-
  src/typingsInstallerCore/typingsInstaller.ts  |    8 +-
  src/webServer/webServer.ts                    |    2 +-
- 90 files changed, 2817 insertions(+), 2098 deletions(-)
+ 90 files changed, 2816 insertions(+), 2097 deletions(-)
 
 diff --git a/src/compiler/builder.ts b/src/compiler/builder.ts
 index d29830e849..7320417971 100644
@@ -4240,7 +4240,7 @@ index 905443939f..71277f27d7 100644
 \ No newline at end of file
 +}
 diff --git a/src/compiler/sys.ts b/src/compiler/sys.ts
-index 0dbf501863..fe178b6ee1 100644
+index 45404e7596..01b48505c8 100644
 --- a/src/compiler/sys.ts
 +++ b/src/compiler/sys.ts
 @@ -14,8 +14,9 @@ declare function clearTimeout(handle: any): void;
@@ -4368,7 +4368,7 @@ index 0dbf501863..fe178b6ee1 100644
  export interface CreateSystemWatchFunctions {
      // Polling watch file
      pollingWatchFileWorker: HostWatchFile;
-@@ -868,7 +870,7 @@ export interface CreateSystemWatchFunctions {
+@@ -867,7 +869,7 @@ export interface CreateSystemWatchFunctions {
      sysLog: (s: string) => void;
  }
  
@@ -4377,7 +4377,7 @@ index 0dbf501863..fe178b6ee1 100644
  export function createSystemWatchFunctions({
      pollingWatchFileWorker,
      getModifiedTime,
-@@ -1240,8 +1242,9 @@ export function createSystemWatchFunctions({
+@@ -1238,8 +1240,9 @@ export function createSystemWatchFunctions({
  
  /**
   * patch writefile to create folder before writing the file
@@ -4388,7 +4388,7 @@ index 0dbf501863..fe178b6ee1 100644
  export function patchWriteFileEnsuringDirectory(sys: System) {
      // patch writefile to create folder before writing the file
      const originalWriteFile = sys.writeFile;
-@@ -1255,10 +1258,10 @@ export function patchWriteFileEnsuringDirectory(sys: System) {
+@@ -1253,10 +1256,10 @@ export function patchWriteFileEnsuringDirectory(sys: System) {
              path => sys.directoryExists(path));
  }
  
@@ -4401,7 +4401,7 @@ index 0dbf501863..fe178b6ee1 100644
  interface NodeBuffer extends Uint8Array {
      constructor: any;
      write(str: string, encoding?: BufferEncoding): number;
-@@ -1334,7 +1337,7 @@ interface NodeBuffer extends Uint8Array {
+@@ -1332,7 +1335,7 @@ interface NodeBuffer extends Uint8Array {
      values(): IterableIterator<number>;
  }
  
@@ -4410,7 +4410,7 @@ index 0dbf501863..fe178b6ee1 100644
  interface Buffer extends NodeBuffer { }
  
  // TODO: GH#18217 Methods on System are often used as if they are certainly defined
-@@ -1374,27 +1377,27 @@ export interface System {
+@@ -1372,26 +1375,26 @@ export interface System {
      createSHA256Hash?(data: string): string;
      getMemoryUsage?(): number;
      exit(exitCode?: number): void;
@@ -4436,10 +4436,8 @@ index 0dbf501863..fe178b6ee1 100644
      base64encode?(input: string): string;
 -    /*@internal*/ bufferFrom?(input: string, encoding?: string): Buffer;
 -    /*@internal*/ require?(baseDir: string, moduleName: string): RequireResult;
--    /*@internal*/ defaultWatchFileKind?(): WatchFileKind | undefined;
 +    /** @internal */ bufferFrom?(input: string, encoding?: string): Buffer;
 +    /** @internal */ require?(baseDir: string, moduleName: string): RequireResult;
-+    /** @internal */ defaultWatchFileKind?(): WatchFileKind | undefined;
  
      // For testing
 -    /*@internal*/ now?(): Date;
@@ -4451,7 +4449,7 @@ index 0dbf501863..fe178b6ee1 100644
  }
  
  export interface FileWatcher {
-@@ -1977,7 +1980,7 @@ export let sys: System = (() => {
+@@ -1973,7 +1976,7 @@ export let sys: System = (() => {
      return sys!;
  })();
  
