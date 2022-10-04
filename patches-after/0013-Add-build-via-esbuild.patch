@@ -7,7 +7,7 @@ This configures the existing build tasks to use esbuild by defualt. If
 using the plain files is desired, passing `--bundle=false` will build
 using plain files and still produce a runnable system.
 ---
- Gulpfile.js                                   | 381 +++++++-----
+ Gulpfile.js                                   | 377 +++++++-----
  package-lock.json                             | 574 ++++++++++++++++++
  package.json                                  |   1 +
  scripts/build/options.js                      |  11 +-
@@ -40,7 +40,7 @@ using plain files and still produce a runnable system.
  src/watchGuard/tsconfig.json                  |   4 +-
  src/watchGuard/watchGuard.ts                  |   2 +-
  src/webServer/webServer.ts                    |  27 +-
- 33 files changed, 891 insertions(+), 456 deletions(-)
+ 33 files changed, 887 insertions(+), 456 deletions(-)
  delete mode 100644 scripts/build/prepend.js
  delete mode 100644 src/debug/_namespaces/Debug.ts
  rename src/debug/{dbg.ts => compilerDebug.ts} (95%)
@@ -51,7 +51,7 @@ using plain files and still produce a runnable system.
  delete mode 100644 src/services/exportAsModule.ts
 
 diff --git a/Gulpfile.js b/Gulpfile.js
-index df8b38ea48..ef5533036f 100644
+index df8b38ea48..7079bd0298 100644
 --- a/Gulpfile.js
 +++ b/Gulpfile.js
 @@ -3,23 +3,50 @@ const path = require("path");
@@ -110,7 +110,7 @@ index df8b38ea48..ef5533036f 100644
  
  const buildScripts = () => buildProject("scripts");
  task("scripts", buildScripts);
-@@ -99,26 +126,133 @@ const buildSrc = () => buildProject("src");
+@@ -99,26 +126,129 @@ const buildSrc = () => buildProject("src");
  
  task("build-src", series(preSrc, buildSrc));
  
@@ -124,14 +124,15 @@ index df8b38ea48..ef5533036f 100644
 +    }
 +    return copyrightHeader;
 +}
-+
+ 
+-const buildDebugTools = () => buildProject("src/debug");
+-const cleanDebugTools = () => cleanProject("src/debug");
 +/**
 + * @param {string} entrypoint
 + * @param {string} outfile
 + * @param {boolean} exportIsTsObject True if this file exports the TS object and should have relevant code injected.
-+ * @param {boolean} performanceMatters True if this is a bundle where performance matters, so should be optimized at the cost of build time.
 + */
-+function esbuildTask(entrypoint, outfile, exportIsTsObject = false, performanceMatters = false) {
++function esbuildTask(entrypoint, outfile, exportIsTsObject = false) {
 +    /** @type {esbuild.BuildOptions} */
 +    const options = {
 +        entryPoints: [entrypoint],
@@ -149,10 +150,7 @@ index df8b38ea48..ef5533036f 100644
 +            "object-rest-spread": false, // See: https://github.com/evanw/esbuild/releases/tag/v0.14.46
 +        },
 +        // legalComments: "none", // If we add copyright headers to the source files, uncomment.
-+    };
-+
-+    if (performanceMatters) {
-+        options.plugins = [
++        plugins: [
 +            {
 +                name: "fix-require",
 +                setup: (build) => {
@@ -174,8 +172,8 @@ index df8b38ea48..ef5533036f 100644
 +                    });
 +                },
 +            }
-+        ];
-+    }
++        ]
++    };
 +
 +    if (exportIsTsObject) {
 +        options.format = "iife"; // We use an IIFE so we can inject the code below.
@@ -202,9 +200,7 @@ index df8b38ea48..ef5533036f 100644
 +        watch: () => esbuild.build({ ...options, watch: true }),
 +    };
 +}
- 
--const buildDebugTools = () => buildProject("src/debug");
--const cleanDebugTools = () => cleanProject("src/debug");
++
 +/**
 + * Writes a CJS module that reexports another CJS file via
 + * `module.exports = require("...")`.
@@ -228,7 +224,7 @@ index df8b38ea48..ef5533036f 100644
  
 -const buildTsc = () => buildProject("src/tsc");
 +
-+const esbuildTsc = esbuildTask("./src/tsc/tsc.ts", "./built/local/tsc.js", /* exportIsTsObject */ true, /* performanceMatters */ true);
++const esbuildTsc = esbuildTask("./src/tsc/tsc.ts", "./built/local/tsc.js", /* exportIsTsObject */ true);
 +
 +
 +const buildTsc = () => {
@@ -251,7 +247,7 @@ index df8b38ea48..ef5533036f 100644
  task("watch-tsc", series(lkgPreBuild, parallel(watchLib, watchDiagnostics, watchTsc)));
  task("watch-tsc").description = "Watch for changes and rebuild the command-line compiler only.";
  
-@@ -128,101 +262,43 @@ const localPreBuild = parallel(generateLibs, series(buildScripts, generateDiagno
+@@ -128,101 +258,43 @@ const localPreBuild = parallel(generateLibs, series(buildScripts, generateDiagno
  // Pre-build steps to use based on supplied options.
  const preBuild = cmdLineOptions.lkg ? lkgPreBuild : localPreBuild;
  
@@ -307,7 +303,7 @@ index df8b38ea48..ef5533036f 100644
 -        // createTypescriptStandaloneDts,
 -    );
 -})();
-+const esbuildServices = esbuildTask("./src/typescript/typescript.ts", "./built/local/typescript.js", /* exportIsTsObject */ true, /* performanceMatters */ true);
++const esbuildServices = esbuildTask("./src/typescript/typescript.ts", "./built/local/typescript.js", /* exportIsTsObject */ true);
 +
 +// TODO(jakebailey): rename this; no longer "services".
 +const buildServices = () => {
@@ -363,7 +359,7 @@ index df8b38ea48..ef5533036f 100644
  
 -const buildServerMain = () => buildProject("src/tsserver", cmdLineOptions);
 -const buildServer = series(buildDynamicImportCompat, buildServerMain);
-+const esbuildServer = esbuildTask("./src/tsserver/server.ts", "./built/local/tsserver.js", /* exportIsTsObject */ true, /* performanceMatters */ true);
++const esbuildServer = esbuildTask("./src/tsserver/server.ts", "./built/local/tsserver.js", /* exportIsTsObject */ true);
 +
 +const buildServer = () => {
 +    if (cmdLineOptions.bundle) return esbuildServer.build();
@@ -373,7 +369,7 @@ index df8b38ea48..ef5533036f 100644
  buildServer.displayName = "buildServer";
  task("tsserver", series(preBuild, buildServer));
  task("tsserver").description = "Builds the language server";
-@@ -230,17 +306,15 @@ task("tsserver").flags = {
+@@ -230,17 +302,15 @@ task("tsserver").flags = {
      "   --built": "Compile using the built version of the compiler."
  };
  
@@ -395,7 +391,7 @@ index df8b38ea48..ef5533036f 100644
  task("watch-tsserver").description = "Watch for changes and rebuild the language server only";
  task("watch-tsserver").flags = {
      "   --built": "Compile using the built version of the compiler."
-@@ -261,89 +335,54 @@ task("watch-min").flags = {
+@@ -261,89 +331,54 @@ task("watch-min").flags = {
      "   --built": "Compile using the built version of the compiler."
  };
  
@@ -427,7 +423,7 @@ index df8b38ea48..ef5533036f 100644
 -        createServerLibraryDts,
 -    );
 -})();
-+const esbuildLssl = esbuildTask("./src/tsserverlibrary/tsserverlibrary.ts", "./built/local/tsserverlibrary.js", /* exportIsTsObject */ true, /* performanceMatters */ true);
++const esbuildLssl = esbuildTask("./src/tsserverlibrary/tsserverlibrary.ts", "./built/local/tsserverlibrary.js", /* exportIsTsObject */ true);
 +
 +const buildLssl = () => {
 +    if (cmdLineOptions.bundle) return esbuildLssl.build();
@@ -507,7 +503,7 @@ index df8b38ea48..ef5533036f 100644
  
  const buildEslintRules = () => buildProject("scripts/eslint");
  task("build-eslint-rules", buildEslintRules);
-@@ -383,16 +422,30 @@ lint.displayName = "lint";
+@@ -383,16 +418,30 @@ lint.displayName = "lint";
  task("lint", lint);
  task("lint").description = "Runs eslint on the compiler and scripts sources.";
  
@@ -544,7 +540,7 @@ index df8b38ea48..ef5533036f 100644
  cleanTasks.push(cleanWatchGuard);
  
  const generateTypesMap = () => src("src/server/typesMap.json")
-@@ -435,7 +488,7 @@ const preTest = parallel(buildTsc, buildTests, buildServices, buildLssl);
+@@ -435,7 +484,7 @@ const preTest = parallel(buildTsc, buildTests, buildServices, buildLssl);
  preTest.displayName = "preTest";
  
  const runTests = () => runConsoleTests(testRunner, "mocha-fivemat-progress-reporter", /*runInParallel*/ false, /*watchMode*/ false);
@@ -553,7 +549,7 @@ index df8b38ea48..ef5533036f 100644
  task("runtests").description = "Runs the tests using the built run.js file.";
  task("runtests").flags = {
      "-t --tests=<regex>": "Pattern for tests to run.",
-@@ -454,7 +507,7 @@ task("runtests").flags = {
+@@ -454,7 +503,7 @@ task("runtests").flags = {
  };
  
  const runTestsParallel = () => runConsoleTests(testRunner, "min", /*runInParallel*/ cmdLineOptions.workers > 1, /*watchMode*/ false);
@@ -562,7 +558,7 @@ index df8b38ea48..ef5533036f 100644
  task("runtests-parallel").description = "Runs all the tests in parallel using the built run.js file.";
  task("runtests-parallel").flags = {
      "   --light": "Run tests in light mode (fewer verifications, but tests run faster).",
-@@ -512,6 +565,9 @@ const importDefinitelyTypedTests = () => exec(process.execPath, ["scripts/import
+@@ -512,6 +561,9 @@ const importDefinitelyTypedTests = () => exec(process.execPath, ["scripts/import
  task("importDefinitelyTypedTests", series(buildImportDefinitelyTypedTests, importDefinitelyTypedTests));
  task("importDefinitelyTypedTests").description = "Runs the importDefinitelyTypedTests script to copy DT's tests to the TS-internal RWC tests";
  
@@ -572,7 +568,7 @@ index df8b38ea48..ef5533036f 100644
  const buildReleaseTsc = () => buildProject("src/tsc/tsconfig.release.json");
  const cleanReleaseTsc = () => cleanProject("src/tsc/tsconfig.release.json");
  cleanTasks.push(cleanReleaseTsc);
-@@ -524,7 +580,6 @@ const produceLKG = async () => {
+@@ -524,7 +576,6 @@ const produceLKG = async () => {
          "built/local/typescriptServices.js",
          "built/local/typescriptServices.d.ts",
          "built/local/tsserver.js",
@@ -580,7 +576,7 @@ index df8b38ea48..ef5533036f 100644
          "built/local/typescript.js",
          "built/local/typescript.d.ts",
          "built/local/tsserverlibrary.js",
-@@ -560,6 +615,8 @@ task("generate-spec").description = "Generates a Markdown version of the Languag
+@@ -560,6 +611,8 @@ task("generate-spec").description = "Generates a Markdown version of the Languag
  task("clean", series(parallel(cleanTasks), cleanBuilt));
  task("clean").description = "Cleans build outputs";
  
