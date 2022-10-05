@@ -12467,7 +12467,7 @@ index b59a533db1..1ae9921a3c 100644
      return (config as TsConfigSourceFile).kind !== undefined;
  }
 diff --git a/src/server/project.ts b/src/server/project.ts
-index 314306382d..648c7b2612 100644
+index 2cd3aa32ad..23d3636a22 100644
 --- a/src/server/project.ts
 +++ b/src/server/project.ts
 @@ -39,10 +39,10 @@ export enum ProjectKind {
@@ -12972,7 +12972,7 @@ index 314306382d..648c7b2612 100644
      isSourceOfProjectReferenceRedirect(fileName: string) {
          return !!this.program && this.program.isSourceOfProjectReferenceRedirect(fileName);
      }
-@@ -1670,7 +1675,7 @@ export abstract class Project implements LanguageServiceHost, ModuleResolutionHo
+@@ -1669,7 +1674,7 @@ export abstract class Project implements LanguageServiceHost, ModuleResolutionHo
      /**
       * Performs the initial steps of enabling a plugin by finding and instantiating the module for a plugin synchronously using 'require'.
       */
@@ -12981,7 +12981,7 @@ index 314306382d..648c7b2612 100644
      beginEnablePluginSync(pluginConfigEntry: PluginImport, searchPaths: string[], pluginConfigOverrides: Map<any> | undefined): BeginEnablePluginResult {
          Debug.assertIsDefined(this.projectService.host.require);
  
-@@ -1687,7 +1692,7 @@ export abstract class Project implements LanguageServiceHost, ModuleResolutionHo
+@@ -1686,7 +1691,7 @@ export abstract class Project implements LanguageServiceHost, ModuleResolutionHo
      /**
       * Performs the initial steps of enabling a plugin by finding and instantiating the module for a plugin asynchronously using dynamic `import`.
       */
@@ -12990,7 +12990,7 @@ index 314306382d..648c7b2612 100644
      async beginEnablePluginAsync(pluginConfigEntry: PluginImport, searchPaths: string[], pluginConfigOverrides: Map<any> | undefined): Promise<BeginEnablePluginResult> {
          Debug.assertIsDefined(this.projectService.host.importPlugin);
  
-@@ -1710,7 +1715,7 @@ export abstract class Project implements LanguageServiceHost, ModuleResolutionHo
+@@ -1709,7 +1714,7 @@ export abstract class Project implements LanguageServiceHost, ModuleResolutionHo
      /**
       * Performs the remaining steps of enabling a plugin after its module has been instantiated.
       */
@@ -12999,7 +12999,7 @@ index 314306382d..648c7b2612 100644
      endEnablePlugin({ pluginConfigEntry, pluginConfigOverrides, resolvedModule, errorLogs }: BeginEnablePluginResult) {
          if (resolvedModule) {
              const configurationOverride = pluginConfigOverrides && pluginConfigOverrides.get(pluginConfigEntry.name);
-@@ -1767,7 +1772,7 @@ export abstract class Project implements LanguageServiceHost, ModuleResolutionHo
+@@ -1766,7 +1771,7 @@ export abstract class Project implements LanguageServiceHost, ModuleResolutionHo
          }
      }
  
@@ -13008,7 +13008,7 @@ index 314306382d..648c7b2612 100644
      onPluginConfigurationChanged(pluginName: string, configuration: any) {
          this.plugins.filter(plugin => plugin.name === pluginName).forEach(plugin => {
              if (plugin.module.onConfigurationChanged) {
-@@ -1781,45 +1786,45 @@ export abstract class Project implements LanguageServiceHost, ModuleResolutionHo
+@@ -1780,45 +1785,45 @@ export abstract class Project implements LanguageServiceHost, ModuleResolutionHo
          this.projectService.sendProjectsUpdatedInBackgroundEvent();
      }
  
@@ -13062,7 +13062,7 @@ index 314306382d..648c7b2612 100644
      includePackageJsonAutoImports(): PackageJsonAutoImportPreference {
          if (this.projectService.includePackageJsonAutoImports() === PackageJsonAutoImportPreference.Off ||
              !this.languageServiceEnabled ||
-@@ -1830,7 +1835,7 @@ export abstract class Project implements LanguageServiceHost, ModuleResolutionHo
+@@ -1829,7 +1834,7 @@ export abstract class Project implements LanguageServiceHost, ModuleResolutionHo
          return this.projectService.includePackageJsonAutoImports();
      }
  
@@ -13071,7 +13071,7 @@ index 314306382d..648c7b2612 100644
      getModuleResolutionHostForAutoImportProvider(): ModuleResolutionHost {
          if (this.program) {
              return {
-@@ -1847,7 +1852,7 @@ export abstract class Project implements LanguageServiceHost, ModuleResolutionHo
+@@ -1846,7 +1851,7 @@ export abstract class Project implements LanguageServiceHost, ModuleResolutionHo
          return this.projectService.host;
      }
  
@@ -13080,7 +13080,7 @@ index 314306382d..648c7b2612 100644
      getPackageJsonAutoImportProvider(): Program | undefined {
          if (this.autoImportProviderHost === false) {
              return undefined;
-@@ -1881,24 +1886,24 @@ export abstract class Project implements LanguageServiceHost, ModuleResolutionHo
+@@ -1880,24 +1885,24 @@ export abstract class Project implements LanguageServiceHost, ModuleResolutionHo
          }
      }
  
@@ -13109,7 +13109,7 @@ index 314306382d..648c7b2612 100644
      getNoDtsResolutionProject(rootFileNames: readonly string[]): Project {
          Debug.assert(this.projectService.serverMode === LanguageServiceMode.Semantic);
          if (!this.noDtsResolutionProject) {
-@@ -1930,7 +1935,7 @@ export abstract class Project implements LanguageServiceHost, ModuleResolutionHo
+@@ -1929,7 +1934,7 @@ export abstract class Project implements LanguageServiceHost, ModuleResolutionHo
          return this.noDtsResolutionProject;
      }
  
@@ -13118,7 +13118,7 @@ index 314306382d..648c7b2612 100644
      private getCompilerOptionsForNoDtsResolutionProject() {
          return {
              ...this.getCompilerOptions(),
-@@ -2005,11 +2010,11 @@ export class InferredProject extends Project {
+@@ -2004,11 +2009,11 @@ export class InferredProject extends Project {
      /** this is canonical project root path */
      readonly projectRootPath: string | undefined;
  
@@ -13132,7 +13132,7 @@ index 314306382d..648c7b2612 100644
      constructor(
          projectService: ProjectService,
          documentRegistry: DocumentRegistry,
-@@ -2058,7 +2063,7 @@ export class InferredProject extends Project {
+@@ -2057,7 +2062,7 @@ export class InferredProject extends Project {
          }
      }
  
@@ -13141,7 +13141,7 @@ index 314306382d..648c7b2612 100644
      isOrphan() {
          return !this.hasRoots();
      }
-@@ -2104,7 +2109,7 @@ class AuxiliaryProject extends Project {
+@@ -2103,7 +2108,7 @@ class AuxiliaryProject extends Project {
          return true;
      }
  
@@ -13150,7 +13150,7 @@ index 314306382d..648c7b2612 100644
      scheduleInvalidateResolutionsOfFailedLookupLocations(): void {
          // Invalidation will happen on-demand as part of updateGraph
          return;
-@@ -2112,10 +2117,10 @@ class AuxiliaryProject extends Project {
+@@ -2111,10 +2116,10 @@ class AuxiliaryProject extends Project {
  }
  
  export class AutoImportProviderProject extends Project {
@@ -13163,7 +13163,7 @@ index 314306382d..648c7b2612 100644
      static getRootFileNames(dependencySelection: PackageJsonAutoImportPreference, hostProject: Project, moduleResolutionHost: ModuleResolutionHost, compilerOptions: CompilerOptions): string[] {
          if (!dependencySelection) {
              return ts.emptyArray;
-@@ -2235,7 +2240,7 @@ export class AutoImportProviderProject extends Project {
+@@ -2234,7 +2239,7 @@ export class AutoImportProviderProject extends Project {
          }
      }
  
@@ -13172,7 +13172,7 @@ index 314306382d..648c7b2612 100644
      static readonly compilerOptionsOverrides: CompilerOptions = {
          diagnostics: false,
          skipLibCheck: true,
-@@ -2245,7 +2250,7 @@ export class AutoImportProviderProject extends Project {
+@@ -2244,7 +2249,7 @@ export class AutoImportProviderProject extends Project {
          noLib: true,
      };
  
@@ -13181,7 +13181,7 @@ index 314306382d..648c7b2612 100644
      static create(dependencySelection: PackageJsonAutoImportPreference, hostProject: Project, moduleResolutionHost: ModuleResolutionHost, documentRegistry: DocumentRegistry): AutoImportProviderProject | undefined {
          if (dependencySelection === PackageJsonAutoImportPreference.Off) {
              return undefined;
-@@ -2266,7 +2271,7 @@ export class AutoImportProviderProject extends Project {
+@@ -2265,7 +2270,7 @@ export class AutoImportProviderProject extends Project {
  
      private rootFileNames: string[] | undefined;
  
@@ -13190,7 +13190,7 @@ index 314306382d..648c7b2612 100644
      constructor(
          private hostProject: Project,
          initialRootNames: string[],
-@@ -2290,7 +2295,7 @@ export class AutoImportProviderProject extends Project {
+@@ -2289,7 +2294,7 @@ export class AutoImportProviderProject extends Project {
          this.getParsedCommandLine = maybeBind(this.hostProject, this.hostProject.getParsedCommandLine);
      }
  
@@ -13199,7 +13199,7 @@ index 314306382d..648c7b2612 100644
      isEmpty() {
          return !some(this.rootFileNames);
      }
-@@ -2319,7 +2324,7 @@ export class AutoImportProviderProject extends Project {
+@@ -2318,7 +2323,7 @@ export class AutoImportProviderProject extends Project {
          return hasSameSetOfFiles;
      }
  
@@ -13208,7 +13208,7 @@ index 314306382d..648c7b2612 100644
      scheduleInvalidateResolutionsOfFailedLookupLocations(): void {
          // Invalidation will happen on-demand as part of updateGraph
          return;
-@@ -2342,12 +2347,12 @@ export class AutoImportProviderProject extends Project {
+@@ -2341,12 +2346,12 @@ export class AutoImportProviderProject extends Project {
          throw new Error("AutoImportProviderProject language service should never be used. To get the program, use `project.getCurrentProgram()`.");
      }
  
@@ -13223,7 +13223,7 @@ index 314306382d..648c7b2612 100644
      onPackageJsonChange(): never {
          throw new Error("package.json changes should be notified on an AutoImportProvider's host project");
      }
-@@ -2360,7 +2365,7 @@ export class AutoImportProviderProject extends Project {
+@@ -2359,7 +2364,7 @@ export class AutoImportProviderProject extends Project {
          return this.hostProject.getProjectReferences();
      }
  
@@ -13232,7 +13232,7 @@ index 314306382d..648c7b2612 100644
      includePackageJsonAutoImports() {
          return PackageJsonAutoImportPreference.Off;
      }
-@@ -2369,12 +2374,12 @@ export class AutoImportProviderProject extends Project {
+@@ -2368,12 +2373,12 @@ export class AutoImportProviderProject extends Project {
          return { enable: false };
      }
  
@@ -13247,7 +13247,7 @@ index 314306382d..648c7b2612 100644
      getModuleResolutionCache() {
          return this.hostProject.getCurrentProgram()?.getModuleResolutionCache();
      }
-@@ -2386,15 +2391,15 @@ export class AutoImportProviderProject extends Project {
+@@ -2385,15 +2390,15 @@ export class AutoImportProviderProject extends Project {
   * Otherwise it will create an InferredProject.
   */
  export class ConfiguredProject extends Project {
@@ -13267,7 +13267,7 @@ index 314306382d..648c7b2612 100644
      canConfigFileJsonReportNoInputFiles = false;
  
      /** Ref count to the project when opened from external project */
-@@ -2403,22 +2408,22 @@ export class ConfiguredProject extends Project {
+@@ -2402,22 +2407,22 @@ export class ConfiguredProject extends Project {
      private projectReferences: readonly ProjectReference[] | undefined;
  
      /** Potential project references before the project is actually loaded (read config file) */
@@ -13296,7 +13296,7 @@ index 314306382d..648c7b2612 100644
      constructor(configFileName: NormalizedPath,
          readonly canonicalConfigFilePath: NormalizedPath,
          projectService: ProjectService,
-@@ -2438,22 +2443,22 @@ export class ConfiguredProject extends Project {
+@@ -2437,22 +2442,22 @@ export class ConfiguredProject extends Project {
          );
      }
  
@@ -13323,7 +13323,7 @@ index 314306382d..648c7b2612 100644
      getParsedCommandLine(fileName: string) {
          const configFileName = asNormalizedPath(normalizePath(fileName));
          const canonicalConfigFilePath = asNormalizedPath(this.projectService.toCanonicalFileName(configFileName));
-@@ -2471,12 +2476,12 @@ export class ConfiguredProject extends Project {
+@@ -2470,12 +2475,12 @@ export class ConfiguredProject extends Project {
          return configFileExistenceInfo.exists ? configFileExistenceInfo.config!.parsedCommandLine : undefined;
      }
  
@@ -13338,7 +13338,7 @@ index 314306382d..648c7b2612 100644
      private releaseParsedConfig(canonicalConfigFilePath: NormalizedPath) {
          this.projectService.stopWatchingWildCards(canonicalConfigFilePath, this);
          this.projectService.releaseParsedConfig(canonicalConfigFilePath, this);
-@@ -2513,7 +2518,7 @@ export class ConfiguredProject extends Project {
+@@ -2512,7 +2517,7 @@ export class ConfiguredProject extends Project {
          return result;
      }
  
@@ -13347,7 +13347,7 @@ index 314306382d..648c7b2612 100644
      getCachedDirectoryStructureHost() {
          return this.directoryStructureHost as CachedDirectoryStructureHost;
      }
-@@ -2531,26 +2536,26 @@ export class ConfiguredProject extends Project {
+@@ -2530,26 +2535,26 @@ export class ConfiguredProject extends Project {
          this.potentialProjectReferences = undefined;
      }
  
@@ -13376,8 +13376,8 @@ index 314306382d..648c7b2612 100644
 -    /*@internal*/
 +    /** @internal */
      enablePluginsWithOptions(options: CompilerOptions, pluginConfigOverrides: ESMap<string, any> | undefined): void {
+         if (!options.plugins?.length && !this.projectService.globalPlugins.length) return;
          const host = this.projectService.host;
-         if (!host.require && !host.importPlugin) {
 @@ -2605,23 +2610,23 @@ export class ConfiguredProject extends Project {
          super.close();
      }
