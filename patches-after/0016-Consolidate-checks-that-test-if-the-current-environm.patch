@@ -52,7 +52,7 @@ index ce65f1d889..3788da62b9 100644
              let performance: Performance;
              const { performance: nodePerformance, PerformanceObserver } = require("perf_hooks") as typeof import("perf_hooks");
 diff --git a/src/compiler/sys.ts b/src/compiler/sys.ts
-index 356b920557..9c76344c3e 100644
+index 5c369877fd..1003a5b941 100644
 --- a/src/compiler/sys.ts
 +++ b/src/compiler/sys.ts
 @@ -2,7 +2,7 @@ import {

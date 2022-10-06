@@ -5,18 +5,69 @@ Subject: [PATCH] Add dts bundling
 
 ---
  .gitignore                                    |     1 +
- Gulpfile.js                                   |    40 +-
- scripts/build/options.js                      |     6 +-
- scripts/dtsBundler.ts                         |   219 +
+ Gulpfile.js                                   |    38 +-
+ scripts/build/options.js                      |     2 +-
+ scripts/dtsBundler.ts                         |   242 +
  scripts/produceLKG.ts                         |    10 +-
+ src/compiler/commandLineParser.ts             |     2 +-
+ src/compiler/factory/utilities.ts             |    11 +-
+ src/compiler/moduleNameResolver.ts            |     8 +-
+ src/compiler/parser.ts                        |     2 +-
+ src/compiler/perfLogger.ts                    |    29 +-
+ src/compiler/program.ts                       |     4 +-
+ src/compiler/resolutionCache.ts               |     6 +-
+ src/compiler/sys.ts                           |     4 +-
+ src/compiler/tracing.ts                       |     9 +-
+ src/compiler/transformers/classFields.ts      |     4 +-
+ src/compiler/transformers/es2015.ts           |     4 +-
+ src/compiler/transformers/es2016.ts           |     4 +-
+ src/compiler/transformers/es2017.ts           |     3 +-
+ src/compiler/transformers/es2018.ts           |     4 +-
+ src/compiler/transformers/es2019.ts           |     3 +-
+ src/compiler/transformers/es2020.ts           |     4 +-
+ src/compiler/transformers/es2021.ts           |     4 +-
+ src/compiler/transformers/es5.ts              |     3 +-
+ src/compiler/transformers/esnext.ts           |     3 +-
+ src/compiler/transformers/generators.ts       |     4 +-
+ src/compiler/transformers/jsx.ts              |     4 +-
+ src/compiler/transformers/legacyDecorators.ts |     4 +-
+ .../transformers/module/esnextAnd2015.ts      |     4 +-
+ src/compiler/transformers/module/module.ts    |     3 +-
+ src/compiler/transformers/module/system.ts    |     4 +-
+ src/compiler/transformers/taggedTemplate.ts   |     3 +-
+ src/compiler/transformers/typeSerializer.ts   |     7 +-
+ src/compiler/transformers/utilities.ts        |     4 +-
+ src/compiler/types.ts                         |    16 +-
+ src/compiler/utilities.ts                     |     7 +-
+ src/compiler/watchUtilities.ts                |     3 +-
  .../4.0/nodeFactoryTopLevelExports.ts         |   592 +-
+ src/deprecatedCompat/deprecations.ts          |    67 +-
+ src/server/editorServices.ts                  |     6 +-
+ src/server/scriptVersionCache.ts              |    15 +-
+ .../codefixes/annotateWithTypeFromJSDoc.ts    |     3 +-
+ src/services/codefixes/generateAccessors.ts   |    17 +-
+ src/services/codefixes/helpers.ts             |    10 +-
+ src/services/completions.ts                   |    32 +-
+ src/services/getEditsForFileRename.ts         |     8 +-
+ src/services/organizeImports.ts               |     7 +-
+ src/services/refactors/extractSymbol.ts       |    11 +-
+ src/services/symbolDisplay.ts                 |     3 +-
+ src/services/textChanges.ts                   |     3 +-
  src/services/transform.ts                     |     6 +-
  src/tsserverlibrary/tsserverlibrary.ts        |     6 +-
  src/typescript/typescript.ts                  |     5 +-
- .../reference/api/tsserverlibrary.d.ts        | 10988 ++++++++--------
- tests/baselines/reference/api/typescript.d.ts |  3271 +++--
- 11 files changed, 7487 insertions(+), 7657 deletions(-)
+ tests/baselines/reference/APILibCheck.js      |    36 +
+ tests/baselines/reference/APILibCheck.symbols |    13 +
+ tests/baselines/reference/APILibCheck.types   |    13 +
+ .../reference/api/tsserverlibrary.d.ts        | 10986 ++++++++--------
+ tests/baselines/reference/api/typescript.d.ts |  3263 +++--
+ tests/cases/compiler/APILibCheck.ts           |    34 +
+ 58 files changed, 7820 insertions(+), 7783 deletions(-)
  create mode 100644 scripts/dtsBundler.ts
+ create mode 100644 tests/baselines/reference/APILibCheck.js
+ create mode 100644 tests/baselines/reference/APILibCheck.symbols
+ create mode 100644 tests/baselines/reference/APILibCheck.types
+ create mode 100644 tests/cases/compiler/APILibCheck.ts
 
 diff --git a/.gitignore b/.gitignore
 index cdf20ba5a2..4ba9e15206 100644
@@ -31,10 +82,10 @@ index cdf20ba5a2..4ba9e15206 100644
  scripts/processDiagnosticMessages.js
  scripts/produceLKG.js
 diff --git a/Gulpfile.js b/Gulpfile.js
-index 701ecd21ba..74d54ad193 100644
+index 701ecd21ba..7c52710c3c 100644
 --- a/Gulpfile.js
 +++ b/Gulpfile.js
-@@ -126,6 +126,22 @@ const buildSrc = () => buildProject("src");
+@@ -126,6 +126,20 @@ const buildSrc = () => buildProject("src");
  
  task("build-src", series(preSrc, buildSrc));
  
@@ -43,21 +94,19 @@ index 701ecd21ba..74d54ad193 100644
 + * @param {string} output
 + */
 +async function runDtsBundler(entrypoint, output) {
-+    // Want to preserve @internal? Pass `--stripInternal=false` when running the dts task.
 +    await exec(process.execPath, [
 +        "./scripts/dtsBundler.js",
 +        "--entrypoint",
 +        entrypoint,
 +        "--output",
 +        output,
-+        `--stripInternal=${cmdLineOptions.stripInternal}`,
 +    ]);
 +}
 +
  /** @type {string | undefined} */
  let copyrightHeader;
  function getCopyrightHeader() {
-@@ -268,6 +284,7 @@ const esbuildServices = esbuildTask("./src/typescript/typescript.ts", "./built/l
+@@ -268,6 +282,7 @@ const esbuildServices = esbuildTask("./src/typescript/typescript.ts", "./built/l
  const writeServicesCJSShim = () => writeCJSReexport("./built/local/typescript/typescript.js", "./built/local/typescript.js");
  const buildServicesProject = () => buildProject("src/typescript");
  
@@ -65,7 +114,7 @@ index 701ecd21ba..74d54ad193 100644
  const buildServices = () => {
      if (cmdLineOptions.bundle) return esbuildServices.build();
      writeServicesCJSShim();
-@@ -297,6 +314,9 @@ task("watch-services").flags = {
+@@ -297,6 +312,9 @@ task("watch-services").flags = {
      "   --built": "Compile using the built version of the compiler."
  };
  
@@ -75,7 +124,7 @@ index 701ecd21ba..74d54ad193 100644
  
  const esbuildServer = esbuildTask("./src/tsserver/server.ts", "./built/local/tsserver.js", /* exportIsTsObject */ true);
  const writeServerCJSShim = () => writeCJSReexport("./built/local/tsserver/server.js", "./built/local/tsserver.js");
-@@ -348,10 +368,11 @@ task("watch-min").flags = {
+@@ -348,10 +366,11 @@ task("watch-min").flags = {
  const esbuildLssl = esbuildTask("./src/tsserverlibrary/tsserverlibrary.ts", "./built/local/tsserverlibrary.js", /* exportIsTsObject */ true);
  const writeLsslCJSShim = () => writeCJSReexport("./built/local/tsserverlibrary/tsserverlibrary.js", "./built/local/tsserverlibrary.js");
  
@@ -88,7 +137,7 @@ index 701ecd21ba..74d54ad193 100644
  };
  task("lssl", series(preBuild, buildLssl));
  task("lssl").description = "Builds language service server library";
-@@ -375,6 +396,14 @@ task("watch-lssl").flags = {
+@@ -375,6 +394,14 @@ task("watch-lssl").flags = {
      "   --built": "Compile using the built version of the compiler."
  };
  
@@ -103,7 +152,7 @@ index 701ecd21ba..74d54ad193 100644
  const testRunner = "./built/local/run.js";
  const esbuildTests = esbuildTask("./src/testRunner/_namespaces/Harness.ts", testRunner);
  const writeTestsCJSShim = () => writeCJSReexport("./built/local/testRunner/runner.js", testRunner);
-@@ -488,7 +517,7 @@ const buildOtherOutputs = parallel(buildCancellationToken, buildTypingsInstaller
+@@ -488,7 +515,7 @@ const buildOtherOutputs = parallel(buildCancellationToken, buildTypingsInstaller
  task("other-outputs", series(preBuild, buildOtherOutputs));
  task("other-outputs").description = "Builds miscelaneous scripts and documents distributed with the LKG";
  
@@ -112,7 +161,7 @@ index 701ecd21ba..74d54ad193 100644
  task("local").description = "Builds the full compiler and services";
  task("local").flags = {
      "   --built": "Compile using the built version of the compiler."
-@@ -504,7 +533,7 @@ const preTest = parallel(buildTsc, buildTests, buildServices, buildLssl);
+@@ -504,7 +531,7 @@ const preTest = parallel(buildTsc, buildTests, buildServices, buildLssl);
  preTest.displayName = "preTest";
  
  const runTests = () => runConsoleTests(testRunner, "mocha-fivemat-progress-reporter", /*runInParallel*/ false, /*watchMode*/ false);
@@ -121,7 +170,7 @@ index 701ecd21ba..74d54ad193 100644
  task("runtests").description = "Runs the tests using the built run.js file.";
  task("runtests").flags = {
      "-t --tests=<regex>": "Pattern for tests to run.",
-@@ -523,7 +552,7 @@ task("runtests").flags = {
+@@ -523,7 +550,7 @@ task("runtests").flags = {
  };
  
  const runTestsParallel = () => runConsoleTests(testRunner, "min", /*runInParallel*/ cmdLineOptions.workers > 1, /*watchMode*/ false);
@@ -130,7 +179,7 @@ index 701ecd21ba..74d54ad193 100644
  task("runtests-parallel").description = "Runs all the tests in parallel using the built run.js file.";
  task("runtests-parallel").flags = {
      "   --light": "Run tests in light mode (fewer verifications, but tests run faster).",
-@@ -613,8 +642,7 @@ const produceLKG = async () => {
+@@ -613,8 +640,7 @@ const produceLKG = async () => {
      }
  };
  
@@ -141,41 +190,24 @@ index 701ecd21ba..74d54ad193 100644
  task("LKG").flags = {
      "   --built": "Compile using the built version of the compiler.",
 diff --git a/scripts/build/options.js b/scripts/build/options.js
-index e37b1edd6a..d95269dac9 100644
+index e37b1edd6a..c5993953ab 100644
 --- a/scripts/build/options.js
 +++ b/scripts/build/options.js
-@@ -6,7 +6,7 @@ const ci = ["1", "true"].includes(process.env.CI);
- 
- /** @type {CommandLineOptions} */
- module.exports = minimist(process.argv.slice(2), {
--    boolean: ["dirty", "light", "colors", "lkg", "soft", "fix", "failed", "keepFailed", "force", "built", "ci", "bundle"],
-+    boolean: ["dirty", "light", "colors", "lkg", "soft", "fix", "failed", "keepFailed", "force", "built", "ci", "bundle", "stripInternal"],
-     string: ["browser", "tests", "break", "host", "reporter", "stackTraceLimit", "timeout", "shards", "shardId"],
-     alias: {
-         /* eslint-disable quote-props */
-@@ -41,7 +41,8 @@ module.exports = minimist(process.argv.slice(2), {
+@@ -41,7 +41,7 @@ module.exports = minimist(process.argv.slice(2), {
          dirty: false,
          built: false,
          ci,
 -        bundle: true
 +        bundle: true,
-+        stripInternal: true,
      }
  });
  
-@@ -74,5 +75,6 @@ if (module.exports.built) {
-  * @property {string} shards
-  * @property {string} shardId
-  * @property {string} break
-+ * @property {boolean} stripInternal
-  */
- void 0;
 diff --git a/scripts/dtsBundler.ts b/scripts/dtsBundler.ts
 new file mode 100644
-index 0000000000..ceb937ac67
+index 0000000000..eeed72bb5c
 --- /dev/null
 +++ b/scripts/dtsBundler.ts
-@@ -0,0 +1,219 @@
+@@ -0,0 +1,242 @@
 +/**
 + * WARNING: this is a very, very rudimentary d.ts bundler; it only works
 + * in the TS project thanks to our history using namespaces, which has
@@ -189,23 +221,22 @@ index 0000000000..ceb937ac67
 +import * as minimist from "minimist";
 +import * as ts from "../lib/typescript";
 +
++const dotDts = ".d.ts";
++
 +const options = minimist(process.argv.slice(2), {
-+    boolean: ["stripInternal"],
 +    string: ["project", "entrypoint", "output"],
-+    default: {
-+        stripInternal: true,
-+    },
 +});
 +
-+const stripInternal = !!options.stripInternal;
 +const entrypoint = options.entrypoint;
 +const output = options.output;
 +
-+
 +assert(typeof entrypoint === "string" && entrypoint);
 +assert(typeof output === "string" && output);
++assert(output.endsWith(dotDts));
 +
-+console.log(`Bundling ${entrypoint} to ${output}`);
++const internalOutput = output.substring(0, output.length - dotDts.length) + ".internal" + dotDts;
++
++console.log(`Bundling ${entrypoint} to ${output} and ${internalOutput}`);
 +
 +const newLineKind = ts.NewLineKind.LineFeed;
 +const newLine = newLineKind === ts.NewLineKind.LineFeed ? "\n" : "\r\n";
@@ -251,7 +282,9 @@ index 0000000000..ceb937ac67
 +const printer = ts.createPrinter({ newLine: newLineKind });
 +
 +
-+const lines: string[] = [];
++const publicLines: string[] = [];
++const internalLines: string[] = [];
++
 +const indent = "    ";
 +let currentIndent = "";
 +
@@ -263,13 +296,29 @@ index 0000000000..ceb937ac67
 +    currentIndent = currentIndent.slice(indent.length);
 +}
 +
-+function write(s: string) {
-+    if (!s) {
-+        lines.push("");
++enum WriteTarget {
++    Public = 1 << 0,
++    Internal = 1 << 1,
++    Both = Public | Internal,
++}
++
++function write(s: string, target: WriteTarget) {
++    if (!target) {
++        return;
 +    }
-+    else {
-+        lines.push(...s.split(/\r?\n/).filter(line => line).map(line => (currentIndent + line).trimEnd()));
++
++    const toPush = !s ? [""] : s.split(/\r?\n/).filter(line => line).map(line => (currentIndent + line).trimEnd());
++
++    if (target & WriteTarget.Public) {
++        publicLines.push(...toPush);
 +    }
++    if (target & WriteTarget.Internal) {
++        internalLines.push(...toPush);
++    }
++}
++
++function writeNode(node: ts.Node, sourceFile: ts.SourceFile, target: WriteTarget) {
++    write(printer.printNode(ts.EmitHint.Unspecified, node, sourceFile), target);
 +}
 +
 +const containsPublicAPICache = new Map<ts.Symbol, boolean>();
@@ -294,7 +343,8 @@ index 0000000000..ceb937ac67
 +            return containsPublicAPI(resolved);
 +        }
 +
-+        if (symbol.flags & ts.SymbolFlags.ValueModule) {
++        // Namespace barrel; actual namespaces are checked below.
++        if (symbol.flags & ts.SymbolFlags.ValueModule && symbol.valueDeclaration?.kind === ts.SyntaxKind.SourceFile) {
 +            for (const me of typeChecker.getExportsOfModule(symbol)) {
 +                if (containsPublicAPI(me)) {
 +                    return true;
@@ -320,25 +370,33 @@ index 0000000000..ceb937ac67
 +    return `${sourceFile.fileName}:${lc.line}:${lc.character}`;
 +}
 +
++function removeDeclareConstExport(node: ts.Node): ts.Node | undefined {
++    switch (node.kind) {
++        case ts.SyntaxKind.DeclareKeyword: // No need to emit this in d.ts files.
++        case ts.SyntaxKind.ConstKeyword:   // Remove const from const enums.
++        case ts.SyntaxKind.ExportKeyword:  // No export modifier; we are already in the namespace.
++            return undefined;
++    }
++    return node;
++}
++
 +function emitAsNamespace(name: string, moduleSymbol: ts.Symbol) {
 +    assert(moduleSymbol.flags & ts.SymbolFlags.ValueModule);
 +
++    const target = containsPublicAPI(moduleSymbol) ? WriteTarget.Both : WriteTarget.Internal;
++
 +    if (name === "ts") {
 +        // We will write `export = ts` at the end.
-+        write(`declare namespace ${name} {`);
++        write(`declare namespace ${name} {`, target);
 +    }
 +    else {
 +        // No export modifier; we are already in the namespace.
-+        write(`namespace ${name} {`);
++        write(`namespace ${name} {`, target);
 +    }
 +    increaseIndent();
 +
 +    const moduleExports = typeChecker.getExportsOfModule(moduleSymbol);
 +    for (const me of moduleExports) {
-+        if (stripInternal && !containsPublicAPI(me)) {
-+            continue;
-+        }
-+
 +        assert(me.declarations?.length);
 +
 +        if (me.flags & ts.SymbolFlags.Alias) {
@@ -348,53 +406,50 @@ index 0000000000..ceb937ac67
 +        }
 +
 +        for (const decl of me.declarations) {
-+            let statement = getDeclarationStatement(decl);
++            const statement = getDeclarationStatement(decl);
++            const sourceFile = decl.getSourceFile();
 +
 +            if (!statement) {
 +                throw new Error(`Unhandled declaration for ${me.name} at ${nodeToLocation(decl)}`);
 +            }
 +
-+            // Ignore an internal declaration.
-+            if (stripInternal && isInternalDeclaration(statement)) {
-+                continue;
++            const isInternal = isInternalDeclaration(statement);
++            if (!isInternal) {
++                const publicStatement = ts.visitEachChild(statement, (node) => {
++                    // No @internal comments in the public API.
++                    if (isInternalDeclaration(node)) {
++                        return undefined;
++                    }
++                    return removeDeclareConstExport(node);
++                }, nullTransformationContext);
++
++                writeNode(publicStatement, sourceFile, WriteTarget.Public);
 +            }
 +
-+            // Remove internal components and declare/const keywords.
-+            statement = ts.visitEachChild(statement, (node) => {
-+                if (stripInternal && isInternalDeclaration(node)) {
-+                    return undefined;
-+                }
++            const internalStatement = ts.visitEachChild(statement, removeDeclareConstExport, nullTransformationContext);
 +
-+                switch (node.kind) {
-+                    case ts.SyntaxKind.DeclareKeyword: // No need to emit this in d.ts files.
-+                    case ts.SyntaxKind.ConstKeyword:   // Remove const from const enums.
-+                    case ts.SyntaxKind.ExportKeyword:  // No export modifier; we are already in the namespace.
-+                        return undefined;
-+                }
-+
-+                return node;
-+            }, nullTransformationContext);
-+
-+            write(printer.printNode(ts.EmitHint.Unspecified, statement, decl.getSourceFile()));
++            writeNode(internalStatement, sourceFile, WriteTarget.Internal);
 +        }
 +    }
 +
 +    decreaseIndent();
-+    write(`}`);
++    write(`}`, target);
 +}
 +
 +emitAsNamespace("ts", moduleSymbol);
 +
-+write("export = ts;");
++write("export = ts;", WriteTarget.Both);
 +
 +const copyrightNotice = fs.readFileSync(path.join(__dirname, "..", "CopyrightNotice.txt"), "utf-8");
-+const outputContents = copyrightNotice + lines.join(newLine);
++const publicContents = copyrightNotice + publicLines.join(newLine);
++const internalContents = copyrightNotice + internalLines.join(newLine);
 +
-+if (stripInternal && outputContents.includes("@internal")) {
++if (publicContents.includes("@internal")) {
 +    console.error("Output includes untrimmed @internal nodes!");
 +}
 +
-+fs.writeFileSync(output, outputContents);
++fs.writeFileSync(output, publicContents);
++fs.writeFileSync(internalOutput, internalContents);
 diff --git a/scripts/produceLKG.ts b/scripts/produceLKG.ts
 index a10a7775bc..9ce5bcc63f 100644
 --- a/scripts/produceLKG.ts
@@ -428,6 +483,755 @@ index a10a7775bc..9ce5bcc63f 100644
 -
  async function copyFromBuiltLocal(fileName: string) {
      await fs.copy(path.join(source, fileName), path.join(dest, fileName));
+ }
+diff --git a/src/compiler/commandLineParser.ts b/src/compiler/commandLineParser.ts
+index 31dd774182..2ed978e2d6 100644
+--- a/src/compiler/commandLineParser.ts
++++ b/src/compiler/commandLineParser.ts
+@@ -2081,7 +2081,7 @@ function getTsconfigRootOptionsMap() {
+ }
+ 
+ /** @internal */
+-interface JsonConversionNotifier {
++export interface JsonConversionNotifier {
+     /**
+      * Notifies parent option object is being set with the optionKey and a valid optionValue
+      * Currently it notifies only if there is element with type object (parentOption) and
+diff --git a/src/compiler/factory/utilities.ts b/src/compiler/factory/utilities.ts
+index 010b996d7a..b6c97f8f3b 100644
+--- a/src/compiler/factory/utilities.ts
++++ b/src/compiler/factory/utilities.ts
+@@ -2,11 +2,12 @@ import {
+     AccessorDeclaration, addEmitFlags, AdditiveOperator, AdditiveOperatorOrHigher, AssertionLevel,
+     AssignmentOperatorOrHigher, BinaryExpression, BinaryOperator, BinaryOperatorToken, BindingOrAssignmentElement,
+     BindingOrAssignmentElementRestIndicator, BindingOrAssignmentElementTarget, BindingOrAssignmentPattern,
+-    BitwiseOperator, BitwiseOperatorOrHigher, BooleanLiteral, CharacterCodes, CommaListExpression,
++    BitwiseOperator, BitwiseOperatorOrHigher, Block, BooleanLiteral, CharacterCodes, CommaListExpression,
+     compareStringsCaseSensitive, CompilerOptions, Debug, Declaration, EmitFlags, EmitHelperFactory, EmitHost,
+     EmitResolver, EntityName, EqualityOperator, EqualityOperatorOrHigher, ExclamationToken, ExponentiationOperator,
+     ExportDeclaration, Expression, ExpressionStatement, externalHelpersModuleNameText, first, firstOrUndefined,
+     ForInitializer, GeneratedIdentifier, GeneratedIdentifierFlags, GeneratedNamePart, GeneratedPrivateIdentifier,
++    GetAccessorDeclaration,
+     getAllAccessorDeclarations, getEmitFlags, getEmitHelpers, getEmitModuleKind, getESModuleInterop,
+     getExternalModuleName, getExternalModuleNameFromPath, getJSDocType, getJSDocTypeTag, getModifiers,
+     getNamespaceDeclarationNode, getOrCreateEmitNode, getOriginalNode, getParseTreeNode,
+@@ -26,7 +27,7 @@ import {
+     NumericLiteral, ObjectLiteralElementLike, ObjectLiteralExpression, or, OuterExpression, OuterExpressionKinds,
+     outFile, parseNodeFactory, PlusToken, PostfixUnaryExpression, PrefixUnaryExpression, PrivateIdentifier,
+     PropertyAssignment, PropertyDeclaration, PropertyName, pushIfUnique, QuestionToken, ReadonlyKeyword,
+-    RelationalOperator, RelationalOperatorOrHigher, setOriginalNode, setParent, setStartsOnNewLine, setTextRange,
++    RelationalOperator, RelationalOperatorOrHigher, SetAccessorDeclaration, setOriginalNode, setParent, setStartsOnNewLine, setTextRange,
+     ShiftOperator, ShiftOperatorOrHigher, ShorthandPropertyAssignment, some, SourceFile, Statement, StringLiteral,
+     SyntaxKind, TextRange, ThisTypeNode, Token, TypeNode, TypeParameterDeclaration,
+ } from "../_namespaces/ts";
+@@ -185,7 +186,7 @@ export function createForOfBindingStatement(factory: NodeFactory, node: ForIniti
+ }
+ 
+ /** @internal */
+-export function insertLeadingStatement(factory: NodeFactory, dest: Statement, source: Statement) {
++export function insertLeadingStatement(factory: NodeFactory, dest: Statement, source: Statement): Block {
+     if (isBlock(dest)) {
+         return factory.updateBlock(dest, setTextRange(factory.createNodeArray([source, ...dest.statements]), dest.statements));
+     }
+@@ -1456,7 +1457,7 @@ export function createAccessorPropertyBackingField(factory: NodeFactory, node: P
+  *
+  * @internal
+  */
+-export function createAccessorPropertyGetRedirector(factory: NodeFactory, node: PropertyDeclaration, modifiers: ModifiersArray | undefined, name: PropertyName) {
++export function createAccessorPropertyGetRedirector(factory: NodeFactory, node: PropertyDeclaration, modifiers: ModifiersArray | undefined, name: PropertyName): GetAccessorDeclaration {
+     return factory.createGetAccessorDeclaration(
+         modifiers,
+         name,
+@@ -1478,7 +1479,7 @@ export function createAccessorPropertyGetRedirector(factory: NodeFactory, node:
+  *
+  * @internal
+  */
+-export function createAccessorPropertySetRedirector(factory: NodeFactory, node: PropertyDeclaration, modifiers: ModifiersArray | undefined, name: PropertyName) {
++export function createAccessorPropertySetRedirector(factory: NodeFactory, node: PropertyDeclaration, modifiers: ModifiersArray | undefined, name: PropertyName): SetAccessorDeclaration {
+     return factory.createSetAccessorDeclaration(
+         modifiers,
+         name,
+diff --git a/src/compiler/moduleNameResolver.ts b/src/compiler/moduleNameResolver.ts
+index f13d60743e..9e62af0806 100644
+--- a/src/compiler/moduleNameResolver.ts
++++ b/src/compiler/moduleNameResolver.ts
+@@ -128,7 +128,7 @@ function createResolvedModuleWithFailedLookupLocations(
+ }
+ 
+ /** @internal */
+-interface ModuleResolutionState {
++export interface ModuleResolutionState {
+     host: ModuleResolutionHost;
+     compilerOptions: CompilerOptions;
+     traceEnabled: boolean;
+@@ -146,7 +146,7 @@ interface ModuleResolutionState {
+  *
+  * @internal
+  */
+-interface PackageJsonPathFields {
++export interface PackageJsonPathFields {
+     typings?: string;
+     types?: string;
+     typesVersions?: MapLike<MapLike<string[]>>;
+@@ -226,7 +226,7 @@ function readPackageJsonTypesVersionsField(jsonContent: PackageJson, state: Modu
+ }
+ 
+ /** @internal */
+-interface VersionPaths {
++export interface VersionPaths {
+     version: string;
+     paths: MapLike<string[]>;
+ }
+@@ -1281,7 +1281,7 @@ export function resolveJSModule(moduleName: string, initialDir: string, host: Mo
+ }
+ 
+ /** @internal */
+-enum NodeResolutionFeatures {
++export enum NodeResolutionFeatures {
+     None = 0,
+     // resolving `#local` names in your own package.json
+     Imports = 1 << 1,
+diff --git a/src/compiler/parser.ts b/src/compiler/parser.ts
+index b57f612c29..85fbb3fad9 100644
+--- a/src/compiler/parser.ts
++++ b/src/compiler/parser.ts
+@@ -9832,7 +9832,7 @@ export function processCommentPragmas(context: PragmaContext, sourceText: string
+ }
+ 
+ /** @internal */
+-type PragmaDiagnosticReporter = (pos: number, length: number, message: DiagnosticMessage) => void;
++export type PragmaDiagnosticReporter = (pos: number, length: number, message: DiagnosticMessage) => void;
+ 
+ /** @internal */
+ export function processPragmasIntoFields(context: PragmaContext, reportDiagnostic: PragmaDiagnosticReporter): void {
+diff --git a/src/compiler/perfLogger.ts b/src/compiler/perfLogger.ts
+index 34a59208d6..fd8a559c75 100644
+--- a/src/compiler/perfLogger.ts
++++ b/src/compiler/perfLogger.ts
+@@ -1,6 +1,29 @@
+ import { noop } from "./_namespaces/ts";
+ 
+-type PerfLogger = typeof import("@microsoft/typescript-etw");
++/** @internal */
++export interface PerfLogger {
++    logEvent(msg: string): void;
++    logErrEvent(msg: string): void;
++    logPerfEvent(msg: string): void;
++    logInfoEvent(msg: string): void;
++    logStartCommand(command: string, msg: string): void;
++    logStopCommand(command: string, msg: string): void;
++    logStartUpdateProgram(msg: string): void;
++    logStopUpdateProgram(msg: string): void;
++    logStartUpdateGraph(): void;
++    logStopUpdateGraph(): void;
++    logStartResolveModule(name: string): void;
++    logStopResolveModule(success: string): void;
++    logStartParseSourceFile(filename: string): void;
++    logStopParseSourceFile(): void;
++    logStartReadFile(filename: string): void;
++    logStopReadFile(): void;
++    logStartBindFile(filename: string): void;
++    logStopBindFile(): void;
++    logStartScheduledOperation(operationId: string): void;
++    logStopScheduledOperation(): void;
++}
++
+ const nullLogger: PerfLogger = {
+     logEvent: noop,
+     logErrEvent: noop,
+@@ -26,7 +49,7 @@ const nullLogger: PerfLogger = {
+ 
+ // Load optional module to enable Event Tracing for Windows
+ // See https://github.com/microsoft/typescript-etw for more information
+-let etwModule;
++let etwModule: typeof import("@microsoft/typescript-etw") | undefined;
+ try {
+     const etwModulePath = process.env.TS_ETW_MODULE_PATH ?? "./node_modules/@microsoft/typescript-etw";
+ 
+@@ -43,4 +66,4 @@ catch (e) {
+  *
+  * @internal
+  */
+-export const perfLogger: PerfLogger = etwModule && etwModule.logEvent ? etwModule : nullLogger;
++export const perfLogger: PerfLogger = etwModule?.logEvent ? etwModule : nullLogger;
+diff --git a/src/compiler/program.ts b/src/compiler/program.ts
+index 30a15b258d..3a6f12fc24 100644
+--- a/src/compiler/program.ts
++++ b/src/compiler/program.ts
+@@ -210,7 +210,7 @@ export function createCompilerHostWorker(options: CompilerOptions, setParentNode
+ }
+ 
+ /** @internal */
+-interface CompilerHostLikeForCache {
++export interface CompilerHostLikeForCache {
+     fileExists(fileName: string): boolean;
+     readFile(fileName: string, encoding?: string): string | undefined;
+     directoryExists?(directory: string): boolean;
+@@ -4318,7 +4318,7 @@ export function filterSemanticDiagnostics(diagnostic: readonly Diagnostic[], opt
+ }
+ 
+ /** @internal */
+-interface CompilerHostLike {
++export interface CompilerHostLike {
+     useCaseSensitiveFileNames(): boolean;
+     getCurrentDirectory(): string;
+     fileExists(fileName: string): boolean;
+diff --git a/src/compiler/resolutionCache.ts b/src/compiler/resolutionCache.ts
+index a6cce70e78..103676d271 100644
+--- a/src/compiler/resolutionCache.ts
++++ b/src/compiler/resolutionCache.ts
+@@ -51,7 +51,8 @@ export interface ResolutionCache {
+     clear(): void;
+ }
+ 
+-interface ResolutionWithFailedLookupLocations {
++/** @internal */
++export interface ResolutionWithFailedLookupLocations {
+     readonly failedLookupLocations: string[];
+     readonly affectingLocations: string[];
+     isInvalidated?: boolean;
+@@ -65,7 +66,8 @@ interface ResolutionWithResolvedFileName {
+     packagetId?: PackageId;
+ }
+ 
+-interface CachedResolvedModuleWithFailedLookupLocations extends ResolvedModuleWithFailedLookupLocations, ResolutionWithFailedLookupLocations {
++/** @internal */
++export interface CachedResolvedModuleWithFailedLookupLocations extends ResolvedModuleWithFailedLookupLocations, ResolutionWithFailedLookupLocations {
+ }
+ 
+ interface CachedResolvedTypeReferenceDirectiveWithFailedLookupLocations extends ResolvedTypeReferenceDirectiveWithFailedLookupLocations, ResolutionWithFailedLookupLocations {
+diff --git a/src/compiler/sys.ts b/src/compiler/sys.ts
+index 356b920557..5c369877fd 100644
+--- a/src/compiler/sys.ts
++++ b/src/compiler/sys.ts
+@@ -1260,7 +1260,7 @@ export function patchWriteFileEnsuringDirectory(sys: System) {
+ export type BufferEncoding = "ascii" | "utf8" | "utf-8" | "utf16le" | "ucs2" | "ucs-2" | "base64" | "latin1" | "binary" | "hex";
+ 
+ /** @internal */
+-interface NodeBuffer extends Uint8Array {
++export interface NodeBuffer extends Uint8Array {
+     constructor: any;
+     write(str: string, encoding?: BufferEncoding): number;
+     write(str: string, offset: number, encoding?: BufferEncoding): number;
+@@ -1336,7 +1336,7 @@ interface NodeBuffer extends Uint8Array {
+ }
+ 
+ /** @internal */
+-interface Buffer extends NodeBuffer { }
++export interface Buffer extends NodeBuffer { }
+ 
+ // TODO: GH#18217 Methods on System are often used as if they are certainly defined
+ export interface System {
+diff --git a/src/compiler/tracing.ts b/src/compiler/tracing.ts
+index 8082131468..3cfa3c6822 100644
+--- a/src/compiler/tracing.ts
++++ b/src/compiler/tracing.ts
+@@ -12,8 +12,13 @@ import {
+ export let tracing: typeof tracingEnabled | undefined;
+ // enable the above using startTracing()
+ 
+-// `tracingEnabled` should never be used directly, only through the above
+-namespace tracingEnabled {
++// TODO(jakebailey): Rework this to not use namespaces.
++
++/**
++ * Do not use this directly; instead @see {tracing}.
++ * @internal
++ */
++export namespace tracingEnabled {
+     type Mode = "project" | "build" | "server";
+ 
+     let fs: typeof import("fs");
+diff --git a/src/compiler/transformers/classFields.ts b/src/compiler/transformers/classFields.ts
+index 5141d77afc..28be1f5f87 100644
+--- a/src/compiler/transformers/classFields.ts
++++ b/src/compiler/transformers/classFields.ts
+@@ -33,7 +33,7 @@ import {
+     startOnNewLine, Statement, SuperProperty, SyntaxKind, TaggedTemplateExpression, ThisExpression,
+     TransformationContext, TransformFlags, tryGetTextOfPropertyName, UnderscoreEscapedMap, unescapeLeadingUnderscores,
+     VariableStatement, visitArray, visitEachChild, visitFunctionBody, visitIterationBody, visitNode, visitNodes,
+-    visitParameterList, VisitResult,
++    visitParameterList, VisitResult, Bundle,
+ } from "../_namespaces/ts";
+ 
+ const enum ClassPropertySubstitutionFlags {
+@@ -168,7 +168,7 @@ const enum ClassFacts {
+  *
+  * @internal
+  */
+-export function transformClassFields(context: TransformationContext) {
++export function transformClassFields(context: TransformationContext): (x: SourceFile | Bundle) => SourceFile | Bundle {
+     const {
+         factory,
+         hoistVariableDeclaration,
+diff --git a/src/compiler/transformers/es2015.ts b/src/compiler/transformers/es2015.ts
+index ac22ce5ec5..545c48a3dd 100644
+--- a/src/compiler/transformers/es2015.ts
++++ b/src/compiler/transformers/es2015.ts
+@@ -33,7 +33,7 @@ import {
+     SyntaxKind, TaggedTemplateExpression, takeWhile, TemplateExpression, TextRange, TokenFlags, TransformationContext,
+     TransformFlags, tryCast, unescapeLeadingUnderscores, unwrapInnermostStatementOfLabel, VariableDeclaration,
+     VariableDeclarationList, VariableStatement, visitEachChild, visitNode, visitNodes, visitParameterList, VisitResult,
+-    VoidExpression, WhileStatement, YieldExpression,
++    VoidExpression, WhileStatement, YieldExpression, Bundle,
+ } from "../_namespaces/ts";
+ 
+ const enum ES2015SubstitutionFlags {
+@@ -299,7 +299,7 @@ function createSpreadSegment(kind: SpreadSegmentKind, expression: Expression): S
+ }
+ 
+ /** @internal */
+-export function transformES2015(context: TransformationContext) {
++export function transformES2015(context: TransformationContext): (x: SourceFile | Bundle) => SourceFile | Bundle {
+     const {
+         factory,
+         getEmitHelperFactory: emitHelpers,
+diff --git a/src/compiler/transformers/es2016.ts b/src/compiler/transformers/es2016.ts
+index 0d4b95afa8..ca3bbbb980 100644
+--- a/src/compiler/transformers/es2016.ts
++++ b/src/compiler/transformers/es2016.ts
+@@ -1,11 +1,11 @@
+ import {
+-    BinaryExpression, chainBundle, Expression, isElementAccessExpression, isExpression, isPropertyAccessExpression,
++    BinaryExpression, Bundle, chainBundle, Expression, isElementAccessExpression, isExpression, isPropertyAccessExpression,
+     Node, setTextRange, SourceFile, SyntaxKind, TransformationContext, TransformFlags, visitEachChild, visitNode,
+     VisitResult,
+ } from "../_namespaces/ts";
+ 
+ /** @internal */
+-export function transformES2016(context: TransformationContext) {
++export function transformES2016(context: TransformationContext): (x: SourceFile | Bundle) => SourceFile | Bundle {
+     const {
+         factory,
+         hoistVariableDeclaration
+diff --git a/src/compiler/transformers/es2017.ts b/src/compiler/transformers/es2017.ts
+index 193eea75be..3f36d8c450 100644
+--- a/src/compiler/transformers/es2017.ts
++++ b/src/compiler/transformers/es2017.ts
+@@ -15,6 +15,7 @@ import {
+     TypeReferenceSerializationKind, unescapeLeadingUnderscores, VariableDeclaration, VariableDeclarationList,
+     VariableStatement, visitEachChild, visitFunctionBody, visitIterationBody, visitNode, visitNodes, visitParameterList,
+     VisitResult,
++    Bundle,
+ } from "../_namespaces/ts";
+ 
+ type SuperContainer = ClassDeclaration | MethodDeclaration | GetAccessorDeclaration | SetAccessorDeclaration | ConstructorDeclaration;
+@@ -30,7 +31,7 @@ const enum ContextFlags {
+ }
+ 
+ /** @internal */
+-export function transformES2017(context: TransformationContext) {
++export function transformES2017(context: TransformationContext): (x: SourceFile | Bundle) => SourceFile | Bundle {
+     const {
+         factory,
+         getEmitHelperFactory: emitHelpers,
+diff --git a/src/compiler/transformers/es2018.ts b/src/compiler/transformers/es2018.ts
+index ee7f2cbc93..d45f5a37b4 100644
+--- a/src/compiler/transformers/es2018.ts
++++ b/src/compiler/transformers/es2018.ts
+@@ -17,7 +17,7 @@ import {
+     SourceFile, startOnNewLine, Statement, SyntaxKind, TaggedTemplateExpression, TextRange, Token,
+     TransformationContext, TransformFlags, unwrapInnermostStatementOfLabel, VariableDeclaration, VariableStatement,
+     visitEachChild, visitIterationBody, visitLexicalEnvironment, visitNode, visitNodes, visitParameterList, VisitResult,
+-    VoidExpression, YieldExpression,
++    VoidExpression, YieldExpression, Bundle,
+ } from "../_namespaces/ts";
+ 
+ const enum ESNextSubstitutionFlags {
+@@ -58,7 +58,7 @@ const enum HierarchyFacts {
+ }
+ 
+ /** @internal */
+-export function transformES2018(context: TransformationContext) {
++export function transformES2018(context: TransformationContext): (x: SourceFile | Bundle) => SourceFile | Bundle {
+     const {
+         factory,
+         getEmitHelperFactory: emitHelpers,
+diff --git a/src/compiler/transformers/es2019.ts b/src/compiler/transformers/es2019.ts
+index 921a2ea33d..eaeb2f19d5 100644
+--- a/src/compiler/transformers/es2019.ts
++++ b/src/compiler/transformers/es2019.ts
+@@ -1,10 +1,11 @@
+ import {
++    Bundle,
+     CatchClause, chainBundle, isBlock, Node, SourceFile, SyntaxKind, TransformationContext, TransformFlags,
+     visitEachChild, visitNode, VisitResult,
+ } from "../_namespaces/ts";
+ 
+ /** @internal */
+-export function transformES2019(context: TransformationContext) {
++export function transformES2019(context: TransformationContext): (x: SourceFile | Bundle) => SourceFile | Bundle {
+     const factory = context.factory;
+     return chainBundle(context, transformSourceFile);
+ 
+diff --git a/src/compiler/transformers/es2020.ts b/src/compiler/transformers/es2020.ts
+index 79be9cae32..ec48ca9433 100644
+--- a/src/compiler/transformers/es2020.ts
++++ b/src/compiler/transformers/es2020.ts
+@@ -1,5 +1,5 @@
+ import {
+-    AccessExpression, addEmitFlags, BinaryExpression, CallExpression, cast, chainBundle, Debug, DeleteExpression,
++    AccessExpression, addEmitFlags, BinaryExpression, Bundle, CallExpression, cast, chainBundle, Debug, DeleteExpression,
+     EmitFlags, Expression, isCallChain, isExpression, isGeneratedIdentifier, isIdentifier, isNonNullChain,
+     isOptionalChain, isParenthesizedExpression, isSimpleCopiableExpression, isSyntheticReference,
+     isTaggedTemplateExpression, Node, OptionalChain, OuterExpressionKinds, ParenthesizedExpression, setOriginalNode,
+@@ -8,7 +8,7 @@ import {
+ } from "../_namespaces/ts";
+ 
+ /** @internal */
+-export function transformES2020(context: TransformationContext) {
++export function transformES2020(context: TransformationContext): (x: SourceFile | Bundle) => SourceFile | Bundle {
+     const {
+         factory,
+         hoistVariableDeclaration,
+diff --git a/src/compiler/transformers/es2021.ts b/src/compiler/transformers/es2021.ts
+index 68ce3c81c4..a63e4688a7 100644
+--- a/src/compiler/transformers/es2021.ts
++++ b/src/compiler/transformers/es2021.ts
+@@ -1,5 +1,5 @@
+ import {
+-    AssignmentExpression, BinaryExpression, chainBundle, getNonAssignmentOperatorForCompoundAssignment,
++    AssignmentExpression, BinaryExpression, Bundle, chainBundle, getNonAssignmentOperatorForCompoundAssignment,
+     isAccessExpression, isExpression, isLeftHandSideExpression, isLogicalOrCoalescingAssignmentExpression,
+     isPropertyAccessExpression, isSimpleCopiableExpression, LogicalOrCoalescingAssignmentOperator, Node,
+     skipParentheses, SourceFile, SyntaxKind, Token, TransformationContext, TransformFlags, visitEachChild, visitNode,
+@@ -7,7 +7,7 @@ import {
+ } from "../_namespaces/ts";
+ 
+ /** @internal */
+-export function transformES2021(context: TransformationContext) {
++export function transformES2021(context: TransformationContext): (x: SourceFile | Bundle) => SourceFile | Bundle {
+     const {
+         hoistVariableDeclaration,
+         factory
+diff --git a/src/compiler/transformers/es5.ts b/src/compiler/transformers/es5.ts
+index cd7eb47d1e..8dd340255a 100644
+--- a/src/compiler/transformers/es5.ts
++++ b/src/compiler/transformers/es5.ts
+@@ -1,4 +1,5 @@
+ import {
++    Bundle,
+     chainBundle, EmitHint, Expression, getOriginalNodeId, Identifier, idText, isIdentifier, isPrivateIdentifier,
+     isPropertyAccessExpression, isPropertyAssignment, JsxClosingElement, JsxEmit, JsxOpeningElement,
+     JsxSelfClosingElement, Node, nodeIsSynthesized, PropertyAccessExpression, PropertyAssignment, setTextRange,
+@@ -12,7 +13,7 @@ import {
+  *
+  * @internal
+  */
+-export function transformES5(context: TransformationContext) {
++export function transformES5(context: TransformationContext): (x: SourceFile | Bundle) => SourceFile | Bundle {
+     const { factory } = context;
+     const compilerOptions = context.getCompilerOptions();
+ 
+diff --git a/src/compiler/transformers/esnext.ts b/src/compiler/transformers/esnext.ts
+index 9cc1b5e739..770153e4e6 100644
+--- a/src/compiler/transformers/esnext.ts
++++ b/src/compiler/transformers/esnext.ts
+@@ -1,9 +1,10 @@
+ import {
++    Bundle,
+     chainBundle, Node, SourceFile, TransformationContext, TransformFlags, visitEachChild, VisitResult,
+ } from "../_namespaces/ts";
+ 
+ /** @internal */
+-export function transformESNext(context: TransformationContext) {
++export function transformESNext(context: TransformationContext): (x: SourceFile | Bundle) => SourceFile | Bundle {
+   return chainBundle(context, transformSourceFile);
+ 
+   function transformSourceFile(node: SourceFile) {
+diff --git a/src/compiler/transformers/generators.ts b/src/compiler/transformers/generators.ts
+index 9c62a751da..ef5550a83a 100644
+--- a/src/compiler/transformers/generators.ts
++++ b/src/compiler/transformers/generators.ts
+@@ -1,6 +1,6 @@
+ import {
+     AccessorDeclaration, addEmitHelpers, addSyntheticTrailingComment, ArrayLiteralExpression, Associativity,
+-    BinaryExpression, Block, BreakStatement, CallExpression, CaseClause, chainBundle, CommaListExpression,
++    BinaryExpression, Block, BreakStatement, Bundle, CallExpression, CaseClause, chainBundle, CommaListExpression,
+     ConditionalExpression, ContinueStatement, createExpressionForObjectLiteralElementLike, Debug, DoStatement,
+     ElementAccessExpression, EmitFlags, EmitHint, ESMap, Expression, ExpressionStatement, forEach, ForInStatement,
+     ForStatement, FunctionDeclaration, FunctionExpression, getEmitFlags, getEmitScriptTarget,
+@@ -247,7 +247,7 @@ function getInstructionName(instruction: Instruction): string {
+ }
+ 
+ /** @internal */
+-export function transformGenerators(context: TransformationContext) {
++export function transformGenerators(context: TransformationContext): (x: SourceFile | Bundle) => SourceFile | Bundle {
+     const {
+         factory,
+         getEmitHelperFactory: emitHelpers,
+diff --git a/src/compiler/transformers/jsx.ts b/src/compiler/transformers/jsx.ts
+index 5e02c2ce92..37152cfe6a 100644
+--- a/src/compiler/transformers/jsx.ts
++++ b/src/compiler/transformers/jsx.ts
+@@ -1,5 +1,5 @@
+ import {
+-    addEmitHelpers, arrayFrom, chainBundle, createExpressionForJsxElement, createExpressionForJsxFragment,
++    addEmitHelpers, arrayFrom, Bundle, chainBundle, createExpressionForJsxElement, createExpressionForJsxFragment,
+     createExpressionFromEntityName, createJsxFactoryExpression, Debug, emptyArray, Expression, filter, find, flatten,
+     GeneratedIdentifierFlags, getEmitScriptTarget, getEntries, getJSXImplicitImportBase, getJSXRuntimeImport,
+     getLineAndCharacterOfPosition, getOriginalNode, getSemanticJsxChildren, Identifier, idText, ImportSpecifier,
+@@ -14,7 +14,7 @@ import {
+ } from "../_namespaces/ts";
+ 
+ /** @internal */
+-export function transformJsx(context: TransformationContext) {
++export function transformJsx(context: TransformationContext): (x: SourceFile | Bundle) => SourceFile | Bundle {
+     interface PerFileState {
+         importSpecifier?: string;
+         filenameDeclaration?: VariableDeclaration & { name: Identifier; };
+diff --git a/src/compiler/transformers/legacyDecorators.ts b/src/compiler/transformers/legacyDecorators.ts
+index 52ddcf5a62..be6c0615ee 100644
+--- a/src/compiler/transformers/legacyDecorators.ts
++++ b/src/compiler/transformers/legacyDecorators.ts
+@@ -1,5 +1,5 @@
+ import {
+-    addEmitHelpers, addRange, AllDecorators, append, canHaveDecorators, chainBundle, childIsDecorated, ClassDeclaration,
++    addEmitHelpers, addRange, AllDecorators, append, Bundle, canHaveDecorators, chainBundle, childIsDecorated, ClassDeclaration,
+     ClassElement, ClassExpression, ClassLikeDeclaration, classOrConstructorParameterIsDecorated, ConstructorDeclaration,
+     Decorator, elideNodes, EmitFlags, EmitHint, EnumMember, Expression, filter, flatMap, GetAccessorDeclaration,
+     getAllDecoratorsOfClass, getAllDecoratorsOfClassElement, getEmitFlags, getEmitScriptTarget, getOriginalNodeId,
+@@ -14,7 +14,7 @@ import {
+ } from "../_namespaces/ts";
+ 
+ /** @internal */
+-export function transformLegacyDecorators(context: TransformationContext) {
++export function transformLegacyDecorators(context: TransformationContext): (x: SourceFile | Bundle) => SourceFile | Bundle {
+     const {
+         factory,
+         getEmitHelperFactory: emitHelpers,
+diff --git a/src/compiler/transformers/module/esnextAnd2015.ts b/src/compiler/transformers/module/esnextAnd2015.ts
+index ead5ee8eea..ec9d36cc2e 100644
+--- a/src/compiler/transformers/module/esnextAnd2015.ts
++++ b/src/compiler/transformers/module/esnextAnd2015.ts
+@@ -1,5 +1,5 @@
+ import {
+-    addRange, append, chainBundle, createEmptyExports, createExternalHelpersImportDeclarationIfNeeded, Debug, EmitFlags,
++    addRange, append, Bundle, chainBundle, createEmptyExports, createExternalHelpersImportDeclarationIfNeeded, Debug, EmitFlags,
+     EmitHint, ESMap, ExportAssignment, ExportDeclaration, Expression, GeneratedIdentifierFlags, getEmitFlags,
+     getEmitModuleKind, getEmitScriptTarget, getExternalModuleNameLiteral, hasSyntacticModifier, Identifier, idText,
+     ImportDeclaration, ImportEqualsDeclaration, insertStatementsAfterCustomPrologue,
+@@ -10,7 +10,7 @@ import {
+ } from "../../_namespaces/ts";
+ 
+ /** @internal */
+-export function transformECMAScriptModule(context: TransformationContext) {
++export function transformECMAScriptModule(context: TransformationContext): (x: SourceFile | Bundle) => SourceFile | Bundle {
+     const {
+         factory,
+         getEmitHelperFactory: emitHelpers,
+diff --git a/src/compiler/transformers/module/module.ts b/src/compiler/transformers/module/module.ts
+index 0b9c5ad57b..cb3b73b777 100644
+--- a/src/compiler/transformers/module/module.ts
++++ b/src/compiler/transformers/module/module.ts
+@@ -1,5 +1,6 @@
+ import {
+     addEmitFlags, addEmitHelper, addEmitHelpers, addRange, append, ArrowFunction, BinaryExpression, BindingElement,
++    Bundle,
+     CallExpression, chainBundle, ClassDeclaration, collectExternalModuleInfo, Debug, Declaration,
+     DestructuringAssignment, EmitFlags, EmitHelper, EmitHint, emptyArray, EndOfDeclarationMarker, ExportAssignment,
+     ExportDeclaration, Expression, ExpressionStatement, ExternalModuleInfo, firstOrUndefined,
+@@ -27,7 +28,7 @@ import {
+ } from "../../_namespaces/ts";
+ 
+ /** @internal */
+-export function transformModule(context: TransformationContext) {
++export function transformModule(context: TransformationContext): (x: SourceFile | Bundle) => SourceFile | Bundle {
+     interface AsynchronousDependencies {
+         aliasedModuleNames: Expression[];
+         unaliasedModuleNames: Expression[];
+diff --git a/src/compiler/transformers/module/system.ts b/src/compiler/transformers/module/system.ts
+index 977d7efdfa..a6e9e90d2b 100644
+--- a/src/compiler/transformers/module/system.ts
++++ b/src/compiler/transformers/module/system.ts
+@@ -1,5 +1,5 @@
+ import {
+-    addRange, append, BinaryExpression, BindingElement, Block, CaseBlock, CaseClause, CaseOrDefaultClause, CatchClause,
++    addRange, append, BinaryExpression, BindingElement, Block, Bundle, CaseBlock, CaseClause, CaseOrDefaultClause, CatchClause,
+     chainBundle, ClassDeclaration, collectExternalModuleInfo, Debug, Declaration, DefaultClause,
+     DestructuringAssignment, DoStatement, EmitFlags, EmitHint, EndOfDeclarationMarker, ExportAssignment,
+     ExportDeclaration, Expression, ExpressionStatement, ExternalModuleInfo, firstOrUndefined,
+@@ -25,7 +25,7 @@ import {
+ } from "../../_namespaces/ts";
+ 
+ /** @internal */
+-export function transformSystemModule(context: TransformationContext) {
++export function transformSystemModule(context: TransformationContext): (x: SourceFile | Bundle) => SourceFile | Bundle {
+     interface DependencyGroup {
+         name: StringLiteral;
+         externalImports: (ImportDeclaration | ImportEqualsDeclaration | ExportDeclaration)[];
+diff --git a/src/compiler/transformers/taggedTemplate.ts b/src/compiler/transformers/taggedTemplate.ts
+index ffce659146..683c445127 100644
+--- a/src/compiler/transformers/taggedTemplate.ts
++++ b/src/compiler/transformers/taggedTemplate.ts
+@@ -1,4 +1,5 @@
+ import {
++    CallExpression,
+     Debug, Expression, factory, getSourceTextOfNodeFromSourceFile, hasInvalidEscape, Identifier, isExpression,
+     isExternalModule, isNoSubstitutionTemplateLiteral, NoSubstitutionTemplateLiteral, setTextRange, SourceFile,
+     SyntaxKind, TaggedTemplateExpression, TemplateHead, TemplateLiteralLikeNode, TemplateMiddle, TemplateTail,
+@@ -18,7 +19,7 @@ export function processTaggedTemplateExpression(
+     visitor: Visitor,
+     currentSourceFile: SourceFile,
+     recordTaggedTemplateString: (temp: Identifier) => void,
+-    level: ProcessLevel) {
++    level: ProcessLevel): CallExpression | TaggedTemplateExpression {
+ 
+     // Visit the tag expression
+     const tag = visitNode(node.tag, visitor, isExpression);
+diff --git a/src/compiler/transformers/typeSerializer.ts b/src/compiler/transformers/typeSerializer.ts
+index 7548d159c5..fb86fed8a6 100644
+--- a/src/compiler/transformers/typeSerializer.ts
++++ b/src/compiler/transformers/typeSerializer.ts
+@@ -14,14 +14,17 @@ import {
+     VoidExpression,
+ } from "../_namespaces/ts";
+ 
+-type SerializedEntityName =
++/** @internal */
++export type SerializedEntityName =
+     | Identifier // Globals (i.e., `String`, `Number`, etc.)
+  // Globals (i.e., `String`, `Number`, etc.)
+     | PropertyAccessEntityNameExpression // `A.B`
+  // `A.B`
+     ;
+ 
+-type SerializedTypeNode =
++
++/** @internal */
++export type SerializedTypeNode =
+     | SerializedEntityName
+     | ConditionalExpression // Type Reference or Global fallback
+  // Type Reference or Global fallback
+diff --git a/src/compiler/transformers/utilities.ts b/src/compiler/transformers/utilities.ts
+index 4460f4fc45..862bdf7c8b 100644
+--- a/src/compiler/transformers/utilities.ts
++++ b/src/compiler/transformers/utilities.ts
+@@ -12,7 +12,7 @@ import {
+     isPrivateIdentifier, isPropertyDeclaration, isStatic, isStringLiteralLike, isSuperCall, LogicalOperatorOrHigher,
+     map, Map, MethodDeclaration, ModifierFlags, NamedImportBindings, NamespaceExport, Node, NodeArray,
+     parameterIsThisKeyword, PrivateIdentifierAccessorDeclaration, PrivateIdentifierAutoAccessorPropertyDeclaration,
+-    PrivateIdentifierMethodDeclaration, PropertyDeclaration, skipParentheses, some, SourceFile, Statement, SyntaxKind,
++    PrivateIdentifierMethodDeclaration, PropertyDeclaration, skipParentheses, some, SourceFile, Statement, SuperCall, SyntaxKind,
+     TransformationContext, VariableDeclaration, VariableStatement,
+ } from "../_namespaces/ts";
+ 
+@@ -332,7 +332,7 @@ export function getNonAssignmentOperatorForCompoundAssignment(kind: CompoundAssi
+  *
+  * @internal
+  */
+-export function getSuperCallFromStatement(statement: Statement) {
++export function getSuperCallFromStatement(statement: Statement): SuperCall | undefined {
+     if (!isExpressionStatement(statement)) {
+         return undefined;
+     }
+diff --git a/src/compiler/types.ts b/src/compiler/types.ts
+index c95a9a231f..dd7e5ba02d 100644
+--- a/src/compiler/types.ts
++++ b/src/compiler/types.ts
+@@ -5087,7 +5087,7 @@ export interface SymbolWalker {
+ 
+ // This was previously deprecated in our public API, but is still used internally
+ /** @internal */
+-interface SymbolWriter extends SymbolTracker {
++export interface SymbolWriter extends SymbolTracker {
+     writeKeyword(text: string): void;
+     writeOperator(text: string): void;
+     writePunctuation(text: string): void;
+@@ -9236,7 +9236,7 @@ export const enum PragmaKindFlags {
+ }
+ 
+ /** @internal */
+-interface PragmaArgumentSpecification<TName extends string> {
++export interface PragmaArgumentSpecification<TName extends string> {
+     name: TName; // Determines the name of the key in the resulting parsed type, type parameter to cause literal type inference
+     optional?: boolean;
+     captureSpan?: boolean;
+@@ -9300,20 +9300,20 @@ export const commentPragmas = {
+ } as const;
+ 
+ /** @internal */
+-type PragmaArgTypeMaybeCapture<TDesc> = TDesc extends {captureSpan: true} ? {value: string, pos: number, end: number} : string;
++export type PragmaArgTypeMaybeCapture<TDesc> = TDesc extends {captureSpan: true} ? {value: string, pos: number, end: number} : string;
+ 
+ /** @internal */
+-type PragmaArgTypeOptional<TDesc, TName extends string> =
++export type PragmaArgTypeOptional<TDesc, TName extends string> =
+     TDesc extends {optional: true}
+         ? {[K in TName]?: PragmaArgTypeMaybeCapture<TDesc>}
+         : {[K in TName]: PragmaArgTypeMaybeCapture<TDesc>};
+ 
+ /** @internal */
+-type UnionToIntersection<U> =
++export type UnionToIntersection<U> =
+         (U extends any ? (k: U) => void : never) extends ((k: infer I) => void) ? I : never;
+ 
+ /** @internal */
+-type ArgumentDefinitionToFieldUnion<T extends readonly PragmaArgumentSpecification<any>[]> = {
++export type ArgumentDefinitionToFieldUnion<T extends readonly PragmaArgumentSpecification<any>[]> = {
+     [K in keyof T]: PragmaArgTypeOptional<T[K], T[K] extends {name: infer TName} ? TName extends string ? TName : never : never>
+ }[Extract<keyof T, number>]; // The mapped type maps over only the tuple members, but this reindex gets _all_ members - by extracting only `number` keys, we get only the tuple members
+ 
+@@ -9322,13 +9322,13 @@ type ArgumentDefinitionToFieldUnion<T extends readonly PragmaArgumentSpecificati
+  *
+  * @internal
+  */
+-type PragmaArgumentType<KPrag extends keyof ConcretePragmaSpecs> =
++export type PragmaArgumentType<KPrag extends keyof ConcretePragmaSpecs> =
+     ConcretePragmaSpecs[KPrag] extends { args: readonly PragmaArgumentSpecification<any>[] }
+         ? UnionToIntersection<ArgumentDefinitionToFieldUnion<ConcretePragmaSpecs[KPrag]["args"]>>
+         : never;
+ 
+ /** @internal */
+-type ConcretePragmaSpecs = typeof commentPragmas;
++export type ConcretePragmaSpecs = typeof commentPragmas;
+ 
+ /** @internal */
+ export type PragmaPseudoMap = {[K in keyof ConcretePragmaSpecs]: {arguments: PragmaArgumentType<K>, range: CommentRange}};
+diff --git a/src/compiler/utilities.ts b/src/compiler/utilities.ts
+index 560a78a818..97620b9c89 100644
+--- a/src/compiler/utilities.ts
++++ b/src/compiler/utilities.ts
+@@ -721,7 +721,8 @@ export function getEmitFlags(node: Node): EmitFlags {
+     return emitNode && emitNode.flags || 0;
+ }
+ 
+-interface ScriptTargetFeatures {
++/** @internal */
++export interface ScriptTargetFeatures {
+     [key: string]: { [key: string]: string[] | undefined };
+ }
+ 
+@@ -6743,14 +6744,14 @@ export function formatStringFromArgs(text: string, args: ArrayLike<string | numb
+ let localizedDiagnosticMessages: MapLike<string> | undefined;
+ 
+ /** @internal */
+-export function setLocalizedDiagnosticMessages(messages: typeof localizedDiagnosticMessages) {
++export function setLocalizedDiagnosticMessages(messages: MapLike<string> | undefined) {
+     localizedDiagnosticMessages = messages;
+ }
+ 
+ /** @internal */
+ // If the localized messages json is unset, and if given function use it to set the json
+ 
+-export function maybeSetLocalizedDiagnosticMessages(getMessages: undefined | (() => typeof localizedDiagnosticMessages)) {
++export function maybeSetLocalizedDiagnosticMessages(getMessages: undefined | (() => MapLike<string> | undefined)) {
+     if (!localizedDiagnosticMessages && getMessages) {
+         localizedDiagnosticMessages = getMessages();
+     }
+diff --git a/src/compiler/watchUtilities.ts b/src/compiler/watchUtilities.ts
+index 5dce173af6..0a06364c12 100644
+--- a/src/compiler/watchUtilities.ts
++++ b/src/compiler/watchUtilities.ts
+@@ -30,7 +30,8 @@ export interface DirectoryStructureHost {
+     writeFile?(path: string, data: string, writeByteOrderMark?: boolean): void;
+ }
+ 
+-interface FileAndDirectoryExistence {
++/** @internal */
++export interface FileAndDirectoryExistence {
+     fileExists: boolean;
+     directoryExists: boolean;
  }
 diff --git a/src/deprecatedCompat/4.0/nodeFactoryTopLevelExports.ts b/src/deprecatedCompat/4.0/nodeFactoryTopLevelExports.ts
 index db5f894683..b3ec867dab 100644
@@ -1627,6 +2431,486 @@ index db5f894683..b3ec867dab 100644
  
  /** @deprecated Use `factory.createToken` or the factory supplied by your transformation context instead. */
  export const createToken = Debug.deprecate(function createToken<TKind extends SyntaxKind>(kind: TKind): Token<TKind> {
+diff --git a/src/deprecatedCompat/deprecations.ts b/src/deprecatedCompat/deprecations.ts
+index d85748d14d..d4e4152322 100644
+--- a/src/deprecatedCompat/deprecations.ts
++++ b/src/deprecatedCompat/deprecations.ts
+@@ -1,4 +1,4 @@
+-import { Debug, DeprecationOptions, hasProperty } from "./_namespaces/ts";
++import { Debug, DeprecationOptions, hasProperty, UnionToIntersection } from "./_namespaces/ts";
+ 
+ // The following are deprecations for the public API. Deprecated exports are removed from the compiler itself
+ // and compatible implementations are added here, along with an appropriate deprecation warning using
+@@ -12,31 +12,54 @@ import { Debug, DeprecationOptions, hasProperty } from "./_namespaces/ts";
+ //
+ // Once we have determined enough time has passed after a deprecation has been marked as `"warn"` or `"error"`, it will be removed from the public API.
+ 
+-/** Defines a list of overloads by ordinal */
+-type OverloadDefinitions = { readonly [P in number]: (...args: any[]) => any; };
++/**
++ * Defines a list of overloads by ordinal
++ *
++ * @internal
++ */
++export type OverloadDefinitions = { readonly [P in number]: (...args: any[]) => any; };
+ 
+ /** A function that returns the ordinal of the overload that matches the provided arguments */
+ type OverloadBinder<T extends OverloadDefinitions> = (args: OverloadParameters<T>) => OverloadKeys<T> | undefined;
+ 
+-/** Extracts the ordinals from an set of overload definitions. */
+-type OverloadKeys<T extends OverloadDefinitions> = Extract<keyof T, number>;
++/**
++ * Extracts the ordinals from an set of overload definitions.
++ *
++ * @internal
++ */
++export type OverloadKeys<T extends OverloadDefinitions> = Extract<keyof T, number>;
+ 
+-/** Extracts a union of the potential parameter lists for each overload. */
+-type OverloadParameters<T extends OverloadDefinitions> = Parameters<{ [P in OverloadKeys<T>]: T[P]; }[OverloadKeys<T>]>;
++/**
++ * Extracts a union of the potential parameter lists for each overload.
++ *
++ * @internal
++ */
++export type OverloadParameters<T extends OverloadDefinitions> = Parameters<{ [P in OverloadKeys<T>]: T[P]; }[OverloadKeys<T>]>;
+ 
+ // NOTE: the following doesn't work in TS 4.4 (the current LKG in main), so we have to use UnionToIntersection for now
+-/** Constructs an intersection of each overload in a set of overload definitions. */
+ // type OverloadFunction<T extends OverloadDefinitions, R extends ((...args: any[]) => any)[] = [], O = unknown> =
+ //     R["length"] extends keyof T ? OverloadFunction<T, [...R, T[R["length"]]], O & T[R["length"]]> :
+ //     unknown extends O ? never : O;
+-type UnionToIntersection<T> = (T extends any ? (x: T) => any : never) extends (x: infer R) => any ? R : never;
+-type OverloadFunction<T extends OverloadDefinitions> = UnionToIntersection<T[keyof T]>;
+-
+-/** Maps each ordinal in a set of overload definitions to a function that can be used to bind its arguments. */
+-type OverloadBinders<T extends OverloadDefinitions> = { [P in OverloadKeys<T>]: (args: OverloadParameters<T>) => boolean | undefined; };
+-
+-/** Defines deprecations for specific overloads by ordinal. */
+-type OverloadDeprecations<T extends OverloadDefinitions> = { [P in OverloadKeys<T>]?: DeprecationOptions; };
++/**
++ * Constructs an intersection of each overload in a set of overload definitions.
++ *
++ * @internal
++ */
++export type OverloadFunction<T extends OverloadDefinitions> = UnionToIntersection<T[keyof T]>;
++
++/**
++ * Maps each ordinal in a set of overload definitions to a function that can be used to bind its arguments.
++ *
++ * @internal
++ */
++export type OverloadBinders<T extends OverloadDefinitions> = { [P in OverloadKeys<T>]: (args: OverloadParameters<T>) => boolean | undefined; };
++
++/**
++ * Defines deprecations for specific overloads by ordinal.
++ *
++ * @internal
++ */
++export type OverloadDeprecations<T extends OverloadDefinitions> = { [P in OverloadKeys<T>]?: DeprecationOptions; };
+ 
+ /** @internal */
+ export function createOverload<T extends OverloadDefinitions>(name: string, overloads: T, binder: OverloadBinders<T>, deprecations?: OverloadDeprecations<T>) {
+@@ -75,19 +98,23 @@ function createBinder<T extends OverloadDefinitions>(overloads: T, binder: Overl
+     };
+ }
+ 
+-interface OverloadBuilder {
++/** @internal */
++export interface OverloadBuilder {
+     overload<T extends OverloadDefinitions>(overloads: T): BindableOverloadBuilder<T>;
+ }
+ 
+-interface BindableOverloadBuilder<T extends OverloadDefinitions> {
++/** @internal */
++export interface BindableOverloadBuilder<T extends OverloadDefinitions> {
+     bind(binder: OverloadBinders<T>): BoundOverloadBuilder<T>;
+ }
+ 
+-interface FinishableOverloadBuilder<T extends OverloadDefinitions> {
++/** @internal */
++export interface FinishableOverloadBuilder<T extends OverloadDefinitions> {
+     finish(): OverloadFunction<T>;
+ }
+ 
+-interface BoundOverloadBuilder<T extends OverloadDefinitions> extends FinishableOverloadBuilder<T> {
++/** @internal */
++export interface BoundOverloadBuilder<T extends OverloadDefinitions> extends FinishableOverloadBuilder<T> {
+     deprecate(deprecations: OverloadDeprecations<T>): FinishableOverloadBuilder<T>;
+ }
+ 
+diff --git a/src/server/editorServices.ts b/src/server/editorServices.ts
+index 1ae9921a3c..b3e91f685e 100644
+--- a/src/server/editorServices.ts
++++ b/src/server/editorServices.ts
+@@ -28,7 +28,7 @@ import {
+     parseJsonSourceFileConfigFileContent, parseJsonText, parsePackageName, Path, PerformanceEvent, PluginImport,
+     PollingInterval, ProjectPackageJsonInfo, ProjectReference, ReadMapFile, ReadonlyCollection, removeFileExtension,
+     removeIgnoredPath, removeMinAndVersionNumbers, ResolvedProjectReference, resolveProjectReferencePath,
+-    returnNoopFileWatcher, returnTrue, ScriptKind, Set, SharedExtendedConfigFileWatcher, some, SourceFile, startsWith,
++    returnNoopFileWatcher, returnTrue, ScriptKind, Set, SharedExtendedConfigFileWatcher, some, SourceFile, SourceFileLike, startsWith,
+     Ternary, TextChange, toFileNameLowerCase, toPath, tracing, tryAddToSet, tryReadFile, TsConfigSourceFile,
+     TypeAcquisition, typeAcquisitionDeclarations, unorderedRemoveItem, updateSharedExtendedConfigFileWatcher,
+     updateWatchingWildcardDirectories, UserPreferences, version, WatchDirectoryFlags, WatchFactory, WatchLogLevel,
+@@ -397,7 +397,7 @@ function findProjectByName<T extends Project>(projectName: string, projects: T[]
+ const noopConfigFileWatcher: FileWatcher = { close: noop };
+ 
+ /** @internal */
+-interface ConfigFileExistenceInfo {
++export interface ConfigFileExistenceInfo {
+     /**
+      * Cached value of existence of config file
+      * It is true if there is configured project open for this file.
+@@ -2984,7 +2984,7 @@ export class ProjectService {
+     }
+ 
+     /** @internal */
+-    getSourceFileLike(fileName: string, projectNameOrProject: string | Project, declarationInfo?: ScriptInfo) {
++    getSourceFileLike(fileName: string, projectNameOrProject: string | Project, declarationInfo?: ScriptInfo): SourceFileLike | undefined {
+         const project = (projectNameOrProject as Project).projectName ? projectNameOrProject as Project : this.findProject(projectNameOrProject as string);
+         if (project) {
+             const path = project.toPath(fileName);
+diff --git a/src/server/scriptVersionCache.ts b/src/server/scriptVersionCache.ts
+index 13a2fbe6a0..fc828b3f8c 100644
+--- a/src/server/scriptVersionCache.ts
++++ b/src/server/scriptVersionCache.ts
+@@ -6,7 +6,8 @@ import { emptyArray, protocol } from "./_namespaces/ts.server";
+ 
+ const lineCollectionCapacity = 4;
+ 
+-interface LineCollection {
++/** @internal */
++export interface LineCollection {
+     charCount(): number;
+     lineCount(): number;
+     isLeaf(): this is LineLeaf;
+@@ -19,7 +20,8 @@ export interface AbsolutePositionAndLineText {
+     lineText: string | undefined;
+ }
+ 
+-const enum CharRangeSection {
++/** @internal */
++export const enum CharRangeSection {
+     PreStart,
+     Start,
+     Entire,
+@@ -28,7 +30,8 @@ const enum CharRangeSection {
+     PostEnd
+ }
+ 
+-interface LineIndexWalker {
++/** @internal */
++export interface LineIndexWalker {
+     goSubtree: boolean;
+     done: boolean;
+     leaf(relativeStart: number, relativeLength: number, lineCollection: LineLeaf): void;
+@@ -568,7 +571,8 @@ export class LineIndex {
+     }
+ }
+ 
+-class LineNode implements LineCollection {
++/** @internal */
++export class LineNode implements LineCollection {
+     totalChars = 0;
+     totalLines = 0;
+ 
+@@ -819,7 +823,8 @@ class LineNode implements LineCollection {
+     }
+ }
+ 
+-class LineLeaf implements LineCollection {
++/** @internal */
++export class LineLeaf implements LineCollection {
+     constructor(public text: string) {
+     }
+ 
+diff --git a/src/services/codefixes/annotateWithTypeFromJSDoc.ts b/src/services/codefixes/annotateWithTypeFromJSDoc.ts
+index 8003b4a713..8220c43714 100644
+--- a/src/services/codefixes/annotateWithTypeFromJSDoc.ts
++++ b/src/services/codefixes/annotateWithTypeFromJSDoc.ts
+@@ -32,7 +32,8 @@ function getDeclaration(file: SourceFile, pos: number): DeclarationWithType | un
+     return tryCast(isParameter(name.parent) ? name.parent.parent : name.parent, parameterShouldGetTypeFromJSDoc);
+ }
+ 
+-type DeclarationWithType =
++/** @internal */
++export type DeclarationWithType =
+     | FunctionLikeDeclaration
+     | VariableDeclaration
+     | PropertySignature
+diff --git a/src/services/codefixes/generateAccessors.ts b/src/services/codefixes/generateAccessors.ts
+index 1ae126ddfa..e6d09c1ad8 100644
+--- a/src/services/codefixes/generateAccessors.ts
++++ b/src/services/codefixes/generateAccessors.ts
+@@ -11,12 +11,17 @@ import {
+     SymbolFlags, SyntaxKind, textChanges, TypeChecker, TypeNode,
+ } from "../_namespaces/ts";
+ 
+-type AcceptedDeclaration = ParameterPropertyDeclaration | PropertyDeclaration | PropertyAssignment;
+-type AcceptedNameType = Identifier | StringLiteral;
+-type ContainerDeclaration = ClassLikeDeclaration | ObjectLiteralExpression;
++/** @internal */
++export type AcceptedDeclaration = ParameterPropertyDeclaration | PropertyDeclaration | PropertyAssignment;
++/** @internal */
++export type AcceptedNameType = Identifier | StringLiteral;
++/** @internal */
++export type ContainerDeclaration = ClassLikeDeclaration | ObjectLiteralExpression;
+ 
+-type Info = AccessorInfo | refactor.RefactorErrorInfo;
+-interface AccessorInfo {
++/** @internal */
++export type AccessorOrRefactorErrorInfo = AccessorInfo | refactor.RefactorErrorInfo;
++/** @internal */
++export interface AccessorInfo {
+     readonly container: ContainerDeclaration;
+     readonly isStatic: boolean;
+     readonly isReadonly: boolean;
+@@ -117,7 +122,7 @@ function prepareModifierFlagsForField(modifierFlags: ModifierFlags): ModifierFla
+ }
+ 
+ /** @internal */
+-export function getAccessorConvertiblePropertyAtPosition(file: SourceFile, program: Program, start: number, end: number, considerEmptySpans = true): Info | undefined {
++export function getAccessorConvertiblePropertyAtPosition(file: SourceFile, program: Program, start: number, end: number, considerEmptySpans = true): AccessorOrRefactorErrorInfo | undefined {
+     const node = getTokenAtPosition(file, start);
+     const cursorRequest = start === end && considerEmptySpans;
+     const declaration = findAncestor(node.parent, isAcceptedDeclaration);
+diff --git a/src/services/codefixes/helpers.ts b/src/services/codefixes/helpers.ts
+index c54f6da012..5fa4e7e0f5 100644
+--- a/src/services/codefixes/helpers.ts
++++ b/src/services/codefixes/helpers.ts
+@@ -8,7 +8,7 @@ import {
+     IntersectionType, isArrowFunction, isAutoAccessorPropertyDeclaration, isFunctionDeclaration, isFunctionExpression,
+     isGetAccessorDeclaration, isIdentifier, isImportTypeNode, isInJSFile, isLiteralImportTypeNode, isMethodDeclaration,
+     isObjectLiteralExpression, isPropertyAccessExpression, isPropertyAssignment, isSetAccessorDeclaration,
+-    isStringLiteral, isYieldExpression, LanguageServiceHost, length, map, Map, MethodDeclaration, Modifier,
++    isStringLiteral, isYieldExpression, LanguageServiceHost, length, map, Map, MethodDeclaration, MethodSignature, Modifier,
+     ModifierFlags, Node, NodeArray, NodeBuilderFlags, NodeFlags, nullTransformationContext, ObjectFlags,
+     ObjectLiteralExpression, ObjectType, ParameterDeclaration, Program, PropertyAssignment, PropertyDeclaration,
+     PropertyName, QuotePreference, sameMap, ScriptTarget, Set, SetAccessorDeclaration, setTextRange, Signature,
+@@ -57,7 +57,8 @@ export interface TypeConstructionContext {
+     host: LanguageServiceHost;
+ }
+ 
+-type AddNode = PropertyDeclaration | GetAccessorDeclaration | SetAccessorDeclaration | MethodDeclaration | FunctionExpression | ArrowFunction;
++/** @internal */
++export type AddNode = PropertyDeclaration | GetAccessorDeclaration | SetAccessorDeclaration | MethodDeclaration | FunctionExpression | ArrowFunction;
+ 
+ /** @internal */
+ export const enum PreserveOptionalFlags {
+@@ -353,7 +354,7 @@ export function createSignatureDeclarationFromCallExpression(
+     name: Identifier | string,
+     modifierFlags: ModifierFlags,
+     contextNode: Node
+-) {
++): MethodDeclaration | FunctionDeclaration | MethodSignature {
+     const quotePreference = getQuotePreference(context.sourceFile, context.preferences);
+     const scriptTarget = getEmitScriptTarget(context.program.getCompilerOptions());
+     const tracker = getNoopSymbolTrackerWithResolver(context);
+@@ -417,7 +418,8 @@ export function createSignatureDeclarationFromCallExpression(
+     }
+ }
+ 
+-interface ArgumentTypeParameterAndConstraint {
++/** @internal */
++export interface ArgumentTypeParameterAndConstraint {
+     argumentType: Type;
+     constraint?: TypeNode;
+ }
+diff --git a/src/services/completions.ts b/src/services/completions.ts
+index 86de7d17e3..f3e4f3f2ec 100644
+--- a/src/services/completions.ts
++++ b/src/services/completions.ts
+@@ -124,7 +124,8 @@ export enum CompletionSource {
+     ObjectLiteralMethodSnippet = "ObjectLiteralMethodSnippet/",
+ }
+ 
+-const enum SymbolOriginInfoKind {
++/** @internal */
++export const enum SymbolOriginInfoKind {
+     ThisType            = 1 << 0,
+     SymbolMember        = 1 << 1,
+     Export              = 1 << 2,
+@@ -138,7 +139,8 @@ const enum SymbolOriginInfoKind {
+     SymbolMemberExport   = SymbolMember | Export,
+ }
+ 
+-interface SymbolOriginInfo {
++/** @internal */
++export interface SymbolOriginInfo {
+     kind: SymbolOriginInfoKind;
+     isDefaultExport?: boolean;
+     isFromPackageJson?: boolean;
+@@ -210,18 +212,25 @@ function originIsObjectLiteralMethod(origin: SymbolOriginInfo | undefined): orig
+     return !!(origin && origin.kind & SymbolOriginInfoKind.ObjectLiteralMethod);
+ }
+ 
+-interface UniqueNameSet {
++/** @internal */
++export interface UniqueNameSet {
+     add(name: string): void;
+     has(name: string): boolean;
+ }
+ 
+ /**
+  * Map from symbol index in `symbols` -> SymbolOriginInfo.
++ *
++ * @internal
+  */
+-type SymbolOriginInfoMap = Record<number, SymbolOriginInfo>;
++export type SymbolOriginInfoMap = Record<number, SymbolOriginInfo>;
+ 
+-/** Map from symbol id -> SortText. */
+-type SymbolSortTextMap = (SortText | undefined)[];
++/**
++ * Map from symbol id -> SortText.
++ *
++ * @internal
++ */
++export type SymbolSortTextMap = (SortText | undefined)[];
+ 
+ const enum KeywordCompletionFilters {
+     None,                           // No keywords
+@@ -1881,8 +1890,12 @@ export function getCompletionEntrySymbol(
+ }
+ 
+ const enum CompletionDataKind { Data, JsDocTagName, JsDocTag, JsDocParameterName, Keywords }
+-/** true: after the `=` sign but no identifier has been typed yet. Else is the Identifier after the initializer. */
+-type IsJsxInitializer = boolean | Identifier;
++/**
++ * true: after the `=` sign but no identifier has been typed yet. Else is the Identifier after the initializer.
++ *
++ * @internal
++ */
++export type IsJsxInitializer = boolean | Identifier;
+ interface CompletionData {
+     readonly kind: CompletionDataKind.Data;
+     readonly symbols: readonly Symbol[];
+@@ -4319,7 +4332,8 @@ function tryGetObjectLiteralContextualType(node: ObjectLiteralExpression, typeCh
+     return undefined;
+ }
+ 
+-interface ImportStatementCompletionInfo {
++/** @internal */
++export interface ImportStatementCompletionInfo {
+     isKeywordOnlyCompletion: boolean;
+     keywordCompletion: TokenSyntaxKind | undefined;
+     isNewIdentifierLocation: boolean;
+diff --git a/src/services/getEditsForFileRename.ts b/src/services/getEditsForFileRename.ts
+index bdd1ac357d..2c2096a860 100644
+--- a/src/services/getEditsForFileRename.ts
++++ b/src/services/getEditsForFileRename.ts
+@@ -30,8 +30,12 @@ export function getEditsForFileRename(
+     });
+ }
+ 
+-/** If 'path' refers to an old directory, returns path in the new directory. */
+-type PathUpdater = (path: string) => string | undefined;
++/**
++ * If 'path' refers to an old directory, returns path in the new directory.
++ *
++ * @internal
++ */
++export type PathUpdater = (path: string) => string | undefined;
+ // exported for tests
+ /** @internal */
+ export function getPathUpdater(oldFileOrDirPath: string, newFileOrDirPath: string, getCanonicalFileName: GetCanonicalFileName, sourceMapper: SourceMapper | undefined): PathUpdater {
+diff --git a/src/services/organizeImports.ts b/src/services/organizeImports.ts
+index 7dfb4558e1..f8204d4f4b 100644
+--- a/src/services/organizeImports.ts
++++ b/src/services/organizeImports.ts
+@@ -1,6 +1,7 @@
+ import {
+     AnyImportOrRequireStatement, arrayIsSorted, binarySearch, compareBooleans, compareStringsCaseInsensitive,
+-    compareValues, createScanner, emptyArray, ExportDeclaration, ExportSpecifier, Expression, factory,
++    compareValues, Comparison, createScanner, emptyArray, ExportDeclaration, ExportSpecifier, Expression, factory,
++    FileTextChanges,
+     FindAllReferences, flatMap, formatting, getNewLineOrDefaultFromHost, group, Identifier, identity, ImportDeclaration,
+     ImportOrExportSpecifier, ImportSpecifier, isAmbientModule, isExportDeclaration, isExternalModuleNameRelative,
+     isExternalModuleReference, isImportDeclaration, isNamedExports, isNamedImports, isNamespaceImport, isString,
+@@ -25,7 +26,7 @@ export function organizeImports(
+     program: Program,
+     preferences: UserPreferences,
+     mode: OrganizeImportsMode,
+-) {
++): FileTextChanges[] {
+     const changeTracker = textChanges.ChangeTracker.fromContext({ host, formatContext, preferences });
+     const shouldSort = mode === OrganizeImportsMode.SortAndCombine || mode === OrganizeImportsMode.All;
+     const shouldCombine = shouldSort; // These are currently inseparable, but I draw a distinction for clarity and in case we add modes in the future.
+@@ -481,7 +482,7 @@ function sortSpecifiers<T extends ImportOrExportSpecifier>(specifiers: readonly
+ }
+ 
+ /** @internal */
+-export function compareImportOrExportSpecifiers<T extends ImportOrExportSpecifier>(s1: T, s2: T) {
++export function compareImportOrExportSpecifiers<T extends ImportOrExportSpecifier>(s1: T, s2: T): Comparison {
+     return compareBooleans(s1.isTypeOnly, s2.isTypeOnly)
+         || compareIdentifiers(s1.propertyName || s1.name, s2.propertyName || s2.name)
+         || compareIdentifiers(s1.name, s2.name);
+diff --git a/src/services/refactors/extractSymbol.ts b/src/services/refactors/extractSymbol.ts
+index a49c9f248d..9a702aa1a7 100644
+--- a/src/services/refactors/extractSymbol.ts
++++ b/src/services/refactors/extractSymbol.ts
+@@ -255,7 +255,8 @@ export namespace Messages {
+     export const cannotExtractFunctionsContainingThisToMethod = createMessage("Cannot extract functions containing this to method");
+ }
+ 
+-enum RangeFacts {
++/** @internal */
++export enum RangeFacts {
+     None = 0,
+     HasReturn = 1 << 0,
+     IsGenerator = 1 << 1,
+@@ -270,8 +271,10 @@ enum RangeFacts {
+ 
+ /**
+  * Represents an expression or a list of statements that should be extracted with some extra information
++ *
++ * @internal
+  */
+-interface TargetRange {
++export interface TargetRange {
+     readonly range: Expression | Statement[];
+     readonly facts: RangeFacts;
+     /**
+@@ -287,8 +290,10 @@ interface TargetRange {
+ 
+ /**
+  * Result of 'getRangeToExtract' operation: contains either a range or a list of errors
++ *
++ * @internal
+  */
+-type RangeToExtract = {
++export type RangeToExtract = {
+     readonly targetRange?: never;
+     readonly errors: readonly Diagnostic[];
+ } | {
+diff --git a/src/services/symbolDisplay.ts b/src/services/symbolDisplay.ts
+index 78d07e625d..ce70ddb0dc 100644
+--- a/src/services/symbolDisplay.ts
++++ b/src/services/symbolDisplay.ts
+@@ -149,7 +149,8 @@ export function getSymbolModifiers(typeChecker: TypeChecker, symbol: Symbol): st
+     return modifiers.size > 0 ? arrayFrom(modifiers.values()).join(",") : ScriptElementKindModifier.none;
+ }
+ 
+-interface SymbolDisplayPartsDocumentationAndSymbolKind {
++/** @internal */
++export interface SymbolDisplayPartsDocumentationAndSymbolKind {
+     displayParts: SymbolDisplayPart[];
+     documentation: SymbolDisplayPart[];
+     symbolKind: ScriptElementKind;
+diff --git a/src/services/textChanges.ts b/src/services/textChanges.ts
+index 2ddc725e83..4673304be2 100644
+--- a/src/services/textChanges.ts
++++ b/src/services/textChanges.ts
+@@ -1192,7 +1192,8 @@ function assignPositionsToNodeArray(nodes: NodeArray<any>, visitor: Visitor, tes
+     return nodeArray;
+ }
+ 
+-interface TextChangesWriter extends EmitTextWriter, PrintHandlers {}
++/** @internal */
++export interface TextChangesWriter extends EmitTextWriter, PrintHandlers {}
+ 
+ /** @internal */
+ export function createWriter(newLine: string): TextChangesWriter {
 diff --git a/src/services/transform.ts b/src/services/transform.ts
 index f6fb9314ac..f76326ea3f 100644
 --- a/src/services/transform.ts
@@ -1684,8 +2968,88 @@ index c9862f6a73..8a5136a1eb 100644
  
 -export = ts;
 +export * from "./_namespaces/ts";
+diff --git a/tests/baselines/reference/APILibCheck.js b/tests/baselines/reference/APILibCheck.js
+new file mode 100644
+index 0000000000..d63155925f
+--- /dev/null
++++ b/tests/baselines/reference/APILibCheck.js
+@@ -0,0 +1,36 @@
++//// [tests/cases/compiler/APILibCheck.ts] ////
++
++//// [package.json]
++{
++    "name": "typescript",
++    "types": "/.ts/typescript.d.ts"
++}
++
++//// [package.json]
++{
++    "name": "typescript-internal",
++    "types": "/.ts/typescript.internal.d.ts"
++}
++
++//// [package.json]
++{
++    "name": "tsserverlibrary",
++    "types": "/.ts/tsserverlibrary.d.ts"
++}
++
++//// [package.json]
++{
++    "name": "tsserverlibrary-internal",
++    "types": "/.ts/tsserverlibrary.internal.d.ts"
++}
++
++//// [index.ts]
++import ts = require("typescript");
++import tsInternal = require("typescript-internal");
++import tsserverlibrary = require("tsserverlibrary");
++import tsserverlibraryInternal = require("tsserverlibrary-internal");
++
++
++//// [index.js]
++"use strict";
++exports.__esModule = true;
+diff --git a/tests/baselines/reference/APILibCheck.symbols b/tests/baselines/reference/APILibCheck.symbols
+new file mode 100644
+index 0000000000..73bfb529ba
+--- /dev/null
++++ b/tests/baselines/reference/APILibCheck.symbols
+@@ -0,0 +1,13 @@
++=== tests/cases/compiler/index.ts ===
++import ts = require("typescript");
++>ts : Symbol(ts, Decl(index.ts, 0, 0))
++
++import tsInternal = require("typescript-internal");
++>tsInternal : Symbol(tsInternal, Decl(index.ts, 0, 34))
++
++import tsserverlibrary = require("tsserverlibrary");
++>tsserverlibrary : Symbol(tsserverlibrary, Decl(index.ts, 1, 51))
++
++import tsserverlibraryInternal = require("tsserverlibrary-internal");
++>tsserverlibraryInternal : Symbol(tsserverlibraryInternal, Decl(index.ts, 2, 52))
++
+diff --git a/tests/baselines/reference/APILibCheck.types b/tests/baselines/reference/APILibCheck.types
+new file mode 100644
+index 0000000000..5b06711a80
+--- /dev/null
++++ b/tests/baselines/reference/APILibCheck.types
+@@ -0,0 +1,13 @@
++=== tests/cases/compiler/index.ts ===
++import ts = require("typescript");
++>ts : typeof ts
++
++import tsInternal = require("typescript-internal");
++>tsInternal : typeof tsInternal
++
++import tsserverlibrary = require("tsserverlibrary");
++>tsserverlibrary : typeof tsserverlibrary
++
++import tsserverlibraryInternal = require("tsserverlibrary-internal");
++>tsserverlibraryInternal : typeof tsserverlibraryInternal
++
 diff --git a/tests/baselines/reference/api/tsserverlibrary.d.ts b/tests/baselines/reference/api/tsserverlibrary.d.ts
-index 43681f1bd3..421da0b754 100644
+index 43681f1bd3..9b7679b1a5 100644
 --- a/tests/baselines/reference/api/tsserverlibrary.d.ts
 +++ b/tests/baselines/reference/api/tsserverlibrary.d.ts
 @@ -14,6 +14,3937 @@ and limitations under the License.
@@ -9658,7 +11022,7 @@ index 43681f1bd3..421da0b754 100644
      enum InvalidatedProjectKind {
          Build = 0,
          UpdateBundle = 1,
-@@ -5609,165 +9813,15 @@ declare namespace ts {
+@@ -5609,165 +9813,7 @@ declare namespace ts {
          emit(writeFile?: WriteFileCallback, customTransformers?: CustomTransformers): EmitResult | BuildInvalidedProject<T> | undefined;
      }
      type InvalidatedProject<T extends BuilderProgram> = UpdateOutputFileStampsProject | BuildInvalidedProject<T> | UpdateBundleProject<T>;
@@ -9807,8 +11171,7 @@ index 43681f1bd3..421da0b754 100644
 -        getReturnType(): Type;
 -        getDocumentationComment(typeChecker: TypeChecker | undefined): SymbolDisplayPart[];
 -        getJsDocTags(): JSDocTagInfo[];
-+    namespace FindAllReferences {
-     }
+-    }
 -    interface SourceFile {
 -        getLineAndCharacterOfPosition(pos: number): LineAndCharacter;
 -        getLineEndOfPosition(pos: number): number;
@@ -9818,19 +11181,15 @@ index 43681f1bd3..421da0b754 100644
 -    }
 -    interface SourceFileLike {
 -        getLineAndCharacterOfPosition(pos: number): LineAndCharacter;
-+    namespace refactor {
-+        namespace extractSymbol {
-+        }
-     }
+-    }
 -    interface SourceMapSource {
 -        getLineAndCharacterOfPosition(pos: number): LineAndCharacter;
-+    namespace formatting {
-     }
+-    }
 +    function getDefaultFormatCodeSettings(newLineCharacter?: string): FormatCodeSettings;
      /**
       * Represents an immutable snapshot of a script at a specified time.Once acquired, the
       * snapshot is observably immutable. i.e. the same calls with the same parameters will return
-@@ -6410,7 +10464,6 @@ declare namespace ts {
+@@ -6410,7 +10456,6 @@ declare namespace ts {
          readonly indentMultiLineObjectLiteralBeginningOnBlankLine?: boolean;
          readonly semicolons?: SemicolonPreference;
      }
@@ -9838,7 +11197,7 @@ index 43681f1bd3..421da0b754 100644
      interface DefinitionInfo extends DocumentSpan {
          kind: ScriptElementKind;
          name: string;
-@@ -6893,18 +10946,13 @@ declare namespace ts {
+@@ -6893,18 +10938,13 @@ declare namespace ts {
          span: TextSpan;
          preferences: UserPreferences;
      }
@@ -9858,7 +11217,7 @@ index 43681f1bd3..421da0b754 100644
      /**
       * The document registry represents a store of SourceFile objects that can be shared between
       * multiple LanguageService instances. A LanguageService instance holds on the SourceFile (AST)
-@@ -6967,8 +11015,9 @@ declare namespace ts {
+@@ -6967,8 +11007,9 @@ declare namespace ts {
           * @param fileName The name of the file to be released
           * @param compilationSettings The compilation settings used to acquire the file
           * @param scriptKind The script kind of the file to be released
@@ -9869,7 +11228,7 @@ index 43681f1bd3..421da0b754 100644
          releaseDocument(fileName: string, compilationSettings: CompilerOptions, scriptKind?: ScriptKind): void;
          /**
           * Informs the DocumentRegistry that a file is not needed any longer.
-@@ -6991,12 +11040,9 @@ declare namespace ts {
+@@ -6991,12 +11032,9 @@ declare namespace ts {
      type DocumentRegistryBucketKey = string & {
          __bucketKey: any;
      };
@@ -9884,7 +11243,7 @@ index 43681f1bd3..421da0b754 100644
      interface TranspileOptions {
          compilerOptions?: CompilerOptions;
          fileName?: string;
-@@ -7010,4637 +11056,624 @@ declare namespace ts {
+@@ -7010,4637 +11048,624 @@ declare namespace ts {
          diagnostics?: Diagnostic[];
          sourceMapText?: string;
      }
@@ -14836,7 +16195,7 @@ index 43681f1bd3..421da0b754 100644
      /** @deprecated Use `factory.createToken` or the factory supplied by your transformation context instead. */
      const createToken: <TKind extends SyntaxKind>(kind: TKind) => Token<TKind>;
      /** @deprecated Use `factory.createIdentifier` or the factory supplied by your transformation context instead. */
-@@ -11772,256 +11805,11 @@ declare namespace ts {
+@@ -11772,256 +11797,11 @@ declare namespace ts {
       * @deprecated Use an appropriate `factory.update...` method instead, use `setCommentRange` or `setSourceMapRange`, and avoid setting `parent`.
       */
      const getMutableClone: <T extends Node>(node: T) => T;
@@ -15097,7 +16456,7 @@ index 43681f1bd3..421da0b754 100644
 +export = ts;
 \ No newline at end of file
 diff --git a/tests/baselines/reference/api/typescript.d.ts b/tests/baselines/reference/api/typescript.d.ts
-index ba0f15b86d..062f4fdf95 100644
+index ba0f15b86d..6fd3b5a3a5 100644
 --- a/tests/baselines/reference/api/typescript.d.ts
 +++ b/tests/baselines/reference/api/typescript.d.ts
 @@ -46,7 +46,10 @@ declare namespace ts {
@@ -19168,7 +20527,7 @@ index ba0f15b86d..062f4fdf95 100644
      enum InvalidatedProjectKind {
          Build = 0,
          UpdateBundle = 1,
-@@ -5609,165 +5882,88 @@ declare namespace ts {
+@@ -5609,165 +5882,80 @@ declare namespace ts {
          emit(writeFile?: WriteFileCallback, customTransformers?: CustomTransformers): EmitResult | BuildInvalidedProject<T> | undefined;
      }
      type InvalidatedProject<T extends BuilderProgram> = UpdateOutputFileStampsProject | BuildInvalidedProject<T> | UpdateBundleProject<T>;
@@ -19402,20 +20761,12 @@ index ba0f15b86d..062f4fdf95 100644
 +            readonly unresolvedImports: SortedReadonlyArray<string>;
 +            readonly kind: ActionSet;
 +        }
-+    }
-+    namespace FindAllReferences {
-+    }
-+    namespace refactor {
-+        namespace extractSymbol {
-+        }
-+    }
-+    namespace formatting {
      }
 +    function getDefaultFormatCodeSettings(newLineCharacter?: string): FormatCodeSettings;
      /**
       * Represents an immutable snapshot of a script at a specified time.Once acquired, the
       * snapshot is observably immutable. i.e. the same calls with the same parameters will return
-@@ -6410,7 +6606,6 @@ declare namespace ts {
+@@ -6410,7 +6598,6 @@ declare namespace ts {
          readonly indentMultiLineObjectLiteralBeginningOnBlankLine?: boolean;
          readonly semicolons?: SemicolonPreference;
      }
@@ -19423,7 +20774,7 @@ index ba0f15b86d..062f4fdf95 100644
      interface DefinitionInfo extends DocumentSpan {
          kind: ScriptElementKind;
          name: string;
-@@ -6893,18 +7088,13 @@ declare namespace ts {
+@@ -6893,18 +7080,13 @@ declare namespace ts {
          span: TextSpan;
          preferences: UserPreferences;
      }
@@ -19443,7 +20794,7 @@ index ba0f15b86d..062f4fdf95 100644
      /**
       * The document registry represents a store of SourceFile objects that can be shared between
       * multiple LanguageService instances. A LanguageService instance holds on the SourceFile (AST)
-@@ -6967,8 +7157,9 @@ declare namespace ts {
+@@ -6967,8 +7149,9 @@ declare namespace ts {
           * @param fileName The name of the file to be released
           * @param compilationSettings The compilation settings used to acquire the file
           * @param scriptKind The script kind of the file to be released
@@ -19454,7 +20805,7 @@ index ba0f15b86d..062f4fdf95 100644
          releaseDocument(fileName: string, compilationSettings: CompilerOptions, scriptKind?: ScriptKind): void;
          /**
           * Informs the DocumentRegistry that a file is not needed any longer.
-@@ -6991,12 +7182,9 @@ declare namespace ts {
+@@ -6991,12 +7174,9 @@ declare namespace ts {
      type DocumentRegistryBucketKey = string & {
          __bucketKey: any;
      };
@@ -19469,7 +20820,7 @@ index ba0f15b86d..062f4fdf95 100644
      interface TranspileOptions {
          compilerOptions?: CompilerOptions;
          fileName?: string;
-@@ -7010,12 +7198,6 @@ declare namespace ts {
+@@ -7010,12 +7190,6 @@ declare namespace ts {
          diagnostics?: Diagnostic[];
          sourceMapText?: string;
      }
@@ -19482,7 +20833,7 @@ index ba0f15b86d..062f4fdf95 100644
      function toEditorSettings(options: EditorOptions | EditorSettings): EditorSettings;
      function displayPartsToString(displayParts: SymbolDisplayPart[] | undefined): string;
      function getDefaultCompilerOptions(): CompilerOptions;
-@@ -7029,8 +7211,8 @@ declare namespace ts {
+@@ -7029,8 +7203,8 @@ declare namespace ts {
       * The functionality is not supported if the ts module is consumed outside of a node module.
       */
      function getDefaultLibFilePath(options: CompilerOptions): string;
@@ -19493,7 +20844,7 @@ index ba0f15b86d..062f4fdf95 100644
      /**
       * Transform one or more nodes using the supplied transformers.
       * @param source A single `Node` or an array of `Node` objects.
-@@ -7038,735 +7220,602 @@ declare namespace ts {
+@@ -7038,735 +7212,602 @@ declare namespace ts {
       * @param compilerOptions Optional compiler options.
       */
      function transform<T extends Node>(source: T | T[], transformers: TransformerFactory<T>[], compilerOptions?: CompilerOptions): TransformationResult<T>;
@@ -20525,7 +21876,7 @@ index ba0f15b86d..062f4fdf95 100644
      /** @deprecated Use `factory.createToken` or the factory supplied by your transformation context instead. */
      const createToken: <TKind extends SyntaxKind>(kind: TKind) => Token<TKind>;
      /** @deprecated Use `factory.createIdentifier` or the factory supplied by your transformation context instead. */
-@@ -7898,255 +7947,11 @@ declare namespace ts {
+@@ -7898,255 +7939,11 @@ declare namespace ts {
       * @deprecated Use an appropriate `factory.update...` method instead, use `setCommentRange` or `setSourceMapRange`, and avoid setting `parent`.
       */
      const getMutableClone: <T extends Node>(node: T) => T;
@@ -20782,6 +22133,46 @@ index ba0f15b86d..062f4fdf95 100644
 -
  export = ts;
 \ No newline at end of file
+diff --git a/tests/cases/compiler/APILibCheck.ts b/tests/cases/compiler/APILibCheck.ts
+new file mode 100644
+index 0000000000..dc7ba084d0
+--- /dev/null
++++ b/tests/cases/compiler/APILibCheck.ts
+@@ -0,0 +1,34 @@
++// @module: commonjs
++// @noImplicitAny: true
++// @strictNullChecks: true
++// @lib: es2015.iterable, es2015.generator, es5
++
++// @filename: node_modules/typescript/package.json
++{
++    "name": "typescript",
++    "types": "/.ts/typescript.d.ts"
++}
++
++// @filename: node_modules/typescript-internal/package.json
++{
++    "name": "typescript-internal",
++    "types": "/.ts/typescript.internal.d.ts"
++}
++
++// @filename: node_modules/tsserverlibrary/package.json
++{
++    "name": "tsserverlibrary",
++    "types": "/.ts/tsserverlibrary.d.ts"
++}
++
++// @filename: node_modules/tsserverlibrary-internal/package.json
++{
++    "name": "tsserverlibrary-internal",
++    "types": "/.ts/tsserverlibrary.internal.d.ts"
++}
++
++// @filename: index.ts
++import ts = require("typescript");
++import tsInternal = require("typescript-internal");
++import tsserverlibrary = require("tsserverlibrary");
++import tsserverlibraryInternal = require("tsserverlibrary-internal");
 -- 
 2.38.0
 
