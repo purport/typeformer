@@ -8,15 +8,15 @@ per file; each file is its own scope and declaring a namespace won't
 merge it into any other files.
 ---
  .eslintrc.json                                |  1 -
- .../eslint/rules/one-namespace-per-file.js    | 45 -------------------
+ .../eslint/rules/one-namespace-per-file.cjs   | 45 -------------------
  2 files changed, 46 deletions(-)
- delete mode 100644 scripts/eslint/rules/one-namespace-per-file.js
+ delete mode 100644 scripts/eslint/rules/one-namespace-per-file.cjs
 
 diff --git a/.eslintrc.json b/.eslintrc.json
-index 1711f8592a..0a4bef28ee 100644
+index 35901b1201..c3ce2174a7 100644
 --- a/.eslintrc.json
 +++ b/.eslintrc.json
-@@ -98,7 +98,6 @@
+@@ -87,7 +87,6 @@
          "local/simple-indent": "error",
          "local/debug-assert": "error",
          "local/no-keywords": "error",
@@ -24,14 +24,14 @@ index 1711f8592a..0a4bef28ee 100644
  
          // eslint-plugin-import
          "import/no-extraneous-dependencies": ["error", { "optionalDependencies": false }],
-diff --git a/scripts/eslint/rules/one-namespace-per-file.js b/scripts/eslint/rules/one-namespace-per-file.js
+diff --git a/scripts/eslint/rules/one-namespace-per-file.cjs b/scripts/eslint/rules/one-namespace-per-file.cjs
 deleted file mode 100644
-index a91f54eeaf..0000000000
---- a/scripts/eslint/rules/one-namespace-per-file.js
+index 2b8772005a..0000000000
+--- a/scripts/eslint/rules/one-namespace-per-file.cjs
 +++ /dev/null
 @@ -1,45 +0,0 @@
 -const { AST_NODE_TYPES, TSESTree } = require("@typescript-eslint/utils");
--const { createRule } = require("./utils");
+-const { createRule } = require("./utils.cjs");
 -
 -module.exports = createRule({
 -    name: "one-namespace-per-file",

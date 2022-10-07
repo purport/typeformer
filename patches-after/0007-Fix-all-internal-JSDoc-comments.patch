@@ -15,6 +15,9 @@ non-JSDoc comments.
 The comments also need to be attached to a declaration, not floating,
 otherwise they won't be used by api-extractor, so move them if needed.
 ---
+ scripts/failed-tests.cjs                      |    1 +
+ scripts/processDiagnosticMessages.mjs         |    1 +
+ scripts/word2md.mjs                           |    1 +
  src/compiler/builder.ts                       |    9 +-
  src/compiler/builderPublic.ts                 |   27 +-
  src/compiler/builderStatePublic.ts            |    4 +-
@@ -105,8 +108,44 @@ otherwise they won't be used by api-extractor, so move them if needed.
  src/services/utilities.ts                     |   98 +-
  src/typingsInstallerCore/typingsInstaller.ts  |    8 +-
  src/webServer/webServer.ts                    |    2 +-
- 90 files changed, 2816 insertions(+), 2097 deletions(-)
+ 93 files changed, 2819 insertions(+), 2097 deletions(-)
 
+diff --git a/scripts/failed-tests.cjs b/scripts/failed-tests.cjs
+index 78e90fc976..d2f3078e7b 100644
+--- a/scripts/failed-tests.cjs
++++ b/scripts/failed-tests.cjs
+@@ -10,6 +10,7 @@ const os = require("os");
+     reporter?: Mocha.ReporterConstructor | keyof Mocha.reporters;
+     reporterOptions?: any; // TODO(jakebailey): what?
+ }} ReporterOptions */
++void 0;
+ 
+ /**
+  * .failed-tests reporter
+diff --git a/scripts/processDiagnosticMessages.mjs b/scripts/processDiagnosticMessages.mjs
+index 26cf24d796..747af17bd4 100644
+--- a/scripts/processDiagnosticMessages.mjs
++++ b/scripts/processDiagnosticMessages.mjs
+@@ -9,6 +9,7 @@ import fs from "fs";
+     isEarly?: boolean;
+     elidedInCompatabilityPyramid?: boolean;
+ }} DiagnosticDetails */
++void 0;
+ 
+ /** @typedef {Map<string, DiagnosticDetails>} InputDiagnosticMessageTable */
+ 
+diff --git a/scripts/word2md.mjs b/scripts/word2md.mjs
+index 785bcf93f1..1bed91726a 100644
+--- a/scripts/word2md.mjs
++++ b/scripts/word2md.mjs
+@@ -60,6 +60,7 @@ const sys = (() => {
+         subscript?: boolean;
+     };
+ }} FindReplaceOptions */
++void 0;
+ 
+ /**
+  * @param {Word.Document} doc
 diff --git a/src/compiler/builder.ts b/src/compiler/builder.ts
 index d29830e849..7320417971 100644
 --- a/src/compiler/builder.ts
@@ -11265,7 +11304,7 @@ index df9e9506f6..81f48515e7 100644
  export function createWatchCompilerHostOfFilesAndCompilerOptions<T extends BuilderProgram = EmitAndSemanticDiagnosticsBuilderProgram>({
      rootFiles, options, watchOptions, projectReferences,
 diff --git a/src/compiler/watchPublic.ts b/src/compiler/watchPublic.ts
-index 04e4426214..c54d14e0b0 100644
+index cc7bfb9fc8..cce52629b8 100644
 --- a/src/compiler/watchPublic.ts
 +++ b/src/compiler/watchPublic.ts
 @@ -25,7 +25,7 @@ export interface ReadBuildProgramHost {
@@ -12467,7 +12506,7 @@ index b59a533db1..1ae9921a3c 100644
      return (config as TsConfigSourceFile).kind !== undefined;
  }
 diff --git a/src/server/project.ts b/src/server/project.ts
-index 2cd3aa32ad..23d3636a22 100644
+index 22ad7f8205..919c1fad7b 100644
 --- a/src/server/project.ts
 +++ b/src/server/project.ts
 @@ -39,10 +39,10 @@ export enum ProjectKind {
@@ -12527,16 +12566,16 @@ index 2cd3aa32ad..23d3636a22 100644
  export interface EmitResult {
      emitSkipped: boolean;
      diagnostics: readonly Diagnostic[];
-@@ -176,7 +177,7 @@ export abstract class Project implements LanguageServiceHost, ModuleResolutionHo
- 
-     private plugins: PluginModuleWithName[] = [];
+@@ -177,7 +178,7 @@ export abstract class Project implements LanguageServiceHost, ModuleResolutionHo
+     /*@internal*/
+     protected readonly plugins: PluginModuleWithName[] = [];
  
 -    /*@internal*/
 +    /** @internal */
      /**
       * This is map from files to unresolved imports in it
       * Maop does not contain entries for files that do not have unresolved imports
-@@ -184,14 +185,14 @@ export abstract class Project implements LanguageServiceHost, ModuleResolutionHo
+@@ -185,14 +186,14 @@ export abstract class Project implements LanguageServiceHost, ModuleResolutionHo
       */
      cachedUnresolvedImportsPerFile = new Map<Path, readonly string[]>();
  
@@ -12555,7 +12594,7 @@ index 2cd3aa32ad..23d3636a22 100644
      lastFileExceededProgramSize: string | undefined;
  
      // wrapper over the real language service that will suppress all semantic operations
-@@ -202,10 +203,10 @@ export abstract class Project implements LanguageServiceHost, ModuleResolutionHo
+@@ -203,10 +204,10 @@ export abstract class Project implements LanguageServiceHost, ModuleResolutionHo
      readonly trace?: (s: string) => void;
      readonly realpath?: (path: string) => string;
  
@@ -12568,7 +12607,7 @@ index 2cd3aa32ad..23d3636a22 100644
      resolutionCache: ResolutionCache;
  
      private builderState: BuilderState | undefined;
-@@ -238,28 +239,28 @@ export abstract class Project implements LanguageServiceHost, ModuleResolutionHo
+@@ -239,28 +240,28 @@ export abstract class Project implements LanguageServiceHost, ModuleResolutionHo
  
      protected isInitialLoadPending: () => boolean = returnFalse;
  
@@ -12605,7 +12644,7 @@ index 2cd3aa32ad..23d3636a22 100644
  
      private readonly cancellationToken: ThrottledCancellationToken;
  
-@@ -285,7 +286,7 @@ export abstract class Project implements LanguageServiceHost, ModuleResolutionHo
+@@ -286,7 +287,7 @@ export abstract class Project implements LanguageServiceHost, ModuleResolutionHo
          return result.module;
      }
  
@@ -12614,7 +12653,7 @@ index 2cd3aa32ad..23d3636a22 100644
      public static async importServicePluginAsync(moduleName: string, initialDir: string, host: ServerHost, log: (message: string) => void, logErrors?: (message: string) => void): Promise<{} | undefined> {
          Debug.assertIsDefined(host.importPlugin);
          const resolvedPath = combinePaths(initialDir, "node_modules");
-@@ -305,31 +306,34 @@ export abstract class Project implements LanguageServiceHost, ModuleResolutionHo
+@@ -306,31 +307,34 @@ export abstract class Project implements LanguageServiceHost, ModuleResolutionHo
          return result.module;
      }
  
@@ -12660,7 +12699,7 @@ index 2cd3aa32ad..23d3636a22 100644
          readonly projectKind: ProjectKind,
          readonly projectService: ProjectService,
          private documentRegistry: DocumentRegistry,
-@@ -341,6 +345,7 @@ export abstract class Project implements LanguageServiceHost, ModuleResolutionHo
+@@ -342,6 +346,7 @@ export abstract class Project implements LanguageServiceHost, ModuleResolutionHo
          directoryStructureHost: DirectoryStructureHost,
          currentDirectory: string | undefined,
      ) {
@@ -12668,7 +12707,7 @@ index 2cd3aa32ad..23d3636a22 100644
          this.directoryStructureHost = directoryStructureHost;
          this.currentDirectory = this.projectService.getNormalizedAbsolutePath(currentDirectory || "");
          this.getCanonicalFileName = this.projectService.toCanonicalFileName;
-@@ -407,7 +412,7 @@ export abstract class Project implements LanguageServiceHost, ModuleResolutionHo
+@@ -408,7 +413,7 @@ export abstract class Project implements LanguageServiceHost, ModuleResolutionHo
          return this.typingsCache.installPackage({ ...options, projectName: this.projectName, projectRootPath: this.toPath(this.currentDirectory) });
      }
  
@@ -12677,7 +12716,7 @@ index 2cd3aa32ad..23d3636a22 100644
      getGlobalTypingsCacheLocation() {
          return this.getGlobalCache();
      }
-@@ -416,7 +421,7 @@ export abstract class Project implements LanguageServiceHost, ModuleResolutionHo
+@@ -417,7 +422,7 @@ export abstract class Project implements LanguageServiceHost, ModuleResolutionHo
          return this.projectService.typingsCache;
      }
  
@@ -12686,7 +12725,7 @@ index 2cd3aa32ad..23d3636a22 100644
      getSymlinkCache(): SymlinkCache {
          if (!this.symlinks) {
              this.symlinks = createSymlinkCache(this.getCurrentDirectory(), this.getCanonicalFileName);
-@@ -560,17 +565,17 @@ export abstract class Project implements LanguageServiceHost, ModuleResolutionHo
+@@ -561,17 +566,17 @@ export abstract class Project implements LanguageServiceHost, ModuleResolutionHo
          return this.directoryStructureHost.getDirectories!(path); // TODO: GH#18217
      }
  
@@ -12707,7 +12746,7 @@ index 2cd3aa32ad..23d3636a22 100644
      watchDirectoryOfFailedLookupLocation(directory: string, cb: DirectoryWatcherCallback, flags: WatchDirectoryFlags) {
          return this.projectService.watchFactory.watchDirectory(
              directory,
-@@ -582,7 +587,7 @@ export abstract class Project implements LanguageServiceHost, ModuleResolutionHo
+@@ -583,7 +588,7 @@ export abstract class Project implements LanguageServiceHost, ModuleResolutionHo
          );
      }
  
@@ -12716,7 +12755,7 @@ index 2cd3aa32ad..23d3636a22 100644
      watchAffectingFileLocation(file: string, cb: FileWatcherCallback) {
          return this.projectService.watchFactory.watchFile(
              file,
-@@ -594,12 +599,12 @@ export abstract class Project implements LanguageServiceHost, ModuleResolutionHo
+@@ -595,12 +600,12 @@ export abstract class Project implements LanguageServiceHost, ModuleResolutionHo
          );
      }
  
@@ -12731,7 +12770,7 @@ index 2cd3aa32ad..23d3636a22 100644
      scheduleInvalidateResolutionsOfFailedLookupLocations() {
          this.projectService.throttledOperations.schedule(`${this.getProjectName()}FailedLookupInvalidation`, /*delay*/ 1000, () => {
              if (this.resolutionCache.invalidateResolutionsOfFailedLookupLocations()) {
-@@ -608,7 +613,7 @@ export abstract class Project implements LanguageServiceHost, ModuleResolutionHo
+@@ -609,7 +614,7 @@ export abstract class Project implements LanguageServiceHost, ModuleResolutionHo
          });
      }
  
@@ -12740,7 +12779,7 @@ index 2cd3aa32ad..23d3636a22 100644
      invalidateResolutionsOfFailedLookupLocations() {
          if (this.clearInvalidateResolutionOfFailedLookupTimer() &&
              this.resolutionCache.invalidateResolutionsOfFailedLookupLocations()) {
-@@ -617,12 +622,12 @@ export abstract class Project implements LanguageServiceHost, ModuleResolutionHo
+@@ -618,12 +623,12 @@ export abstract class Project implements LanguageServiceHost, ModuleResolutionHo
          }
      }
  
@@ -12755,7 +12794,7 @@ index 2cd3aa32ad..23d3636a22 100644
      watchTypeRootsDirectory(directory: string, cb: DirectoryWatcherCallback, flags: WatchDirectoryFlags) {
          return this.projectService.watchFactory.watchDirectory(
              directory,
-@@ -634,30 +639,30 @@ export abstract class Project implements LanguageServiceHost, ModuleResolutionHo
+@@ -635,30 +640,30 @@ export abstract class Project implements LanguageServiceHost, ModuleResolutionHo
          );
      }
  
@@ -12792,7 +12831,7 @@ index 2cd3aa32ad..23d3636a22 100644
      writeLog(s: string) {
          this.projectService.logger.info(s);
      }
-@@ -711,17 +716,17 @@ export abstract class Project implements LanguageServiceHost, ModuleResolutionHo
+@@ -712,17 +717,17 @@ export abstract class Project implements LanguageServiceHost, ModuleResolutionHo
          this.languageService.clearSourceMapperCache();
      }
  
@@ -12813,7 +12852,7 @@ index 2cd3aa32ad..23d3636a22 100644
      shouldEmitFile(scriptInfo: ScriptInfo | undefined) {
          return scriptInfo &&
              !scriptInfo.isDynamicOrHasMixedContent() &&
-@@ -838,7 +843,7 @@ export abstract class Project implements LanguageServiceHost, ModuleResolutionHo
+@@ -839,7 +844,7 @@ export abstract class Project implements LanguageServiceHost, ModuleResolutionHo
          return this.program.getSourceFileByPath(path);
      }
  
@@ -12822,7 +12861,7 @@ index 2cd3aa32ad..23d3636a22 100644
      getSourceFileOrConfigFile(path: Path): SourceFile | undefined {
          const options = this.program!.getCompilerOptions();
          return path === options.configFilePath ? options.configFile : this.getSourceFile(path);
-@@ -915,7 +920,7 @@ export abstract class Project implements LanguageServiceHost, ModuleResolutionHo
+@@ -917,7 +922,7 @@ export abstract class Project implements LanguageServiceHost, ModuleResolutionHo
          return this.rootFiles && this.rootFiles.length > 0;
      }
  
@@ -12831,7 +12870,7 @@ index 2cd3aa32ad..23d3636a22 100644
      isOrphan() {
          return false;
      }
-@@ -924,7 +929,7 @@ export abstract class Project implements LanguageServiceHost, ModuleResolutionHo
+@@ -926,7 +931,7 @@ export abstract class Project implements LanguageServiceHost, ModuleResolutionHo
          return this.rootFiles && this.rootFiles.map(info => info.fileName);
      }
  
@@ -12840,7 +12879,7 @@ index 2cd3aa32ad..23d3636a22 100644
      getRootFilesMap() {
          return this.rootFilesMap;
      }
-@@ -986,7 +991,7 @@ export abstract class Project implements LanguageServiceHost, ModuleResolutionHo
+@@ -988,7 +993,7 @@ export abstract class Project implements LanguageServiceHost, ModuleResolutionHo
          return result;
      }
  
@@ -12849,7 +12888,7 @@ index 2cd3aa32ad..23d3636a22 100644
      getFileNamesWithRedirectInfo(includeProjectReferenceRedirectInfo: boolean) {
          return this.getFileNames().map((fileName): protocol.FileWithProjectReferenceRedirectInfo => ({
              fileName,
-@@ -1073,7 +1078,7 @@ export abstract class Project implements LanguageServiceHost, ModuleResolutionHo
+@@ -1075,7 +1080,7 @@ export abstract class Project implements LanguageServiceHost, ModuleResolutionHo
          (this.updatedFileNames || (this.updatedFileNames = new Set<string>())).add(fileName);
      }
  
@@ -12858,7 +12897,7 @@ index 2cd3aa32ad..23d3636a22 100644
      markFileAsDirty(changedFile: Path) {
          this.markAsDirty();
          if (this.exportMapCache && !this.exportMapCache.isEmpty()) {
-@@ -1088,7 +1093,7 @@ export abstract class Project implements LanguageServiceHost, ModuleResolutionHo
+@@ -1090,7 +1095,7 @@ export abstract class Project implements LanguageServiceHost, ModuleResolutionHo
          }
      }
  
@@ -12867,7 +12906,7 @@ index 2cd3aa32ad..23d3636a22 100644
      onAutoImportProviderSettingsChanged() {
          if (this.autoImportProviderHost === false) {
              this.autoImportProviderHost = undefined;
-@@ -1098,7 +1103,7 @@ export abstract class Project implements LanguageServiceHost, ModuleResolutionHo
+@@ -1100,7 +1105,7 @@ export abstract class Project implements LanguageServiceHost, ModuleResolutionHo
          }
      }
  
@@ -12876,7 +12915,7 @@ index 2cd3aa32ad..23d3636a22 100644
      onPackageJsonChange(packageJsonPath: Path) {
          if (this.packageJsonsForAutoImport?.has(packageJsonPath)) {
              this.moduleSpecifierCache.clear();
-@@ -1108,7 +1113,7 @@ export abstract class Project implements LanguageServiceHost, ModuleResolutionHo
+@@ -1110,7 +1115,7 @@ export abstract class Project implements LanguageServiceHost, ModuleResolutionHo
          }
      }
  
@@ -12885,7 +12924,7 @@ index 2cd3aa32ad..23d3636a22 100644
      onFileAddedOrRemoved(isSymlink: boolean | undefined) {
          this.hasAddedorRemovedFiles = true;
          if (isSymlink) {
-@@ -1116,7 +1121,7 @@ export abstract class Project implements LanguageServiceHost, ModuleResolutionHo
+@@ -1118,7 +1123,7 @@ export abstract class Project implements LanguageServiceHost, ModuleResolutionHo
          }
      }
  
@@ -12894,7 +12933,7 @@ index 2cd3aa32ad..23d3636a22 100644
      onDiscoveredSymlink() {
          this.hasAddedOrRemovedSymlinks = true;
      }
-@@ -1178,7 +1183,7 @@ export abstract class Project implements LanguageServiceHost, ModuleResolutionHo
+@@ -1180,7 +1185,7 @@ export abstract class Project implements LanguageServiceHost, ModuleResolutionHo
          return !hasNewProgram;
      }
  
@@ -12903,7 +12942,7 @@ index 2cd3aa32ad..23d3636a22 100644
      updateTypingFiles(typingFiles: SortedReadonlyArray<string>) {
          if (enumerateInsertsAndDeletes<string, string>(typingFiles, this.typingFiles, getStringComparer(!this.useCaseSensitiveFileNames()),
              /*inserted*/ noop,
-@@ -1192,7 +1197,7 @@ export abstract class Project implements LanguageServiceHost, ModuleResolutionHo
+@@ -1194,7 +1199,7 @@ export abstract class Project implements LanguageServiceHost, ModuleResolutionHo
          }
      }
  
@@ -12912,7 +12951,7 @@ index 2cd3aa32ad..23d3636a22 100644
      getCurrentProgram(): Program | undefined {
          return this.program;
      }
-@@ -1338,7 +1343,7 @@ export abstract class Project implements LanguageServiceHost, ModuleResolutionHo
+@@ -1340,7 +1345,7 @@ export abstract class Project implements LanguageServiceHost, ModuleResolutionHo
          return hasNewProgram;
      }
  
@@ -12921,7 +12960,7 @@ index 2cd3aa32ad..23d3636a22 100644
      sendPerformanceEvent(kind: PerformanceEvent["kind"], durationMs: number) {
          this.projectService.sendPerformanceEvent(kind, durationMs);
      }
-@@ -1386,7 +1391,7 @@ export abstract class Project implements LanguageServiceHost, ModuleResolutionHo
+@@ -1388,7 +1393,7 @@ export abstract class Project implements LanguageServiceHost, ModuleResolutionHo
          return !!this.missingFilesMap && this.missingFilesMap.has(path);
      }
  
@@ -12930,7 +12969,7 @@ index 2cd3aa32ad..23d3636a22 100644
      addGeneratedFileWatch(generatedFile: string, sourceFile: string) {
          if (outFile(this.compilerOptions)) {
              // Single watcher
-@@ -1471,7 +1476,7 @@ export abstract class Project implements LanguageServiceHost, ModuleResolutionHo
+@@ -1473,7 +1478,7 @@ export abstract class Project implements LanguageServiceHost, ModuleResolutionHo
          return strBuilder;
      }
  
@@ -12939,7 +12978,7 @@ index 2cd3aa32ad..23d3636a22 100644
      print(writeProjectFileNames: boolean) {
          this.writeLog(`Project '${this.projectName}' (${ProjectKind[this.projectKind]})`);
          this.writeLog(this.filesToString(writeProjectFileNames && this.projectService.logger.hasLevel(LogLevel.verbose)));
-@@ -1499,12 +1504,12 @@ export abstract class Project implements LanguageServiceHost, ModuleResolutionHo
+@@ -1501,12 +1506,12 @@ export abstract class Project implements LanguageServiceHost, ModuleResolutionHo
          }
      }
  
@@ -12954,7 +12993,7 @@ index 2cd3aa32ad..23d3636a22 100644
      getWatchOptions(): WatchOptions | undefined {
          return this.watchOptions;
      }
-@@ -1519,7 +1524,7 @@ export abstract class Project implements LanguageServiceHost, ModuleResolutionHo
+@@ -1521,7 +1526,7 @@ export abstract class Project implements LanguageServiceHost, ModuleResolutionHo
          return this.typeAcquisition || {};
      }
  
@@ -12963,7 +13002,7 @@ index 2cd3aa32ad..23d3636a22 100644
      getChangesSinceVersion(lastKnownVersion?: number, includeProjectReferenceRedirectInfo?: boolean): ProjectFilesWithTSDiagnostics {
          const includeProjectReferenceRedirectInfoIfRequested =
              includeProjectReferenceRedirectInfo
-@@ -1630,7 +1635,7 @@ export abstract class Project implements LanguageServiceHost, ModuleResolutionHo
+@@ -1632,7 +1637,7 @@ export abstract class Project implements LanguageServiceHost, ModuleResolutionHo
          this.rootFilesMap.delete(info.path);
      }
  
@@ -12972,7 +13011,7 @@ index 2cd3aa32ad..23d3636a22 100644
      isSourceOfProjectReferenceRedirect(fileName: string) {
          return !!this.program && this.program.isSourceOfProjectReferenceRedirect(fileName);
      }
-@@ -1669,7 +1674,7 @@ export abstract class Project implements LanguageServiceHost, ModuleResolutionHo
+@@ -1675,7 +1680,7 @@ export abstract class Project implements LanguageServiceHost, ModuleResolutionHo
      /**
       * Performs the initial steps of enabling a plugin by finding and instantiating the module for a plugin synchronously using 'require'.
       */
@@ -12981,7 +13020,7 @@ index 2cd3aa32ad..23d3636a22 100644
      beginEnablePluginSync(pluginConfigEntry: PluginImport, searchPaths: string[], pluginConfigOverrides: Map<any> | undefined): BeginEnablePluginResult {
          Debug.assertIsDefined(this.projectService.host.require);
  
-@@ -1686,7 +1691,7 @@ export abstract class Project implements LanguageServiceHost, ModuleResolutionHo
+@@ -1692,7 +1697,7 @@ export abstract class Project implements LanguageServiceHost, ModuleResolutionHo
      /**
       * Performs the initial steps of enabling a plugin by finding and instantiating the module for a plugin asynchronously using dynamic `import`.
       */
@@ -12990,7 +13029,7 @@ index 2cd3aa32ad..23d3636a22 100644
      async beginEnablePluginAsync(pluginConfigEntry: PluginImport, searchPaths: string[], pluginConfigOverrides: Map<any> | undefined): Promise<BeginEnablePluginResult> {
          Debug.assertIsDefined(this.projectService.host.importPlugin);
  
-@@ -1709,7 +1714,7 @@ export abstract class Project implements LanguageServiceHost, ModuleResolutionHo
+@@ -1715,7 +1720,7 @@ export abstract class Project implements LanguageServiceHost, ModuleResolutionHo
      /**
       * Performs the remaining steps of enabling a plugin after its module has been instantiated.
       */
@@ -12999,7 +13038,7 @@ index 2cd3aa32ad..23d3636a22 100644
      endEnablePlugin({ pluginConfigEntry, pluginConfigOverrides, resolvedModule, errorLogs }: BeginEnablePluginResult) {
          if (resolvedModule) {
              const configurationOverride = pluginConfigOverrides && pluginConfigOverrides.get(pluginConfigEntry.name);
-@@ -1766,7 +1771,7 @@ export abstract class Project implements LanguageServiceHost, ModuleResolutionHo
+@@ -1772,7 +1777,7 @@ export abstract class Project implements LanguageServiceHost, ModuleResolutionHo
          }
      }
  
@@ -13008,7 +13047,7 @@ index 2cd3aa32ad..23d3636a22 100644
      onPluginConfigurationChanged(pluginName: string, configuration: any) {
          this.plugins.filter(plugin => plugin.name === pluginName).forEach(plugin => {
              if (plugin.module.onConfigurationChanged) {
-@@ -1780,45 +1785,45 @@ export abstract class Project implements LanguageServiceHost, ModuleResolutionHo
+@@ -1786,45 +1791,45 @@ export abstract class Project implements LanguageServiceHost, ModuleResolutionHo
          this.projectService.sendProjectsUpdatedInBackgroundEvent();
      }
  
@@ -13062,7 +13101,7 @@ index 2cd3aa32ad..23d3636a22 100644
      includePackageJsonAutoImports(): PackageJsonAutoImportPreference {
          if (this.projectService.includePackageJsonAutoImports() === PackageJsonAutoImportPreference.Off ||
              !this.languageServiceEnabled ||
-@@ -1829,7 +1834,7 @@ export abstract class Project implements LanguageServiceHost, ModuleResolutionHo
+@@ -1835,7 +1840,7 @@ export abstract class Project implements LanguageServiceHost, ModuleResolutionHo
          return this.projectService.includePackageJsonAutoImports();
      }
  
@@ -13071,7 +13110,7 @@ index 2cd3aa32ad..23d3636a22 100644
      getModuleResolutionHostForAutoImportProvider(): ModuleResolutionHost {
          if (this.program) {
              return {
-@@ -1846,7 +1851,7 @@ export abstract class Project implements LanguageServiceHost, ModuleResolutionHo
+@@ -1852,7 +1857,7 @@ export abstract class Project implements LanguageServiceHost, ModuleResolutionHo
          return this.projectService.host;
      }
  
@@ -13080,7 +13119,7 @@ index 2cd3aa32ad..23d3636a22 100644
      getPackageJsonAutoImportProvider(): Program | undefined {
          if (this.autoImportProviderHost === false) {
              return undefined;
-@@ -1880,24 +1885,24 @@ export abstract class Project implements LanguageServiceHost, ModuleResolutionHo
+@@ -1886,24 +1891,24 @@ export abstract class Project implements LanguageServiceHost, ModuleResolutionHo
          }
      }
  
@@ -13109,7 +13148,7 @@ index 2cd3aa32ad..23d3636a22 100644
      getNoDtsResolutionProject(rootFileNames: readonly string[]): Project {
          Debug.assert(this.projectService.serverMode === LanguageServiceMode.Semantic);
          if (!this.noDtsResolutionProject) {
-@@ -1929,7 +1934,7 @@ export abstract class Project implements LanguageServiceHost, ModuleResolutionHo
+@@ -1935,7 +1940,7 @@ export abstract class Project implements LanguageServiceHost, ModuleResolutionHo
          return this.noDtsResolutionProject;
      }
  
@@ -13118,7 +13157,7 @@ index 2cd3aa32ad..23d3636a22 100644
      private getCompilerOptionsForNoDtsResolutionProject() {
          return {
              ...this.getCompilerOptions(),
-@@ -2004,11 +2009,11 @@ export class InferredProject extends Project {
+@@ -2010,11 +2015,11 @@ export class InferredProject extends Project {
      /** this is canonical project root path */
      readonly projectRootPath: string | undefined;
  
@@ -13132,7 +13171,7 @@ index 2cd3aa32ad..23d3636a22 100644
      constructor(
          projectService: ProjectService,
          documentRegistry: DocumentRegistry,
-@@ -2057,7 +2062,7 @@ export class InferredProject extends Project {
+@@ -2063,7 +2068,7 @@ export class InferredProject extends Project {
          }
      }
  
@@ -13141,7 +13180,7 @@ index 2cd3aa32ad..23d3636a22 100644
      isOrphan() {
          return !this.hasRoots();
      }
-@@ -2103,7 +2108,7 @@ class AuxiliaryProject extends Project {
+@@ -2109,7 +2114,7 @@ class AuxiliaryProject extends Project {
          return true;
      }
  
@@ -13150,7 +13189,7 @@ index 2cd3aa32ad..23d3636a22 100644
      scheduleInvalidateResolutionsOfFailedLookupLocations(): void {
          // Invalidation will happen on-demand as part of updateGraph
          return;
-@@ -2111,10 +2116,10 @@ class AuxiliaryProject extends Project {
+@@ -2117,10 +2122,10 @@ class AuxiliaryProject extends Project {
  }
  
  export class AutoImportProviderProject extends Project {
@@ -13163,7 +13202,7 @@ index 2cd3aa32ad..23d3636a22 100644
      static getRootFileNames(dependencySelection: PackageJsonAutoImportPreference, hostProject: Project, moduleResolutionHost: ModuleResolutionHost, compilerOptions: CompilerOptions): string[] {
          if (!dependencySelection) {
              return ts.emptyArray;
-@@ -2234,7 +2239,7 @@ export class AutoImportProviderProject extends Project {
+@@ -2240,7 +2245,7 @@ export class AutoImportProviderProject extends Project {
          }
      }
  
@@ -13172,7 +13211,7 @@ index 2cd3aa32ad..23d3636a22 100644
      static readonly compilerOptionsOverrides: CompilerOptions = {
          diagnostics: false,
          skipLibCheck: true,
-@@ -2244,7 +2249,7 @@ export class AutoImportProviderProject extends Project {
+@@ -2250,7 +2255,7 @@ export class AutoImportProviderProject extends Project {
          noLib: true,
      };
  
@@ -13181,7 +13220,7 @@ index 2cd3aa32ad..23d3636a22 100644
      static create(dependencySelection: PackageJsonAutoImportPreference, hostProject: Project, moduleResolutionHost: ModuleResolutionHost, documentRegistry: DocumentRegistry): AutoImportProviderProject | undefined {
          if (dependencySelection === PackageJsonAutoImportPreference.Off) {
              return undefined;
-@@ -2265,7 +2270,7 @@ export class AutoImportProviderProject extends Project {
+@@ -2271,7 +2276,7 @@ export class AutoImportProviderProject extends Project {
  
      private rootFileNames: string[] | undefined;
  
@@ -13190,7 +13229,7 @@ index 2cd3aa32ad..23d3636a22 100644
      constructor(
          private hostProject: Project,
          initialRootNames: string[],
-@@ -2289,7 +2294,7 @@ export class AutoImportProviderProject extends Project {
+@@ -2295,7 +2300,7 @@ export class AutoImportProviderProject extends Project {
          this.getParsedCommandLine = maybeBind(this.hostProject, this.hostProject.getParsedCommandLine);
      }
  
@@ -13199,7 +13238,7 @@ index 2cd3aa32ad..23d3636a22 100644
      isEmpty() {
          return !some(this.rootFileNames);
      }
-@@ -2318,7 +2323,7 @@ export class AutoImportProviderProject extends Project {
+@@ -2324,7 +2329,7 @@ export class AutoImportProviderProject extends Project {
          return hasSameSetOfFiles;
      }
  
@@ -13208,7 +13247,7 @@ index 2cd3aa32ad..23d3636a22 100644
      scheduleInvalidateResolutionsOfFailedLookupLocations(): void {
          // Invalidation will happen on-demand as part of updateGraph
          return;
-@@ -2341,12 +2346,12 @@ export class AutoImportProviderProject extends Project {
+@@ -2347,12 +2352,12 @@ export class AutoImportProviderProject extends Project {
          throw new Error("AutoImportProviderProject language service should never be used. To get the program, use `project.getCurrentProgram()`.");
      }
  
@@ -13223,7 +13262,7 @@ index 2cd3aa32ad..23d3636a22 100644
      onPackageJsonChange(): never {
          throw new Error("package.json changes should be notified on an AutoImportProvider's host project");
      }
-@@ -2359,7 +2364,7 @@ export class AutoImportProviderProject extends Project {
+@@ -2365,7 +2370,7 @@ export class AutoImportProviderProject extends Project {
          return this.hostProject.getProjectReferences();
      }
  
@@ -13232,7 +13271,7 @@ index 2cd3aa32ad..23d3636a22 100644
      includePackageJsonAutoImports() {
          return PackageJsonAutoImportPreference.Off;
      }
-@@ -2368,12 +2373,12 @@ export class AutoImportProviderProject extends Project {
+@@ -2374,12 +2379,12 @@ export class AutoImportProviderProject extends Project {
          return { enable: false };
      }
  
@@ -13247,7 +13286,7 @@ index 2cd3aa32ad..23d3636a22 100644
      getModuleResolutionCache() {
          return this.hostProject.getCurrentProgram()?.getModuleResolutionCache();
      }
-@@ -2385,15 +2390,15 @@ export class AutoImportProviderProject extends Project {
+@@ -2391,15 +2396,15 @@ export class AutoImportProviderProject extends Project {
   * Otherwise it will create an InferredProject.
   */
  export class ConfiguredProject extends Project {
@@ -13267,7 +13306,7 @@ index 2cd3aa32ad..23d3636a22 100644
      canConfigFileJsonReportNoInputFiles = false;
  
      /** Ref count to the project when opened from external project */
-@@ -2402,22 +2407,22 @@ export class ConfiguredProject extends Project {
+@@ -2408,22 +2413,22 @@ export class ConfiguredProject extends Project {
      private projectReferences: readonly ProjectReference[] | undefined;
  
      /** Potential project references before the project is actually loaded (read config file) */
@@ -13296,7 +13335,7 @@ index 2cd3aa32ad..23d3636a22 100644
      constructor(configFileName: NormalizedPath,
          readonly canonicalConfigFilePath: NormalizedPath,
          projectService: ProjectService,
-@@ -2437,22 +2442,22 @@ export class ConfiguredProject extends Project {
+@@ -2443,22 +2448,22 @@ export class ConfiguredProject extends Project {
          );
      }
  
@@ -13323,7 +13362,7 @@ index 2cd3aa32ad..23d3636a22 100644
      getParsedCommandLine(fileName: string) {
          const configFileName = asNormalizedPath(normalizePath(fileName));
          const canonicalConfigFilePath = asNormalizedPath(this.projectService.toCanonicalFileName(configFileName));
-@@ -2470,12 +2475,12 @@ export class ConfiguredProject extends Project {
+@@ -2476,12 +2481,12 @@ export class ConfiguredProject extends Project {
          return configFileExistenceInfo.exists ? configFileExistenceInfo.config!.parsedCommandLine : undefined;
      }
  
@@ -13338,7 +13377,7 @@ index 2cd3aa32ad..23d3636a22 100644
      private releaseParsedConfig(canonicalConfigFilePath: NormalizedPath) {
          this.projectService.stopWatchingWildCards(canonicalConfigFilePath, this);
          this.projectService.releaseParsedConfig(canonicalConfigFilePath, this);
-@@ -2512,7 +2517,7 @@ export class ConfiguredProject extends Project {
+@@ -2518,7 +2523,7 @@ export class ConfiguredProject extends Project {
          return result;
      }
  
@@ -13347,7 +13386,7 @@ index 2cd3aa32ad..23d3636a22 100644
      getCachedDirectoryStructureHost() {
          return this.directoryStructureHost as CachedDirectoryStructureHost;
      }
-@@ -2530,26 +2535,26 @@ export class ConfiguredProject extends Project {
+@@ -2536,26 +2541,26 @@ export class ConfiguredProject extends Project {
          this.potentialProjectReferences = undefined;
      }
  
@@ -13376,9 +13415,9 @@ index 2cd3aa32ad..23d3636a22 100644
 -    /*@internal*/
 +    /** @internal */
      enablePluginsWithOptions(options: CompilerOptions, pluginConfigOverrides: ESMap<string, any> | undefined): void {
+         this.plugins.length = 0;
          if (!options.plugins?.length && !this.projectService.globalPlugins.length) return;
-         const host = this.projectService.host;
-@@ -2605,23 +2610,23 @@ export class ConfiguredProject extends Project {
+@@ -2609,23 +2614,23 @@ export class ConfiguredProject extends Project {
          super.close();
      }
  
@@ -13406,7 +13445,7 @@ index 2cd3aa32ad..23d3636a22 100644
      /** Find the configured project from the project references in project which contains the info directly */
      getDefaultChildProjectFromProjectWithReferences(info: ScriptInfo) {
          return forEachResolvedProjectReferenceProject(
-@@ -2635,7 +2640,7 @@ export class ConfiguredProject extends Project {
+@@ -2639,7 +2644,7 @@ export class ConfiguredProject extends Project {
      }
  
      /** Returns true if the project is needed by any of the open script info/external project */
@@ -13415,7 +13454,7 @@ index 2cd3aa32ad..23d3636a22 100644
      hasOpenRef() {
          if (!!this.externalProjectRefCount) {
              return true;
-@@ -2672,7 +2677,7 @@ export class ConfiguredProject extends Project {
+@@ -2676,7 +2681,7 @@ export class ConfiguredProject extends Project {
          ) || false;
      }
  
@@ -13424,7 +13463,7 @@ index 2cd3aa32ad..23d3636a22 100644
      hasExternalProjectRef() {
          return !!this.externalProjectRefCount;
      }
-@@ -2681,7 +2686,7 @@ export class ConfiguredProject extends Project {
+@@ -2685,7 +2690,7 @@ export class ConfiguredProject extends Project {
          return getEffectiveTypeRoots(this.getCompilationSettings(), this.directoryStructureHost) || [];
      }
  
@@ -13433,7 +13472,7 @@ index 2cd3aa32ad..23d3636a22 100644
      updateErrorOnNoInputFiles(fileNames: string[]) {
          updateErrorForNoInputFiles(fileNames, this.getConfigFilePath(), this.getCompilerOptions().configFile!.configFileSpecs!, this.projectErrors!, this.canConfigFileJsonReportNoInputFiles);
      }
-@@ -2693,7 +2698,7 @@ export class ConfiguredProject extends Project {
+@@ -2697,7 +2702,7 @@ export class ConfiguredProject extends Project {
   */
  export class ExternalProject extends Project {
      excludedFiles: readonly NormalizedPath[] = [];
@@ -13442,7 +13481,7 @@ index 2cd3aa32ad..23d3636a22 100644
      constructor(public externalProjectName: string,
          projectService: ProjectService,
          documentRegistry: DocumentRegistry,
-@@ -2728,17 +2733,17 @@ export class ExternalProject extends Project {
+@@ -2732,17 +2737,17 @@ export class ExternalProject extends Project {
      }
  }
  
@@ -13464,7 +13503,7 @@ index 2cd3aa32ad..23d3636a22 100644
      return project.projectKind === ProjectKind.External;
  }
 diff --git a/src/server/protocol.ts b/src/server/protocol.ts
-index addd691451..cd9a7ea7a2 100644
+index 420c3240e4..7d0c25f951 100644
 --- a/src/server/protocol.ts
 +++ b/src/server/protocol.ts
 @@ -15,7 +15,7 @@ import {
@@ -13726,7 +13765,7 @@ index addd691451..cd9a7ea7a2 100644
  export interface EncodedSyntacticClassificationsRequestArgs extends FileRequestArgs {
      /**
       * Start position of the span.
-@@ -1262,13 +1269,13 @@ export interface RenameRequest extends FileLocationRequest {
+@@ -1264,13 +1271,13 @@ export interface RenameRequest extends FileLocationRequest {
      arguments: RenameRequestArgs;
  }
  
@@ -13742,7 +13781,7 @@ index addd691451..cd9a7ea7a2 100644
  export interface RenameFullResponse extends Response {
      readonly body: readonly RenameLocation[];
  }
-@@ -1422,8 +1429,9 @@ export type ExternalProjectCompilerOptions = CompilerOptions & CompileOnSaveMixi
+@@ -1424,8 +1431,9 @@ export type ExternalProjectCompilerOptions = CompilerOptions & CompileOnSaveMixi
  
  /**
   * Contains information about current project version
@@ -13753,7 +13792,7 @@ index addd691451..cd9a7ea7a2 100644
  export interface ProjectVersionInfo {
      /**
       * Project name
-@@ -1492,8 +1500,9 @@ export interface ProjectChanges {
+@@ -1494,8 +1502,9 @@ export interface ProjectChanges {
   * if files is set - then this is the entire set of files in the project
   * if changes is set - then this is the set of changes that should be applied to existing project
   * otherwise - assume that nothing is changed
@@ -13764,7 +13803,7 @@ index addd691451..cd9a7ea7a2 100644
  export interface ProjectFiles {
      /**
       * Information about project verison
-@@ -1513,8 +1522,9 @@ export interface ProjectFiles {
+@@ -1515,8 +1524,9 @@ export interface ProjectFiles {
  
  /**
   * Combines project information with project level errors.
@@ -13775,7 +13814,7 @@ index addd691451..cd9a7ea7a2 100644
  export interface ProjectFilesWithDiagnostics extends ProjectFiles {
      /**
       * List of errors in project
-@@ -1524,8 +1534,9 @@ export interface ProjectFilesWithDiagnostics extends ProjectFiles {
+@@ -1526,8 +1536,9 @@ export interface ProjectFilesWithDiagnostics extends ProjectFiles {
  
  /**
   * Represents set of changes in open file
@@ -13786,7 +13825,7 @@ index addd691451..cd9a7ea7a2 100644
  export interface ChangedOpenFile {
      /**
       * Name of file
-@@ -1777,16 +1788,18 @@ export interface CloseExternalProjectResponse extends Response {
+@@ -1779,16 +1790,18 @@ export interface CloseExternalProjectResponse extends Response {
  
  /**
   * Request to check if given list of projects is up-to-date and synchronize them if necessary
@@ -13807,7 +13846,7 @@ index addd691451..cd9a7ea7a2 100644
  export interface SynchronizeProjectListRequestArgs {
      /**
       * List of last known projects
-@@ -1801,16 +1814,18 @@ export interface SynchronizeProjectListRequestArgs {
+@@ -1803,16 +1816,18 @@ export interface SynchronizeProjectListRequestArgs {
  
  /**
   * Request to synchronize list of open files with the client
@@ -13828,7 +13867,7 @@ index addd691451..cd9a7ea7a2 100644
  export interface ApplyChangedToOpenFilesRequestArgs {
      /**
       * List of newly open files
-@@ -2053,8 +2068,9 @@ export interface FormatRequestArgs extends FileLocationRequestArgs {
+@@ -2055,8 +2070,9 @@ export interface FormatRequestArgs extends FileLocationRequestArgs {
  
      /**
       * End position of the range for which to format text in file.
@@ -13839,7 +13878,7 @@ index addd691451..cd9a7ea7a2 100644
      endPosition?: number;
      /**
       * Format options to be used.
-@@ -2966,7 +2982,7 @@ export interface LargeFileReferencedEventBody {
+@@ -2968,7 +2984,7 @@ export interface LargeFileReferencedEventBody {
      maxFileSize: number;
  }
  
@@ -14005,10 +14044,10 @@ index aa160e17d2..25c77fe3d4 100644
          if (this.sourceMapFilePath && !isString(this.sourceMapFilePath)) {
              closeFileWatcherOf(this.sourceMapFilePath);
 diff --git a/src/server/session.ts b/src/server/session.ts
-index 726fd29d95..7f1720db91 100644
+index 1a3d38309f..2b84b2188e 100644
 --- a/src/server/session.ts
 +++ b/src/server/session.ts
-@@ -3529,7 +3529,7 @@ export interface HandlerResponse {
+@@ -3531,7 +3531,7 @@ export interface HandlerResponse {
      responseRequired?: boolean;
  }
  

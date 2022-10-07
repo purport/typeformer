@@ -27,7 +27,7 @@ index aaa19750b8..57c82e7522 100644
  interface ServerCancellationToken {
      isCancellationRequested(): boolean;
 diff --git a/src/harness/findUpDir.ts b/src/harness/findUpDir.ts
-index 3a43a5c691..1df1706e41 100644
+index 6fd1b51b07..2a7cda59d5 100644
 --- a/src/harness/findUpDir.ts
 +++ b/src/harness/findUpDir.ts
 @@ -1,5 +1,5 @@

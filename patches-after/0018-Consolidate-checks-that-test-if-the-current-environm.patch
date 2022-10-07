@@ -5,17 +5,17 @@ Subject: [PATCH] Consolidate checks that test if the current environment is
  Node
 
 ---
- src/compiler/core.ts            | 13 +++++++++++++
+ src/compiler/core.ts            | 16 ++++++++++++++++
  src/compiler/performanceCore.ts |  4 ++--
  src/compiler/sys.ts             |  6 ++----
  src/services/globalThisShim.ts  |  4 ++--
- 4 files changed, 19 insertions(+), 8 deletions(-)
+ 4 files changed, 22 insertions(+), 8 deletions(-)
 
 diff --git a/src/compiler/core.ts b/src/compiler/core.ts
-index a0cc5b1854..8a2f2f9077 100644
+index a0cc5b1854..d2c79cfd86 100644
 --- a/src/compiler/core.ts
 +++ b/src/compiler/core.ts
-@@ -2910,3 +2910,16 @@ function trimEndImpl(s: string) {
+@@ -2910,3 +2910,19 @@ function trimEndImpl(s: string) {
      }
      return s.slice(0, end + 1);
  }
@@ -24,7 +24,10 @@ index a0cc5b1854..8a2f2f9077 100644
 +
 +/** @internal */
 +export function isNodeLikeSystem(): boolean {
-+    // Note: we don't use the presence of `require` to check if we are in Node;
++    // This is defined here rather than in sys.ts to prevent a cycle from its
++    // use in performanceCore.ts.
++    //
++    // We don't use the presence of `require` to check if we are in Node;
 +    // when bundled using esbuild, this function will be rewritten to `__require`
 +    // and definitely exist.
 +    return typeof process !== "undefined"

@@ -4,16 +4,16 @@ Date: Mon, 3 Oct 2022 14:38:58 -0700
 Subject: [PATCH] Restore self-compilation using built compiler in CI tests
 
 ---
- Gulpfile.js               |  3 +++
- scripts/build/projects.js |  2 +-
- scripts/build/tests.js    | 22 +++++++++++-----------
+ Gulpfile.mjs               |  3 +++
+ scripts/build/projects.mjs |  2 +-
+ scripts/build/tests.mjs    | 22 +++++++++++-----------
  3 files changed, 15 insertions(+), 12 deletions(-)
 
-diff --git a/Gulpfile.js b/Gulpfile.js
-index 7c52710c3c..1984110af5 100644
---- a/Gulpfile.js
-+++ b/Gulpfile.js
-@@ -126,6 +126,9 @@ const buildSrc = () => buildProject("src");
+diff --git a/Gulpfile.mjs b/Gulpfile.mjs
+index 3fc1e38f00..22f9446898 100644
+--- a/Gulpfile.mjs
++++ b/Gulpfile.mjs
+@@ -125,6 +125,9 @@ const buildSrc = () => buildProject("src");
  
  task("build-src", series(preSrc, buildSrc));
  
@@ -23,11 +23,11 @@ index 7c52710c3c..1984110af5 100644
  /**
   * @param {string} entrypoint
   * @param {string} output
-diff --git a/scripts/build/projects.js b/scripts/build/projects.js
-index 55559e9d1b..d3053c8de2 100644
---- a/scripts/build/projects.js
-+++ b/scripts/build/projects.js
-@@ -32,7 +32,7 @@ class ProjectQueue {
+diff --git a/scripts/build/projects.mjs b/scripts/build/projects.mjs
+index b33d58a6d0..537eea00a1 100644
+--- a/scripts/build/projects.mjs
++++ b/scripts/build/projects.mjs
+@@ -31,7 +31,7 @@ class ProjectQueue {
  
  const execTsc = (/** @type {string[]} */ ...args) =>
      exec(process.execPath,
@@ -36,15 +36,15 @@ index 55559e9d1b..d3053c8de2 100644
            "-b", ...args],
           { hidePrompt: true });
  
-diff --git a/scripts/build/tests.js b/scripts/build/tests.js
-index f656034347..f1fb14a24a 100644
---- a/scripts/build/tests.js
-+++ b/scripts/build/tests.js
-@@ -123,17 +123,17 @@ async function runConsoleTests(runJs, defaultReporter, runInParallel, watchMode)
+diff --git a/scripts/build/tests.mjs b/scripts/build/tests.mjs
+index 4da9cab147..807e5cd03a 100644
+--- a/scripts/build/tests.mjs
++++ b/scripts/build/tests.mjs
+@@ -122,17 +122,17 @@ export async function runConsoleTests(runJs, defaultReporter, runInParallel, _wa
              errorStatus = exitCode;
              error = new Error(`Process exited with status code ${errorStatus}.`);
          }
--        // else if (cmdLineOptions.ci) {
+-        // else if (cmdLineOptions.ci && runJs.startsWith("built")) {
 -        //     // finally, do a sanity check and build the compiler with the built version of itself
 -        //     log.info("Starting sanity check build...");
 -        //     // Cleanup everything except lint rules (we'll need those later and would rather not waste time rebuilding them)
@@ -55,7 +55,7 @@ index f656034347..f1fb14a24a 100644
 -        //         error = new Error(`Sanity check build process exited with status code ${errorStatus}.`);
 -        //     }
 -        // }
-+        else if (cmdLineOptions.ci) {
++        else if (cmdLineOptions.ci && runJs.startsWith("built")) {
 +            // finally, do a sanity check and build the compiler with the built version of itself
 +            log.info("Starting sanity check build...");
 +            // Cleanup everything except lint rules (we'll need those later and would rather not waste time rebuilding them)

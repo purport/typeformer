@@ -8,7 +8,7 @@ Subject: [PATCH] Add a --bundle=false variant to CI
  1 file changed, 6 insertions(+), 1 deletion(-)
 
 diff --git a/.github/workflows/ci.yml b/.github/workflows/ci.yml
-index 956a417296..8ac6a03cc7 100644
+index bf6cb01228..44836a0739 100644
 --- a/.github/workflows/ci.yml
 +++ b/.github/workflows/ci.yml
 @@ -21,6 +21,11 @@ jobs:
