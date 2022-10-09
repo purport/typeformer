@@ -1,0 +1,138 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Jake Bailey <5341706+jakebailey@users.noreply.github.com>
+Date: Sat, 8 Oct 2022 17:07:26 -0700
+Subject: [PATCH] Use jsonc-parser instead of LKG compiler in build
+
+Profiling the build roughly half of the time spent loading the
+build is spent importing typescript.js, for this one function.
+
+Since this stack is already adding required devDependencies, switch
+readJson to use jsonc-parser (published by the VS Code team), rather
+than importing the entire LKG typescript.js library.
+---
+ package-lock.json       | 13 +++++++++++++
+ package.json            |  1 +
+ scripts/build/utils.mjs | 41 +++--------------------------------------
+ 3 files changed, 17 insertions(+), 38 deletions(-)
+
+diff --git a/package-lock.json b/package-lock.json
+index 0f64b8de53..290dc1b06d 100644
+--- a/package-lock.json
++++ b/package-lock.json
+@@ -57,6 +57,7 @@
+                 "gulp-newer": "latest",
+                 "gulp-rename": "latest",
+                 "gulp-sourcemaps": "latest",
++                "jsonc-parser": "^3.2.0",
+                 "merge2": "latest",
+                 "minimist": "latest",
+                 "mkdirp": "latest",
+@@ -5391,6 +5392,12 @@
+                 "json5": "lib/cli.js"
+             }
+         },
++        "node_modules/jsonc-parser": {
++            "version": "3.2.0",
++            "resolved": "https://registry.npmjs.org/jsonc-parser/-/jsonc-parser-3.2.0.tgz",
++            "integrity": "sha512-gfFQZrcTc8CnKXp6Y4/CBT3fTc0OVuDofpre4aEeEpSBPV5X5v4+Vmx+8snU7RLPrNHPKSgLxGo9YuQzz20o+w==",
++            "dev": true
++        },
+         "node_modules/jsonfile": {
+             "version": "6.1.0",
+             "resolved": "https://registry.npmjs.org/jsonfile/-/jsonfile-6.1.0.tgz",
+@@ -13108,6 +13115,12 @@
+                 "minimist": "^1.2.0"
+             }
+         },
++        "jsonc-parser": {
++            "version": "3.2.0",
++            "resolved": "https://registry.npmjs.org/jsonc-parser/-/jsonc-parser-3.2.0.tgz",
++            "integrity": "sha512-gfFQZrcTc8CnKXp6Y4/CBT3fTc0OVuDofpre4aEeEpSBPV5X5v4+Vmx+8snU7RLPrNHPKSgLxGo9YuQzz20o+w==",
++            "dev": true
++        },
+         "jsonfile": {
+             "version": "6.1.0",
+             "resolved": "https://registry.npmjs.org/jsonfile/-/jsonfile-6.1.0.tgz",
+diff --git a/package.json b/package.json
+index f0cbb5ee9e..75c2bbf778 100644
+--- a/package.json
++++ b/package.json
+@@ -83,6 +83,7 @@
+         "gulp-newer": "latest",
+         "gulp-rename": "latest",
+         "gulp-sourcemaps": "latest",
++        "jsonc-parser": "^3.2.0",
+         "merge2": "latest",
+         "minimist": "latest",
+         "mkdirp": "latest",
+diff --git a/scripts/build/utils.mjs b/scripts/build/utils.mjs
+index 59075df3a4..6d8734ba5a 100644
+--- a/scripts/build/utils.mjs
++++ b/scripts/build/utils.mjs
+@@ -7,12 +7,12 @@ import path from "path";
+ import log from "fancy-log";
+ import del from "del";
+ import File from "vinyl";
+-import ts from "../../lib/typescript.js";
+ import chalk from "chalk";
+ import which from "which";
+ import { spawn } from "child_process";
+ import { Duplex } from "stream";
+ import assert from "assert";
++import JSONC from "jsonc-parser";
+ 
+ /**
+  * Executes the provided command once with the supplied arguments.
+@@ -53,47 +53,12 @@ export async function exec(cmd, args, options = {}) {
+ }
+ 
+ /**
+- * @param {ts.Diagnostic[]} diagnostics
+- * @param {{ cwd?: string, pretty?: boolean }} [options]
+- */
+-function formatDiagnostics(diagnostics, options) {
+-    return options && options.pretty
+-        ? ts.formatDiagnosticsWithColorAndContext(diagnostics, getFormatDiagnosticsHost(options && options.cwd))
+-        : ts.formatDiagnostics(diagnostics, getFormatDiagnosticsHost(options && options.cwd));
+-}
+-
+-/**
+- * @param {ts.Diagnostic[]} diagnostics
+- * @param {{ cwd?: string }} [options]
+- */
+-function reportDiagnostics(diagnostics, options) {
+-    log(formatDiagnostics(diagnostics, { cwd: options && options.cwd, pretty: process.stdout.isTTY }));
+-}
+-
+-/**
+- * @param {string | undefined} cwd
+- * @returns {ts.FormatDiagnosticsHost}
+- */
+-function getFormatDiagnosticsHost(cwd) {
+-    return {
+-        getCanonicalFileName: fileName => fileName,
+-        getCurrentDirectory: () => cwd ?? process.cwd(),
+-        getNewLine: () => ts.sys.newLine,
+-    };
+-}
+-
+-/**
+- * Reads JSON data with optional comments using the LKG TypeScript compiler
++ * Reads JSON data with optional comments.
+  * @param {string} jsonPath
+  */
+ export function readJson(jsonPath) {
+     const jsonText = fs.readFileSync(jsonPath, "utf8");
+-    const result = ts.parseConfigFileTextToJson(jsonPath, jsonText);
+-    if (result.error) {
+-        reportDiagnostics([result.error]);
+-        throw new Error("An error occurred during parse.");
+-    }
+-    return result.config;
++    return JSONC.parse(jsonText);
+ }
+ 
+ /**
+-- 
+2.38.0
+

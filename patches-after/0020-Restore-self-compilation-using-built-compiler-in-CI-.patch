@@ -10,7 +10,7 @@ Subject: [PATCH] Restore self-compilation using built compiler in CI tests
  3 files changed, 15 insertions(+), 12 deletions(-)
 
 diff --git a/Gulpfile.mjs b/Gulpfile.mjs
-index 3fc1e38f00..22f9446898 100644
+index 5e05ee491c..2614dc34e7 100644
 --- a/Gulpfile.mjs
 +++ b/Gulpfile.mjs
 @@ -125,6 +125,9 @@ const buildSrc = () => buildProject("src");
