@@ -8,8 +8,8 @@ more than 50%. We can also eliminate some any and such in the process.
 ---
  package-lock.json                             | 110 +++++++-----------
  package.json                                  |   7 +-
- .../generateLocalizedDiagnosticMessages.mjs   |  46 +++++---
- 3 files changed, 74 insertions(+), 89 deletions(-)
+ .../generateLocalizedDiagnosticMessages.mjs   |  47 +++++---
+ 3 files changed, 75 insertions(+), 89 deletions(-)
 
 diff --git a/package-lock.json b/package-lock.json
 index fb77a498ba..eee9d994de 100644
@@ -252,7 +252,7 @@ index 1d41053e00..5fdaf30aab 100644
      "scripts": {
          "test": "hereby runtests-parallel --light=false",
 diff --git a/scripts/generateLocalizedDiagnosticMessages.mjs b/scripts/generateLocalizedDiagnosticMessages.mjs
-index d8bdf0c00d..9109148037 100644
+index d8bdf0c00d..d10bb26106 100644
 --- a/scripts/generateLocalizedDiagnosticMessages.mjs
 +++ b/scripts/generateLocalizedDiagnosticMessages.mjs
 @@ -1,9 +1,26 @@
@@ -262,7 +262,7 @@ index d8bdf0c00d..9109148037 100644
 -import util from "util";
 -
 -const parseString = util.promisify(xml2js.parseString);
-+import { XMLParser } from "fast-xml-parser"
++import { XMLParser } from "fast-xml-parser";
 +
 +/** @typedef {{
 +    LCX: {
@@ -286,7 +286,7 @@ index d8bdf0c00d..9109148037 100644
  
  async function main() {
      const args = process.argv.slice(2);
-@@ -31,15 +48,16 @@ async function main() {
+@@ -31,15 +48,17 @@ async function main() {
       */
      async function visitDirectory(name) {
          const inputFilePath = path.join(inputPath, name, "diagnosticMessages", "diagnosticMessages.generated.json.lcl");
@@ -296,6 +296,7 @@ index d8bdf0c00d..9109148037 100644
 -            console.error("Unexpected XML file structure. Expected to find result.LCX.$.TgtCul.");
 +        const contents = await fs.promises.readFile(inputFilePath);
 +        /** @type {ParsedLCL} */
++        // eslint-disable-next-line local/object-literal-surrounding-space
 +        const result = new XMLParser({ ignoreAttributes: false, attributeNamePrefix: "$_"}).parse(contents);
 +        if (!result || !result.LCX || !result.LCX.$_TgtCul) {
 +            console.error("Unexpected XML file structure. Expected to find result.LCX.$_TgtCul.");
@@ -309,7 +310,7 @@ index d8bdf0c00d..9109148037 100644
              process.exit(1);
          }
          await writeFile(path.join(outputPath, outputDirectoryName, "diagnosticMessages.generated.json"), xmlObjectToString(result));
-@@ -77,14 +95,14 @@ async function main() {
+@@ -77,14 +96,14 @@ async function main() {
      }
  
      /**

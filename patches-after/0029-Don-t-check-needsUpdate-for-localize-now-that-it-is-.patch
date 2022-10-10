@@ -4,11 +4,11 @@ Date: Mon, 10 Oct 2022 12:34:50 -0700
 Subject: [PATCH] Don't check needsUpdate for localize, now that it is fast
 
 ---
- Herebyfile.mjs | 9 +++------
- 1 file changed, 3 insertions(+), 6 deletions(-)
+ Herebyfile.mjs | 11 +++--------
+ 1 file changed, 3 insertions(+), 8 deletions(-)
 
 diff --git a/Herebyfile.mjs b/Herebyfile.mjs
-index 3bbdb05319..bfd66b291b 100644
+index d466cd1d0b..9ccd850926 100644
 --- a/Herebyfile.mjs
 +++ b/Herebyfile.mjs
 @@ -6,7 +6,7 @@ import esbuild from "esbuild";
@@ -20,7 +20,7 @@ index 3bbdb05319..bfd66b291b 100644
  import { runConsoleTests, refBaseline, localBaseline, refRwcBaseline, localRwcBaseline } from "./scripts/build/tests.mjs";
  import { buildProject as realBuildProject, cleanProject } from "./scripts/build/projects.mjs";
  import { localizationDirectories } from "./scripts/build/localization.mjs";
-@@ -148,15 +148,12 @@ const localizationTargets = localizationDirectories
+@@ -148,15 +148,10 @@ const localizationTargets = localizationDirectories
      .map(f => `built/local/${f}/diagnosticMessages.generated.json`)
      .concat(generatedLCGFile);
  
@@ -28,16 +28,16 @@ index 3bbdb05319..bfd66b291b 100644
 +export const localize = task({
      name: "localize",
      dependencies: [generateDiagnostics],
-     run: async () => {
-         await fs.promises.mkdir("./built/local", { recursive: true });  // TODO(jakebailey): needed?
+-    run: async () => {
 -        if (needsUpdate(diagnosticMessagesGeneratedJson, generatedLCGFile)) {
 -            // TODO(jakebailey): slow; need needsUpdate to not block the builds
 -            return exec(process.execPath, ["scripts/generateLocalizedDiagnosticMessages.mjs", "src/loc/lcl", "built/local", diagnosticMessagesGeneratedJson], { ignoreExitCode: true });
 -        }
-+        return exec(process.execPath, ["scripts/generateLocalizedDiagnosticMessages.mjs", "src/loc/lcl", "built/local", diagnosticMessagesGeneratedJson], { ignoreExitCode: true });
-     }
+-    }
++    run: () => exec(process.execPath, ["scripts/generateLocalizedDiagnosticMessages.mjs", "src/loc/lcl", "built/local", diagnosticMessagesGeneratedJson], { ignoreExitCode: true }),
  });
  
+ export const buildSrc = task({
 -- 
 2.38.0
 

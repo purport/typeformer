@@ -177,7 +177,7 @@ index 0f02be239f..0349e2ba7b 100644
      "   --built": "Compile using the built version of the compiler.",
 diff --git a/scripts/dtsBundler.mjs b/scripts/dtsBundler.mjs
 new file mode 100644
-index 0000000000..689f9c71c9
+index 0000000000..7635f1ee38
 --- /dev/null
 +++ b/scripts/dtsBundler.mjs
 @@ -0,0 +1,289 @@
@@ -230,8 +230,8 @@ index 0000000000..689f9c71c9
 +}
 +
 +/**
-+ * 
-+ * @param {ts.VariableDeclaration} node 
++ *
++ * @param {ts.VariableDeclaration} node
 + * @returns {ts.VariableStatement}
 + */
 +function getParentVariableStatement(node) {
@@ -244,8 +244,8 @@ index 0000000000..689f9c71c9
 +}
 +
 +/**
-+ * 
-+ * @param {ts.Declaration} node 
++ *
++ * @param {ts.Declaration} node
 + * @returns {ts.Statement | undefined}
 + */
 +function getDeclarationStatement(node) {
@@ -295,11 +295,11 @@ index 0000000000..689f9c71c9
 +    Public: 1 << 0,
 +    Internal: 1 << 1,
 +    Both: (1 << 0) | (1 << 1),
-+}
++};
 +
 +/**
-+ * @param {string} s 
-+ * @param {WriteTarget} target 
++ * @param {string} s
++ * @param {WriteTarget} target
 + */
 +function write(s, target) {
 +    if (!target) {
@@ -317,9 +317,9 @@ index 0000000000..689f9c71c9
 +}
 +
 +/**
-+ * @param {ts.Node} node 
-+ * @param {ts.SourceFile} sourceFile 
-+ * @param {WriteTarget} target 
++ * @param {ts.Node} node
++ * @param {ts.SourceFile} sourceFile
++ * @param {WriteTarget} target
 + */
 +function writeNode(node, sourceFile, target) {
 +    write(printer.printNode(ts.EmitHint.Unspecified, node, sourceFile), target);
@@ -329,7 +329,7 @@ index 0000000000..689f9c71c9
 +const containsPublicAPICache = new Map();
 +
 +/**
-+ * @param {ts.Symbol} symbol 
++ * @param {ts.Symbol} symbol
 + * @returns {boolean}
 + */
 +function containsPublicAPI(symbol) {
@@ -374,7 +374,7 @@ index 0000000000..689f9c71c9
 +}
 +
 +/**
-+ * @param {ts.Node} decl 
++ * @param {ts.Node} decl
 + */
 +function nodeToLocation(decl) {
 +    const sourceFile = decl.getSourceFile();
@@ -383,7 +383,7 @@ index 0000000000..689f9c71c9
 +}
 +
 +/**
-+ * @param {ts.Node} node 
++ * @param {ts.Node} node
 + * @returns {ts.Node | undefined}
 + */
 +function removeDeclareConstExport(node) {
@@ -397,8 +397,8 @@ index 0000000000..689f9c71c9
 +}
 +
 +/**
-+ * @param {string} name 
-+ * @param {ts.Symbol} moduleSymbol 
++ * @param {string} name
++ * @param {ts.Symbol} moduleSymbol
 + */
 +function emitAsNamespace(name, moduleSymbol) {
 +    assert(moduleSymbol.flags & ts.SymbolFlags.ValueModule);

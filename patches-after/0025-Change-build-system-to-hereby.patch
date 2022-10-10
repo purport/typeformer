@@ -28,7 +28,7 @@ it seems like this is a good time to change things up.
  .vscode/tasks.json                            |    28 +-
  CONTRIBUTING.md                               |    66 +-
  Dockerfile                                    |     3 +-
- Herebyfile.mjs                                |   922 +-
+ Herebyfile.mjs                                |   921 +-
  lib/README.md                                 |     2 +-
  package-lock.json                             | 11735 +++-------------
  package.json                                  |    34 +-
@@ -42,7 +42,7 @@ it seems like this is a good time to change things up.
  scripts/types/ambient.d.ts                    |    90 -
  src/harness/findUpDir.ts                      |     2 +-
  src/harness/harnessIO.ts                      |     2 +-
- 27 files changed, 2341 insertions(+), 10742 deletions(-)
+ 27 files changed, 2340 insertions(+), 10742 deletions(-)
  delete mode 100644 scripts/build/sourcemaps.mjs
  delete mode 100644 scripts/types/ambient.d.ts
 
@@ -440,7 +440,7 @@ index 5606df9611..d72ffc513f 100644
 \ No newline at end of file
 +RUN npx hereby configure-insiders && npx hereby LKG && npx hereby clean && npm pack .
 diff --git a/Herebyfile.mjs b/Herebyfile.mjs
-index 6f970a637e..d6b7e98f11 100644
+index 6f970a637e..41f4abb136 100644
 --- a/Herebyfile.mjs
 +++ b/Herebyfile.mjs
 @@ -1,24 +1,33 @@
@@ -595,7 +595,7 @@ index 6f970a637e..d6b7e98f11 100644
  
  // Localize diagnostics
  /**
-@@ -114,19 +154,26 @@ const localizationTargets = localizationDirectories
+@@ -114,19 +154,25 @@ const localizationTargets = localizationDirectories
      .map(f => `built/local/${f}/diagnosticMessages.generated.json`)
      .concat(generatedLCGFile);
  
@@ -605,7 +605,6 @@ index 6f970a637e..d6b7e98f11 100644
 +const localize = task({
 +    name: "localize",
 +    run: async () => {
-+        await fs.promises.mkdir("./built/local", { recursive: true });
 +        if (needsUpdate(diagnosticMessagesGeneratedJson, generatedLCGFile)) {
 +            return exec(process.execPath, ["scripts/generateLocalizedDiagnosticMessages.mjs", "src/loc/lcl", "built/local", diagnosticMessagesGeneratedJson], { ignoreExitCode: true });
 +        }
@@ -632,7 +631,7 @@ index 6f970a637e..d6b7e98f11 100644
  
  /**
   * @param {string} entrypoint
-@@ -142,21 +189,12 @@ async function runDtsBundler(entrypoint, output) {
+@@ -142,21 +188,12 @@ async function runDtsBundler(entrypoint, output) {
      ]);
  }
  
@@ -655,7 +654,7 @@ index 6f970a637e..d6b7e98f11 100644
      // Note: we do not use --minify, as that would hide function names from user backtraces
      // (we don't ship our sourcemaps), and would break consumers like monaco which modify
      // typescript.js for their own needs. Also, using --sourcesContent=false doesn't help,
-@@ -237,464 +275,516 @@ if (ts.server) {
+@@ -237,464 +274,516 @@ if (ts.server) {
   * @param {string} infile Relative path from the repo root to the file to be required.
   * @param {string} outfile Relative path from the repo root to the output file.
   */

@@ -7,11 +7,11 @@ needsUpdate may be wrong when the branch changes; these ones are now so
 fast thanks to being pure JS that we can just always run their contents
 and be sure that the outputs are right.
 ---
- Herebyfile.mjs | 54 +++++++++++++++++++++-----------------------------
- 1 file changed, 23 insertions(+), 31 deletions(-)
+ Herebyfile.mjs | 52 +++++++++++++++++++++-----------------------------
+ 1 file changed, 22 insertions(+), 30 deletions(-)
 
 diff --git a/Herebyfile.mjs b/Herebyfile.mjs
-index d6b7e98f11..3bbdb05319 100644
+index 41f4abb136..d466cd1d0b 100644
 --- a/Herebyfile.mjs
 +++ b/Herebyfile.mjs
 @@ -84,23 +84,19 @@ export const generateLibs = task({
@@ -61,20 +61,18 @@ index d6b7e98f11..3bbdb05319 100644
      }
  });
  
-@@ -156,9 +150,11 @@ const localizationTargets = localizationDirectories
+@@ -156,8 +150,10 @@ const localizationTargets = localizationDirectories
  
  const localize = task({
      name: "localize",
 +    dependencies: [generateDiagnostics],
      run: async () => {
--        await fs.promises.mkdir("./built/local", { recursive: true });
-+        await fs.promises.mkdir("./built/local", { recursive: true });  // TODO(jakebailey): needed?
          if (needsUpdate(diagnosticMessagesGeneratedJson, generatedLCGFile)) {
 +            // TODO(jakebailey): slow; need needsUpdate to not block the builds
              return exec(process.execPath, ["scripts/generateLocalizedDiagnosticMessages.mjs", "src/loc/lcl", "built/local", diagnosticMessagesGeneratedJson], { ignoreExitCode: true });
          }
      }
-@@ -535,11 +531,9 @@ export const generateTypesMap = task({
+@@ -534,11 +530,9 @@ export const generateTypesMap = task({
      run: async () => {
          const source = "src/server/typesMap.json";
          const target = "built/local/typesMap.json";
@@ -89,7 +87,7 @@ index d6b7e98f11..3bbdb05319 100644
      }
  });
  
-@@ -554,15 +548,13 @@ cleanTasks.push(cleanTypesMap);
+@@ -553,15 +547,13 @@ cleanTasks.push(cleanTypesMap);
  // it to be synced to the Azure DevOps repo, so that it can get picked up by the build
  // pipeline that generates the localization artifacts that are then fed into the translation process.
  const builtLocalDiagnosticMessagesGeneratedJson = "built/local/diagnosticMessages.generated.json";

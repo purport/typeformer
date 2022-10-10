@@ -36,11 +36,11 @@ using plain files and still produce a runnable system.
  src/testRunner/runner.ts                      |   9 +-
  src/tsconfig-base.json                        |   1 +
  src/tsconfig.json                             |   1 -
- src/tsserver/nodeServer.ts                    |   5 +-
+ src/tsserver/nodeServer.ts                    |   4 +-
  src/watchGuard/tsconfig.json                  |   4 +-
  src/watchGuard/watchGuard.ts                  |   2 +-
  src/webServer/webServer.ts                    |  27 +-
- 33 files changed, 929 insertions(+), 399 deletions(-)
+ 33 files changed, 928 insertions(+), 399 deletions(-)
  create mode 100644 scripts/build/localization.mjs
  delete mode 100644 scripts/build/prepend.mjs
  delete mode 100644 src/debug/_namespaces/Debug.ts
@@ -1896,18 +1896,17 @@ index bb93273166..213e1eda3c 100644
          { "path": "./harness" },
          { "path": "./jsTyping" },
 diff --git a/src/tsserver/nodeServer.ts b/src/tsserver/nodeServer.ts
-index 9ea213f134..0f896e0e14 100644
+index 9ea213f134..1e06ce64a7 100644
 --- a/src/tsserver/nodeServer.ts
 +++ b/src/tsserver/nodeServer.ts
-@@ -525,8 +525,9 @@ function startNodeSession(options: StartSessionOptions, logger: Logger, cancella
+@@ -525,8 +525,8 @@ function startNodeSession(options: StartSessionOptions, logger: Logger, cancella
                  }
              }
  
 -            // TODO(jakebailey): fix this for module transform
 -            this.installer = childProcess.fork(combinePaths(__dirname, "..", "typingsInstaller", "nodeTypingsInstaller.js"), args, { execArgv });
-+            // TODO(jakebailey): this is a little hacky; can we use sys?
-+            const builtRoot = __filename.endsWith("nodeServer.js") ? combinePaths(__dirname, "..") : __dirname;
-+            this.installer = childProcess.fork(combinePaths(builtRoot, "typingsInstaller.js"), args, { execArgv });
++            const typingsInstaller = combinePaths(getDirectoryPath(sys.getExecutingFilePath()), "typingsInstaller.js");
++            this.installer = childProcess.fork(typingsInstaller, args, { execArgv });
              this.installer.on("message", m => this.handleMessage(m));
  
              // We have to schedule this event to the next tick
