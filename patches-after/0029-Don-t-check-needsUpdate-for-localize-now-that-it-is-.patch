@@ -1,0 +1,43 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Jake Bailey <5341706+jakebailey@users.noreply.github.com>
+Date: Mon, 10 Oct 2022 12:34:50 -0700
+Subject: [PATCH] Don't check needsUpdate for localize, now that it is fast
+
+---
+ Herebyfile.mjs | 9 +++------
+ 1 file changed, 3 insertions(+), 6 deletions(-)
+
+diff --git a/Herebyfile.mjs b/Herebyfile.mjs
+index b7378c9c85..039f104528 100644
+--- a/Herebyfile.mjs
++++ b/Herebyfile.mjs
+@@ -6,7 +6,7 @@ import esbuild from "esbuild";
+ import { task } from "hereby";
+ import _glob from "glob";
+ import util from "util";
+-import { exec, readJson, needsUpdate, getDiffTool, getDirSize } from "./scripts/build/utils.mjs";
++import { exec, readJson, getDiffTool, getDirSize } from "./scripts/build/utils.mjs";
+ import { runConsoleTests, refBaseline, localBaseline, refRwcBaseline, localRwcBaseline } from "./scripts/build/tests.mjs";
+ import { buildProject as realBuildProject, cleanProject } from "./scripts/build/projects.mjs";
+ import { localizationDirectories } from "./scripts/build/localization.mjs";
+@@ -152,15 +152,12 @@ const localizationTargets = localizationDirectories
+     .map(f => `built/local/${f}/diagnosticMessages.generated.json`)
+     .concat(generatedLCGFile);
+ 
+-const localize = task({
++export const localize = task({
+     name: "localize",
+     dependencies: [generateDiagnostics],
+     run: async () => {
+         await fs.promises.mkdir("./built/local", { recursive: true });  // TODO(jakebailey): needed?
+-        if (needsUpdate(diagnosticMessagesGeneratedJson, generatedLCGFile)) {
+-            // TODO(jakebailey): slow; need needsUpdate to not block the builds
+-            return exec(process.execPath, ["scripts/generateLocalizedDiagnosticMessages.mjs", "src/loc/lcl", "built/local", diagnosticMessagesGeneratedJson], { ignoreExitCode: true });
+-        }
++        return exec(process.execPath, ["scripts/generateLocalizedDiagnosticMessages.mjs", "src/loc/lcl", "built/local", diagnosticMessagesGeneratedJson], { ignoreExitCode: true });
+     }
+ });
+ 
+-- 
+2.38.0
+

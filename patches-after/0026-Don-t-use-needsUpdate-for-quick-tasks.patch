@@ -7,17 +7,19 @@ needsUpdate may be wrong when the branch changes; these ones are now so
 fast thanks to being pure JS that we can just always run their contents
 and be sure that the outputs are right.
 ---
- Herebyfile.mjs | 54 +++++++++++++++++++++++---------------------------
- 1 file changed, 25 insertions(+), 29 deletions(-)
+ Herebyfile.mjs | 58 +++++++++++++++++++++++---------------------------
+ 1 file changed, 27 insertions(+), 31 deletions(-)
 
 diff --git a/Herebyfile.mjs b/Herebyfile.mjs
-index ff9364ccce..8a24e8b0d1 100644
+index ff9364ccce..b7378c9c85 100644
 --- a/Herebyfile.mjs
 +++ b/Herebyfile.mjs
-@@ -86,21 +86,21 @@ export const generateLibs = task({
+@@ -84,23 +84,23 @@ export const generateLibs = task({
+     description: "Builds the library targets",
+     run: async () => {
          await fs.promises.mkdir("./built/local", { recursive: true });
-         const allSources = libs.flatMap((lib) => lib.sources);
-         const allTargets = libs.flatMap((lib) => lib.target);
+-        const allSources = libs.flatMap((lib) => lib.sources);
+-        const allTargets = libs.flatMap((lib) => lib.target);
 -        if (needsUpdate([copyright, ...allSources], allTargets)) {
 -            for (const lib of libs) {
 -                let output = getCopyrightHeader();
@@ -32,6 +34,8 @@ index ff9364ccce..8a24e8b0d1 100644
 -                }
 -
 -                await fs.promises.writeFile(lib.target, output);
++        // const allSources = libs.flatMap((lib) => lib.sources);
++        // const allTargets = libs.flatMap((lib) => lib.target);
 +        // if (needsUpdate([copyright, ...allSources], allTargets)) {
 +        // }
 +        for (const lib of libs) {
