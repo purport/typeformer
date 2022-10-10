@@ -52,7 +52,7 @@ using plain files and still produce a runnable system.
  delete mode 100644 src/services/exportAsModule.ts
 
 diff --git a/Gulpfile.mjs b/Gulpfile.mjs
-index ca364223e1..434fc127d8 100644
+index ebe73a094a..0f02be239f 100644
 --- a/Gulpfile.mjs
 +++ b/Gulpfile.mjs
 @@ -3,25 +3,53 @@ import path from "path";

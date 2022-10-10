@@ -8,7 +8,7 @@ Subject: [PATCH] Temporarily disable template literals
  1 file changed, 1 insertion(+)
 
 diff --git a/Gulpfile.mjs b/Gulpfile.mjs
-index 2614dc34e7..4b04046b30 100644
+index adbb67cc81..6f970a637e 100644
 --- a/Gulpfile.mjs
 +++ b/Gulpfile.mjs
 @@ -177,6 +177,7 @@ function esbuildTask(entrypoint, outfile, exportIsTsObject = false) {

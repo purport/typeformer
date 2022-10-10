@@ -68,7 +68,7 @@ Subject: [PATCH] Add dts bundling
  create mode 100644 tests/cases/compiler/APILibCheck.ts
 
 diff --git a/Gulpfile.mjs b/Gulpfile.mjs
-index 434fc127d8..5e05ee491c 100644
+index 0f02be239f..0349e2ba7b 100644
 --- a/Gulpfile.mjs
 +++ b/Gulpfile.mjs
 @@ -125,6 +125,20 @@ const buildSrc = () => buildProject("src");

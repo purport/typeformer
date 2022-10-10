@@ -28,7 +28,7 @@ it seems like this is a good time to change things up.
  .vscode/tasks.json                            |    28 +-
  CONTRIBUTING.md                               |    66 +-
  Dockerfile                                    |     3 +-
- Herebyfile.mjs                                |   926 +-
+ Herebyfile.mjs                                |   922 +-
  lib/README.md                                 |     2 +-
  package-lock.json                             | 11735 +++-------------
  package.json                                  |    34 +-
@@ -42,7 +42,7 @@ it seems like this is a good time to change things up.
  scripts/types/ambient.d.ts                    |    90 -
  src/harness/findUpDir.ts                      |     2 +-
  src/harness/harnessIO.ts                      |     2 +-
- 27 files changed, 2346 insertions(+), 10741 deletions(-)
+ 27 files changed, 2341 insertions(+), 10742 deletions(-)
  delete mode 100644 scripts/build/sourcemaps.mjs
  delete mode 100644 scripts/types/ambient.d.ts
 
@@ -440,7 +440,7 @@ index 5606df9611..d72ffc513f 100644
 \ No newline at end of file
 +RUN npx hereby configure-insiders && npx hereby LKG && npx hereby clean && npm pack .
 diff --git a/Herebyfile.mjs b/Herebyfile.mjs
-index 4b04046b30..ff9364ccce 100644
+index 6f970a637e..d6b7e98f11 100644
 --- a/Herebyfile.mjs
 +++ b/Herebyfile.mjs
 @@ -1,24 +1,33 @@
@@ -655,7 +655,7 @@ index 4b04046b30..ff9364ccce 100644
      // Note: we do not use --minify, as that would hide function names from user backtraces
      // (we don't ship our sourcemaps), and would break consumers like monaco which modify
      // typescript.js for their own needs. Also, using --sourcesContent=false doesn't help,
-@@ -237,464 +275,522 @@ if (ts.server) {
+@@ -237,464 +275,516 @@ if (ts.server) {
   * @param {string} infile Relative path from the repo root to the file to be required.
   * @param {string} outfile Relative path from the repo root to the output file.
   */
@@ -1191,12 +1191,7 @@ index 4b04046b30..ff9364ccce 100644
 -    "   --shards": "Total number of shards running tests (default: 1)",
 -    "   --shardId": "1-based ID of this shard (default: 1)",
 -};
-+export const buildOtherOutputs = task({
-+    name: "other-outputs",
-+    description: "Builds miscelaneous scripts and documents distributed with the LKG",
-+    dependencies: [buildCancellationToken, buildTypingsInstaller, buildWatchGuard, generateTypesMap, copyBuiltLocalDiagnosticMessages],
-+});
- 
+-
 -const runTestsParallel = () => runConsoleTests(testRunner, "min", /*runInParallel*/ cmdLineOptions.workers > 1, /*watchMode*/ false);
 -task("runtests-parallel", series(preBuild, preTest, dts, runTestsParallel));
 -task("runtests-parallel").description = "Runs all the tests in parallel using the built run.js file.";
@@ -1211,13 +1206,18 @@ index 4b04046b30..ff9364ccce 100644
 -    "   --shards": "Total number of shards running tests (default: 1)",
 -    "   --shardId": "1-based ID of this shard (default: 1)",
 -};
++export const buildOtherOutputs = task({
++    name: "other-outputs",
++    description: "Builds miscelaneous scripts and documents distributed with the LKG",
++    dependencies: [buildCancellationToken, buildTypingsInstaller, buildWatchGuard, generateTypesMap, copyBuiltLocalDiagnosticMessages],
++});
+ 
 +export const local = task({
 +    name: "local",
 +    description: "Builds the full compiler and services",
 +    dependencies: [localize, buildTsc, buildServer, buildServices, buildLssl, buildOtherOutputs, dts],
 +});
 +export default local;
- 
  
 -task("test-browser-integration", () => exec(process.execPath, ["scripts/browserIntegrationTest.mjs"]));
 -task("test-browser-integration").description = "Runs scripts/browserIntegrationTest.mjs which tests that typescript.js loads in a browser";
@@ -1447,7 +1447,7 @@ index 4b04046b30..ff9364ccce 100644
 -task("clean", series(parallel(cleanTasks), cleanBuilt));
 -task("clean").description = "Cleans build outputs";
 -
--const configureNightly = () => exec(process.execPath, ["scripts/configurePrerelease.js", "dev", "package.json", "src/compiler/corePublic.ts"]);
+-const configureNightly = () => exec(process.execPath, ["scripts/configurePrerelease.mjs", "dev", "package.json", "src/compiler/corePublic.ts"]);
 -task("configure-nightly", series(buildScripts, configureNightly));
 -task("configure-nightly").description = "Runs scripts/configurePrerelease.ts to prepare a build for nightly publishing";
 -
@@ -1508,7 +1508,9 @@ index 4b04046b30..ff9364ccce 100644
 +    dependencies: cleanTasks,
 +    run: () => del("built"),
 +});
-+
+ 
+-task("help", () => exec("gulp", ["--tasks", "--depth", "1", "--sort-tasks"], { hidePrompt: true }));
+-task("help").description = "Prints the top-level tasks.";
 +export const configureNightly = task({
 +    name: "configure-nightly",
 +    description: "Runs scripts/configurePrerelease.mjs to prepare a build for nightly publishing",
@@ -1520,19 +1522,12 @@ index 4b04046b30..ff9364ccce 100644
 +    description: "Runs scripts/configurePrerelease.mjs to prepare a build for insiders publishing",
 +    run: () => exec(process.execPath, ["scripts/configurePrerelease.mjs", "insiders", "package.json", "src/compiler/corePublic.ts"]),
 +});
- 
--task("help", () => exec("gulp", ["--tasks", "--depth", "1", "--sort-tasks"], { hidePrompt: true }));
--task("help").description = "Prints the top-level tasks.";
++
 +export const configureExperimental = task({
 +    name: "configure-experimental",
 +    description: "Runs scripts/configurePrerelease.mjs to prepare a build for experimental publishing",
 +    run: () => exec(process.execPath, ["scripts/configurePrerelease.mjs", "experimental", "package.json", "src/compiler/corePublic.ts"]),
 +});
-+
-+// TODO(jakebailey): remove, unused
-+// const publishNightly = () => exec("npm", ["publish", "--tag", "next"]);
-+// task("publish-nightly", series(task("clean"), task("LKG"), task("clean"), task("runtests-parallel"), publishNightly));
-+// task("publish-nightly").description = "Runs `npm publish --tag next` to create a new nightly build on npm";
 +
 +export const help = task({
 +    name: "help",

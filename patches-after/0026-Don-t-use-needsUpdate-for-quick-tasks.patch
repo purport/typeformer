@@ -11,7 +11,7 @@ and be sure that the outputs are right.
  1 file changed, 23 insertions(+), 31 deletions(-)
 
 diff --git a/Herebyfile.mjs b/Herebyfile.mjs
-index ff9364ccce..e9f6a00522 100644
+index d6b7e98f11..3bbdb05319 100644
 --- a/Herebyfile.mjs
 +++ b/Herebyfile.mjs
 @@ -84,23 +84,19 @@ export const generateLibs = task({

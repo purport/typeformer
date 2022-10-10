@@ -1,4 +1,5 @@
 import { Command, Option } from "clipanion";
+import fs from "fs";
 import { globbySync } from "globby";
 import { performance } from "perf_hooks";
 import prettyMs from "pretty-ms";
@@ -75,13 +76,17 @@ and "ts.Symbol", we have just "Node" and "Symbol".
 `
         );
 
+        await createGitBlameIgnoreRevs();
+
         await applyPatches(afterPatchesDir);
 
         await run("npm", "ci");
 
         // Make sure what we get back from our new diagnostics script still compiles.
-        await generateDiagnostics();
-        await noopStep();
+        // Disabled for now, since the patches undo the "pre" patches that allow ts-morph
+        // to load the program, and also the build system may not be gulp.
+        // await generateDiagnostics();
+        // await noopStep();
     }
 }
 
@@ -133,4 +138,23 @@ async function applyPatches(patchDir: string) {
         "--keep-cr",
         ...globbySync(`${patchDir}/*.patch`) // git am doesn't accept a regular directory, only a "Maildir" (which is something different)
     );
+}
+
+async function createGitBlameIgnoreRevs() {
+    await runAndCommit("CONVERSION STEP - .git-ignore-blame-revs", async () => {
+        const mergeBase = await getMergeBase(run);
+
+        const { stdout } = await run(
+            "git",
+            "log",
+            "--grep=CONVERSION STEP",
+            "--pretty=format:# %s%n%H",
+            `${mergeBase}..HEAD`
+        );
+
+        const output = stdout.replace(/\r?\n/g, "\n").trim() + "\n";
+        await fs.promises.writeFile(".git-blame-ignore-revs", output);
+
+        // TODO(jakebailey): also change other files? Or do in a later patch?
+    });
 }
