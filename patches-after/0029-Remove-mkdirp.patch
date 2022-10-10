@@ -1,0 +1,143 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Jake Bailey <5341706+jakebailey@users.noreply.github.com>
+Date: Sun, 9 Oct 2022 21:14:34 -0700
+Subject: [PATCH] Remove mkdirp
+
+If our build scripts target Node 10+, we can use the builtin mkdir
+function in recursive mode instead.
+---
+ package-lock.json       | 38 --------------------------------------
+ package.json            |  2 --
+ scripts/build/tests.mjs |  5 ++---
+ 3 files changed, 2 insertions(+), 43 deletions(-)
+
+diff --git a/package-lock.json b/package-lock.json
+index eee9d994de..42c9ca4a6b 100644
+--- a/package-lock.json
++++ b/package-lock.json
+@@ -19,7 +19,6 @@
+                 "@types/glob": "latest",
+                 "@types/microsoft__typescript-etw": "latest",
+                 "@types/minimist": "latest",
+-                "@types/mkdirp": "latest",
+                 "@types/mocha": "latest",
+                 "@types/ms": "latest",
+                 "@types/node": "latest",
+@@ -46,7 +45,6 @@
+                 "hereby": "^1.5.0",
+                 "jsonc-parser": "^3.2.0",
+                 "minimist": "latest",
+-                "mkdirp": "latest",
+                 "mocha": "latest",
+                 "mocha-fivemat-progress-reporter": "latest",
+                 "ms": "^2.1.3",
+@@ -430,15 +428,6 @@
+             "integrity": "sha512-jhuKLIRrhvCPLqwPcx6INqmKeiA5EWrsCOPhrlFSrbrmU4ZMPjj5Ul/oLCMDO98XRUIwVm78xICz4EPCektzeQ==",
+             "dev": true
+         },
+-        "node_modules/@types/mkdirp": {
+-            "version": "1.0.2",
+-            "resolved": "https://registry.npmjs.org/@types/mkdirp/-/mkdirp-1.0.2.tgz",
+-            "integrity": "sha512-o0K1tSO0Dx5X6xlU5F1D6625FawhC3dU3iqr25lluNv/+/QIVH8RLNEiVokgIZo+mz+87w/3Mkg/VvQS+J51fQ==",
+-            "dev": true,
+-            "dependencies": {
+-                "@types/node": "*"
+-            }
+-        },
+         "node_modules/@types/mocha": {
+             "version": "10.0.0",
+             "resolved": "https://registry.npmjs.org/@types/mocha/-/mocha-10.0.0.tgz",
+@@ -3192,18 +3181,6 @@
+             "integrity": "sha512-Jsjnk4bw3YJqYzbdyBiNsPWHPfO++UGG749Cxs6peCu5Xg4nrena6OVxOYxrQTqww0Jmwt+Ref8rggumkTLz9Q==",
+             "dev": true
+         },
+-        "node_modules/mkdirp": {
+-            "version": "1.0.4",
+-            "resolved": "https://registry.npmjs.org/mkdirp/-/mkdirp-1.0.4.tgz",
+-            "integrity": "sha512-vVqVZQyf3WLx2Shd0qJ9xuvqgAyKPLAiqITEtqW0oIUjzo3PePDd6fW9iFz30ef7Ysp/oiWqbhszeGWW2T6Gzw==",
+-            "dev": true,
+-            "bin": {
+-                "mkdirp": "bin/cmd.js"
+-            },
+-            "engines": {
+-                "node": ">=10"
+-            }
+-        },
+         "node_modules/mocha": {
+             "version": "10.0.0",
+             "resolved": "https://registry.npmjs.org/mocha/-/mocha-10.0.0.tgz",
+@@ -4834,15 +4811,6 @@
+             "integrity": "sha512-jhuKLIRrhvCPLqwPcx6INqmKeiA5EWrsCOPhrlFSrbrmU4ZMPjj5Ul/oLCMDO98XRUIwVm78xICz4EPCektzeQ==",
+             "dev": true
+         },
+-        "@types/mkdirp": {
+-            "version": "1.0.2",
+-            "resolved": "https://registry.npmjs.org/@types/mkdirp/-/mkdirp-1.0.2.tgz",
+-            "integrity": "sha512-o0K1tSO0Dx5X6xlU5F1D6625FawhC3dU3iqr25lluNv/+/QIVH8RLNEiVokgIZo+mz+87w/3Mkg/VvQS+J51fQ==",
+-            "dev": true,
+-            "requires": {
+-                "@types/node": "*"
+-            }
+-        },
+         "@types/mocha": {
+             "version": "10.0.0",
+             "resolved": "https://registry.npmjs.org/@types/mocha/-/mocha-10.0.0.tgz",
+@@ -6752,12 +6720,6 @@
+             "integrity": "sha512-Jsjnk4bw3YJqYzbdyBiNsPWHPfO++UGG749Cxs6peCu5Xg4nrena6OVxOYxrQTqww0Jmwt+Ref8rggumkTLz9Q==",
+             "dev": true
+         },
+-        "mkdirp": {
+-            "version": "1.0.4",
+-            "resolved": "https://registry.npmjs.org/mkdirp/-/mkdirp-1.0.4.tgz",
+-            "integrity": "sha512-vVqVZQyf3WLx2Shd0qJ9xuvqgAyKPLAiqITEtqW0oIUjzo3PePDd6fW9iFz30ef7Ysp/oiWqbhszeGWW2T6Gzw==",
+-            "dev": true
+-        },
+         "mocha": {
+             "version": "10.0.0",
+             "resolved": "https://registry.npmjs.org/mocha/-/mocha-10.0.0.tgz",
+diff --git a/package.json b/package.json
+index 5fdaf30aab..426ca7410b 100644
+--- a/package.json
++++ b/package.json
+@@ -45,7 +45,6 @@
+         "@types/glob": "latest",
+         "@types/microsoft__typescript-etw": "latest",
+         "@types/minimist": "latest",
+-        "@types/mkdirp": "latest",
+         "@types/mocha": "latest",
+         "@types/ms": "latest",
+         "@types/node": "latest",
+@@ -72,7 +71,6 @@
+         "hereby": "^1.5.0",
+         "jsonc-parser": "^3.2.0",
+         "minimist": "latest",
+-        "mkdirp": "latest",
+         "mocha": "latest",
+         "mocha-fivemat-progress-reporter": "latest",
+         "ms": "^2.1.3",
+diff --git a/scripts/build/tests.mjs b/scripts/build/tests.mjs
+index 753c3046ec..3d6c1eb626 100644
+--- a/scripts/build/tests.mjs
++++ b/scripts/build/tests.mjs
+@@ -2,7 +2,6 @@ import del from "del";
+ import fs from "fs";
+ import os from "os";
+ import path from "path";
+-import mkdirP from "mkdirp";
+ import cmdLineOptions from "./options.mjs";
+ import { exec } from "./utils.mjs";
+ import { findUpFile, findUpRoot } from "./findUpDir.mjs";
+@@ -151,8 +150,8 @@ export async function runConsoleTests(runJs, defaultReporter, runInParallel) {
+ 
+ export async function cleanTestDirs() {
+     await del([localBaseline, localRwcBaseline]);
+-    mkdirP.sync(localRwcBaseline);
+-    mkdirP.sync(localBaseline);
++    await fs.promises.mkdir(localRwcBaseline, { recursive: true });
++    await fs.promises.mkdir(localBaseline, { recursive: true });
+ }
+ 
+ /**
+-- 
+2.38.0
+
