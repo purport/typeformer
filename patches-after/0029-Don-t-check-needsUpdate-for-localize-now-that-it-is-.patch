@@ -8,7 +8,7 @@ Subject: [PATCH] Don't check needsUpdate for localize, now that it is fast
  1 file changed, 3 insertions(+), 6 deletions(-)
 
 diff --git a/Herebyfile.mjs b/Herebyfile.mjs
-index b7378c9c85..039f104528 100644
+index e9f6a00522..3ce06a1502 100644
 --- a/Herebyfile.mjs
 +++ b/Herebyfile.mjs
 @@ -6,7 +6,7 @@ import esbuild from "esbuild";
@@ -20,7 +20,7 @@ index b7378c9c85..039f104528 100644
  import { runConsoleTests, refBaseline, localBaseline, refRwcBaseline, localRwcBaseline } from "./scripts/build/tests.mjs";
  import { buildProject as realBuildProject, cleanProject } from "./scripts/build/projects.mjs";
  import { localizationDirectories } from "./scripts/build/localization.mjs";
-@@ -152,15 +152,12 @@ const localizationTargets = localizationDirectories
+@@ -148,15 +148,12 @@ const localizationTargets = localizationDirectories
      .map(f => `built/local/${f}/diagnosticMessages.generated.json`)
      .concat(generatedLCGFile);
  
