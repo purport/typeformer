@@ -11,7 +11,7 @@ export class SavePatchesCommand extends Command {
     after = Option.Boolean(`--after`);
 
     static usage = Command.Usage({
-        description: "Saves commits after the conversion steps back into the typeformer's patches.",
+        description: "Saves commits after the Generated module conversion steps back into the typeformer's patches.",
     });
 
     async execute() {
@@ -35,7 +35,7 @@ export class SavePatchesCommand extends Command {
                 "--no-numbered",
                 "--no-base",
                 "--zero-commit",
-                `${mergeBase}..:/!-CONVERSION STEP`
+                `${mergeBase}..:/!-Generated module conversion step`
             );
         }
 
@@ -53,7 +53,7 @@ export class SavePatchesCommand extends Command {
                 "--no-numbered",
                 "--no-base",
                 "--zero-commit",
-                "HEAD^{/CONVERSION STEP}"
+                "HEAD^{/Generated module conversion step}"
             );
         }
     }

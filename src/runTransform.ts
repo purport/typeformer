@@ -116,7 +116,7 @@ async function runAndCommit(message: string, fn: () => Promise<any>) {
 }
 
 async function runMorph(name: string, description: string) {
-    await runAndCommit(`CONVERSION STEP - ${name}\n\n${description}`, async () => {
+    await runAndCommit(`Generated module conversion step - ${name}\n\n${description}`, async () => {
         const before = performance.now();
         await runNode(packageRoot, "morph", name);
         console.log(`took ${prettyMs(performance.now() - before)}`);
@@ -141,13 +141,13 @@ async function applyPatches(patchDir: string) {
 }
 
 async function createGitBlameIgnoreRevs() {
-    await runAndCommit("CONVERSION STEP - .git-ignore-blame-revs", async () => {
+    await runAndCommit("Generated module conversion step - .git-ignore-blame-revs", async () => {
         const mergeBase = await getMergeBase(run);
 
         const { stdout } = await run(
             "git",
             "log",
-            "--grep=CONVERSION STEP",
+            "--grep=Generated module conversion step",
             "--pretty=format:# %s%n%H",
             `${mergeBase}..HEAD`
         );
