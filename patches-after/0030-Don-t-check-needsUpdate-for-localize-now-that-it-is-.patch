@@ -8,7 +8,7 @@ Subject: [PATCH] Don't check needsUpdate for localize, now that it is fast
  1 file changed, 3 insertions(+), 8 deletions(-)
 
 diff --git a/Herebyfile.mjs b/Herebyfile.mjs
-index d466cd1d0b..9ccd850926 100644
+index 3eb608a736..83f09c201f 100644
 --- a/Herebyfile.mjs
 +++ b/Herebyfile.mjs
 @@ -6,7 +6,7 @@ import esbuild from "esbuild";

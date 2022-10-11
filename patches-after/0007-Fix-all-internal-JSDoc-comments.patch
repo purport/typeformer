@@ -1794,7 +1794,7 @@ index bb9a8d6dab..c05a05a652 100644
 +/** @internal */
  export const Set = NativeCollections.tryGetNativeSet();
 diff --git a/src/compiler/emitter.ts b/src/compiler/emitter.ts
-index bffe7b6e24..ef12089934 100644
+index eed25e4111..2d371afea0 100644
 --- a/src/compiler/emitter.ts
 +++ b/src/compiler/emitter.ts
 @@ -81,12 +81,11 @@ import {
@@ -2988,7 +2988,7 @@ index 6a01040365..25f450cb43 100644
      moduleSymbol: Symbol,
      checker: TypeChecker,
 diff --git a/src/compiler/parser.ts b/src/compiler/parser.ts
-index 344ce3482e..b57f612c29 100644
+index cec4f87dcc..da9050dcce 100644
 --- a/src/compiler/parser.ts
 +++ b/src/compiler/parser.ts
 @@ -89,8 +89,9 @@ let SourceFileConstructor: new (kind: SyntaxKind, pos?: number, end?: number) =>
@@ -3743,7 +3743,7 @@ index 15d3c41994..ce65f1d889 100644
 \ No newline at end of file
 +    () => +(new Date());
 diff --git a/src/compiler/program.ts b/src/compiler/program.ts
-index 90b25576bf..30a15b258d 100644
+index eccd6ad83d..ad3ee26238 100644
 --- a/src/compiler/program.ts
 +++ b/src/compiler/program.ts
 @@ -73,7 +73,7 @@ export function resolveTripleslashReference(moduleName: string, containingFile:
@@ -4243,10 +4243,10 @@ index 0500ba87f8..c91595719b 100644
  export class VersionRange {
      private _alternatives: readonly (readonly Comparator[])[];
 diff --git a/src/compiler/sourcemap.ts b/src/compiler/sourcemap.ts
-index ba810d6d00..3fea87a803 100644
+index 27204635b5..f353e8db7f 100644
 --- a/src/compiler/sourcemap.ts
 +++ b/src/compiler/sourcemap.ts
-@@ -348,9 +348,10 @@ export function getLineInfo(text: string, lineStarts: readonly number[]): LineIn
+@@ -349,9 +349,10 @@ export function getLineInfo(text: string, lineStarts: readonly number[]): LineIn
      };
  }
  
@@ -4498,10 +4498,10 @@ index 45404e7596..01b48505c8 100644
      sys = s;
  }
 diff --git a/src/compiler/transformer.ts b/src/compiler/transformer.ts
-index 4e6b893c42..6a905084c0 100644
+index 553fbc6680..dac2670b72 100644
 --- a/src/compiler/transformer.ts
 +++ b/src/compiler/transformer.ts
-@@ -158,7 +158,6 @@ export function noEmitNotification(hint: EmitHint, node: Node, callback: (hint:
+@@ -159,7 +159,6 @@ export function noEmitNotification(hint: EmitHint, node: Node, callback: (hint:
      callback(hint, node);
  }
  
@@ -4509,7 +4509,7 @@ index 4e6b893c42..6a905084c0 100644
  /**
   * Transforms an array of SourceFiles by passing them through each transformer.
   *
-@@ -168,6 +167,8 @@ export function noEmitNotification(hint: EmitHint, node: Node, callback: (hint:
+@@ -169,6 +168,8 @@ export function noEmitNotification(hint: EmitHint, node: Node, callback: (hint:
   * @param nodes An array of nodes to transform.
   * @param transforms An array of `TransformerFactory` callbacks.
   * @param allowDtsFiles A value indicating whether to allow the transformation of .d.ts files.
@@ -4803,7 +4803,7 @@ index ad20ff97b4..a927555fbe 100644
 \ No newline at end of file
 +}
 diff --git a/src/compiler/tsbuildPublic.ts b/src/compiler/tsbuildPublic.ts
-index 79c85ab944..5e0a7a7166 100644
+index 895a03afe6..c454d528b9 100644
 --- a/src/compiler/tsbuildPublic.ts
 +++ b/src/compiler/tsbuildPublic.ts
 @@ -37,24 +37,24 @@ export interface BuildOptions {
@@ -11202,7 +11202,7 @@ index 3dcb96b072..2f22a76e0e 100644
  export function visitEachChild<T extends Node>(node: T | undefined, visitor: Visitor, context: TransformationContext, nodesVisitor = visitNodes, tokenVisitor?: Visitor, nodeVisitor: NodeVisitor = visitNode): T | undefined {
      if (node === undefined) {
 diff --git a/src/compiler/watch.ts b/src/compiler/watch.ts
-index df9e9506f6..81f48515e7 100644
+index 0dfc5fa92e..5048c99522 100644
 --- a/src/compiler/watch.ts
 +++ b/src/compiler/watch.ts
 @@ -27,9 +27,10 @@ const sysFormatDiagnosticsHost: FormatDiagnosticsHost | undefined = sys ? {
@@ -14678,7 +14678,7 @@ index 41f9b72547..3fb1751875 100644
      refactors.set(name, refactor);
  }
 diff --git a/src/services/refactors/extractSymbol.ts b/src/services/refactors/extractSymbol.ts
-index acb6048a1c..a49c9f248d 100644
+index 05549713e1..2266ea1e22 100644
 --- a/src/services/refactors/extractSymbol.ts
 +++ b/src/services/refactors/extractSymbol.ts
 @@ -49,10 +49,11 @@ registerRefactor(refactorName, {
@@ -14708,7 +14708,7 @@ index acb6048a1c..a49c9f248d 100644
  export function getRefactorEditsToExtractSymbol(context: RefactorContext, actionName: string): RefactorEditInfo | undefined {
      const rangeToExtract = getRangeToExtract(context.file, getRefactorContextSpan(context));
      const targetRange = rangeToExtract.targetRange!; // TODO:GH#18217
-@@ -297,14 +301,15 @@ type RangeToExtract = {
+@@ -292,14 +296,15 @@ type RangeToExtract = {
   */
  type Scope = FunctionLikeDeclaration | SourceFile | ModuleBlock | ClassLikeDeclaration;
  

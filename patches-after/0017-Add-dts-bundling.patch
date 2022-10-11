@@ -616,7 +616,7 @@ index f13d60743e..9e62af0806 100644
      // resolving `#local` names in your own package.json
      Imports = 1 << 1,
 diff --git a/src/compiler/parser.ts b/src/compiler/parser.ts
-index b57f612c29..85fbb3fad9 100644
+index da9050dcce..b0eb6b3ba5 100644
 --- a/src/compiler/parser.ts
 +++ b/src/compiler/parser.ts
 @@ -9832,7 +9832,7 @@ export function processCommentPragmas(context: PragmaContext, sourceText: string
@@ -679,7 +679,7 @@ index 34a59208d6..fd8a559c75 100644
 -export const perfLogger: PerfLogger = etwModule && etwModule.logEvent ? etwModule : nullLogger;
 +export const perfLogger: PerfLogger = etwModule?.logEvent ? etwModule : nullLogger;
 diff --git a/src/compiler/program.ts b/src/compiler/program.ts
-index 30a15b258d..3a6f12fc24 100644
+index ad3ee26238..33b536170e 100644
 --- a/src/compiler/program.ts
 +++ b/src/compiler/program.ts
 @@ -210,7 +210,7 @@ export function createCompilerHostWorker(options: CompilerOptions, setParentNode
@@ -747,7 +747,7 @@ index 356b920557..5c369877fd 100644
  // TODO: GH#18217 Methods on System are often used as if they are certainly defined
  export interface System {
 diff --git a/src/compiler/tracing.ts b/src/compiler/tracing.ts
-index 8082131468..3cfa3c6822 100644
+index 9ec10f1d90..9d29f38851 100644
 --- a/src/compiler/tracing.ts
 +++ b/src/compiler/tracing.ts
 @@ -12,8 +12,13 @@ import {
@@ -2870,7 +2870,7 @@ index 7dfb4558e1..f8204d4f4b 100644
          || compareIdentifiers(s1.propertyName || s1.name, s2.propertyName || s2.name)
          || compareIdentifiers(s1.name, s2.name);
 diff --git a/src/services/refactors/extractSymbol.ts b/src/services/refactors/extractSymbol.ts
-index a49c9f248d..9a702aa1a7 100644
+index 2266ea1e22..0af702dbb7 100644
 --- a/src/services/refactors/extractSymbol.ts
 +++ b/src/services/refactors/extractSymbol.ts
 @@ -255,7 +255,8 @@ export namespace Messages {
@@ -2895,7 +2895,7 @@ index a49c9f248d..9a702aa1a7 100644
      readonly range: Expression | Statement[];
      readonly facts: RangeFacts;
      /**
-@@ -287,8 +290,10 @@ interface TargetRange {
+@@ -282,8 +285,10 @@ interface TargetRange {
  
  /**
   * Result of 'getRangeToExtract' operation: contains either a range or a list of errors

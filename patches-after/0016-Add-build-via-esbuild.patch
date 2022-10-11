@@ -642,7 +642,7 @@ index ebe73a094a..0f02be239f 100644
  task("LKG").flags = {
      "   --built": "Compile using the built version of the compiler.",
 diff --git a/package-lock.json b/package-lock.json
-index 66238c0178..0f64b8de53 100644
+index e5c75751f3..d82b30bd29 100644
 --- a/package-lock.json
 +++ b/package-lock.json
 @@ -41,6 +41,7 @@
@@ -692,7 +692,7 @@ index 66238c0178..0f64b8de53 100644
          "node_modules/@eslint/eslintrc": {
              "version": "1.3.3",
              "resolved": "https://registry.npmjs.org/@eslint/eslintrc/-/eslintrc-1.3.3.tgz",
-@@ -2263,6 +2296,363 @@
+@@ -2261,6 +2294,363 @@
                  "es6-symbol": "^3.1.1"
              }
          },
@@ -1056,7 +1056,7 @@ index 66238c0178..0f64b8de53 100644
          "node_modules/escalade": {
              "version": "3.1.1",
              "resolved": "https://registry.npmjs.org/escalade/-/escalade-3.1.1.tgz",
-@@ -8674,6 +9064,20 @@
+@@ -8675,6 +9065,20 @@
                  "jsdoc-type-pratt-parser": "~3.1.0"
              }
          },
@@ -1077,7 +1077,7 @@ index 66238c0178..0f64b8de53 100644
          "@eslint/eslintrc": {
              "version": "1.3.3",
              "resolved": "https://registry.npmjs.org/@eslint/eslintrc/-/eslintrc-1.3.3.tgz",
-@@ -10392,6 +10796,176 @@
+@@ -10391,6 +10795,176 @@
                  "es6-symbol": "^3.1.1"
              }
          },
@@ -1896,10 +1896,10 @@ index bb93273166..213e1eda3c 100644
          { "path": "./harness" },
          { "path": "./jsTyping" },
 diff --git a/src/tsserver/nodeServer.ts b/src/tsserver/nodeServer.ts
-index 9ea213f134..1e06ce64a7 100644
+index de9b8a0ad6..fcd871ce43 100644
 --- a/src/tsserver/nodeServer.ts
 +++ b/src/tsserver/nodeServer.ts
-@@ -525,8 +525,8 @@ function startNodeSession(options: StartSessionOptions, logger: Logger, cancella
+@@ -526,8 +526,8 @@ function startNodeSession(options: StartSessionOptions, logger: Logger, cancella
                  }
              }
  
