@@ -1,0 +1,54 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Jake Bailey <5341706+jakebailey@users.noreply.github.com>
+Date: Thu, 13 Oct 2022 11:03:29 -0700
+Subject: [PATCH] Fix injection of dynamicImport
+
+---
+ Herebyfile.mjs             | 6 ++++--
+ src/webServer/webServer.ts | 9 ++++++---
+ 2 files changed, 10 insertions(+), 5 deletions(-)
+
+diff --git a/Herebyfile.mjs b/Herebyfile.mjs
+index 400df599d0..57760e8fc9 100644
+--- a/Herebyfile.mjs
++++ b/Herebyfile.mjs
+@@ -239,9 +239,11 @@ if (typeof module !== "undefined" && module.exports) {
+     // If we are in a CJS context, export the ts namespace.
+     module.exports = ts;
+ }
+-if (ts.server) {
++if (ts.server && ts.server.setDynamicImport) {
+     // If we are in a server bundle, inject the dynamicImport function.
+-    ts.server.dynamicImport = id => import(id);
++    // This only works because the web server's "start" function returns;
++    // the node server does not, but we don't use this there.
++    ts.server.setDynamicImport(id => import(id));
+ }`
+         };
+     }
+diff --git a/src/webServer/webServer.ts b/src/webServer/webServer.ts
+index ba41fc8af5..9e3f6a45df 100644
+--- a/src/webServer/webServer.ts
++++ b/src/webServer/webServer.ts
+@@ -125,12 +125,15 @@ export class MainProcessLogger extends BaseLogger {
+     }
+ }
+ 
+-/** @internal */
+-// eslint-disable-next-line prefer-const
+-export let dynamicImport = async (_id: string): Promise<any> => {
++let dynamicImport = async (_id: string): Promise<any> => {
+     throw new Error("Dynamic import not implemented");
+ };
+ 
++/** @internal */
++export function setDynamicImport(fn: (id: string) => Promise<any>) {
++    dynamicImport = fn;
++}
++
+ /** @internal */
+ export function createWebSystem(host: WebHost, args: string[], getExecutingFilePath: () => string): ServerHost {
+     const returnEmptyString = () => "";
+-- 
+2.38.0
+

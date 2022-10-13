@@ -1,0 +1,36 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Jake Bailey <5341706+jakebailey@users.noreply.github.com>
+Date: Thu, 13 Oct 2022 11:27:23 -0700
+Subject: [PATCH] Small cleanups
+
+---
+ Herebyfile.mjs | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/Herebyfile.mjs b/Herebyfile.mjs
+index 000bec4c1b..3e5c34c38b 100644
+--- a/Herebyfile.mjs
++++ b/Herebyfile.mjs
+@@ -31,8 +31,8 @@ function getCopyrightHeader() {
+ const cleanTasks = [];
+ 
+ 
+-// TODO(jakebailey): This is really gross. Waiting on https://github.com/microsoft/TypeScript/issues/25613,
+-// or at least control over noEmit / emitDeclarationOnly in build mode.
++// TODO(jakebailey): This is really gross. If the build is cancelled (i.e. Ctrl+C), the modification will persist.
++// Waiting on: https://github.com/microsoft/TypeScript/issues/51164
+ let currentlyBuilding = 0;
+ let oldTsconfigBase;
+ 
+@@ -213,7 +213,7 @@ async function runDtsBundler(entrypoint, output) {
+             {
+                 name: "fix-require",
+                 setup: (build) => {
+-                    build.onEnd(async (result) => {
++                    build.onEnd(async () => {
+                         // esbuild converts calls to "require" to "__require"; this function
+                         // calls the real require if it exists, or throws if it does not (rather than
+                         // throwing an error like "require not defined"). But, since we want typescript
+-- 
+2.38.0
+

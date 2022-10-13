@@ -4938,7 +4938,7 @@ index 895a03afe6..c454d528b9 100644
       *  To dispose this project and ensure that all the necessary actions are taken and state is updated accordingly
       */
 diff --git a/src/compiler/types.ts b/src/compiler/types.ts
-index 48e4a174e1..c95a9a231f 100644
+index 4b20184d40..c9d728f00b 100644
 --- a/src/compiler/types.ts
 +++ b/src/compiler/types.ts
 @@ -8,7 +8,7 @@ import {

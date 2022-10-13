@@ -1,0 +1,117 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Jake Bailey <5341706+jakebailey@users.noreply.github.com>
+Date: Thu, 13 Oct 2022 11:00:11 -0700
+Subject: [PATCH] Export ts namespace from tsserver for hacky-post patching
+
+---
+ src/tsserver/_namespaces/ts.server.ts |  2 +-
+ src/tsserver/common.ts                | 27 ++++++++++++++++++++++++++
+ src/tsserver/server.ts                | 28 ++++-----------------------
+ src/tsserver/tsconfig.json            |  1 +
+ 4 files changed, 33 insertions(+), 25 deletions(-)
+ create mode 100644 src/tsserver/common.ts
+
+diff --git a/src/tsserver/_namespaces/ts.server.ts b/src/tsserver/_namespaces/ts.server.ts
+index c7eb056ac0..95d1804ff3 100644
+--- a/src/tsserver/_namespaces/ts.server.ts
++++ b/src/tsserver/_namespaces/ts.server.ts
+@@ -5,4 +5,4 @@ export * from "../../server/_namespaces/ts.server";
+ export * from "../../webServer/_namespaces/ts.server";
+ export * from "../nodeServer";
+ export * from "../webServer";
+-export * from "../server";
++export * from "../common";
+diff --git a/src/tsserver/common.ts b/src/tsserver/common.ts
+new file mode 100644
+index 0000000000..e2d3ad716e
+--- /dev/null
++++ b/src/tsserver/common.ts
+@@ -0,0 +1,27 @@
++import {
++    Logger, LogLevel, ServerCancellationToken, StartSessionOptions,
++} from "./_namespaces/ts.server";
++import { LanguageServiceMode } from "./_namespaces/ts";
++
++/** @internal */
++export function getLogLevel(level: string | undefined) {
++    if (level) {
++        const l = level.toLowerCase();
++        for (const name in LogLevel) {
++            if (isNaN(+name) && l === name.toLowerCase()) {
++                return LogLevel[name] as any as LogLevel;
++            }
++        }
++    }
++    return undefined;
++}
++
++/** @internal */
++export interface StartInput {
++    args: readonly string[];
++    logger: Logger;
++    cancellationToken: ServerCancellationToken;
++    serverMode: LanguageServiceMode | undefined;
++    unknownServerMode?: string;
++    startSession: (option: StartSessionOptions, logger: Logger, cancellationToken: ServerCancellationToken) => void;
++}
+diff --git a/src/tsserver/server.ts b/src/tsserver/server.ts
+index 754b3e2edf..f88fcb3bff 100644
+--- a/src/tsserver/server.ts
++++ b/src/tsserver/server.ts
+@@ -1,8 +1,9 @@
+ import {
+-    emptyArray, findArgument, hasArgument, initializeNodeSystem, initializeWebSystem, Logger, LogLevel, Msg,
+-    ServerCancellationToken, StartSessionOptions,
++    emptyArray, findArgument, hasArgument, initializeNodeSystem, initializeWebSystem, Msg,
++    StartInput,
+ } from "./_namespaces/ts.server";
+-import { Debug, getNodeMajorVersion, LanguageServiceMode, setStackTraceLimit, sys, version } from "./_namespaces/ts";
++import { Debug, getNodeMajorVersion, setStackTraceLimit, sys, version } from "./_namespaces/ts";
++export * from "./_namespaces/ts";
+ 
+ declare const addEventListener: any;
+ declare const removeEventListener: any;
+@@ -14,28 +15,7 @@ function findArgumentStringArray(argName: string): readonly string[] {
+     return arg.split(",").filter(name => name !== "");
+ }
+ 
+-/** @internal */
+-export function getLogLevel(level: string | undefined) {
+-    if (level) {
+-        const l = level.toLowerCase();
+-        for (const name in LogLevel) {
+-            if (isNaN(+name) && l === name.toLowerCase()) {
+-                return LogLevel[name] as any as LogLevel;
+-            }
+-        }
+-    }
+-    return undefined;
+-}
+ 
+-/** @internal */
+-export interface StartInput {
+-    args: readonly string[];
+-    logger: Logger;
+-    cancellationToken: ServerCancellationToken;
+-    serverMode: LanguageServiceMode | undefined;
+-    unknownServerMode?: string;
+-    startSession: (option: StartSessionOptions, logger: Logger, cancellationToken: ServerCancellationToken) => void;
+-}
+ function start({ args, logger, cancellationToken, serverMode, unknownServerMode, startSession: startServer }: StartInput, platform: string) {
+     const syntaxOnly = hasArgument("--syntaxOnly");
+ 
+diff --git a/src/tsserver/tsconfig.json b/src/tsserver/tsconfig.json
+index c2508ba284..b300cf27c9 100644
+--- a/src/tsserver/tsconfig.json
++++ b/src/tsserver/tsconfig.json
+@@ -10,6 +10,7 @@
+         "nodeServer.ts",
+         "webServer.ts",
+         "server.ts",
++        "common.ts",
+         "_namespaces/ts.server.ts",
+         "_namespaces/ts.ts"
+     ],
+-- 
+2.38.0
+

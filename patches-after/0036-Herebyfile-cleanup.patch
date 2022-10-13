@@ -1,0 +1,67 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Jake Bailey <5341706+jakebailey@users.noreply.github.com>
+Date: Wed, 12 Oct 2022 19:00:54 -0700
+Subject: [PATCH] Herebyfile cleanup
+
+---
+ Herebyfile.mjs | 19 +++++++------------
+ 1 file changed, 7 insertions(+), 12 deletions(-)
+
+diff --git a/Herebyfile.mjs b/Herebyfile.mjs
+index ceace8e46f..400df599d0 100644
+--- a/Herebyfile.mjs
++++ b/Herebyfile.mjs
+@@ -185,11 +185,6 @@ async function runDtsBundler(entrypoint, output) {
+  * @param {boolean} exportIsTsObject True if this file exports the TS object and should have relevant code injected.
+  */
+  function esbuildTask(entrypoint, outfile, exportIsTsObject = false) {
+-    // Note: we do not use --minify, as that would hide function names from user backtraces
+-    // (we don't ship our sourcemaps), and would break consumers like monaco which modify
+-    // typescript.js for their own needs. Also, using --sourcesContent=false doesn't help,
+-    // as even though it's a smaller source map that could be shipped to users for better
+-    // stack traces via names, the maps are bigger than the actual source files themselves.
+     /** @type {esbuild.BuildOptions} */
+     const options = {
+         entryPoints: [entrypoint],
+@@ -201,31 +196,31 @@ async function runDtsBundler(entrypoint, output) {
+         format: "cjs",
+         sourcemap: "linked",
+         external: ["./node_modules/*"],
+-        conditions: ["require"],
+         supported: {
+             // "const-and-let": false, // https://github.com/evanw/esbuild/issues/297
+             "object-rest-spread": false, // Performance enhancement, see: https://github.com/evanw/esbuild/releases/tag/v0.14.46
+-            "template-literal": false, // TODO(jakebailey): workaround for https://github.com/microsoft/TypeScript/issues/51072
++            // TODO(jakebailey): workaround for https://github.com/microsoft/TypeScript/issues/51072
++            // Remove once 4.9 is out with the fix and monaco is updated.
++            "template-literal": false,
+         },
+         // legalComments: "none", // If we add copyright headers to the source files, uncomment.
+         plugins: [
+             {
+                 name: "fix-require",
+                 setup: (build) => {
+-                    build.onEnd(async () => {
++                    build.onEnd(async (result) => {
+                         // esbuild converts calls to "require" to "__require"; this function
+                         // calls the real require if it exists, or throws if it does not (rather than
+                         // throwing an error like "require not defined"). But, since we want typescript
+                         // to be consumable by other bundlers, we need to convert these calls back to
+                         // require so our imports are visible again.
+                         //
+-                        // Note that this step breaks source maps, but only for lines that reference
+-                        // "__require", which is an okay tradeoff for the performance of not running
+-                        // the output through transpileModule/babel/etc.
++                        // The leading spaces are to keep the offsets the same within the files to keep
++                        // source maps working (though this only really matters for the line the require is on).
+                         //
+                         // See: https://github.com/evanw/esbuild/issues/1905
+                         let contents = await fs.promises.readFile(outfile, "utf-8");
+-                        contents = contents.replace(/__require\(/g, "require(");
++                        contents = contents.replace(/__require\(/g, "  require(");
+                         await fs.promises.writeFile(outfile, contents);
+                     });
+                 },
+-- 
+2.38.0
+

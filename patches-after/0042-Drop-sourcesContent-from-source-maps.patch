@@ -1,0 +1,24 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Jake Bailey <5341706+jakebailey@users.noreply.github.com>
+Date: Thu, 13 Oct 2022 11:54:52 -0700
+Subject: [PATCH] Drop sourcesContent from source maps
+
+---
+ Herebyfile.mjs | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/Herebyfile.mjs b/Herebyfile.mjs
+index 3e5c34c38b..4ecf131fc6 100644
+--- a/Herebyfile.mjs
++++ b/Herebyfile.mjs
+@@ -195,6 +195,7 @@ async function runDtsBundler(entrypoint, output) {
+         target: "es2018", // Covers Node 10.
+         format: "cjs",
+         sourcemap: "linked",
++        sourcesContent: false,
+         // external/conditions are workarounds for: https://github.com/evanw/esbuild/issues/1958
+         // For requires in the compiler/server/etc, we have to ensure to write things indirectly
+         // to avoid hardcoding a path to node_modules. In the test code, we can be less careful,
+-- 
+2.38.0
+

@@ -1150,7 +1150,7 @@ index 4460f4fc45..862bdf7c8b 100644
          return undefined;
      }
 diff --git a/src/compiler/types.ts b/src/compiler/types.ts
-index c95a9a231f..dd7e5ba02d 100644
+index c9d728f00b..6c3b39bd26 100644
 --- a/src/compiler/types.ts
 +++ b/src/compiler/types.ts
 @@ -5087,7 +5087,7 @@ export interface SymbolWalker {
@@ -2908,7 +2908,7 @@ index 2266ea1e22..0af702dbb7 100644
      readonly errors: readonly Diagnostic[];
  } | {
 diff --git a/src/services/symbolDisplay.ts b/src/services/symbolDisplay.ts
-index 78d07e625d..ce70ddb0dc 100644
+index e599ad7366..9e627cae13 100644
 --- a/src/services/symbolDisplay.ts
 +++ b/src/services/symbolDisplay.ts
 @@ -149,7 +149,8 @@ export function getSymbolModifiers(typeChecker: TypeChecker, symbol: Symbol): st
