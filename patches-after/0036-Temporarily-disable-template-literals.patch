@@ -1,0 +1,26 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Jake Bailey <5341706+jakebailey@users.noreply.github.com>
+Date: Fri, 14 Oct 2022 13:26:29 -0700
+Subject: [PATCH] Temporarily disable template literals
+
+---
+ Herebyfile.mjs | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/Herebyfile.mjs b/Herebyfile.mjs
+index 0e1a2042dd..fe719d00fc 100644
+--- a/Herebyfile.mjs
++++ b/Herebyfile.mjs
+@@ -210,6 +210,9 @@ async function runDtsBundler(entrypoint, output) {
+                 supported: {
+                     // "const-and-let": false, // https://github.com/evanw/esbuild/issues/297
+                     "object-rest-spread": false, // Performance enhancement, see: https://github.com/evanw/esbuild/releases/tag/v0.14.46
++                    // TODO(jakebailey): workaround for https://github.com/microsoft/TypeScript/issues/51072
++                    // Remove once 4.9 is out with the fix and monaco is updated.
++                    "template-literal": false,
+                 },
+                 logLevel: "warning",
+                 // legalComments: "none", // If we add copyright headers to the source files, uncomment.
+-- 
+2.38.0
+

@@ -440,7 +440,7 @@ index 5606df9611..d72ffc513f 100644
 \ No newline at end of file
 +RUN npx hereby configure-insiders && npx hereby LKG && npx hereby clean && npm pack .
 diff --git a/Herebyfile.mjs b/Herebyfile.mjs
-index 6f970a637e..1c03c741db 100644
+index adbb67cc81..b6e8300258 100644
 --- a/Herebyfile.mjs
 +++ b/Herebyfile.mjs
 @@ -1,24 +1,33 @@
@@ -654,7 +654,7 @@ index 6f970a637e..1c03c741db 100644
      // Note: we do not use --minify, as that would hide function names from user backtraces
      // (we don't ship our sourcemaps), and would break consumers like monaco which modify
      // typescript.js for their own needs. Also, using --sourcesContent=false doesn't help,
-@@ -237,464 +274,516 @@ if (ts.server) {
+@@ -236,464 +273,516 @@ if (ts.server) {
   * @param {string} infile Relative path from the repo root to the file to be required.
   * @param {string} outfile Relative path from the repo root to the output file.
   */

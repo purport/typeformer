@@ -4,13 +4,13 @@ Date: Wed, 12 Oct 2022 19:00:54 -0700
 Subject: [PATCH] Build fixups
 
 ---
- Herebyfile.mjs             | 184 ++++++++++++++++++++++---------------
+ Herebyfile.mjs             | 101 ++++++++++++++++++++++++-------------
  src/compiler/sys.ts        |   5 +-
- src/webServer/webServer.ts |   9 +-
- 3 files changed, 116 insertions(+), 82 deletions(-)
+ src/webServer/webServer.ts |   9 ++--
+ 3 files changed, 73 insertions(+), 42 deletions(-)
 
 diff --git a/Herebyfile.mjs b/Herebyfile.mjs
-index ceace8e46f..fe719d00fc 100644
+index 8118d46d06..0e1a2042dd 100644
 --- a/Herebyfile.mjs
 +++ b/Herebyfile.mjs
 @@ -31,8 +31,8 @@ function getCopyrightHeader() {
@@ -24,7 +24,7 @@ index ceace8e46f..fe719d00fc 100644
  let currentlyBuilding = 0;
  let oldTsconfigBase;
  
-@@ -180,81 +180,107 @@ async function runDtsBundler(entrypoint, output) {
+@@ -180,18 +180,18 @@ async function runDtsBundler(entrypoint, output) {
  }
  
  /**
@@ -39,77 +39,35 @@ index ceace8e46f..fe719d00fc 100644
 + * @param {ESBuildTaskOptions | undefined} [taskOptions]
   */
 - function esbuildTask(entrypoint, outfile, exportIsTsObject = false) {
--    // Note: we do not use --minify, as that would hide function names from user backtraces
--    // (we don't ship our sourcemaps), and would break consumers like monaco which modify
--    // typescript.js for their own needs. Also, using --sourcesContent=false doesn't help,
--    // as even though it's a smaller source map that could be shipped to users for better
--    // stack traces via names, the maps are bigger than the actual source files themselves.
--    /** @type {esbuild.BuildOptions} */
--    const options = {
--        entryPoints: [entrypoint],
--        banner: { js: getCopyrightHeader() },
--        bundle: true,
--        outfile,
--        platform: "node",
--        target: "es2018", // Covers Node 10.
--        format: "cjs",
--        sourcemap: "linked",
--        external: ["./node_modules/*"],
--        conditions: ["require"],
--        supported: {
--            // "const-and-let": false, // https://github.com/evanw/esbuild/issues/297
--            "object-rest-spread": false, // Performance enhancement, see: https://github.com/evanw/esbuild/releases/tag/v0.14.46
--            "template-literal": false, // TODO(jakebailey): workaround for https://github.com/microsoft/TypeScript/issues/51072
--        },
--        // legalComments: "none", // If we add copyright headers to the source files, uncomment.
--        plugins: [
--            {
--                name: "fix-require",
--                setup: (build) => {
--                    build.onEnd(async () => {
--                        // esbuild converts calls to "require" to "__require"; this function
--                        // calls the real require if it exists, or throws if it does not (rather than
--                        // throwing an error like "require not defined"). But, since we want typescript
--                        // to be consumable by other bundlers, we need to convert these calls back to
--                        // require so our imports are visible again.
--                        //
--                        // Note that this step breaks source maps, but only for lines that reference
--                        // "__require", which is an okay tradeoff for the performance of not running
--                        // the output through transpileModule/babel/etc.
--                        //
--                        // See: https://github.com/evanw/esbuild/issues/1905
--                        let contents = await fs.promises.readFile(outfile, "utf-8");
--                        contents = contents.replace(/__require\(/g, "require(");
--                        await fs.promises.writeFile(outfile, contents);
--                    });
 + function esbuildTask(entrypoint, outfile, taskOptions = {}) {
-+    return {
-+        build: async () => {
-+            /** @type {esbuild.BuildOptions} */
-+            const options = {
-+                entryPoints: [entrypoint],
-+                banner: { js: getCopyrightHeader() },
-+                bundle: true,
-+                outfile,
-+                platform: "node",
-+                target: "es2018", // Covers Node 10.
-+                format: "cjs",
-+                sourcemap: "linked",
+     return {
+         build: async () => {
+-            // Note: we do not use --minify, as that would hide function names from user backtraces
+-            // (we don't ship our sourcemaps), and would break consumers like monaco which modify
+-            // typescript.js for their own needs. Also, using --sourcesContent=false doesn't help,
+-            // as even though it's a smaller source map that could be shipped to users for better
+-            // stack traces via names, the maps are bigger than the actual source files themselves.
+             /** @type {esbuild.BuildOptions} */
+             const options = {
+                 entryPoints: [entrypoint],
+@@ -202,14 +202,37 @@ async function runDtsBundler(entrypoint, output) {
+                 target: "es2018", // Covers Node 10.
+                 format: "cjs",
+                 sourcemap: "linked",
+-                external: ["./node_modules/*"],
+-                conditions: ["require"],
 +                sourcesContent: false,
 +                external: [
 +                    ...(taskOptions.external ?? []),
 +                    "source-map-support",
 +                ],
-+                supported: {
-+                    // "const-and-let": false, // https://github.com/evanw/esbuild/issues/297
-+                    "object-rest-spread": false, // Performance enhancement, see: https://github.com/evanw/esbuild/releases/tag/v0.14.46
-+                    // TODO(jakebailey): workaround for https://github.com/microsoft/TypeScript/issues/51072
-+                    // Remove once 4.9 is out with the fix and monaco is updated.
-+                    "template-literal": false,
+                 supported: {
+                     // "const-and-let": false, // https://github.com/evanw/esbuild/issues/297
+                     "object-rest-spread": false, // Performance enhancement, see: https://github.com/evanw/esbuild/releases/tag/v0.14.46
                  },
 +                logLevel: "warning",
-+                // legalComments: "none", // If we add copyright headers to the source files, uncomment.
-+                plugins: [
+                 // legalComments: "none", // If we add copyright headers to the source files, uncomment.
+                 plugins: [
 +                    {
 +                        name: "no-node-modules",
 +                        setup: (build) => {
@@ -129,29 +87,32 @@ index ceace8e46f..fe719d00fc 100644
 +                            });
 +                        }
 +                    },
-+                    {
-+                        name: "fix-require",
-+                        setup: (build) => {
-+                            build.onEnd(async () => {
-+                                // esbuild converts calls to "require" to "__require"; this function
-+                                // calls the real require if it exists, or throws if it does not (rather than
-+                                // throwing an error like "require not defined"). But, since we want typescript
-+                                // to be consumable by other bundlers, we need to convert these calls back to
-+                                // require so our imports are visible again.
-+                                //
+                     {
+                         name: "fix-require",
+                         setup: (build) => {
+@@ -220,13 +243,12 @@ async function runDtsBundler(entrypoint, output) {
+                                 // to be consumable by other bundlers, we need to convert these calls back to
+                                 // require so our imports are visible again.
+                                 //
+-                                // Note that this step breaks source maps, but only for lines that reference
+-                                // "__require", which is an okay tradeoff for the performance of not running
+-                                // the output through transpileModule/babel/etc.
 +                                // The leading spaces are to keep the offsets the same within the files to keep
 +                                // source maps working (though this only really matters for the line the require is on).
-+                                //
-+                                // See: https://github.com/evanw/esbuild/issues/1905
-+                                let contents = await fs.promises.readFile(outfile, "utf-8");
+                                 //
+                                 // See: https://github.com/evanw/esbuild/issues/1905
+                                 let contents = await fs.promises.readFile(outfile, "utf-8");
+-                                contents = contents.replace(/__require\(/g, "require(");
 +                                contents = contents.replace(/__require\(/g, "  require(");
-+                                await fs.promises.writeFile(outfile, contents);
-+                            });
-+                        },
-+                    }
-+                ]
-+            };
-+
+                                 await fs.promises.writeFile(outfile, contents);
+                             });
+                         },
+@@ -234,22 +256,23 @@ async function runDtsBundler(entrypoint, output) {
+                 ]
+             };
+ 
+-            if (exportIsTsObject) {
+-                options.format = "iife"; // We use an IIFE so we can inject the code below.
 +            if (taskOptions.exportIsTsObject) {
 +                // These snippets cannot appear in the actual source files, otherwise they will be rewritten
 +                // to things like exports or requires.
@@ -167,40 +128,25 @@ index ceace8e46f..fe719d00fc 100644
 +                }
 +
 +                options.format = "iife"; // We use an IIFE so we can inject the footer, and so that "ts" is global if not loaded as a module.
-+                options.globalName = "ts"; // Name the variable ts, matching our old big bundle and so we can use the code below.
-+                options.footer = { js: footer };
-             }
--        ]
--    };
- 
--    if (exportIsTsObject) {
--        options.format = "iife"; // We use an IIFE so we can inject the code below.
--        options.globalName = "ts"; // Name the variable ts, matching our old big bundle and so we can use the code below.
--        options.footer = {
--            // These snippets cannot appear in the actual source files, otherwise they will be rewritten
--            // to things like exports or requires.
--            js: `
+                 options.globalName = "ts"; // Name the variable ts, matching our old big bundle and so we can use the code below.
+-                options.footer = {
+-                    // These snippets cannot appear in the actual source files, otherwise they will be rewritten
+-                    // to things like exports or requires.
+-                    js: `
 -if (typeof module !== "undefined" && module.exports) {
--    // If we are in a CJS context, export the ts namespace.
--    module.exports = ts;
+-// If we are in a CJS context, export the ts namespace.
+-module.exports = ts;
 -}
 -if (ts.server) {
--    // If we are in a server bundle, inject the dynamicImport function.
--    ts.server.dynamicImport = id => import(id);
+-// If we are in a server bundle, inject the dynamicImport function.
+-ts.server.dynamicImport = id => import(id);
 -}`
--        };
--    }
--
--    return {
--        build: () => esbuild.build(options),
-+            await esbuild.build(options);
-+        },
-         clean: () => del([outfile, `${outfile}.map`]),
--        watch: () => esbuild.build({ ...options, watch: true }),
-     };
- }
+-                };
++                options.footer = { js: footer };
+             }
  
-@@ -286,7 +312,7 @@ const cleanDebugTools = task({
+             await esbuild.build(options);
+@@ -286,7 +309,7 @@ const cleanDebugTools = task({
  cleanTasks.push(cleanDebugTools);
  
  
@@ -209,7 +155,7 @@ index ceace8e46f..fe719d00fc 100644
  
  export const buildTsc = task({
      name: "tsc",
-@@ -315,7 +341,7 @@ const buildServicesWithTsc = task({
+@@ -315,7 +338,7 @@ const buildServicesWithTsc = task({
  
  // TODO(jakebailey): rename this; no longer "services".
  
@@ -218,7 +164,7 @@ index ceace8e46f..fe719d00fc 100644
  
  export const buildServices = task({
      name: "services",
-@@ -343,7 +369,7 @@ export const dtsServices = task({
+@@ -343,7 +366,7 @@ export const dtsServices = task({
      run: () => runDtsBundler("./built/local/typescript/typescript.d.ts", "./built/local/typescript.d.ts"),
  });
  
@@ -227,7 +173,7 @@ index ceace8e46f..fe719d00fc 100644
  
  export const buildServer = task({
      name: "tsserver",
-@@ -384,7 +410,7 @@ const buildLsslWithTsc = task({
+@@ -384,7 +407,7 @@ const buildLsslWithTsc = task({
      run: () => buildProject("src/tsserverlibrary"),
  });
  
@@ -236,7 +182,7 @@ index ceace8e46f..fe719d00fc 100644
  
  export const buildLssl = task({
      name: "lssl",
-@@ -418,7 +444,15 @@ export const dts = task({
+@@ -418,7 +441,15 @@ export const dts = task({
  
  
  const testRunner = "./built/local/run.js";
