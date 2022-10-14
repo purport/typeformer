@@ -1,9 +1,34 @@
 From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Jake Bailey <5341706+jakebailey@users.noreply.github.com>
 Date: Wed, 12 Oct 2022 15:46:10 -0700
-Subject: [PATCH] Ensure dtsBundler complains when one file grabs the symbol
- from another's scope accidentally
+Subject: [PATCH] Ensure dtsBundler errors when an unexpected symbol is used
 
+If we have a layout like:
+
+```ts
+// @filename: foo.ts
+export type Something = "something";
+
+// @filename: bar.ts
+type Something = "oops";
+export function func(x: Something): void;
+
+// @filename: index.ts
+export * from "./foo";
+export * from "./bar";
+```
+
+Then when we bundle from index.ts, we will get Something from foo.ts,
+but then try to use that type again for bar.ts, even thoug the two are
+not the same symbol.
+
+In a true dts emitter, we would emit all required declarations and this
+wouldn't be a problem, but the bundler I've implemented is intentionally
+simple and requires its inputs be well-formed. Make sure we error if
+this case does happen so we can resolve it in our types.
+
+Thankfully, this only occurs once in our codebase; WatchFactory was
+declared twice, but only internally. Phew.
 ---
  scripts/dtsBundler.mjs | 154 ++++++++++++++++++++++++++++++++++++++---
  src/compiler/watch.ts  |   7 +-

@@ -19,14 +19,14 @@ files in each project.
  src/services/tsconfig.json             | 162 +----------------
  src/testRunner/tsconfig.json           | 230 +------------------------
  src/tsc/tsconfig.json                  |   7 +-
- src/tsserver/tsconfig.json             |  11 +-
+ src/tsserver/tsconfig.json             |  10 +-
  src/tsserverlibrary/tsconfig.json      |   8 +-
  src/typescript/tsconfig.json           |   7 +-
  src/typingsInstaller/tsconfig.json     |   7 +-
  src/typingsInstallerCore/tsconfig.json |   7 +-
  src/watchGuard/tsconfig.json           |   4 +-
  src/webServer/tsconfig.json            |   6 +-
- 19 files changed, 23 insertions(+), 605 deletions(-)
+ 19 files changed, 23 insertions(+), 604 deletions(-)
 
 diff --git a/src/cancellationToken/tsconfig.json b/src/cancellationToken/tsconfig.json
 index 86550f8adf..9249fae5d1 100644
@@ -718,10 +718,10 @@ index b4e1a49585..21e193ad5d 100644
 +    "include": ["**/*"]
  }
 diff --git a/src/tsserver/tsconfig.json b/src/tsserver/tsconfig.json
-index b300cf27c9..8408638400 100644
+index c2508ba284..8408638400 100644
 --- a/src/tsserver/tsconfig.json
 +++ b/src/tsserver/tsconfig.json
-@@ -6,14 +6,6 @@
+@@ -6,13 +6,6 @@
              "node"
          ]
      },
@@ -729,14 +729,13 @@ index b300cf27c9..8408638400 100644
 -        "nodeServer.ts",
 -        "webServer.ts",
 -        "server.ts",
--        "common.ts",
 -        "_namespaces/ts.server.ts",
 -        "_namespaces/ts.ts"
 -    ],
      "references": [
          { "path": "../compiler" },
          { "path": "../services" },
-@@ -21,5 +13,6 @@
+@@ -20,5 +13,6 @@
          { "path": "../server" },
          { "path": "../webServer" },
          { "path": "../deprecatedCompat" }

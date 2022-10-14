@@ -24,8 +24,9 @@ it seems like this is a good time to change things up.
  .../workflows/release-branch-artifact.yaml    |     6 +-
  .github/workflows/set-version.yaml            |     2 +-
  .github/workflows/update-lkg.yml              |     2 +-
- .vscode/launch.template.json                  |     5 +-
- .vscode/tasks.json                            |    28 +-
+ .vscode/launch.template.json                  |     7 +-
+ .vscode/settings.template.json                |     8 +
+ .vscode/tasks.json                            |    40 +-
  CONTRIBUTING.md                               |    66 +-
  Dockerfile                                    |     3 +-
  Herebyfile.mjs                                |   921 +-
@@ -42,7 +43,7 @@ it seems like this is a good time to change things up.
  scripts/types/ambient.d.ts                    |    90 -
  src/harness/findUpDir.ts                      |     2 +-
  src/harness/harnessIO.ts                      |     2 +-
- 27 files changed, 2360 insertions(+), 10759 deletions(-)
+ 28 files changed, 2379 insertions(+), 10762 deletions(-)
  delete mode 100644 scripts/build/sourcemaps.mjs
  delete mode 100644 scripts/types/ambient.d.ts
 
@@ -189,7 +190,7 @@ index 3505fc2830..b2fd19c02d 100644
          git diff
          git add ./lib
 diff --git a/.vscode/launch.template.json b/.vscode/launch.template.json
-index e4301b81e8..bd79a648d2 100644
+index e4301b81e8..a2477ed7fa 100644
 --- a/.vscode/launch.template.json
 +++ b/.vscode/launch.template.json
 @@ -20,7 +20,6 @@
@@ -200,7 +201,13 @@ index e4301b81e8..bd79a648d2 100644
        "request": "launch",
        "name": "Mocha Tests (currently opened test)",
        "runtimeArgs": ["--nolazy"],
-@@ -48,7 +47,7 @@
+@@ -43,12 +42,12 @@
+       },
+       "sourceMaps": true,
+       "smartStep": true,
+-      "preLaunchTask": "gulp: tests",
++      "preLaunchTask": "npm: build:tests",
+       "console": "integratedTerminal",
        "outFiles": [
          "${workspaceRoot}/built/local/run.js"
        ],
@@ -218,30 +225,65 @@ index e4301b81e8..bd79a648d2 100644
      }
    ]
  }
+diff --git a/.vscode/settings.template.json b/.vscode/settings.template.json
+index ccfcfc2631..56a9b56202 100644
+--- a/.vscode/settings.template.json
++++ b/.vscode/settings.template.json
+@@ -6,4 +6,12 @@
+ 
+     // To use the locally built compiler, after 'npm run build':
+     // "typescript.tsdk": "built/local"
++
++    // These options search the repo recursively and slow down
++    // the build task menu. We define our own in tasks.json.
++    "typescript.tsc.autoDetect": "off",
++    "npm.autoDetect": "off",
++    "grunt.autoDetect": "off",
++    "jake.autoDetect": "off",
++    "gulp.autoDetect": "off"
+ }
 diff --git a/.vscode/tasks.json b/.vscode/tasks.json
-index 807da9ce56..29a5024590 100644
+index 807da9ce56..63577feb3e 100644
 --- a/.vscode/tasks.json
 +++ b/.vscode/tasks.json
-@@ -4,9 +4,9 @@
+@@ -4,42 +4,42 @@
      "version": "2.0.0",
      "tasks": [
          {
 -            "type": "gulp",
 -            "label": "gulp: local",
 -            "task": "local",
-+            "label": "npm: build:compiler",
-+            "type": "npm",
-+            "script": "build:compiler",
-             "group": {
-                 "kind": "build",
-                 "isDefault": true
-@@ -16,30 +16,22 @@
+-            "group": {
+-                "kind": "build",
+-                "isDefault": true
+-            },
++            "label": "tsc --build ./src --watch",
++            "type": "shell",
++            "command": "node",
++            "args": ["${workspaceFolder}/lib/tsc.js", "--build", "${workspaceFolder}/src", "--watch"],
++            "group": "build",
++            "isBackground": true,
+             "problemMatcher": [
+-                "$tsc"
++                "$tsc-watch"
              ]
          },
          {
 -            "type": "gulp",
 -            "label": "gulp: tsc",
 -            "task": "tsc",
++            "label": "npm: build:compiler",
++            "type": "npm",
++            "script": "build:compiler",
+             "group": "build",
+             "problemMatcher": [
+                 "$tsc"
+             ]
+         },
+         {
+-            "type": "gulp",
+-            "label": "gulp: tests",
+-            "task": "tests",
 +            "label": "npm: build:tests",
 +            "type": "npm",
 +            "script": "build:tests",
@@ -252,24 +294,18 @@ index 807da9ce56..29a5024590 100644
          },
          {
 -            "type": "gulp",
--            "label": "gulp: tests",
--            "task": "tests",
+-            "task": "services",
+-            "label": "gulp: services",
 +            "label": "gulp: tests", // Kept for backwards compat for old launch.json files.
 +            "type": "npm",
 +            "script": "build:tests",
-             "group": "build",
++            "group": "build",
              "problemMatcher": [
                  "$tsc"
-             ]
-         },
--        {
--            "type": "gulp",
--            "task": "services",
--            "label": "gulp: services",
--            "problemMatcher": [
--                "$tsc"
 -            ],
 -        }
++            ]
++        },
      ]
 -}
 \ No newline at end of file

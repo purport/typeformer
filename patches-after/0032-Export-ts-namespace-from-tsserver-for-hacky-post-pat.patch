@@ -7,8 +7,7 @@ Subject: [PATCH] Export ts namespace from tsserver for hacky-post patching
  src/tsserver/_namespaces/ts.server.ts |  2 +-
  src/tsserver/common.ts                | 27 ++++++++++++++++++++++++++
  src/tsserver/server.ts                | 28 ++++-----------------------
- src/tsserver/tsconfig.json            |  1 +
- 4 files changed, 33 insertions(+), 25 deletions(-)
+ 3 files changed, 32 insertions(+), 25 deletions(-)
  create mode 100644 src/tsserver/common.ts
 
 diff --git a/src/tsserver/_namespaces/ts.server.ts b/src/tsserver/_namespaces/ts.server.ts
@@ -100,18 +99,6 @@ index 754b3e2edf..f88fcb3bff 100644
  function start({ args, logger, cancellationToken, serverMode, unknownServerMode, startSession: startServer }: StartInput, platform: string) {
      const syntaxOnly = hasArgument("--syntaxOnly");
  
-diff --git a/src/tsserver/tsconfig.json b/src/tsserver/tsconfig.json
-index c2508ba284..b300cf27c9 100644
---- a/src/tsserver/tsconfig.json
-+++ b/src/tsserver/tsconfig.json
-@@ -10,6 +10,7 @@
-         "nodeServer.ts",
-         "webServer.ts",
-         "server.ts",
-+        "common.ts",
-         "_namespaces/ts.server.ts",
-         "_namespaces/ts.ts"
-     ],
 -- 
 2.38.0
 
