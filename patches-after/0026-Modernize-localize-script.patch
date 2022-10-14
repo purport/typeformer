@@ -7,11 +7,24 @@ This file is pretty much the same as it was when it was committed in
 2017; these days, we can write clearer code with async/await and new FS
 APIs.
 ---
- .../generateLocalizedDiagnosticMessages.mjs   | 109 ++++++------------
- 1 file changed, 33 insertions(+), 76 deletions(-)
+ Herebyfile.mjs                                |   1 +
+ .../generateLocalizedDiagnosticMessages.mjs   | 113 ++++++------------
+ 2 files changed, 36 insertions(+), 78 deletions(-)
 
+diff --git a/Herebyfile.mjs b/Herebyfile.mjs
+index b6e8300258..ab70539f9a 100644
+--- a/Herebyfile.mjs
++++ b/Herebyfile.mjs
+@@ -156,6 +156,7 @@ const localizationTargets = localizationDirectories
+ 
+ const localize = task({
+     name: "localize",
++    dependencies: [generateDiagnostics],
+     run: async () => {
+         if (needsUpdate(diagnosticMessagesGeneratedJson, generatedLCGFile)) {
+             return exec(process.execPath, ["scripts/generateLocalizedDiagnosticMessages.mjs", "src/loc/lcl", "built/local", diagnosticMessagesGeneratedJson], { ignoreExitCode: true });
 diff --git a/scripts/generateLocalizedDiagnosticMessages.mjs b/scripts/generateLocalizedDiagnosticMessages.mjs
-index e07f6629a1..d8bdf0c00d 100644
+index e07f6629a1..73c30e8615 100644
 --- a/scripts/generateLocalizedDiagnosticMessages.mjs
 +++ b/scripts/generateLocalizedDiagnosticMessages.mjs
 @@ -1,8 +1,11 @@
@@ -27,8 +40,12 @@ index e07f6629a1..d8bdf0c00d 100644
      const args = process.argv.slice(2);
      if (args.length !== 3) {
          console.log("Usage:");
-@@ -18,35 +21,28 @@ function main() {
-     generateLCGFile();
+@@ -15,38 +18,31 @@ function main() {
+     const diagnosticsMapFilePath = args[2];
+ 
+     // generate the lcg file for enu
+-    generateLCGFile();
++    await generateLCGFile();
  
      // generate other langs
 -    fs.readdir(inputPath, (err, files) => {
@@ -165,6 +182,12 @@ index e07f6629a1..d8bdf0c00d 100644
  
          /**
           * @param {string} key
+@@ -204,4 +161,4 @@ function main() {
+     }
+ }
+ 
+-main();
++await main();
 -- 
 2.38.0
 

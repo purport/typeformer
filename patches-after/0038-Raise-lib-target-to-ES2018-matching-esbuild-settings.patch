@@ -1,0 +1,29 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Jake Bailey <5341706+jakebailey@users.noreply.github.com>
+Date: Fri, 14 Oct 2022 15:16:59 -0700
+Subject: [PATCH] Raise lib/target to ES2018, matching esbuild settings, and
+ set commonjs module mode
+
+---
+ src/tsconfig-base.json | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
+
+diff --git a/src/tsconfig-base.json b/src/tsconfig-base.json
+index 29fd577914..d0efb21a15 100644
+--- a/src/tsconfig-base.json
++++ b/src/tsconfig-base.json
+@@ -4,8 +4,9 @@
+         "outDir": "../built/local",
+ 
+         "pretty": true,
+-        "lib": ["es2015.iterable", "es2015.generator", "es5"],
+-        "target": "es5",
++        "lib": ["es2018"],
++        "target": "es2018",
++        "module": "CommonJS",
+         "moduleResolution": "node",
+ 
+         "declaration": true,
+-- 
+2.38.0
+

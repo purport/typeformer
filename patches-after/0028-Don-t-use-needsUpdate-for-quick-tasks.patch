@@ -7,11 +7,11 @@ needsUpdate may be wrong when the branch changes; these ones are now so
 fast thanks to being pure JS that we can just always run their contents
 and be sure that the outputs are right.
 ---
- Herebyfile.mjs | 61 ++++++++++++++++++++------------------------------
- 1 file changed, 24 insertions(+), 37 deletions(-)
+ Herebyfile.mjs | 56 +++++++++++++++++++-------------------------------
+ 1 file changed, 21 insertions(+), 35 deletions(-)
 
 diff --git a/Herebyfile.mjs b/Herebyfile.mjs
-index b6e8300258..fb919e0781 100644
+index ab70539f9a..47c2a4e1ef 100644
 --- a/Herebyfile.mjs
 +++ b/Herebyfile.mjs
 @@ -6,7 +6,7 @@ import esbuild from "esbuild";
@@ -70,24 +70,20 @@ index b6e8300258..fb919e0781 100644
      }
  });
  
-@@ -154,13 +148,10 @@ const localizationTargets = localizationDirectories
-     .map(f => `built/local/${f}/diagnosticMessages.generated.json`)
-     .concat(generatedLCGFile);
- 
--const localize = task({
-+export const localize = task({
+@@ -157,11 +151,7 @@ const localizationTargets = localizationDirectories
+ const localize = task({
      name: "localize",
+     dependencies: [generateDiagnostics],
 -    run: async () => {
 -        if (needsUpdate(diagnosticMessagesGeneratedJson, generatedLCGFile)) {
 -            return exec(process.execPath, ["scripts/generateLocalizedDiagnosticMessages.mjs", "src/loc/lcl", "built/local", diagnosticMessagesGeneratedJson], { ignoreExitCode: true });
 -        }
 -    }
-+    dependencies: [generateDiagnostics],
 +    run: () => exec(process.execPath, ["scripts/generateLocalizedDiagnosticMessages.mjs", "src/loc/lcl", "built/local", diagnosticMessagesGeneratedJson], { ignoreExitCode: true }),
  });
  
  export const buildSrc = task({
-@@ -533,11 +524,9 @@ export const generateTypesMap = task({
+@@ -534,11 +524,9 @@ export const generateTypesMap = task({
      run: async () => {
          const source = "src/server/typesMap.json";
          const target = "built/local/typesMap.json";
@@ -102,12 +98,7 @@ index b6e8300258..fb919e0781 100644
      }
  });
  
-@@ -552,15 +541,13 @@ cleanTasks.push(cleanTypesMap);
- // it to be synced to the Azure DevOps repo, so that it can get picked up by the build
- // pipeline that generates the localization artifacts that are then fed into the translation process.
- const builtLocalDiagnosticMessagesGeneratedJson = "built/local/diagnosticMessages.generated.json";
--const copyBuiltLocalDiagnosticMessages = task({
-+export const copyBuiltLocalDiagnosticMessages = task({
+@@ -557,11 +545,9 @@ const copyBuiltLocalDiagnosticMessages = task({
      name: "copy-built-local-diagnostic-messages",
      dependencies: [generateDiagnostics],
      run: async () => {

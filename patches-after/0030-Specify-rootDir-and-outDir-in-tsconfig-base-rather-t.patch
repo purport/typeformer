@@ -29,7 +29,7 @@ Subject: [PATCH] Specify rootDir and outDir in tsconfig-base rather than in
  21 files changed, 14 insertions(+), 30 deletions(-)
 
 diff --git a/Herebyfile.mjs b/Herebyfile.mjs
-index fb919e0781..901addd99c 100644
+index 47c2a4e1ef..c2b1124da8 100644
 --- a/Herebyfile.mjs
 +++ b/Herebyfile.mjs
 @@ -473,11 +473,14 @@ export const lint = task({

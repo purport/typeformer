@@ -252,7 +252,7 @@ index 1a164cbd67..bc0c36dba1 100644
      "scripts": {
          "test": "hereby runtests-parallel --light=false",
 diff --git a/scripts/generateLocalizedDiagnosticMessages.mjs b/scripts/generateLocalizedDiagnosticMessages.mjs
-index d8bdf0c00d..d10bb26106 100644
+index 73c30e8615..45e393fc3e 100644
 --- a/scripts/generateLocalizedDiagnosticMessages.mjs
 +++ b/scripts/generateLocalizedDiagnosticMessages.mjs
 @@ -1,9 +1,26 @@
