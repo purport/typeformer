@@ -576,7 +576,7 @@ index 010b996d7a..b6c97f8f3b 100644
          modifiers,
          name,
 diff --git a/src/compiler/moduleNameResolver.ts b/src/compiler/moduleNameResolver.ts
-index f13d60743e..9e62af0806 100644
+index 87fef65c11..c2a17563f0 100644
 --- a/src/compiler/moduleNameResolver.ts
 +++ b/src/compiler/moduleNameResolver.ts
 @@ -128,7 +128,7 @@ function createResolvedModuleWithFailedLookupLocations(
@@ -725,7 +725,7 @@ index a6cce70e78..103676d271 100644
  
  interface CachedResolvedTypeReferenceDirectiveWithFailedLookupLocations extends ResolvedTypeReferenceDirectiveWithFailedLookupLocations, ResolutionWithFailedLookupLocations {
 diff --git a/src/compiler/sys.ts b/src/compiler/sys.ts
-index 356b920557..5c369877fd 100644
+index e4cbb90009..0fbddaaa95 100644
 --- a/src/compiler/sys.ts
 +++ b/src/compiler/sys.ts
 @@ -1260,7 +1260,7 @@ export function patchWriteFileEnsuringDirectory(sys: System) {
@@ -1213,10 +1213,10 @@ index c9d728f00b..6c3b39bd26 100644
  /** @internal */
  export type PragmaPseudoMap = {[K in keyof ConcretePragmaSpecs]: {arguments: PragmaArgumentType<K>, range: CommentRange}};
 diff --git a/src/compiler/utilities.ts b/src/compiler/utilities.ts
-index 560a78a818..97620b9c89 100644
+index 71009dd489..8ae950ee3f 100644
 --- a/src/compiler/utilities.ts
 +++ b/src/compiler/utilities.ts
-@@ -721,7 +721,8 @@ export function getEmitFlags(node: Node): EmitFlags {
+@@ -722,7 +722,8 @@ export function getEmitFlags(node: Node): EmitFlags {
      return emitNode && emitNode.flags || 0;
  }
  
@@ -1226,7 +1226,7 @@ index 560a78a818..97620b9c89 100644
      [key: string]: { [key: string]: string[] | undefined };
  }
  
-@@ -6743,14 +6744,14 @@ export function formatStringFromArgs(text: string, args: ArrayLike<string | numb
+@@ -6744,14 +6745,14 @@ export function formatStringFromArgs(text: string, args: ArrayLike<string | numb
  let localizedDiagnosticMessages: MapLike<string> | undefined;
  
  /** @internal */
@@ -2870,7 +2870,7 @@ index 7dfb4558e1..f8204d4f4b 100644
          || compareIdentifiers(s1.propertyName || s1.name, s2.propertyName || s2.name)
          || compareIdentifiers(s1.name, s2.name);
 diff --git a/src/services/refactors/extractSymbol.ts b/src/services/refactors/extractSymbol.ts
-index 2266ea1e22..0af702dbb7 100644
+index b8f98c3969..8a6190df3b 100644
 --- a/src/services/refactors/extractSymbol.ts
 +++ b/src/services/refactors/extractSymbol.ts
 @@ -255,7 +255,8 @@ export namespace Messages {

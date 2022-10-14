@@ -4,14 +4,14 @@ Date: Tue, 4 Oct 2022 21:16:06 -0700
 Subject: [PATCH] Add a --bundle=false variant to CI
 
 ---
- .github/workflows/ci.yml | 7 ++++++-
- 1 file changed, 6 insertions(+), 1 deletion(-)
+ .github/workflows/ci.yml | 24 +++++++++++++++++++++++-
+ 1 file changed, 23 insertions(+), 1 deletion(-)
 
 diff --git a/.github/workflows/ci.yml b/.github/workflows/ci.yml
-index bf6cb01228..44836a0739 100644
+index bf6cb01228..e1467cc471 100644
 --- a/.github/workflows/ci.yml
 +++ b/.github/workflows/ci.yml
-@@ -21,6 +21,11 @@ jobs:
+@@ -21,6 +21,13 @@ jobs:
            - "*"
            - lts/*
            - lts/-1
@@ -20,10 +20,12 @@ index bf6cb01228..44836a0739 100644
 +        include:
 +          - node-version: "*"
 +            bundle: "false"
++
++    name: Test Node ${{ matrix.node-version }} with --bundle=${{ matrix.bundle }}
  
      steps:
      - uses: actions/checkout@v3
-@@ -32,7 +37,7 @@ jobs:
+@@ -32,7 +39,7 @@ jobs:
      - run:  npm ci
  
      - name: Tests
@@ -32,6 +34,28 @@ index bf6cb01228..44836a0739 100644
  
    lint:
      runs-on: ubuntu-latest
+@@ -68,6 +75,21 @@ jobs:
+     - name: Validate the browser can import TypeScript
+       run: gulp test-browser-integration
+ 
++  typecheck:
++    runs-on: ubuntu-latest
++
++    steps:
++    - uses: actions/checkout@v3
++    - uses: actions/setup-node@v3
++      with:
++        node-version: "*"
++        check-latest: true
++    - run:  npm ci
++
++    - name: Build src
++      run: npx hereby build-src
++
++
+   misc:
+     runs-on: ubuntu-latest
+ 
 -- 
 2.38.0
 

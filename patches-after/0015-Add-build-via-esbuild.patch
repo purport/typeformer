@@ -18,7 +18,7 @@ using plain files and still produce a runnable system.
  scripts/produceLKG.mjs                        |  32 +-
  src/cancellationToken/tsconfig.json           |   4 +-
  src/compiler/debug.ts                         |   2 +-
- src/compiler/sys.ts                           |  21 +-
+ src/compiler/sys.ts                           |  23 +-
  src/debug/_namespaces/Debug.ts                |   3 -
  src/debug/{dbg.ts => compilerDebug.ts}        |  10 -
  src/debug/tsconfig.json                       |   7 +-
@@ -30,17 +30,17 @@ using plain files and still produce a runnable system.
  src/server/scriptVersionCache.ts              |   8 +-
  src/services/_namespaces/ts.ts                |   1 +
  src/services/exportAsModule.ts                |   9 -
- src/services/services.ts                      |   4 +-
+ src/services/services.ts                      |  12 +-
  src/services/tsconfig.json                    |   1 -
  src/testRunner/_namespaces/Harness.ts         |   6 +
  src/testRunner/runner.ts                      |   9 +-
  src/tsconfig-base.json                        |   1 +
  src/tsconfig.json                             |   1 -
- src/tsserver/nodeServer.ts                    |   4 +-
+ src/tsserver/nodeServer.ts                    |  12 +-
+ src/typingsInstaller/nodeTypingsInstaller.ts  |   7 +-
  src/watchGuard/tsconfig.json                  |   4 +-
- src/watchGuard/watchGuard.ts                  |   2 +-
  src/webServer/webServer.ts                    |  27 +-
- 33 files changed, 928 insertions(+), 399 deletions(-)
+ 33 files changed, 939 insertions(+), 411 deletions(-)
  create mode 100644 scripts/build/localization.mjs
  delete mode 100644 scripts/build/prepend.mjs
  delete mode 100644 src/debug/_namespaces/Debug.ts
@@ -642,14 +642,14 @@ index ebe73a094a..0f02be239f 100644
  task("LKG").flags = {
      "   --built": "Compile using the built version of the compiler.",
 diff --git a/package-lock.json b/package-lock.json
-index e5c75751f3..d82b30bd29 100644
+index a66a99cbc2..322274fd26 100644
 --- a/package-lock.json
 +++ b/package-lock.json
 @@ -41,6 +41,7 @@
                  "chalk": "^4.1.2",
                  "del": "^6.1.1",
                  "diff": "^5.1.0",
-+                "esbuild": "^0.15.9",
++                "esbuild": "^0.15.11",
                  "eslint": "^8.22.0",
                  "eslint-formatter-autolinkable-stylish": "^1.2.0",
                  "eslint-plugin-import": "^2.26.0",
@@ -658,9 +658,9 @@ index e5c75751f3..d82b30bd29 100644
              }
          },
 +        "node_modules/@esbuild/android-arm": {
-+            "version": "0.15.9",
-+            "resolved": "https://registry.npmjs.org/@esbuild/android-arm/-/android-arm-0.15.9.tgz",
-+            "integrity": "sha512-VZPy/ETF3fBG5PiinIkA0W/tlsvlEgJccyN2DzWZEl0DlVKRbu91PvY2D6Lxgluj4w9QtYHjOWjAT44C+oQ+EQ==",
++            "version": "0.15.11",
++            "resolved": "https://registry.npmjs.org/@esbuild/android-arm/-/android-arm-0.15.11.tgz",
++            "integrity": "sha512-PzMcQLazLBkwDEkrNPi9AbjFt6+3I7HKbiYF2XtWQ7wItrHvEOeO3T8Am434zAozWtVP7lrTue1bEfc2nYWeCA==",
 +            "cpu": [
 +                "arm"
 +            ],
@@ -674,9 +674,9 @@ index e5c75751f3..d82b30bd29 100644
 +            }
 +        },
 +        "node_modules/@esbuild/linux-loong64": {
-+            "version": "0.15.9",
-+            "resolved": "https://registry.npmjs.org/@esbuild/linux-loong64/-/linux-loong64-0.15.9.tgz",
-+            "integrity": "sha512-O+NfmkfRrb3uSsTa4jE3WApidSe3N5++fyOVGP1SmMZi4A3BZELkhUUvj5hwmMuNdlpzAZ8iAPz2vmcR7DCFQA==",
++            "version": "0.15.11",
++            "resolved": "https://registry.npmjs.org/@esbuild/linux-loong64/-/linux-loong64-0.15.11.tgz",
++            "integrity": "sha512-geWp637tUhNmhL3Xgy4Bj703yXB9dqiLJe05lCUfjSFDrQf9C/8pArusyPUbUbPwlC/EAUjBw32sxuIl/11dZw==",
 +            "cpu": [
 +                "loong64"
 +            ],
@@ -692,14 +692,14 @@ index e5c75751f3..d82b30bd29 100644
          "node_modules/@eslint/eslintrc": {
              "version": "1.3.3",
              "resolved": "https://registry.npmjs.org/@eslint/eslintrc/-/eslintrc-1.3.3.tgz",
-@@ -2261,6 +2294,363 @@
+@@ -2264,6 +2297,363 @@
                  "es6-symbol": "^3.1.1"
              }
          },
 +        "node_modules/esbuild": {
-+            "version": "0.15.9",
-+            "resolved": "https://registry.npmjs.org/esbuild/-/esbuild-0.15.9.tgz",
-+            "integrity": "sha512-OnYr1rkMVxtmMHIAKZLMcEUlJmqcbxBz9QoBU8G9v455na0fuzlT/GLu6l+SRghrk0Mm2fSSciMmzV43Q8e0Gg==",
++            "version": "0.15.11",
++            "resolved": "https://registry.npmjs.org/esbuild/-/esbuild-0.15.11.tgz",
++            "integrity": "sha512-OgHGuhlfZ//mToxjte1D5iiiQgWfJ2GByVMwEC/IuoXsBGkuyK1+KrjYu0laSpnN/L1UmLUCv0s25vObdc1bVg==",
 +            "dev": true,
 +            "hasInstallScript": true,
 +            "bin": {
@@ -709,34 +709,34 @@ index e5c75751f3..d82b30bd29 100644
 +                "node": ">=12"
 +            },
 +            "optionalDependencies": {
-+                "@esbuild/android-arm": "0.15.9",
-+                "@esbuild/linux-loong64": "0.15.9",
-+                "esbuild-android-64": "0.15.9",
-+                "esbuild-android-arm64": "0.15.9",
-+                "esbuild-darwin-64": "0.15.9",
-+                "esbuild-darwin-arm64": "0.15.9",
-+                "esbuild-freebsd-64": "0.15.9",
-+                "esbuild-freebsd-arm64": "0.15.9",
-+                "esbuild-linux-32": "0.15.9",
-+                "esbuild-linux-64": "0.15.9",
-+                "esbuild-linux-arm": "0.15.9",
-+                "esbuild-linux-arm64": "0.15.9",
-+                "esbuild-linux-mips64le": "0.15.9",
-+                "esbuild-linux-ppc64le": "0.15.9",
-+                "esbuild-linux-riscv64": "0.15.9",
-+                "esbuild-linux-s390x": "0.15.9",
-+                "esbuild-netbsd-64": "0.15.9",
-+                "esbuild-openbsd-64": "0.15.9",
-+                "esbuild-sunos-64": "0.15.9",
-+                "esbuild-windows-32": "0.15.9",
-+                "esbuild-windows-64": "0.15.9",
-+                "esbuild-windows-arm64": "0.15.9"
++                "@esbuild/android-arm": "0.15.11",
++                "@esbuild/linux-loong64": "0.15.11",
++                "esbuild-android-64": "0.15.11",
++                "esbuild-android-arm64": "0.15.11",
++                "esbuild-darwin-64": "0.15.11",
++                "esbuild-darwin-arm64": "0.15.11",
++                "esbuild-freebsd-64": "0.15.11",
++                "esbuild-freebsd-arm64": "0.15.11",
++                "esbuild-linux-32": "0.15.11",
++                "esbuild-linux-64": "0.15.11",
++                "esbuild-linux-arm": "0.15.11",
++                "esbuild-linux-arm64": "0.15.11",
++                "esbuild-linux-mips64le": "0.15.11",
++                "esbuild-linux-ppc64le": "0.15.11",
++                "esbuild-linux-riscv64": "0.15.11",
++                "esbuild-linux-s390x": "0.15.11",
++                "esbuild-netbsd-64": "0.15.11",
++                "esbuild-openbsd-64": "0.15.11",
++                "esbuild-sunos-64": "0.15.11",
++                "esbuild-windows-32": "0.15.11",
++                "esbuild-windows-64": "0.15.11",
++                "esbuild-windows-arm64": "0.15.11"
 +            }
 +        },
 +        "node_modules/esbuild-android-64": {
-+            "version": "0.15.9",
-+            "resolved": "https://registry.npmjs.org/esbuild-android-64/-/esbuild-android-64-0.15.9.tgz",
-+            "integrity": "sha512-HQCX7FJn9T4kxZQkhPjNZC7tBWZqJvhlLHPU2SFzrQB/7nDXjmTIFpFTjt7Bd1uFpeXmuwf5h5fZm+x/hLnhbw==",
++            "version": "0.15.11",
++            "resolved": "https://registry.npmjs.org/esbuild-android-64/-/esbuild-android-64-0.15.11.tgz",
++            "integrity": "sha512-rrwoXEiuI1kaw4k475NJpexs8GfJqQUKcD08VR8sKHmuW9RUuTR2VxcupVvHdiGh9ihxL9m3lpqB1kju92Ialw==",
 +            "cpu": [
 +                "x64"
 +            ],
@@ -750,9 +750,9 @@ index e5c75751f3..d82b30bd29 100644
 +            }
 +        },
 +        "node_modules/esbuild-android-arm64": {
-+            "version": "0.15.9",
-+            "resolved": "https://registry.npmjs.org/esbuild-android-arm64/-/esbuild-android-arm64-0.15.9.tgz",
-+            "integrity": "sha512-E6zbLfqbFVCNEKircSHnPiSTsm3fCRxeIMPfrkS33tFjIAoXtwegQfVZqMGR0FlsvVxp2NEDOUz+WW48COCjSg==",
++            "version": "0.15.11",
++            "resolved": "https://registry.npmjs.org/esbuild-android-arm64/-/esbuild-android-arm64-0.15.11.tgz",
++            "integrity": "sha512-/hDubOg7BHOhUUsT8KUIU7GfZm5bihqssvqK5PfO4apag7YuObZRZSzViyEKcFn2tPeHx7RKbSBXvAopSHDZJQ==",
 +            "cpu": [
 +                "arm64"
 +            ],
@@ -766,9 +766,9 @@ index e5c75751f3..d82b30bd29 100644
 +            }
 +        },
 +        "node_modules/esbuild-darwin-64": {
-+            "version": "0.15.9",
-+            "resolved": "https://registry.npmjs.org/esbuild-darwin-64/-/esbuild-darwin-64-0.15.9.tgz",
-+            "integrity": "sha512-gI7dClcDN/HHVacZhTmGjl0/TWZcGuKJ0I7/xDGJwRQQn7aafZGtvagOFNmuOq+OBFPhlPv1T6JElOXb0unkSQ==",
++            "version": "0.15.11",
++            "resolved": "https://registry.npmjs.org/esbuild-darwin-64/-/esbuild-darwin-64-0.15.11.tgz",
++            "integrity": "sha512-1DqHD0ms3AhiwkKnjRUzmiW7JnaJJr5FKrPiR7xuyMwnjDqvNWDdMq4rKSD9OC0piFNK6n0LghsglNMe2MwJtA==",
 +            "cpu": [
 +                "x64"
 +            ],
@@ -782,9 +782,9 @@ index e5c75751f3..d82b30bd29 100644
 +            }
 +        },
 +        "node_modules/esbuild-darwin-arm64": {
-+            "version": "0.15.9",
-+            "resolved": "https://registry.npmjs.org/esbuild-darwin-arm64/-/esbuild-darwin-arm64-0.15.9.tgz",
-+            "integrity": "sha512-VZIMlcRN29yg/sv7DsDwN+OeufCcoTNaTl3Vnav7dL/nvsApD7uvhVRbgyMzv0zU/PP0xRhhIpTyc7lxEzHGSw==",
++            "version": "0.15.11",
++            "resolved": "https://registry.npmjs.org/esbuild-darwin-arm64/-/esbuild-darwin-arm64-0.15.11.tgz",
++            "integrity": "sha512-OMzhxSbS0lwwrW40HHjRCeVIJTURdXFA8c3GU30MlHKuPCcvWNUIKVucVBtNpJySXmbkQMDJdJNrXzNDyvoqvQ==",
 +            "cpu": [
 +                "arm64"
 +            ],
@@ -798,9 +798,9 @@ index e5c75751f3..d82b30bd29 100644
 +            }
 +        },
 +        "node_modules/esbuild-freebsd-64": {
-+            "version": "0.15.9",
-+            "resolved": "https://registry.npmjs.org/esbuild-freebsd-64/-/esbuild-freebsd-64-0.15.9.tgz",
-+            "integrity": "sha512-uM4z5bTvuAXqPxrI204txhlsPIolQPWRMLenvGuCPZTnnGlCMF2QLs0Plcm26gcskhxewYo9LkkmYSS5Czrb5A==",
++            "version": "0.15.11",
++            "resolved": "https://registry.npmjs.org/esbuild-freebsd-64/-/esbuild-freebsd-64-0.15.11.tgz",
++            "integrity": "sha512-8dKP26r0/Qyez8nTCwpq60QbuYKOeBygdgOAWGCRalunyeqWRoSZj9TQjPDnTTI9joxd3QYw3UhVZTKxO9QdRg==",
 +            "cpu": [
 +                "x64"
 +            ],
@@ -814,9 +814,9 @@ index e5c75751f3..d82b30bd29 100644
 +            }
 +        },
 +        "node_modules/esbuild-freebsd-arm64": {
-+            "version": "0.15.9",
-+            "resolved": "https://registry.npmjs.org/esbuild-freebsd-arm64/-/esbuild-freebsd-arm64-0.15.9.tgz",
-+            "integrity": "sha512-HHDjT3O5gWzicGdgJ5yokZVN9K9KG05SnERwl9nBYZaCjcCgj/sX8Ps1jvoFSfNCO04JSsHSOWo4qvxFuj8FoA==",
++            "version": "0.15.11",
++            "resolved": "https://registry.npmjs.org/esbuild-freebsd-arm64/-/esbuild-freebsd-arm64-0.15.11.tgz",
++            "integrity": "sha512-aSGiODiukLGGnSg/O9+cGO2QxEacrdCtCawehkWYTt5VX1ni2b9KoxpHCT9h9Y6wGqNHmXFnB47RRJ8BIqZgmQ==",
 +            "cpu": [
 +                "arm64"
 +            ],
@@ -830,9 +830,9 @@ index e5c75751f3..d82b30bd29 100644
 +            }
 +        },
 +        "node_modules/esbuild-linux-32": {
-+            "version": "0.15.9",
-+            "resolved": "https://registry.npmjs.org/esbuild-linux-32/-/esbuild-linux-32-0.15.9.tgz",
-+            "integrity": "sha512-AQIdE8FugGt1DkcekKi5ycI46QZpGJ/wqcMr7w6YUmOmp2ohQ8eO4sKUsOxNOvYL7hGEVwkndSyszR6HpVHLFg==",
++            "version": "0.15.11",
++            "resolved": "https://registry.npmjs.org/esbuild-linux-32/-/esbuild-linux-32-0.15.11.tgz",
++            "integrity": "sha512-lsrAfdyJBGx+6aHIQmgqUonEzKYeBnyfJPkT6N2dOf1RoXYYV1BkWB6G02tjsrz1d5wZzaTc3cF+TKmuTo/ZwA==",
 +            "cpu": [
 +                "ia32"
 +            ],
@@ -846,9 +846,9 @@ index e5c75751f3..d82b30bd29 100644
 +            }
 +        },
 +        "node_modules/esbuild-linux-64": {
-+            "version": "0.15.9",
-+            "resolved": "https://registry.npmjs.org/esbuild-linux-64/-/esbuild-linux-64-0.15.9.tgz",
-+            "integrity": "sha512-4RXjae7g6Qs7StZyiYyXTZXBlfODhb1aBVAjd+ANuPmMhWthQilWo7rFHwJwL7DQu1Fjej2sODAVwLbcIVsAYQ==",
++            "version": "0.15.11",
++            "resolved": "https://registry.npmjs.org/esbuild-linux-64/-/esbuild-linux-64-0.15.11.tgz",
++            "integrity": "sha512-Y2Rh+PcyVhQqXKBTacPCltINN3uIw2xC+dsvLANJ1SpK5NJUtxv8+rqWpjmBgaNWKQT1/uGpMmA9olALy9PLVA==",
 +            "cpu": [
 +                "x64"
 +            ],
@@ -862,9 +862,9 @@ index e5c75751f3..d82b30bd29 100644
 +            }
 +        },
 +        "node_modules/esbuild-linux-arm": {
-+            "version": "0.15.9",
-+            "resolved": "https://registry.npmjs.org/esbuild-linux-arm/-/esbuild-linux-arm-0.15.9.tgz",
-+            "integrity": "sha512-3Zf2GVGUOI7XwChH3qrnTOSqfV1V4CAc/7zLVm4lO6JT6wbJrTgEYCCiNSzziSju+J9Jhf9YGWk/26quWPC6yQ==",
++            "version": "0.15.11",
++            "resolved": "https://registry.npmjs.org/esbuild-linux-arm/-/esbuild-linux-arm-0.15.11.tgz",
++            "integrity": "sha512-TJllTVk5aSyqPFvvcHTvf6Wu1ZKhWpJ/qNmZO8LL/XeB+LXCclm7HQHNEIz6MT7IX8PmlC1BZYrOiw2sXSB95A==",
 +            "cpu": [
 +                "arm"
 +            ],
@@ -878,9 +878,9 @@ index e5c75751f3..d82b30bd29 100644
 +            }
 +        },
 +        "node_modules/esbuild-linux-arm64": {
-+            "version": "0.15.9",
-+            "resolved": "https://registry.npmjs.org/esbuild-linux-arm64/-/esbuild-linux-arm64-0.15.9.tgz",
-+            "integrity": "sha512-a+bTtxJmYmk9d+s2W4/R1SYKDDAldOKmWjWP0BnrWtDbvUBNOm++du0ysPju4mZVoEFgS1yLNW+VXnG/4FNwdQ==",
++            "version": "0.15.11",
++            "resolved": "https://registry.npmjs.org/esbuild-linux-arm64/-/esbuild-linux-arm64-0.15.11.tgz",
++            "integrity": "sha512-uhcXiTwTmD4OpxJu3xC5TzAAw6Wzf9O1XGWL448EE9bqGjgV1j+oK3lIHAfsHnuIn8K4nDW8yjX0Sv5S++oRuw==",
 +            "cpu": [
 +                "arm64"
 +            ],
@@ -894,9 +894,9 @@ index e5c75751f3..d82b30bd29 100644
 +            }
 +        },
 +        "node_modules/esbuild-linux-mips64le": {
-+            "version": "0.15.9",
-+            "resolved": "https://registry.npmjs.org/esbuild-linux-mips64le/-/esbuild-linux-mips64le-0.15.9.tgz",
-+            "integrity": "sha512-Zn9HSylDp89y+TRREMDoGrc3Z4Hs5u56ozZLQCiZAUx2+HdbbXbWdjmw3FdTJ/i7t5Cew6/Q+6kfO3KCcFGlyw==",
++            "version": "0.15.11",
++            "resolved": "https://registry.npmjs.org/esbuild-linux-mips64le/-/esbuild-linux-mips64le-0.15.11.tgz",
++            "integrity": "sha512-WD61y/R1M4BLe4gxXRypoQ0Ci+Vjf714QYzcPNkiYv5I8K8WDz2ZR8Bm6cqKxd6rD+e/rZgPDbhQ9PCf7TMHmA==",
 +            "cpu": [
 +                "mips64el"
 +            ],
@@ -910,9 +910,9 @@ index e5c75751f3..d82b30bd29 100644
 +            }
 +        },
 +        "node_modules/esbuild-linux-ppc64le": {
-+            "version": "0.15.9",
-+            "resolved": "https://registry.npmjs.org/esbuild-linux-ppc64le/-/esbuild-linux-ppc64le-0.15.9.tgz",
-+            "integrity": "sha512-OEiOxNAMH9ENFYqRsWUj3CWyN3V8P3ZXyfNAtX5rlCEC/ERXrCEFCJji/1F6POzsXAzxvUJrTSTCy7G6BhA6Fw==",
++            "version": "0.15.11",
++            "resolved": "https://registry.npmjs.org/esbuild-linux-ppc64le/-/esbuild-linux-ppc64le-0.15.11.tgz",
++            "integrity": "sha512-JVleZS9oPVLTlBhPTWgOwxFWU/wMUdlBwTbGA4GF8c38sLbS13cupj+C8bLq929jU7EMWry4SaL+tKGIaTlqKg==",
 +            "cpu": [
 +                "ppc64"
 +            ],
@@ -926,9 +926,9 @@ index e5c75751f3..d82b30bd29 100644
 +            }
 +        },
 +        "node_modules/esbuild-linux-riscv64": {
-+            "version": "0.15.9",
-+            "resolved": "https://registry.npmjs.org/esbuild-linux-riscv64/-/esbuild-linux-riscv64-0.15.9.tgz",
-+            "integrity": "sha512-ukm4KsC3QRausEFjzTsOZ/qqazw0YvJsKmfoZZm9QW27OHjk2XKSQGGvx8gIEswft/Sadp03/VZvAaqv5AIwNA==",
++            "version": "0.15.11",
++            "resolved": "https://registry.npmjs.org/esbuild-linux-riscv64/-/esbuild-linux-riscv64-0.15.11.tgz",
++            "integrity": "sha512-9aLIalZ2HFHIOZpmVU11sEAS9F8TnHw49daEjcgMpBXHFF57VuT9f9/9LKJhw781Gda0P9jDkuCWJ0tFbErvJw==",
 +            "cpu": [
 +                "riscv64"
 +            ],
@@ -942,9 +942,9 @@ index e5c75751f3..d82b30bd29 100644
 +            }
 +        },
 +        "node_modules/esbuild-linux-s390x": {
-+            "version": "0.15.9",
-+            "resolved": "https://registry.npmjs.org/esbuild-linux-s390x/-/esbuild-linux-s390x-0.15.9.tgz",
-+            "integrity": "sha512-uDOQEH55wQ6ahcIKzQr3VyjGc6Po/xblLGLoUk3fVL1qjlZAibtQr6XRfy5wPJLu/M2o0vQKLq4lyJ2r1tWKcw==",
++            "version": "0.15.11",
++            "resolved": "https://registry.npmjs.org/esbuild-linux-s390x/-/esbuild-linux-s390x-0.15.11.tgz",
++            "integrity": "sha512-sZHtiXXOKsLI3XGBGoYO4qKBzJlb8xNsWmvFiwFMHFzA4AXgDP1KDp7Dawe9C2pavTRBDvl+Ok4n/DHQ59oaTg==",
 +            "cpu": [
 +                "s390x"
 +            ],
@@ -958,9 +958,9 @@ index e5c75751f3..d82b30bd29 100644
 +            }
 +        },
 +        "node_modules/esbuild-netbsd-64": {
-+            "version": "0.15.9",
-+            "resolved": "https://registry.npmjs.org/esbuild-netbsd-64/-/esbuild-netbsd-64-0.15.9.tgz",
-+            "integrity": "sha512-yWgxaYTQz+TqX80wXRq6xAtb7GSBAp6gqLKfOdANg9qEmAI1Bxn04IrQr0Mzm4AhxvGKoHzjHjMgXbCCSSDxcw==",
++            "version": "0.15.11",
++            "resolved": "https://registry.npmjs.org/esbuild-netbsd-64/-/esbuild-netbsd-64-0.15.11.tgz",
++            "integrity": "sha512-hUC9yN06K9sg7ju4Vgu9ChAPdsEgtcrcLfyNT5IKwKyfpLvKUwCMZSdF+gRD3WpyZelgTQfJ+pDx5XFbXTlB0A==",
 +            "cpu": [
 +                "x64"
 +            ],
@@ -974,9 +974,9 @@ index e5c75751f3..d82b30bd29 100644
 +            }
 +        },
 +        "node_modules/esbuild-openbsd-64": {
-+            "version": "0.15.9",
-+            "resolved": "https://registry.npmjs.org/esbuild-openbsd-64/-/esbuild-openbsd-64-0.15.9.tgz",
-+            "integrity": "sha512-JmS18acQl4iSAjrEha1MfEmUMN4FcnnrtTaJ7Qg0tDCOcgpPPQRLGsZqhes0vmx8VA6IqRyScqXvaL7+Q0Uf3A==",
++            "version": "0.15.11",
++            "resolved": "https://registry.npmjs.org/esbuild-openbsd-64/-/esbuild-openbsd-64-0.15.11.tgz",
++            "integrity": "sha512-0bBo9SQR4t66Wd91LGMAqmWorzO0TTzVjYiifwoFtel8luFeXuPThQnEm5ztN4g0fnvcp7AnUPPzS/Depf17wQ==",
 +            "cpu": [
 +                "x64"
 +            ],
@@ -990,9 +990,9 @@ index e5c75751f3..d82b30bd29 100644
 +            }
 +        },
 +        "node_modules/esbuild-sunos-64": {
-+            "version": "0.15.9",
-+            "resolved": "https://registry.npmjs.org/esbuild-sunos-64/-/esbuild-sunos-64-0.15.9.tgz",
-+            "integrity": "sha512-UKynGSWpzkPmXW3D2UMOD9BZPIuRaSqphxSCwScfEE05Be3KAmvjsBhht1fLzKpiFVJb0BYMd4jEbWMyJ/z1hQ==",
++            "version": "0.15.11",
++            "resolved": "https://registry.npmjs.org/esbuild-sunos-64/-/esbuild-sunos-64-0.15.11.tgz",
++            "integrity": "sha512-EuBdTGlsMTjEl1sQnBX2jfygy7iR6CKfvOzi+gEOfhDqbHXsmY1dcpbVtcwHAg9/2yUZSfMJHMAgf1z8M4yyyw==",
 +            "cpu": [
 +                "x64"
 +            ],
@@ -1006,9 +1006,9 @@ index e5c75751f3..d82b30bd29 100644
 +            }
 +        },
 +        "node_modules/esbuild-windows-32": {
-+            "version": "0.15.9",
-+            "resolved": "https://registry.npmjs.org/esbuild-windows-32/-/esbuild-windows-32-0.15.9.tgz",
-+            "integrity": "sha512-aqXvu4/W9XyTVqO/hw3rNxKE1TcZiEYHPsXM9LwYmKSX9/hjvfIJzXwQBlPcJ/QOxedfoMVH0YnhhQ9Ffb0RGA==",
++            "version": "0.15.11",
++            "resolved": "https://registry.npmjs.org/esbuild-windows-32/-/esbuild-windows-32-0.15.11.tgz",
++            "integrity": "sha512-O0/Wo1Wk6dc0rZSxkvGpmTNIycEznHmkObTFz2VHBhjPsO4ZpCgfGxNkCpz4AdAIeMczpTXt/8d5vdJNKEGC+Q==",
 +            "cpu": [
 +                "ia32"
 +            ],
@@ -1022,9 +1022,9 @@ index e5c75751f3..d82b30bd29 100644
 +            }
 +        },
 +        "node_modules/esbuild-windows-64": {
-+            "version": "0.15.9",
-+            "resolved": "https://registry.npmjs.org/esbuild-windows-64/-/esbuild-windows-64-0.15.9.tgz",
-+            "integrity": "sha512-zm7h91WUmlS4idMtjvCrEeNhlH7+TNOmqw5dJPJZrgFaxoFyqYG6CKDpdFCQXdyKpD5yvzaQBOMVTCBVKGZDEg==",
++            "version": "0.15.11",
++            "resolved": "https://registry.npmjs.org/esbuild-windows-64/-/esbuild-windows-64-0.15.11.tgz",
++            "integrity": "sha512-x977Q4HhNjnHx00b4XLAnTtj5vfbdEvkxaQwC1Zh5AN8g5EX+izgZ6e5QgqJgpzyRNJqh4hkgIJF1pyy1be0mQ==",
 +            "cpu": [
 +                "x64"
 +            ],
@@ -1038,9 +1038,9 @@ index e5c75751f3..d82b30bd29 100644
 +            }
 +        },
 +        "node_modules/esbuild-windows-arm64": {
-+            "version": "0.15.9",
-+            "resolved": "https://registry.npmjs.org/esbuild-windows-arm64/-/esbuild-windows-arm64-0.15.9.tgz",
-+            "integrity": "sha512-yQEVIv27oauAtvtuhJVfSNMztJJX47ismRS6Sv2QMVV9RM+6xjbMWuuwM2nxr5A2/gj/mu2z9YlQxiwoFRCfZA==",
++            "version": "0.15.11",
++            "resolved": "https://registry.npmjs.org/esbuild-windows-arm64/-/esbuild-windows-arm64-0.15.11.tgz",
++            "integrity": "sha512-VwUHFACuBahrvntdcMKZteUZ9HaYrBRODoKe4tIWxguQRvvYoYb7iu5LrcRS/FQx8KPZNaa72zuqwVtHeXsITw==",
 +            "cpu": [
 +                "arm64"
 +            ],
@@ -1056,198 +1056,198 @@ index e5c75751f3..d82b30bd29 100644
          "node_modules/escalade": {
              "version": "3.1.1",
              "resolved": "https://registry.npmjs.org/escalade/-/escalade-3.1.1.tgz",
-@@ -8675,6 +9065,20 @@
+@@ -8678,6 +9068,20 @@
                  "jsdoc-type-pratt-parser": "~3.1.0"
              }
          },
 +        "@esbuild/android-arm": {
-+            "version": "0.15.9",
-+            "resolved": "https://registry.npmjs.org/@esbuild/android-arm/-/android-arm-0.15.9.tgz",
-+            "integrity": "sha512-VZPy/ETF3fBG5PiinIkA0W/tlsvlEgJccyN2DzWZEl0DlVKRbu91PvY2D6Lxgluj4w9QtYHjOWjAT44C+oQ+EQ==",
++            "version": "0.15.11",
++            "resolved": "https://registry.npmjs.org/@esbuild/android-arm/-/android-arm-0.15.11.tgz",
++            "integrity": "sha512-PzMcQLazLBkwDEkrNPi9AbjFt6+3I7HKbiYF2XtWQ7wItrHvEOeO3T8Am434zAozWtVP7lrTue1bEfc2nYWeCA==",
 +            "dev": true,
 +            "optional": true
 +        },
 +        "@esbuild/linux-loong64": {
-+            "version": "0.15.9",
-+            "resolved": "https://registry.npmjs.org/@esbuild/linux-loong64/-/linux-loong64-0.15.9.tgz",
-+            "integrity": "sha512-O+NfmkfRrb3uSsTa4jE3WApidSe3N5++fyOVGP1SmMZi4A3BZELkhUUvj5hwmMuNdlpzAZ8iAPz2vmcR7DCFQA==",
++            "version": "0.15.11",
++            "resolved": "https://registry.npmjs.org/@esbuild/linux-loong64/-/linux-loong64-0.15.11.tgz",
++            "integrity": "sha512-geWp637tUhNmhL3Xgy4Bj703yXB9dqiLJe05lCUfjSFDrQf9C/8pArusyPUbUbPwlC/EAUjBw32sxuIl/11dZw==",
 +            "dev": true,
 +            "optional": true
 +        },
          "@eslint/eslintrc": {
              "version": "1.3.3",
              "resolved": "https://registry.npmjs.org/@eslint/eslintrc/-/eslintrc-1.3.3.tgz",
-@@ -10391,6 +10795,176 @@
+@@ -10394,6 +10798,176 @@
                  "es6-symbol": "^3.1.1"
              }
          },
 +        "esbuild": {
-+            "version": "0.15.9",
-+            "resolved": "https://registry.npmjs.org/esbuild/-/esbuild-0.15.9.tgz",
-+            "integrity": "sha512-OnYr1rkMVxtmMHIAKZLMcEUlJmqcbxBz9QoBU8G9v455na0fuzlT/GLu6l+SRghrk0Mm2fSSciMmzV43Q8e0Gg==",
++            "version": "0.15.11",
++            "resolved": "https://registry.npmjs.org/esbuild/-/esbuild-0.15.11.tgz",
++            "integrity": "sha512-OgHGuhlfZ//mToxjte1D5iiiQgWfJ2GByVMwEC/IuoXsBGkuyK1+KrjYu0laSpnN/L1UmLUCv0s25vObdc1bVg==",
 +            "dev": true,
 +            "requires": {
-+                "@esbuild/android-arm": "0.15.9",
-+                "@esbuild/linux-loong64": "0.15.9",
-+                "esbuild-android-64": "0.15.9",
-+                "esbuild-android-arm64": "0.15.9",
-+                "esbuild-darwin-64": "0.15.9",
-+                "esbuild-darwin-arm64": "0.15.9",
-+                "esbuild-freebsd-64": "0.15.9",
-+                "esbuild-freebsd-arm64": "0.15.9",
-+                "esbuild-linux-32": "0.15.9",
-+                "esbuild-linux-64": "0.15.9",
-+                "esbuild-linux-arm": "0.15.9",
-+                "esbuild-linux-arm64": "0.15.9",
-+                "esbuild-linux-mips64le": "0.15.9",
-+                "esbuild-linux-ppc64le": "0.15.9",
-+                "esbuild-linux-riscv64": "0.15.9",
-+                "esbuild-linux-s390x": "0.15.9",
-+                "esbuild-netbsd-64": "0.15.9",
-+                "esbuild-openbsd-64": "0.15.9",
-+                "esbuild-sunos-64": "0.15.9",
-+                "esbuild-windows-32": "0.15.9",
-+                "esbuild-windows-64": "0.15.9",
-+                "esbuild-windows-arm64": "0.15.9"
++                "@esbuild/android-arm": "0.15.11",
++                "@esbuild/linux-loong64": "0.15.11",
++                "esbuild-android-64": "0.15.11",
++                "esbuild-android-arm64": "0.15.11",
++                "esbuild-darwin-64": "0.15.11",
++                "esbuild-darwin-arm64": "0.15.11",
++                "esbuild-freebsd-64": "0.15.11",
++                "esbuild-freebsd-arm64": "0.15.11",
++                "esbuild-linux-32": "0.15.11",
++                "esbuild-linux-64": "0.15.11",
++                "esbuild-linux-arm": "0.15.11",
++                "esbuild-linux-arm64": "0.15.11",
++                "esbuild-linux-mips64le": "0.15.11",
++                "esbuild-linux-ppc64le": "0.15.11",
++                "esbuild-linux-riscv64": "0.15.11",
++                "esbuild-linux-s390x": "0.15.11",
++                "esbuild-netbsd-64": "0.15.11",
++                "esbuild-openbsd-64": "0.15.11",
++                "esbuild-sunos-64": "0.15.11",
++                "esbuild-windows-32": "0.15.11",
++                "esbuild-windows-64": "0.15.11",
++                "esbuild-windows-arm64": "0.15.11"
 +            }
 +        },
 +        "esbuild-android-64": {
-+            "version": "0.15.9",
-+            "resolved": "https://registry.npmjs.org/esbuild-android-64/-/esbuild-android-64-0.15.9.tgz",
-+            "integrity": "sha512-HQCX7FJn9T4kxZQkhPjNZC7tBWZqJvhlLHPU2SFzrQB/7nDXjmTIFpFTjt7Bd1uFpeXmuwf5h5fZm+x/hLnhbw==",
++            "version": "0.15.11",
++            "resolved": "https://registry.npmjs.org/esbuild-android-64/-/esbuild-android-64-0.15.11.tgz",
++            "integrity": "sha512-rrwoXEiuI1kaw4k475NJpexs8GfJqQUKcD08VR8sKHmuW9RUuTR2VxcupVvHdiGh9ihxL9m3lpqB1kju92Ialw==",
 +            "dev": true,
 +            "optional": true
 +        },
 +        "esbuild-android-arm64": {
-+            "version": "0.15.9",
-+            "resolved": "https://registry.npmjs.org/esbuild-android-arm64/-/esbuild-android-arm64-0.15.9.tgz",
-+            "integrity": "sha512-E6zbLfqbFVCNEKircSHnPiSTsm3fCRxeIMPfrkS33tFjIAoXtwegQfVZqMGR0FlsvVxp2NEDOUz+WW48COCjSg==",
++            "version": "0.15.11",
++            "resolved": "https://registry.npmjs.org/esbuild-android-arm64/-/esbuild-android-arm64-0.15.11.tgz",
++            "integrity": "sha512-/hDubOg7BHOhUUsT8KUIU7GfZm5bihqssvqK5PfO4apag7YuObZRZSzViyEKcFn2tPeHx7RKbSBXvAopSHDZJQ==",
 +            "dev": true,
 +            "optional": true
 +        },
 +        "esbuild-darwin-64": {
-+            "version": "0.15.9",
-+            "resolved": "https://registry.npmjs.org/esbuild-darwin-64/-/esbuild-darwin-64-0.15.9.tgz",
-+            "integrity": "sha512-gI7dClcDN/HHVacZhTmGjl0/TWZcGuKJ0I7/xDGJwRQQn7aafZGtvagOFNmuOq+OBFPhlPv1T6JElOXb0unkSQ==",
++            "version": "0.15.11",
++            "resolved": "https://registry.npmjs.org/esbuild-darwin-64/-/esbuild-darwin-64-0.15.11.tgz",
++            "integrity": "sha512-1DqHD0ms3AhiwkKnjRUzmiW7JnaJJr5FKrPiR7xuyMwnjDqvNWDdMq4rKSD9OC0piFNK6n0LghsglNMe2MwJtA==",
 +            "dev": true,
 +            "optional": true
 +        },
 +        "esbuild-darwin-arm64": {
-+            "version": "0.15.9",
-+            "resolved": "https://registry.npmjs.org/esbuild-darwin-arm64/-/esbuild-darwin-arm64-0.15.9.tgz",
-+            "integrity": "sha512-VZIMlcRN29yg/sv7DsDwN+OeufCcoTNaTl3Vnav7dL/nvsApD7uvhVRbgyMzv0zU/PP0xRhhIpTyc7lxEzHGSw==",
++            "version": "0.15.11",
++            "resolved": "https://registry.npmjs.org/esbuild-darwin-arm64/-/esbuild-darwin-arm64-0.15.11.tgz",
++            "integrity": "sha512-OMzhxSbS0lwwrW40HHjRCeVIJTURdXFA8c3GU30MlHKuPCcvWNUIKVucVBtNpJySXmbkQMDJdJNrXzNDyvoqvQ==",
 +            "dev": true,
 +            "optional": true
 +        },
 +        "esbuild-freebsd-64": {
-+            "version": "0.15.9",
-+            "resolved": "https://registry.npmjs.org/esbuild-freebsd-64/-/esbuild-freebsd-64-0.15.9.tgz",
-+            "integrity": "sha512-uM4z5bTvuAXqPxrI204txhlsPIolQPWRMLenvGuCPZTnnGlCMF2QLs0Plcm26gcskhxewYo9LkkmYSS5Czrb5A==",
++            "version": "0.15.11",
++            "resolved": "https://registry.npmjs.org/esbuild-freebsd-64/-/esbuild-freebsd-64-0.15.11.tgz",
++            "integrity": "sha512-8dKP26r0/Qyez8nTCwpq60QbuYKOeBygdgOAWGCRalunyeqWRoSZj9TQjPDnTTI9joxd3QYw3UhVZTKxO9QdRg==",
 +            "dev": true,
 +            "optional": true
 +        },
 +        "esbuild-freebsd-arm64": {
-+            "version": "0.15.9",
-+            "resolved": "https://registry.npmjs.org/esbuild-freebsd-arm64/-/esbuild-freebsd-arm64-0.15.9.tgz",
-+            "integrity": "sha512-HHDjT3O5gWzicGdgJ5yokZVN9K9KG05SnERwl9nBYZaCjcCgj/sX8Ps1jvoFSfNCO04JSsHSOWo4qvxFuj8FoA==",
++            "version": "0.15.11",
++            "resolved": "https://registry.npmjs.org/esbuild-freebsd-arm64/-/esbuild-freebsd-arm64-0.15.11.tgz",
++            "integrity": "sha512-aSGiODiukLGGnSg/O9+cGO2QxEacrdCtCawehkWYTt5VX1ni2b9KoxpHCT9h9Y6wGqNHmXFnB47RRJ8BIqZgmQ==",
 +            "dev": true,
 +            "optional": true
 +        },
 +        "esbuild-linux-32": {
-+            "version": "0.15.9",
-+            "resolved": "https://registry.npmjs.org/esbuild-linux-32/-/esbuild-linux-32-0.15.9.tgz",
-+            "integrity": "sha512-AQIdE8FugGt1DkcekKi5ycI46QZpGJ/wqcMr7w6YUmOmp2ohQ8eO4sKUsOxNOvYL7hGEVwkndSyszR6HpVHLFg==",
++            "version": "0.15.11",
++            "resolved": "https://registry.npmjs.org/esbuild-linux-32/-/esbuild-linux-32-0.15.11.tgz",
++            "integrity": "sha512-lsrAfdyJBGx+6aHIQmgqUonEzKYeBnyfJPkT6N2dOf1RoXYYV1BkWB6G02tjsrz1d5wZzaTc3cF+TKmuTo/ZwA==",
 +            "dev": true,
 +            "optional": true
 +        },
 +        "esbuild-linux-64": {
-+            "version": "0.15.9",
-+            "resolved": "https://registry.npmjs.org/esbuild-linux-64/-/esbuild-linux-64-0.15.9.tgz",
-+            "integrity": "sha512-4RXjae7g6Qs7StZyiYyXTZXBlfODhb1aBVAjd+ANuPmMhWthQilWo7rFHwJwL7DQu1Fjej2sODAVwLbcIVsAYQ==",
++            "version": "0.15.11",
++            "resolved": "https://registry.npmjs.org/esbuild-linux-64/-/esbuild-linux-64-0.15.11.tgz",
++            "integrity": "sha512-Y2Rh+PcyVhQqXKBTacPCltINN3uIw2xC+dsvLANJ1SpK5NJUtxv8+rqWpjmBgaNWKQT1/uGpMmA9olALy9PLVA==",
 +            "dev": true,
 +            "optional": true
 +        },
 +        "esbuild-linux-arm": {
-+            "version": "0.15.9",
-+            "resolved": "https://registry.npmjs.org/esbuild-linux-arm/-/esbuild-linux-arm-0.15.9.tgz",
-+            "integrity": "sha512-3Zf2GVGUOI7XwChH3qrnTOSqfV1V4CAc/7zLVm4lO6JT6wbJrTgEYCCiNSzziSju+J9Jhf9YGWk/26quWPC6yQ==",
++            "version": "0.15.11",
++            "resolved": "https://registry.npmjs.org/esbuild-linux-arm/-/esbuild-linux-arm-0.15.11.tgz",
++            "integrity": "sha512-TJllTVk5aSyqPFvvcHTvf6Wu1ZKhWpJ/qNmZO8LL/XeB+LXCclm7HQHNEIz6MT7IX8PmlC1BZYrOiw2sXSB95A==",
 +            "dev": true,
 +            "optional": true
 +        },
 +        "esbuild-linux-arm64": {
-+            "version": "0.15.9",
-+            "resolved": "https://registry.npmjs.org/esbuild-linux-arm64/-/esbuild-linux-arm64-0.15.9.tgz",
-+            "integrity": "sha512-a+bTtxJmYmk9d+s2W4/R1SYKDDAldOKmWjWP0BnrWtDbvUBNOm++du0ysPju4mZVoEFgS1yLNW+VXnG/4FNwdQ==",
++            "version": "0.15.11",
++            "resolved": "https://registry.npmjs.org/esbuild-linux-arm64/-/esbuild-linux-arm64-0.15.11.tgz",
++            "integrity": "sha512-uhcXiTwTmD4OpxJu3xC5TzAAw6Wzf9O1XGWL448EE9bqGjgV1j+oK3lIHAfsHnuIn8K4nDW8yjX0Sv5S++oRuw==",
 +            "dev": true,
 +            "optional": true
 +        },
 +        "esbuild-linux-mips64le": {
-+            "version": "0.15.9",
-+            "resolved": "https://registry.npmjs.org/esbuild-linux-mips64le/-/esbuild-linux-mips64le-0.15.9.tgz",
-+            "integrity": "sha512-Zn9HSylDp89y+TRREMDoGrc3Z4Hs5u56ozZLQCiZAUx2+HdbbXbWdjmw3FdTJ/i7t5Cew6/Q+6kfO3KCcFGlyw==",
++            "version": "0.15.11",
++            "resolved": "https://registry.npmjs.org/esbuild-linux-mips64le/-/esbuild-linux-mips64le-0.15.11.tgz",
++            "integrity": "sha512-WD61y/R1M4BLe4gxXRypoQ0Ci+Vjf714QYzcPNkiYv5I8K8WDz2ZR8Bm6cqKxd6rD+e/rZgPDbhQ9PCf7TMHmA==",
 +            "dev": true,
 +            "optional": true
 +        },
 +        "esbuild-linux-ppc64le": {
-+            "version": "0.15.9",
-+            "resolved": "https://registry.npmjs.org/esbuild-linux-ppc64le/-/esbuild-linux-ppc64le-0.15.9.tgz",
-+            "integrity": "sha512-OEiOxNAMH9ENFYqRsWUj3CWyN3V8P3ZXyfNAtX5rlCEC/ERXrCEFCJji/1F6POzsXAzxvUJrTSTCy7G6BhA6Fw==",
++            "version": "0.15.11",
++            "resolved": "https://registry.npmjs.org/esbuild-linux-ppc64le/-/esbuild-linux-ppc64le-0.15.11.tgz",
++            "integrity": "sha512-JVleZS9oPVLTlBhPTWgOwxFWU/wMUdlBwTbGA4GF8c38sLbS13cupj+C8bLq929jU7EMWry4SaL+tKGIaTlqKg==",
 +            "dev": true,
 +            "optional": true
 +        },
 +        "esbuild-linux-riscv64": {
-+            "version": "0.15.9",
-+            "resolved": "https://registry.npmjs.org/esbuild-linux-riscv64/-/esbuild-linux-riscv64-0.15.9.tgz",
-+            "integrity": "sha512-ukm4KsC3QRausEFjzTsOZ/qqazw0YvJsKmfoZZm9QW27OHjk2XKSQGGvx8gIEswft/Sadp03/VZvAaqv5AIwNA==",
++            "version": "0.15.11",
++            "resolved": "https://registry.npmjs.org/esbuild-linux-riscv64/-/esbuild-linux-riscv64-0.15.11.tgz",
++            "integrity": "sha512-9aLIalZ2HFHIOZpmVU11sEAS9F8TnHw49daEjcgMpBXHFF57VuT9f9/9LKJhw781Gda0P9jDkuCWJ0tFbErvJw==",
 +            "dev": true,
 +            "optional": true
 +        },
 +        "esbuild-linux-s390x": {
-+            "version": "0.15.9",
-+            "resolved": "https://registry.npmjs.org/esbuild-linux-s390x/-/esbuild-linux-s390x-0.15.9.tgz",
-+            "integrity": "sha512-uDOQEH55wQ6ahcIKzQr3VyjGc6Po/xblLGLoUk3fVL1qjlZAibtQr6XRfy5wPJLu/M2o0vQKLq4lyJ2r1tWKcw==",
++            "version": "0.15.11",
++            "resolved": "https://registry.npmjs.org/esbuild-linux-s390x/-/esbuild-linux-s390x-0.15.11.tgz",
++            "integrity": "sha512-sZHtiXXOKsLI3XGBGoYO4qKBzJlb8xNsWmvFiwFMHFzA4AXgDP1KDp7Dawe9C2pavTRBDvl+Ok4n/DHQ59oaTg==",
 +            "dev": true,
 +            "optional": true
 +        },
 +        "esbuild-netbsd-64": {
-+            "version": "0.15.9",
-+            "resolved": "https://registry.npmjs.org/esbuild-netbsd-64/-/esbuild-netbsd-64-0.15.9.tgz",
-+            "integrity": "sha512-yWgxaYTQz+TqX80wXRq6xAtb7GSBAp6gqLKfOdANg9qEmAI1Bxn04IrQr0Mzm4AhxvGKoHzjHjMgXbCCSSDxcw==",
++            "version": "0.15.11",
++            "resolved": "https://registry.npmjs.org/esbuild-netbsd-64/-/esbuild-netbsd-64-0.15.11.tgz",
++            "integrity": "sha512-hUC9yN06K9sg7ju4Vgu9ChAPdsEgtcrcLfyNT5IKwKyfpLvKUwCMZSdF+gRD3WpyZelgTQfJ+pDx5XFbXTlB0A==",
 +            "dev": true,
 +            "optional": true
 +        },
 +        "esbuild-openbsd-64": {
-+            "version": "0.15.9",
-+            "resolved": "https://registry.npmjs.org/esbuild-openbsd-64/-/esbuild-openbsd-64-0.15.9.tgz",
-+            "integrity": "sha512-JmS18acQl4iSAjrEha1MfEmUMN4FcnnrtTaJ7Qg0tDCOcgpPPQRLGsZqhes0vmx8VA6IqRyScqXvaL7+Q0Uf3A==",
++            "version": "0.15.11",
++            "resolved": "https://registry.npmjs.org/esbuild-openbsd-64/-/esbuild-openbsd-64-0.15.11.tgz",
++            "integrity": "sha512-0bBo9SQR4t66Wd91LGMAqmWorzO0TTzVjYiifwoFtel8luFeXuPThQnEm5ztN4g0fnvcp7AnUPPzS/Depf17wQ==",
 +            "dev": true,
 +            "optional": true
 +        },
 +        "esbuild-sunos-64": {
-+            "version": "0.15.9",
-+            "resolved": "https://registry.npmjs.org/esbuild-sunos-64/-/esbuild-sunos-64-0.15.9.tgz",
-+            "integrity": "sha512-UKynGSWpzkPmXW3D2UMOD9BZPIuRaSqphxSCwScfEE05Be3KAmvjsBhht1fLzKpiFVJb0BYMd4jEbWMyJ/z1hQ==",
++            "version": "0.15.11",
++            "resolved": "https://registry.npmjs.org/esbuild-sunos-64/-/esbuild-sunos-64-0.15.11.tgz",
++            "integrity": "sha512-EuBdTGlsMTjEl1sQnBX2jfygy7iR6CKfvOzi+gEOfhDqbHXsmY1dcpbVtcwHAg9/2yUZSfMJHMAgf1z8M4yyyw==",
 +            "dev": true,
 +            "optional": true
 +        },
 +        "esbuild-windows-32": {
-+            "version": "0.15.9",
-+            "resolved": "https://registry.npmjs.org/esbuild-windows-32/-/esbuild-windows-32-0.15.9.tgz",
-+            "integrity": "sha512-aqXvu4/W9XyTVqO/hw3rNxKE1TcZiEYHPsXM9LwYmKSX9/hjvfIJzXwQBlPcJ/QOxedfoMVH0YnhhQ9Ffb0RGA==",
++            "version": "0.15.11",
++            "resolved": "https://registry.npmjs.org/esbuild-windows-32/-/esbuild-windows-32-0.15.11.tgz",
++            "integrity": "sha512-O0/Wo1Wk6dc0rZSxkvGpmTNIycEznHmkObTFz2VHBhjPsO4ZpCgfGxNkCpz4AdAIeMczpTXt/8d5vdJNKEGC+Q==",
 +            "dev": true,
 +            "optional": true
 +        },
 +        "esbuild-windows-64": {
-+            "version": "0.15.9",
-+            "resolved": "https://registry.npmjs.org/esbuild-windows-64/-/esbuild-windows-64-0.15.9.tgz",
-+            "integrity": "sha512-zm7h91WUmlS4idMtjvCrEeNhlH7+TNOmqw5dJPJZrgFaxoFyqYG6CKDpdFCQXdyKpD5yvzaQBOMVTCBVKGZDEg==",
++            "version": "0.15.11",
++            "resolved": "https://registry.npmjs.org/esbuild-windows-64/-/esbuild-windows-64-0.15.11.tgz",
++            "integrity": "sha512-x977Q4HhNjnHx00b4XLAnTtj5vfbdEvkxaQwC1Zh5AN8g5EX+izgZ6e5QgqJgpzyRNJqh4hkgIJF1pyy1be0mQ==",
 +            "dev": true,
 +            "optional": true
 +        },
 +        "esbuild-windows-arm64": {
-+            "version": "0.15.9",
-+            "resolved": "https://registry.npmjs.org/esbuild-windows-arm64/-/esbuild-windows-arm64-0.15.9.tgz",
-+            "integrity": "sha512-yQEVIv27oauAtvtuhJVfSNMztJJX47ismRS6Sv2QMVV9RM+6xjbMWuuwM2nxr5A2/gj/mu2z9YlQxiwoFRCfZA==",
++            "version": "0.15.11",
++            "resolved": "https://registry.npmjs.org/esbuild-windows-arm64/-/esbuild-windows-arm64-0.15.11.tgz",
++            "integrity": "sha512-VwUHFACuBahrvntdcMKZteUZ9HaYrBRODoKe4tIWxguQRvvYoYb7iu5LrcRS/FQx8KPZNaa72zuqwVtHeXsITw==",
 +            "dev": true,
 +            "optional": true
 +        },
@@ -1255,14 +1255,14 @@ index e5c75751f3..d82b30bd29 100644
              "version": "3.1.1",
              "resolved": "https://registry.npmjs.org/escalade/-/escalade-3.1.1.tgz",
 diff --git a/package.json b/package.json
-index 384d29f05c..f0cbb5ee9e 100644
+index 384d29f05c..ee3a7b7216 100644
 --- a/package.json
 +++ b/package.json
 @@ -67,6 +67,7 @@
          "chalk": "^4.1.2",
          "del": "^6.1.1",
          "diff": "^5.1.0",
-+        "esbuild": "^0.15.9",
++        "esbuild": "^0.15.11",
          "eslint": "^8.22.0",
          "eslint-formatter-autolinkable-stylish": "^1.2.0",
          "eslint-plugin-import": "^2.26.0",
@@ -1588,7 +1588,7 @@ index 591cd8945d..c766bf6875 100644
                      result.module.init(ts);
                      extendedDebugModule = result.module;
 diff --git a/src/compiler/sys.ts b/src/compiler/sys.ts
-index ffacb3f1fd..356b920557 100644
+index ffacb3f1fd..e4cbb90009 100644
 --- a/src/compiler/sys.ts
 +++ b/src/compiler/sys.ts
 @@ -1463,6 +1463,13 @@ export let sys: System = (() => {
@@ -1633,6 +1633,15 @@ index ffacb3f1fd..356b920557 100644
                  }
                  catch {
                      // Could not enable source maps.
+@@ -1642,7 +1645,7 @@ export let sys: System = (() => {
+         function cleanupPaths(profile: import("inspector").Profiler.Profile) {
+             let externalFileCounter = 0;
+             const remappedPaths = new Map<string, string>();
+-            const normalizedDir = normalizeSlashes(__dirname);
++            const normalizedDir = normalizeSlashes(_path.dirname(executingFilePath));
+             // Windows rooted dir names need an extra `/` prepended to be valid file:/// urls
+             const fileUrlRoot = `file://${getRootLength(normalizedDir) === 1 ? "" : "/"}${normalizedDir}`;
+             for (const node of profile.nodes) {
 diff --git a/src/debug/_namespaces/Debug.ts b/src/debug/_namespaces/Debug.ts
 deleted file mode 100644
 index 449c31bdae..0000000000
@@ -1737,10 +1746,10 @@ index 3abacb2133..0000000000
 -    ]
 -}
 diff --git a/src/harness/fourslashImpl.ts b/src/harness/fourslashImpl.ts
-index 6283312cd0..d108c864ab 100644
+index ff8de94c2e..ff4946a41f 100644
 --- a/src/harness/fourslashImpl.ts
 +++ b/src/harness/fourslashImpl.ts
-@@ -4059,7 +4059,7 @@ export function runFourSlashTestContent(basePath: string, testType: FourSlashTes
+@@ -4069,7 +4069,7 @@ export function runFourSlashTestContent(basePath: string, testType: FourSlashTes
  function runCode(code: string, state: TestState, fileName: string): void {
      // Compile and execute the test
      const generatedFile = ts.changeExtension(fileName, ".js");
@@ -1749,7 +1758,7 @@ index 6283312cd0..d108c864ab 100644
  
      type SourceMapSupportModule = typeof import("source-map-support") & {
          // TODO(rbuckton): This is missing from the DT definitions and needs to be added.
-@@ -4093,8 +4093,8 @@ function runCode(code: string, state: TestState, fileName: string): void {
+@@ -4103,8 +4103,8 @@ function runCode(code: string, state: TestState, fileName: string): void {
          const format = new FourSlashInterface.Format(state);
          const cancellation = new FourSlashInterface.Cancellation(state);
          // eslint-disable-next-line no-eval
@@ -1813,7 +1822,7 @@ index 757f9f7cd3..0000000000
 -    module.exports = ts;
 -}
 diff --git a/src/services/services.ts b/src/services/services.ts
-index 09600bc485..b92a98a05a 100644
+index 09600bc485..c2dc0e983e 100644
 --- a/src/services/services.ts
 +++ b/src/services/services.ts
 @@ -484,9 +484,9 @@ class IdentifierObject extends TokenOrIdentifierObject implements Identifier {
@@ -1828,11 +1837,32 @@ index 09600bc485..b92a98a05a 100644
      _primaryExpressionBrand: any;
      _memberExpressionBrand: any;
      _leftHandSideExpressionBrand: any;
+@@ -2922,18 +2922,14 @@ function isArgumentOfElementAccessExpression(node: Node) {
+         (node.parent as ElementAccessExpression).argumentExpression === node;
+ }
+ 
+-/// getDefaultLibraryFilePath
+-declare const __dirname: string;
+-
+ /**
+  * Get the path of the default library files (lib.d.ts) as distributed with the typescript
+  * node package.
+  * The functionality is not supported if the ts module is consumed outside of a node module.
+  */
+ export function getDefaultLibFilePath(options: CompilerOptions): string {
+-    // Check __dirname is defined and that we are on a node.js system.
+-    if (typeof __dirname !== "undefined") {
+-        return combinePaths(__dirname, getDefaultLibFileName(options));
++    if (ts.sys) {
++        return combinePaths(getDirectoryPath(normalizePath(ts.sys.getExecutingFilePath())), getDefaultLibFileName(options));
+     }
+ 
+     throw new Error("getDefaultLibFilePath is only supported when consumed as a node module. ");
 diff --git a/src/services/tsconfig.json b/src/services/tsconfig.json
-index a70b4d47d7..e360b2f340 100644
+index f5341a81a7..b5ac304b33 100644
 --- a/src/services/tsconfig.json
 +++ b/src/services/tsconfig.json
-@@ -135,7 +135,6 @@
+@@ -136,7 +136,6 @@
          "transform.ts",
          "shims.ts",
          "globalThisShim.ts",
@@ -1896,10 +1926,46 @@ index bb93273166..213e1eda3c 100644
          { "path": "./harness" },
          { "path": "./jsTyping" },
 diff --git a/src/tsserver/nodeServer.ts b/src/tsserver/nodeServer.ts
-index de9b8a0ad6..fcd871ce43 100644
+index de9b8a0ad6..4292b8cc02 100644
 --- a/src/tsserver/nodeServer.ts
 +++ b/src/tsserver/nodeServer.ts
-@@ -526,8 +526,8 @@ function startNodeSession(options: StartSessionOptions, logger: Logger, cancella
+@@ -13,7 +13,7 @@ import {
+ import {
+     ApplyCodeActionCommandResult, assertType, CharacterCodes, combinePaths, createQueue, Debug, directorySeparator,
+     DirectoryWatcherCallback, ESMap, FileWatcher, getDirectoryPath, getEntries, getNodeMajorVersion, getRootLength,
+-    JsTyping, LanguageServiceMode, Map, MapLike, noop, noopFileWatcher, normalizeSlashes, resolveJSModule,
++    JsTyping, LanguageServiceMode, Map, MapLike, noop, noopFileWatcher, normalizePath, normalizeSlashes, resolveJSModule,
+     SortedReadonlyArray, startTracing, stripQuotes, sys, toFileNameLowerCase, tracing, TypeAcquisition,
+     validateLocaleAndSetLanguage, versionMajorMinor, WatchOptions,
+ } from "./_namespaces/ts";
+@@ -193,6 +193,8 @@ export function initializeNodeSystem(): StartInput {
+         }
+     }
+ 
++    const libDirectory = getDirectoryPath(normalizePath(sys.getExecutingFilePath()));
++
+     const nodeVersion = getNodeMajorVersion();
+     // use watchGuard process on Windows when node version is 4 or later
+     const useWatchGuard = process.platform === "win32" && nodeVersion! >= 4;
+@@ -227,7 +229,7 @@ export function initializeNodeSystem(): StartInput {
+                     logger.info(`${cacheKey} for path ${path} not found in cache...`);
+                 }
+                 try {
+-                    const args = [combinePaths(__dirname, "watchGuard.js"), path];
++                    const args = [combinePaths(libDirectory, "watchGuard.js"), path];
+                     if (logger.hasLevel(LogLevel.verbose)) {
+                         logger.info(`Starting ${process.execPath} with args:${stringifyIndented(args)}`);
+                     }
+@@ -326,7 +328,7 @@ export function initializeNodeSystem(): StartInput {
+         const unsubstitutedLogFileName = cmdLineLogFileName
+             ? stripQuotes(cmdLineLogFileName)
+             : envLogOptions.logToFile
+-                ? envLogOptions.file || (__dirname + "/.log" + process.pid.toString())
++                ? envLogOptions.file || (libDirectory + "/.log" + process.pid.toString())
+                 : undefined;
+ 
+         const substitutedLogFileName = unsubstitutedLogFileName
+@@ -526,8 +528,8 @@ function startNodeSession(options: StartSessionOptions, logger: Logger, cancella
                  }
              }
  
@@ -1910,6 +1976,34 @@ index de9b8a0ad6..fcd871ce43 100644
              this.installer.on("message", m => this.handleMessage(m));
  
              // We have to schedule this event to the next tick
+diff --git a/src/typingsInstaller/nodeTypingsInstaller.ts b/src/typingsInstaller/nodeTypingsInstaller.ts
+index f043e44a18..c1dd5d67b4 100644
+--- a/src/typingsInstaller/nodeTypingsInstaller.ts
++++ b/src/typingsInstaller/nodeTypingsInstaller.ts
+@@ -11,7 +11,7 @@ import {
+ } from "./_namespaces/ts.server";
+ import {
+     combinePaths, createGetCanonicalFileName, Debug, ESMap, forEachAncestorDirectory, getDirectoryPath, getEntries, Map,
+-    MapLike, normalizeSlashes, stringContains, sys, toPath, version,
++    MapLike, normalizePath, normalizeSlashes, stringContains, sys, toPath, version,
+ } from "./_namespaces/ts";
+ 
+ class FileLog implements Log {
+@@ -89,11 +89,12 @@ export class NodeTypingsInstaller extends TypingsInstaller {
+     private delayedInitializationError: InitializationFailedResponse | undefined;
+ 
+     constructor(globalTypingsCacheLocation: string, typingSafeListLocation: string, typesMapLocation: string, npmLocation: string | undefined, validateDefaultNpmLocation: boolean, throttleLimit: number, log: Log) {
++        const libDirectory = getDirectoryPath(normalizePath(sys.getExecutingFilePath()));
+         super(
+             sys,
+             globalTypingsCacheLocation,
+-            typingSafeListLocation ? toPath(typingSafeListLocation, "", createGetCanonicalFileName(sys.useCaseSensitiveFileNames)) : toPath("typingSafeList.json", __dirname, createGetCanonicalFileName(sys.useCaseSensitiveFileNames)),
+-            typesMapLocation ? toPath(typesMapLocation, "", createGetCanonicalFileName(sys.useCaseSensitiveFileNames)) : toPath("typesMap.json", __dirname, createGetCanonicalFileName(sys.useCaseSensitiveFileNames)),
++            typingSafeListLocation ? toPath(typingSafeListLocation, "", createGetCanonicalFileName(sys.useCaseSensitiveFileNames)) : toPath("typingSafeList.json", libDirectory, createGetCanonicalFileName(sys.useCaseSensitiveFileNames)),
++            typesMapLocation ? toPath(typesMapLocation, "", createGetCanonicalFileName(sys.useCaseSensitiveFileNames)) : toPath("typesMap.json", libDirectory, createGetCanonicalFileName(sys.useCaseSensitiveFileNames)),
+             throttleLimit,
+             log);
+         this.npmPath = npmLocation !== undefined ? npmLocation : getDefaultNPMLocation(process.argv[0], validateDefaultNpmLocation, this.installTypingHost);
 diff --git a/src/watchGuard/tsconfig.json b/src/watchGuard/tsconfig.json
 index eb1607930c..2276c1ad14 100644
 --- a/src/watchGuard/tsconfig.json
@@ -1925,18 +2019,6 @@ index eb1607930c..2276c1ad14 100644
          "types": [
              "node"
          ],
-diff --git a/src/watchGuard/watchGuard.ts b/src/watchGuard/watchGuard.ts
-index b66338f42e..c9589e048e 100644
---- a/src/watchGuard/watchGuard.ts
-+++ b/src/watchGuard/watchGuard.ts
-@@ -1,6 +1,6 @@
- /// <reference types="node" />
- 
--import * as fs from "fs";
-+import fs = require("fs");
- 
- if (process.argv.length < 3) {
-     process.exit(1);
 diff --git a/src/webServer/webServer.ts b/src/webServer/webServer.ts
 index 11980d1a0e..ba41fc8af5 100644
 --- a/src/webServer/webServer.ts

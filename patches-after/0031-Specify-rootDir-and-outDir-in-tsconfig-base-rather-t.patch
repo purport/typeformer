@@ -188,7 +188,7 @@ index 433d3b581e..674ed67018 100644
              "node"
          ]
 diff --git a/src/services/tsconfig.json b/src/services/tsconfig.json
-index e360b2f340..cbd44f9549 100644
+index b5ac304b33..4a3e47d443 100644
 --- a/src/services/tsconfig.json
 +++ b/src/services/tsconfig.json
 @@ -1,7 +1,6 @@

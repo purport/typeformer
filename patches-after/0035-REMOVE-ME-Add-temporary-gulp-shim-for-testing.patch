@@ -1,7 +1,7 @@
 From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Jake Bailey <5341706+jakebailey@users.noreply.github.com>
 Date: Tue, 11 Oct 2022 11:35:00 -0700
-Subject: [PATCH] Add temporary gulp shim for testing
+Subject: [PATCH] REMOVE ME: Add temporary gulp shim for testing
 
 ---
  Gulpfile.js                 |  1 +
@@ -19,7 +19,7 @@ index 0000000000..6affe5db24
 @@ -0,0 +1 @@
 +throw new Error("Do not use; run hereby instead.");
 diff --git a/package.json b/package.json
-index 426ca7410b..d87ee4a98e 100644
+index 012c6289e0..d2ffdf719e 100644
 --- a/package.json
 +++ b/package.json
 @@ -80,6 +80,7 @@

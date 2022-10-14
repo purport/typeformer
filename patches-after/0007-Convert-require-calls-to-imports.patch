@@ -11,8 +11,8 @@ Subject: [PATCH] Convert require calls to imports
  .../unittests/services/languageService.ts      |  4 ++--
  src/testRunner/unittests/tsserver/session.ts   |  4 ++--
  src/typingsInstaller/nodeTypingsInstaller.ts   | 13 +++----------
- src/watchGuard/watchGuard.ts                   |  3 ++-
- 8 files changed, 24 insertions(+), 32 deletions(-)
+ src/watchGuard/watchGuard.ts                   |  3 +--
+ 8 files changed, 23 insertions(+), 33 deletions(-)
 
 diff --git a/src/cancellationToken/cancellationToken.ts b/src/cancellationToken/cancellationToken.ts
 index aaa19750b8..57c82e7522 100644
@@ -157,14 +157,13 @@ index aae6b44b45..f043e44a18 100644
      constructor(private logFile: string | undefined) {
      }
 diff --git a/src/watchGuard/watchGuard.ts b/src/watchGuard/watchGuard.ts
-index 3835540d9c..b66338f42e 100644
+index 3835540d9c..233781365c 100644
 --- a/src/watchGuard/watchGuard.ts
 +++ b/src/watchGuard/watchGuard.ts
-@@ -1,10 +1,11 @@
- /// <reference types="node" />
- 
+@@ -1,10 +1,9 @@
+-/// <reference types="node" />
 +import * as fs from "fs";
-+
+ 
  if (process.argv.length < 3) {
      process.exit(1);
  }
