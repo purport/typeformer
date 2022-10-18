@@ -1,0 +1,94 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Jake Bailey <5341706+jakebailey@users.noreply.github.com>
+Date: Tue, 18 Oct 2022 09:39:24 -0700
+Subject: [PATCH] Ensure ts object passed to plugins contains deprecatedCompat
+ declarations
+
+---
+ src/server/_namespaces/ts.ts          | 2 ++
+ src/server/tsconfig.json              | 3 ++-
+ src/tsserver/_namespaces/ts.ts        | 1 -
+ src/tsserver/tsconfig.json            | 3 +--
+ src/tsserverlibrary/_namespaces/ts.ts | 1 -
+ src/tsserverlibrary/tsconfig.json     | 3 +--
+ 6 files changed, 6 insertions(+), 7 deletions(-)
+
+diff --git a/src/server/_namespaces/ts.ts b/src/server/_namespaces/ts.ts
+index 0751d69491..26e554e4cd 100644
+--- a/src/server/_namespaces/ts.ts
++++ b/src/server/_namespaces/ts.ts
+@@ -3,5 +3,7 @@
+ export * from "../../compiler/_namespaces/ts";
+ export * from "../../jsTyping/_namespaces/ts";
+ export * from "../../services/_namespaces/ts";
++// Pull this in here so that plugins loaded by the server see compat wrappers.
++export * from "../../deprecatedCompat/_namespaces/ts";
+ import * as server from "./ts.server";
+ export { server };
+diff --git a/src/server/tsconfig.json b/src/server/tsconfig.json
+index 3ab8107c3e..e7efc71154 100644
+--- a/src/server/tsconfig.json
++++ b/src/server/tsconfig.json
+@@ -8,7 +8,8 @@
+     "references": [
+         { "path": "../compiler" },
+         { "path": "../jsTyping" },
+-        { "path": "../services" }
++        { "path": "../services" },
++        { "path": "../deprecatedCompat" }
+     ],
+     "include": ["**/*"]
+ }
+diff --git a/src/tsserver/_namespaces/ts.ts b/src/tsserver/_namespaces/ts.ts
+index 70c879deb4..c37271569f 100644
+--- a/src/tsserver/_namespaces/ts.ts
++++ b/src/tsserver/_namespaces/ts.ts
+@@ -5,6 +5,5 @@ export * from "../../services/_namespaces/ts";
+ export * from "../../jsTyping/_namespaces/ts";
+ export * from "../../server/_namespaces/ts";
+ export * from "../../webServer/_namespaces/ts";
+-export * from "../../deprecatedCompat/_namespaces/ts";
+ import * as server from "./ts.server";
+ export { server };
+diff --git a/src/tsserver/tsconfig.json b/src/tsserver/tsconfig.json
+index 8408638400..f7a1d43e77 100644
+--- a/src/tsserver/tsconfig.json
++++ b/src/tsserver/tsconfig.json
+@@ -11,8 +11,7 @@
+         { "path": "../services" },
+         { "path": "../jsTyping" },
+         { "path": "../server" },
+-        { "path": "../webServer" },
+-        { "path": "../deprecatedCompat" }
++        { "path": "../webServer" }
+     ],
+     "include": ["**/*"]
+ }
+diff --git a/src/tsserverlibrary/_namespaces/ts.ts b/src/tsserverlibrary/_namespaces/ts.ts
+index 3c0e2227e9..3060a64378 100644
+--- a/src/tsserverlibrary/_namespaces/ts.ts
++++ b/src/tsserverlibrary/_namespaces/ts.ts
+@@ -4,6 +4,5 @@ export * from "../../compiler/_namespaces/ts";
+ export * from "../../jsTyping/_namespaces/ts";
+ export * from "../../services/_namespaces/ts";
+ export * from "../../server/_namespaces/ts";
+-export * from "../../deprecatedCompat/_namespaces/ts";
+ import * as server from "./ts.server";
+ export { server };
+diff --git a/src/tsserverlibrary/tsconfig.json b/src/tsserverlibrary/tsconfig.json
+index 97af0d9529..20b8306af5 100644
+--- a/src/tsserverlibrary/tsconfig.json
++++ b/src/tsserverlibrary/tsconfig.json
+@@ -6,8 +6,7 @@
+         { "path": "../compiler" },
+         { "path": "../jsTyping" },
+         { "path": "../services" },
+-        { "path": "../server" },
+-        { "path": "../deprecatedCompat" }
++        { "path": "../server" }
+     ],
+     "include": ["**/*"]
+ }
+-- 
+2.38.0
+

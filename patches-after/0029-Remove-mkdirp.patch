@@ -12,7 +12,7 @@ function in recursive mode instead.
  3 files changed, 2 insertions(+), 43 deletions(-)
 
 diff --git a/package-lock.json b/package-lock.json
-index cdd7fc7ea7..e54ae3777a 100644
+index 813cdf5530..5db4e8f214 100644
 --- a/package-lock.json
 +++ b/package-lock.json
 @@ -19,7 +19,6 @@
@@ -47,7 +47,7 @@ index cdd7fc7ea7..e54ae3777a 100644
          "node_modules/@types/mocha": {
              "version": "10.0.0",
              "resolved": "https://registry.npmjs.org/@types/mocha/-/mocha-10.0.0.tgz",
-@@ -3196,18 +3185,6 @@
+@@ -3190,18 +3179,6 @@
                  "url": "https://github.com/sponsors/ljharb"
              }
          },
@@ -64,9 +64,9 @@ index cdd7fc7ea7..e54ae3777a 100644
 -            }
 -        },
          "node_modules/mocha": {
-             "version": "10.0.0",
-             "resolved": "https://registry.npmjs.org/mocha/-/mocha-10.0.0.tgz",
-@@ -4838,15 +4815,6 @@
+             "version": "10.1.0",
+             "resolved": "https://registry.npmjs.org/mocha/-/mocha-10.1.0.tgz",
+@@ -4831,15 +4808,6 @@
              "integrity": "sha512-jhuKLIRrhvCPLqwPcx6INqmKeiA5EWrsCOPhrlFSrbrmU4ZMPjj5Ul/oLCMDO98XRUIwVm78xICz4EPCektzeQ==",
              "dev": true
          },
@@ -82,7 +82,7 @@ index cdd7fc7ea7..e54ae3777a 100644
          "@types/mocha": {
              "version": "10.0.0",
              "resolved": "https://registry.npmjs.org/@types/mocha/-/mocha-10.0.0.tgz",
-@@ -6757,12 +6725,6 @@
+@@ -6744,12 +6712,6 @@
              "integrity": "sha512-bzfL1YUZsP41gmu/qjrEk0Q6i2ix/cVeAhbCbqH9u3zYutS1cLg00qhrD0M2MVdCcx4Sc0UpP2eBWo9rotpq6g==",
              "dev": true
          },
@@ -93,8 +93,8 @@ index cdd7fc7ea7..e54ae3777a 100644
 -            "dev": true
 -        },
          "mocha": {
-             "version": "10.0.0",
-             "resolved": "https://registry.npmjs.org/mocha/-/mocha-10.0.0.tgz",
+             "version": "10.1.0",
+             "resolved": "https://registry.npmjs.org/mocha/-/mocha-10.1.0.tgz",
 diff --git a/package.json b/package.json
 index bc0c36dba1..012c6289e0 100644
 --- a/package.json

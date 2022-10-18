@@ -1,0 +1,157 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Jake Bailey <5341706+jakebailey@users.noreply.github.com>
+Date: Mon, 17 Oct 2022 19:39:50 -0700
+Subject: [PATCH] Avoid doing work at herebyfile load
+
+---
+ Herebyfile.mjs          | 53 +++++++++++++++++++----------------------
+ scripts/build/utils.mjs | 17 +++++++++++++
+ 2 files changed, 41 insertions(+), 29 deletions(-)
+
+diff --git a/Herebyfile.mjs b/Herebyfile.mjs
+index e29ff8d9e8..a787704ae9 100644
+--- a/Herebyfile.mjs
++++ b/Herebyfile.mjs
+@@ -5,7 +5,7 @@ import del from "del";
+ import { task } from "hereby";
+ import _glob from "glob";
+ import util from "util";
+-import { exec, readJson, getDiffTool, getDirSize } from "./scripts/build/utils.mjs";
++import { exec, readJson, getDiffTool, getDirSize, memoize } from "./scripts/build/utils.mjs";
+ import { runConsoleTests, refBaseline, localBaseline, refRwcBaseline, localRwcBaseline } from "./scripts/build/tests.mjs";
+ import { buildProject as realBuildProject, cleanProject } from "./scripts/build/projects.mjs";
+ import { localizationDirectories } from "./scripts/build/localization.mjs";
+@@ -17,17 +17,10 @@ const glob = util.promisify(_glob);
+ /** @typedef {ReturnType<typeof task>} Task */
+ void 0;
+ 
+-const copyright = "CopyrightNotice.txt";
+-
+-/** @type {string | undefined} */
+-let copyrightHeader;
+-function getCopyrightHeader() {
+-    if (copyrightHeader === undefined) {
+-        copyrightHeader = fs.readFileSync(copyright, "utf-8");
+-        copyrightHeader.replace(/\r\n/g, "\n");
+-    }
+-    return copyrightHeader;
+-}
++const copyright = memoize(async () => {
++    const contents = await fs.promises.readFile("CopyrightNotice.txt", "utf-8");
++    return contents.replace(/\r\n/g, "\n");
++});
+ 
+ 
+ // TODO(jakebailey): This is really gross. If the build is cancelled (i.e. Ctrl+C), the modification will persist.
+@@ -67,26 +60,28 @@ export const buildScripts = task({
+     run: () => buildProject("scripts")
+ });
+ 
+-
+-/** @type {{ libs: string[]; paths: Record<string, string | undefined>; }} */
+-const libraries = readJson("./src/lib/libs.json");
+-const libs = libraries.libs.map(lib => {
+-    const relativeSources = ["header.d.ts", lib + ".d.ts"];
+-    const relativeTarget = libraries.paths && libraries.paths[lib] || ("lib." + lib + ".d.ts");
+-    const sources = relativeSources.map(s => path.posix.join("src/lib", s));
+-    const target = `built/local/${relativeTarget}`;
+-    return { target, relativeTarget, sources };
++const libs = memoize(() => {
++    /** @type {{ libs: string[]; paths: Record<string, string | undefined>; }} */
++    const libraries = readJson("./src/lib/libs.json");
++    const libs = libraries.libs.map(lib => {
++        const relativeSources = ["header.d.ts", lib + ".d.ts"];
++        const relativeTarget = libraries.paths && libraries.paths[lib] || ("lib." + lib + ".d.ts");
++        const sources = relativeSources.map(s => path.posix.join("src/lib", s));
++        const target = `built/local/${relativeTarget}`;
++        return { target, sources };
++    });
++    return libs;
+ });
+ 
++
+ export const generateLibs = task({
+     name: "lib",
+     description: "Builds the library targets",
+     run: async () => {
+         await fs.promises.mkdir("./built/local", { recursive: true });
+-        for (const lib of libs) {
+-            let output = getCopyrightHeader();
++        for (const lib of libs()) {
++            let output = await copyright();
+ 
+-            await fs.promises.writeFile(lib.target, getCopyrightHeader());
+             for (const source of lib.sources) {
+                 const contents = await fs.promises.readFile(source, "utf-8");
+                 // TODO(jakebailey): "\n\n" is for compatibility with our current tests; our test baselines
+@@ -186,7 +181,7 @@ async function runEsbuild(entrypoint, outfile, taskOptions = {}) {
+     /** @type {esbuild.BuildOptions} */
+     const options = {
+         entryPoints: [entrypoint],
+-        banner: { js: getCopyrightHeader() },
++        banner: { js: await copyright() },
+         bundle: true,
+         outfile,
+         platform: "node",
+@@ -602,7 +597,7 @@ export const diffRwc = task({
+  * @param {string} localBaseline Path to the local copy of the baselines
+  * @param {string} refBaseline Path to the reference copy of the baselines
+  */
+-function createBaselineAccept(localBaseline, refBaseline) {
++function baselineAcceptTask(localBaseline, refBaseline) {
+     /**
+      * @param {string} p
+      */
+@@ -629,13 +624,13 @@ function createBaselineAccept(localBaseline, refBaseline) {
+ export const baselineAccept = task({
+     name: "baseline-accept",
+     description: "Makes the most recent test results the new baseline, overwriting the old baseline",
+-    run: createBaselineAccept(localBaseline, refBaseline),
++    run: baselineAcceptTask(localBaseline, refBaseline),
+ });
+ 
+ export const baselineAcceptRwc = task({
+     name: "baseline-accept-rwc",
+     description: "Makes the most recent rwc test results the new baseline, overwriting the old baseline",
+-    run: createBaselineAccept(localRwcBaseline, refRwcBaseline),
++    run: baselineAcceptTask(localRwcBaseline, refRwcBaseline),
+ });
+ 
+ // TODO(rbuckton): Determine if we still need this task. Depending on a relative
+@@ -678,7 +673,7 @@ export const produceLKG = task({
+             "built/local/typescript.d.ts",
+             "built/local/typingsInstaller.js",
+             "built/local/watchGuard.js",
+-        ].concat(libs.map(lib => lib.target));
++        ].concat(libs().map(lib => lib.target));
+         const missingFiles = expectedFiles
+             .concat(localizationTargets)
+             .filter(f => !fs.existsSync(f));
+diff --git a/scripts/build/utils.mjs b/scripts/build/utils.mjs
+index e5f82cd19c..3bf99758d8 100644
+--- a/scripts/build/utils.mjs
++++ b/scripts/build/utils.mjs
+@@ -200,3 +200,20 @@ export class Debouncer {
+         }
+     }
+ }
++
++const unset = Symbol();
++/**
++ * @template T
++ * @param {() => T} fn
++ * @returns {() => T}
++ */
++export function memoize(fn) {
++    /** @type {T | unset} */
++    let value = unset;
++    return () => {
++        if (value === unset) {
++            value = fn();
++        }
++        return value;
++    };
++}
+-- 
+2.38.0
+

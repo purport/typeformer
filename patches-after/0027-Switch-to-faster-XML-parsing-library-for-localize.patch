@@ -12,7 +12,7 @@ more than 50%. We can also eliminate some any and such in the process.
  3 files changed, 75 insertions(+), 89 deletions(-)
 
 diff --git a/package-lock.json b/package-lock.json
-index 2bd4a8439d..cdd7fc7ea7 100644
+index 91a12871b0..813cdf5530 100644
 --- a/package-lock.json
 +++ b/package-lock.json
 @@ -25,7 +25,6 @@
@@ -57,7 +57,7 @@ index 2bd4a8439d..cdd7fc7ea7 100644
          "node_modules/@typescript-eslint/eslint-plugin": {
              "version": "5.40.0",
              "resolved": "https://registry.npmjs.org/@typescript-eslint/eslint-plugin/-/eslint-plugin-5.40.0.tgz",
-@@ -2158,6 +2148,22 @@
+@@ -2152,6 +2142,22 @@
              "integrity": "sha512-DCXu6Ifhqcks7TZKY3Hxp3y6qphY5SJZmrWMDrKcERSOXWQdMhU9Ig/PYrzyw/ul9jOIyh0N4M0tbC5hodg8dw==",
              "dev": true
          },
@@ -80,7 +80,7 @@ index 2bd4a8439d..cdd7fc7ea7 100644
          "node_modules/fastest-levenshtein": {
              "version": "1.0.16",
              "resolved": "https://registry.npmjs.org/fastest-levenshtein/-/fastest-levenshtein-1.0.16.tgz",
-@@ -3968,12 +3974,6 @@
+@@ -3961,12 +3967,6 @@
                  "url": "https://github.com/sponsors/ljharb"
              }
          },
@@ -93,7 +93,7 @@ index 2bd4a8439d..cdd7fc7ea7 100644
          "node_modules/semver": {
              "version": "7.3.8",
              "resolved": "https://registry.npmjs.org/semver/-/semver-7.3.8.tgz",
-@@ -4150,6 +4150,12 @@
+@@ -4143,6 +4143,12 @@
                  "url": "https://github.com/sponsors/sindresorhus"
              }
          },
@@ -106,7 +106,7 @@ index 2bd4a8439d..cdd7fc7ea7 100644
          "node_modules/supports-color": {
              "version": "7.2.0",
              "resolved": "https://registry.npmjs.org/supports-color/-/supports-color-7.2.0.tgz",
-@@ -4483,28 +4489,6 @@
+@@ -4476,28 +4482,6 @@
              "integrity": "sha512-l4Sp/DRseor9wL6EvV2+TuQn63dMkPjZ/sp9XkghTEbV9KlPS1xUsZ3u7/IQO4wxtcFB4bgpQPRcR3QCvezPcQ==",
              "dev": true
          },
@@ -135,7 +135,7 @@ index 2bd4a8439d..cdd7fc7ea7 100644
          "node_modules/yallist": {
              "version": "4.0.0",
              "resolved": "https://registry.npmjs.org/yallist/-/yallist-4.0.0.tgz",
-@@ -4896,15 +4880,6 @@
+@@ -4889,15 +4873,6 @@
              "integrity": "sha512-Jjakcv8Roqtio6w1gr0D7y6twbhx6gGgFGF5BLwajPpnOIOxFkakFhCq+LmyyeAz7BX6ULrjBOxdKaCDy+4+dQ==",
              "dev": true
          },
@@ -151,7 +151,7 @@ index 2bd4a8439d..cdd7fc7ea7 100644
          "@typescript-eslint/eslint-plugin": {
              "version": "5.40.0",
              "resolved": "https://registry.npmjs.org/@typescript-eslint/eslint-plugin/-/eslint-plugin-5.40.0.tgz",
-@@ -6042,6 +6017,15 @@
+@@ -6029,6 +6004,15 @@
              "integrity": "sha512-DCXu6Ifhqcks7TZKY3Hxp3y6qphY5SJZmrWMDrKcERSOXWQdMhU9Ig/PYrzyw/ul9jOIyh0N4M0tbC5hodg8dw==",
              "dev": true
          },
@@ -167,7 +167,7 @@ index 2bd4a8439d..cdd7fc7ea7 100644
          "fastest-levenshtein": {
              "version": "1.0.16",
              "resolved": "https://registry.npmjs.org/fastest-levenshtein/-/fastest-levenshtein-1.0.16.tgz",
-@@ -7298,12 +7282,6 @@
+@@ -7284,12 +7268,6 @@
                  "is-regex": "^1.1.4"
              }
          },
@@ -180,7 +180,7 @@ index 2bd4a8439d..cdd7fc7ea7 100644
          "semver": {
              "version": "7.3.8",
              "resolved": "https://registry.npmjs.org/semver/-/semver-7.3.8.tgz",
-@@ -7441,6 +7419,12 @@
+@@ -7427,6 +7405,12 @@
              "integrity": "sha512-6fPc+R4ihwqP6N/aIv2f1gMH8lOVtWQHoqC4yK6oSDVVocumAsfCqjkXnqiYMhmMwS/mEHLp7Vehlt3ql6lEig==",
              "dev": true
          },
@@ -193,7 +193,7 @@ index 2bd4a8439d..cdd7fc7ea7 100644
          "supports-color": {
              "version": "7.2.0",
              "resolved": "https://registry.npmjs.org/supports-color/-/supports-color-7.2.0.tgz",
-@@ -7699,22 +7683,6 @@
+@@ -7685,22 +7669,6 @@
              "integrity": "sha512-l4Sp/DRseor9wL6EvV2+TuQn63dMkPjZ/sp9XkghTEbV9KlPS1xUsZ3u7/IQO4wxtcFB4bgpQPRcR3QCvezPcQ==",
              "dev": true
          },
