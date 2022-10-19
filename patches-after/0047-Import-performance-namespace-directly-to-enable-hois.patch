@@ -15,9 +15,9 @@ Subject: [PATCH] Import performance namespace directly to enable hoisting
  src/compiler/tracing.ts                      | 14 +++----
  src/compiler/transformer.ts                  |  8 ++--
  src/compiler/tsbuildPublic.ts                | 43 ++++++++++----------
- src/compiler/watch.ts                        | 14 +++----
+ src/compiler/watch.ts                        | 24 +++++------
  src/executeCommandLine/executeCommandLine.ts | 41 ++++++++++---------
- 13 files changed, 124 insertions(+), 98 deletions(-)
+ 13 files changed, 129 insertions(+), 103 deletions(-)
 
 diff --git a/.eslintignore b/.eslintignore
 index c85649450c..764d07c541 100644
@@ -580,15 +580,31 @@ index c454d528b9..b050895da5 100644
  
  function stopWatching(state: SolutionBuilderState) {
 diff --git a/src/compiler/watch.ts b/src/compiler/watch.ts
-index f92b33fac2..5304a7ac39 100644
+index f92b33fac2..7a10376db4 100644
 --- a/src/compiler/watch.ts
 +++ b/src/compiler/watch.ts
-@@ -1,4 +1,3 @@
+@@ -1,11 +1,10 @@
 -import * as ts from "./_namespaces/ts";
  import {
      addRange, BuilderProgram, CancellationToken, chainDiagnosticMessages, combinePaths, CompilerHost, CompilerOptions,
      contains, convertToRelativePath, copyProperties, countWhere, createCompilerDiagnostic,
-@@ -20,6 +19,7 @@ import {
+     createEmitAndSemanticDiagnosticsBuilderProgram, createGetCanonicalFileName, createIncrementalCompilerHost,
+     createIncrementalProgram, CreateProgram, createSourceFile, CustomTransformers, Debug, Diagnostic,
+     DiagnosticCategory, DiagnosticMessage, DiagnosticMessageChain, DiagnosticReporter, Diagnostics,
+-    DirectoryStructureHost, EmitAndSemanticDiagnosticsBuilderProgram, emptyArray, endsWith, ExitStatus,
++    DirectoryStructureHost, EmitAndSemanticDiagnosticsBuilderProgram, EmitResult, emptyArray, endsWith, ExitStatus,
+     ExtendedConfigCacheEntry, Extension, externalHelpersModuleNameText, FileExtensionInfo, fileExtensionIs,
+     FileIncludeKind, FileIncludeReason, FileWatcher, filter, find, flattenDiagnosticMessageText, forEach, forEachEntry,
+     ForegroundColorEscapeSequences, formatColorAndReset, formatDiagnostic, FormatDiagnosticsHost,
+@@ -14,12 +13,13 @@ import {
+     getParsedCommandLineOfConfigFile, getPatternFromSpec, getReferencedFileLocation, getRegexFromPattern,
+     getRelativePathFromDirectory, getWatchFactory, HasCurrentDirectory, isExternalOrCommonJsModule, isReferencedFile,
+     isReferenceFileLocation, isString, last, Map, maybeBind, memoize, ModuleKind, noop, normalizePath, outFile,
+-    packageIdToString, ParseConfigFileHost, pathIsAbsolute, Program, ProgramHost, ProjectReference,
+-    ReportEmitErrorSummary, ReportFileInError, sortAndDeduplicateDiagnostics, SourceFile, sys, System,
++    packageIdToString, ParseConfigFileHost, ParsedCommandLine, pathIsAbsolute, Program, ProgramHost, ProjectReference,
++    ReportEmitErrorSummary, ReportFileInError, sortAndDeduplicateDiagnostics, SortedReadonlyArray, SourceFile, sys, System,
+     targetOptionDeclaration, WatchCompilerHost, WatchCompilerHostOfConfigFile,
      WatchCompilerHostOfFilesAndCompilerOptions, WatchFactory, WatchFactoryHost, WatchHost, WatchLogLevel, WatchOptions,
      WatchStatusReporter, WriteFileCallback, writeFileEnsuringDirectories,
  } from "./_namespaces/ts";
@@ -596,6 +612,24 @@ index f92b33fac2..5304a7ac39 100644
  
  const sysFormatDiagnosticsHost: FormatDiagnosticsHost | undefined = sys ? {
      getCurrentDirectory: () => sys.getCurrentDirectory(),
+@@ -121,7 +121,7 @@ export function createWatchStatusReporter(system: System, pretty?: boolean): Wat
+  *
+  * @internal
+  */
+-export function parseConfigFileWithSystem(configFileName: string, optionsToExtend: CompilerOptions, extendedConfigCache: Map<ExtendedConfigCacheEntry> | undefined, watchOptionsToExtend: WatchOptions | undefined, system: System, reportDiagnostic: DiagnosticReporter) {
++export function parseConfigFileWithSystem(configFileName: string, optionsToExtend: CompilerOptions, extendedConfigCache: Map<ExtendedConfigCacheEntry> | undefined, watchOptionsToExtend: WatchOptions | undefined, system: System, reportDiagnostic: DiagnosticReporter): ParsedCommandLine | undefined {
+     const host: ParseConfigFileHost = system as any;
+     host.onUnRecoverableConfigFileDiagnostic = diagnostic => reportUnrecoverableDiagnostic(system, reportDiagnostic, diagnostic);
+     const result = getParsedCommandLineOfConfigFile(configFileName, optionsToExtend, host, extendedConfigCache, watchOptionsToExtend);
+@@ -481,7 +481,7 @@ export function emitFilesAndReportErrors<T extends BuilderProgram>(
+     cancellationToken?: CancellationToken,
+     emitOnlyDtsFiles?: boolean,
+     customTransformers?: CustomTransformers
+-) {
++): { emitResult: EmitResult; diagnostics: SortedReadonlyArray<Diagnostic>; } {
+     const isListFilesOnly = !!program.getCompilerOptions().listFilesOnly;
+ 
+     // First get and report any syntactic errors.
 @@ -654,10 +654,10 @@ export function createCompilerHostFromProgramHost(host: ProgramHost<any>, getCom
          getSourceFile: (fileName, languageVersionOrOptions, onError) => {
              let text: string | undefined;
