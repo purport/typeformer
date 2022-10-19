@@ -1,0 +1,55 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Jake Bailey <5341706+jakebailey@users.noreply.github.com>
+Date: Tue, 18 Oct 2022 21:33:27 -0700
+Subject: [PATCH] Direct import moduleSpecifiers in compiler
+
+---
+ src/compiler/checker.ts                   | 3 ++-
+ src/compiler/transformers/declarations.ts | 3 ++-
+ 2 files changed, 4 insertions(+), 2 deletions(-)
+
+diff --git a/src/compiler/checker.ts b/src/compiler/checker.ts
+index d331830b34..352c3ced00 100644
+--- a/src/compiler/checker.ts
++++ b/src/compiler/checker.ts
+@@ -155,7 +155,7 @@ import {
+     mangleScopedPackageName, map, Map, mapDefined, MappedSymbol, MappedType, MappedTypeNode, MatchingKeys, maybeBind,
+     MemberName, MemberOverrideStatus, memoize, MetaProperty, MethodDeclaration, MethodSignature, minAndMax, MinusToken,
+     Modifier, ModifierFlags, modifiersToFlags, modifierToFlag, ModuleBlock, ModuleDeclaration, ModuleInstanceState,
+-    ModuleKind, ModuleResolutionKind, moduleSpecifiers, NamedDeclaration, NamedExports, NamedImportsOrExports,
++    ModuleKind, ModuleResolutionKind, NamedDeclaration, NamedExports, NamedImportsOrExports,
+     NamedTupleMember, NamespaceDeclaration, NamespaceExport, NamespaceExportDeclaration, NamespaceImport,
+     needsScopeMarker, NewExpression, Node, NodeArray, NodeBuilderFlags, nodeCanBeDecorated, NodeCheckFlags, NodeFlags,
+     nodeHasName, nodeIsDecorated, nodeIsMissing, nodeIsPresent, nodeIsSynthesized, NodeLinks,
+@@ -198,6 +198,7 @@ import {
+     walkUpParenthesizedTypesAndGetParentAndChild, WhileStatement, WideningContext, WithStatement, YieldExpression,
+ } from "./_namespaces/ts";
+ import * as performance from "./_namespaces/ts.performance";
++import * as moduleSpecifiers from "./_namespaces/ts.moduleSpecifiers";
+ 
+ const ambientModuleSymbolRegex = /^".+"$/;
+ const anon = "(anonymous)" as __String & string;
+diff --git a/src/compiler/transformers/declarations.ts b/src/compiler/transformers/declarations.ts
+index 095d395c5b..3e0eaed09c 100644
+--- a/src/compiler/transformers/declarations.ts
++++ b/src/compiler/transformers/declarations.ts
+@@ -28,7 +28,7 @@ import {
+     isStringANonContextualKeyword, isStringLiteral, isStringLiteralLike, isTupleTypeNode, isTypeAliasDeclaration,
+     isTypeNode, isTypeParameterDeclaration, isTypeQueryNode, isUnparsedSource, last, LateBoundDeclaration,
+     LateVisibilityPaintedStatement, length, map, Map, mapDefined, MethodDeclaration, MethodSignature, Modifier,
+-    ModifierFlags, ModuleBody, ModuleDeclaration, moduleSpecifiers, NamedDeclaration, NamespaceDeclaration,
++    ModifierFlags, ModuleBody, ModuleDeclaration, NamedDeclaration, NamespaceDeclaration,
+     needsScopeMarker, Node, NodeArray, NodeBuilderFlags, NodeFlags, NodeId, normalizeSlashes, OmittedExpression,
+     orderedRemoveItem, ParameterDeclaration, parseNodeFactory, pathContainsNodeModules, pathIsRelative,
+     PropertyDeclaration, PropertySignature, pushIfUnique, removeAllComments, Set, SetAccessorDeclaration,
+@@ -39,6 +39,7 @@ import {
+     TypeReferenceNode, unescapeLeadingUnderscores, UnparsedSource, VariableDeclaration, VariableStatement, visitArray,
+     visitEachChild, visitNode, visitNodes, VisitResult,
+ } from "../_namespaces/ts";
++import * as moduleSpecifiers from "../_namespaces/ts.moduleSpecifiers";
+ 
+ /** @internal */
+ export function getDeclarationDiagnostics(host: EmitHost, resolver: EmitResolver, file: SourceFile | undefined): DiagnosticWithLocation[] | undefined {
+-- 
+2.38.0
+
