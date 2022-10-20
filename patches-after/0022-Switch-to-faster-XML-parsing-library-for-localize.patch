@@ -7,9 +7,9 @@ Switching to a newer/faster/maintained library speeds up this script by
 more than 50%. We can also eliminate some any and such in the process.
 ---
  package-lock.json                             | 110 +++++++-----------
- package.json                                  |   7 +-
+ package.json                                  |   5 +-
  .../generateLocalizedDiagnosticMessages.mjs   |  47 +++++---
- 3 files changed, 75 insertions(+), 89 deletions(-)
+ 3 files changed, 74 insertions(+), 88 deletions(-)
 
 diff --git a/package-lock.json b/package-lock.json
 index 7ed74b2c58..b410853dab 100644
@@ -217,7 +217,7 @@ index 7ed74b2c58..b410853dab 100644
              "version": "4.0.0",
              "resolved": "https://registry.npmjs.org/yallist/-/yallist-4.0.0.tgz",
 diff --git a/package.json b/package.json
-index 7b85419a52..17e3950f03 100644
+index a639de943e..17e3950f03 100644
 --- a/package.json
 +++ b/package.json
 @@ -51,7 +51,6 @@
@@ -228,19 +228,14 @@ index 7b85419a52..17e3950f03 100644
          "@typescript-eslint/eslint-plugin": "^5.33.1",
          "@typescript-eslint/parser": "^5.33.1",
          "@typescript-eslint/utils": "^5.33.1",
-@@ -67,10 +66,11 @@
+@@ -67,6 +66,7 @@
          "eslint-plugin-jsdoc": "^39.3.6",
          "eslint-plugin-local": "^1.0.0",
          "eslint-plugin-no-null": "^1.0.2",
 +        "fast-xml-parser": "^4.0.11",
          "fs-extra": "^9.1.0",
          "glob": "latest",
--        "jsonc-parser": "^3.2.0",
          "hereby": "^1.6.0",
-+        "jsonc-parser": "^3.2.0",
-         "minimist": "latest",
-         "mkdirp": "latest",
-         "mocha": "latest",
 @@ -79,8 +79,7 @@
          "node-fetch": "^3.2.10",
          "source-map-support": "latest",

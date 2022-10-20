@@ -12,22 +12,22 @@ than importing the entire LKG typescript.js library.
 ---
  package-lock.json       | 13 +++++++++++++
  package.json            |  1 +
- scripts/build/utils.mjs | 41 +++--------------------------------------
- 3 files changed, 17 insertions(+), 38 deletions(-)
+ scripts/build/utils.mjs | 39 ++-------------------------------------
+ 3 files changed, 16 insertions(+), 37 deletions(-)
 
 diff --git a/package-lock.json b/package-lock.json
-index 63916ee0dd..c4f02cf6cd 100644
+index a5a05a4310..7ed74b2c58 100644
 --- a/package-lock.json
 +++ b/package-lock.json
-@@ -57,6 +57,7 @@
-                 "gulp-newer": "latest",
-                 "gulp-rename": "latest",
-                 "gulp-sourcemaps": "latest",
+@@ -44,6 +44,7 @@
+                 "fs-extra": "^9.1.0",
+                 "glob": "latest",
+                 "hereby": "^1.6.0",
 +                "jsonc-parser": "^3.2.0",
-                 "merge2": "latest",
                  "minimist": "latest",
                  "mkdirp": "latest",
-@@ -5393,6 +5394,12 @@
+                 "mocha": "latest",
+@@ -3024,6 +3025,12 @@
                  "json5": "lib/cli.js"
              }
          },
@@ -40,7 +40,7 @@ index 63916ee0dd..c4f02cf6cd 100644
          "node_modules/jsonfile": {
              "version": "6.1.0",
              "resolved": "https://registry.npmjs.org/jsonfile/-/jsonfile-6.1.0.tgz",
-@@ -13111,6 +13118,12 @@
+@@ -6617,6 +6624,12 @@
                  "minimist": "^1.2.0"
              }
          },
@@ -54,39 +54,39 @@ index 63916ee0dd..c4f02cf6cd 100644
              "version": "6.1.0",
              "resolved": "https://registry.npmjs.org/jsonfile/-/jsonfile-6.1.0.tgz",
 diff --git a/package.json b/package.json
-index ee3a7b7216..fb0a058ee9 100644
+index f16f9fa39e..a639de943e 100644
 --- a/package.json
 +++ b/package.json
-@@ -83,6 +83,7 @@
-         "gulp-newer": "latest",
-         "gulp-rename": "latest",
-         "gulp-sourcemaps": "latest",
+@@ -70,6 +70,7 @@
+         "fs-extra": "^9.1.0",
+         "glob": "latest",
+         "hereby": "^1.6.0",
 +        "jsonc-parser": "^3.2.0",
-         "merge2": "latest",
          "minimist": "latest",
          "mkdirp": "latest",
+         "mocha": "latest",
 diff --git a/scripts/build/utils.mjs b/scripts/build/utils.mjs
-index 59075df3a4..6d8734ba5a 100644
+index 1356bfb018..e5f82cd19c 100644
 --- a/scripts/build/utils.mjs
 +++ b/scripts/build/utils.mjs
-@@ -7,12 +7,12 @@ import path from "path";
- import log from "fancy-log";
- import del from "del";
- import File from "vinyl";
+@@ -2,11 +2,11 @@
+ 
+ import fs from "fs";
+ import path from "path";
 -import ts from "../../lib/typescript.js";
  import chalk from "chalk";
  import which from "which";
  import { spawn } from "child_process";
- import { Duplex } from "stream";
  import assert from "assert";
 +import JSONC from "jsonc-parser";
  
  /**
   * Executes the provided command once with the supplied arguments.
-@@ -53,47 +53,12 @@ export async function exec(cmd, args, options = {}) {
+@@ -46,48 +46,13 @@ export async function exec(cmd, args, options = {}) {
+     }));
  }
  
- /**
+-/**
 - * @param {ts.Diagnostic[]} diagnostics
 - * @param {{ cwd?: string, pretty?: boolean }} [options]
 - */
@@ -101,7 +101,7 @@ index 59075df3a4..6d8734ba5a 100644
 - * @param {{ cwd?: string }} [options]
 - */
 -function reportDiagnostics(diagnostics, options) {
--    log(formatDiagnostics(diagnostics, { cwd: options && options.cwd, pretty: process.stdout.isTTY }));
+-    console.log(formatDiagnostics(diagnostics, { cwd: options && options.cwd, pretty: process.stdout.isTTY }));
 -}
 -
 -/**
@@ -116,9 +116,8 @@ index 59075df3a4..6d8734ba5a 100644
 -    };
 -}
 -
--/**
-- * Reads JSON data with optional comments using the LKG TypeScript compiler
-+ * Reads JSON data with optional comments.
+ /**
+  * Reads JSON data with optional comments using the LKG TypeScript compiler
   * @param {string} jsonPath
   */
  export function readJson(jsonPath) {
