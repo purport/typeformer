@@ -5,8 +5,8 @@ Subject: [PATCH] Add JSDoc eslint rule
 
 ---
  .eslintrc.json                        |   1 +
- scripts/eslint/rules/jsdoc-format.cjs | 116 ++++++++++++++++++++++++++
- 2 files changed, 117 insertions(+)
+ scripts/eslint/rules/jsdoc-format.cjs | 112 ++++++++++++++++++++++++++
+ 2 files changed, 113 insertions(+)
  create mode 100644 scripts/eslint/rules/jsdoc-format.cjs
 
 diff --git a/.eslintrc.json b/.eslintrc.json
@@ -23,10 +23,10 @@ index c3ce2174a7..f78f325002 100644
          "import/no-extraneous-dependencies": ["error", { "optionalDependencies": false }],
 diff --git a/scripts/eslint/rules/jsdoc-format.cjs b/scripts/eslint/rules/jsdoc-format.cjs
 new file mode 100644
-index 0000000000..a2e9b80b72
+index 0000000000..b64ca052f0
 --- /dev/null
 +++ b/scripts/eslint/rules/jsdoc-format.cjs
-@@ -0,0 +1,116 @@
+@@ -0,0 +1,112 @@
 +const { TSESTree } = require("@typescript-eslint/utils");
 +const { createRule } = require("./utils.cjs");
 +
@@ -42,7 +42,6 @@ index 0000000000..a2e9b80b72
 +            internalCommentNotLastError: `@internal should only appear in final JSDoc comment for declaration.`,
 +            multipleJSDocError: `Declaration has multiple JSDoc comments.`,
 +            internalCommentOnParameterProperty: `@internal cannot appear on a JSDoc comment; use a declared property and an assignment in the constructor instead.`,
-+            alignmentError: `JSDoc comment is not aligned.`
 +        },
 +        schema: [],
 +        type: "problem",
@@ -115,9 +114,6 @@ index 0000000000..a2e9b80b72
 +                }
 +
 +                // TODO: check duplicate @internal?
-+
-+                // TODO: check alignment
-+                // Should be easy; number of spaces before each non-first line is c.loc.start+1.
 +            }
 +        };
 +
