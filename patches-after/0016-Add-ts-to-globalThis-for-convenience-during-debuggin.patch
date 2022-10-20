@@ -8,7 +8,7 @@ Subject: [PATCH] Add ts to globalThis for convenience during debugging
  1 file changed, 3 insertions(+)
 
 diff --git a/src/testRunner/runner.ts b/src/testRunner/runner.ts
-index 05e3f4aea1..20f02a647a 100644
+index 05e3f4aea1..f84e6df70b 100644
 --- a/src/testRunner/runner.ts
 +++ b/src/testRunner/runner.ts
 @@ -280,6 +280,9 @@ function beginTests() {
@@ -16,7 +16,7 @@ index 05e3f4aea1..20f02a647a 100644
  export let isWorker: boolean;
  function startTestEnvironment() {
 +    // For debugging convenience.
-+    (globalThis as any).ts = require("./_namespaces/ts");
++    (globalThis as any).ts = ts;
 +
      isWorker = handleTestConfig();
      if (isWorker) {
