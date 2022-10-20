@@ -1,24 +1,24 @@
 From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Jake Bailey <5341706+jakebailey@users.noreply.github.com>
-Date: Tue, 18 Oct 2022 17:27:24 -0700
+Date: Sat, 15 Oct 2022 00:03:22 -0700
 Subject: [PATCH] Move compiler-debug into Debug namespace, which allows the
  compiler to be tree shaken
 
 ---
  Herebyfile.mjs             |  20 +-
- src/compiler/debug.ts      | 428 +++++++++++++++++++++++++++++++++----
- src/debug/compilerDebug.ts | 387 ---------------------------------
- src/debug/tsconfig.json    |  11 -
+ src/compiler/debug.ts      | 428 +++++++++++++++++++++++++++----
+ src/debug/compilerDebug.ts | 508 -------------------------------------
+ src/debug/tsconfig.json    |   8 -
  src/tsconfig.json          |   1 -
- 5 files changed, 390 insertions(+), 457 deletions(-)
+ 5 files changed, 390 insertions(+), 575 deletions(-)
  delete mode 100644 src/debug/compilerDebug.ts
  delete mode 100644 src/debug/tsconfig.json
 
 diff --git a/Herebyfile.mjs b/Herebyfile.mjs
-index a787704ae9..0c7f47b6a7 100644
+index cbc9e1e8af..d380908e33 100644
 --- a/Herebyfile.mjs
 +++ b/Herebyfile.mjs
-@@ -324,16 +324,6 @@ function entrypointBuildTask(options) {
+@@ -322,16 +322,6 @@ function entrypointBuildTask(options) {
      return { build, bundle, shim, main };
  }
  
@@ -35,7 +35,7 @@ index a787704ae9..0c7f47b6a7 100644
  const { main: tsc } = entrypointBuildTask({
      name: "tsc",
      description: "Builds the command-line compiler",
-@@ -342,7 +332,7 @@ const { main: tsc } = entrypointBuildTask({
+@@ -340,7 +330,7 @@ const { main: tsc } = entrypointBuildTask({
      srcEntrypoint: "./src/tsc/tsc.ts",
      builtEntrypoint: "./built/local/tsc/tsc.js",
      output: "./built/local/tsc.js",
@@ -44,7 +44,7 @@ index a787704ae9..0c7f47b6a7 100644
  });
  export { tsc };
  
-@@ -355,7 +345,7 @@ const { main: services, build: buildServices } = entrypointBuildTask({
+@@ -353,7 +343,7 @@ const { main: services, build: buildServices } = entrypointBuildTask({
      srcEntrypoint: "./src/typescript/typescript.ts",
      builtEntrypoint: "./built/local/typescript/typescript.js",
      output: "./built/local/typescript.js",
@@ -53,16 +53,16 @@ index a787704ae9..0c7f47b6a7 100644
      esbuildOptions: { exportIsTsObject: true },
  });
  export { services };
-@@ -376,7 +366,7 @@ const { main: server } = entrypointBuildTask({
+@@ -374,7 +364,7 @@ const { main: server } = entrypointBuildTask({
      srcEntrypoint: "./src/tsserver/server.ts",
      builtEntrypoint: "./built/local/tsserver/server.js",
      output: "./built/local/tsserver.js",
 -    mainDeps: [generateLibs, compilerDebug],
 +    mainDeps: [generateLibs],
-     esbuildOptions: { exportIsTsObject: true },
- });
- export { server };
-@@ -397,7 +387,7 @@ const { main: lssl, build: buildLssl } = entrypointBuildTask({
+     // Even though this seems like an exectuable, so could be the default CJS,
+     // this is used in the browser too. Do the same thing that we do for our
+     // libraries and generate an IIFE with name `ts`, as to not pollute the global
+@@ -399,7 +389,7 @@ const { main: lssl, build: buildLssl } = entrypointBuildTask({
      srcEntrypoint: "./src/tsserverlibrary/tsserverlibrary.ts",
      builtEntrypoint: "./built/local/tsserverlibrary/tsserverlibrary.js",
      output: "./built/local/tsserverlibrary.js",
@@ -71,15 +71,15 @@ index a787704ae9..0c7f47b6a7 100644
      esbuildOptions: { exportIsTsObject: true },
  });
  export { lssl };
-@@ -425,7 +415,7 @@ const { main: tests } = entrypointBuildTask({
+@@ -427,7 +417,7 @@ const { main: tests } = entrypointBuildTask({
      srcEntrypoint: "./src/testRunner/_namespaces/Harness.ts",
      builtEntrypoint: "./built/local/testRunner/runner.js",
      output: testRunner,
 -    mainDeps: [generateLibs, compilerDebug],
 +    mainDeps: [generateLibs],
      esbuildOptions: {
-         external: [
-             "chai",
+         // Ensure we never drop any dead code, which might be helpful while debugging.
+         treeShaking: false,
 diff --git a/src/compiler/debug.ts b/src/compiler/debug.ts
 index c766bf6875..3daeedcc07 100644
 --- a/src/compiler/debug.ts
@@ -547,19 +547,140 @@ index c766bf6875..3daeedcc07 100644
  }
 diff --git a/src/debug/compilerDebug.ts b/src/debug/compilerDebug.ts
 deleted file mode 100644
-index 52ced91473..0000000000
+index 5eca399b05..0000000000
 --- a/src/debug/compilerDebug.ts
 +++ /dev/null
-@@ -1,387 +0,0 @@
--import type {
--    FlowNode, FlowFlags, FlowSwitchClause, FlowLabel, Node,
--} from "../compiler/_namespaces/ts";
+@@ -1,508 +0,0 @@
+-interface Node {
+-    kind: number;
+-}
 -
--let ts: typeof import("../compiler/_namespaces/ts");
+-type FunctionExpression = Node;
+-type ArrowFunction = Node;
+-type MethodDeclaration = Node;
+-type Expression = Node;
+-type SourceFile = Node;
+-type VariableDeclaration = Node;
+-type BindingElement = Node;
+-type CallExpression = Node;
+-type BinaryExpression = Node;
+-
+-interface SwitchStatement extends Node {
+-    caseBlock: CaseBlock;
+-}
+-
+-interface CaseBlock extends Node {
+-    clauses: (CaseClause | DefaultClause)[];
+-}
+-
+-interface CaseClause extends Node {
+-    _caseclauseBrand: any;
+-    expression: Expression;
+-}
+-
+-interface DefaultClause extends Node {
+-    _defaultClauseBrand: any;
+-}
+-
+-interface TypeScriptModule {
+-    readonly SyntaxKind: {
+-        readonly CaseClause: number;
+-        readonly DefaultClause: number;
+-    };
+-
+-    readonly FlowFlags: {
+-        readonly Unreachable: number,
+-        readonly Start: number,
+-        readonly BranchLabel: number,
+-        readonly LoopLabel: number,
+-        readonly Assignment: number,
+-        readonly TrueCondition: number,
+-        readonly FalseCondition: number,
+-        readonly SwitchClause: number,
+-        readonly ArrayMutation: number,
+-        readonly Call: number,
+-        readonly ReduceLabel: number,
+-        readonly Referenced: number,
+-        readonly Shared: number,
+-        readonly Label: number,
+-        readonly Condition: number,
+-    };
+-
+-    getSourceFileOfNode(node: Node): SourceFile;
+-    getSourceTextOfNodeFromSourceFile(sourceFile: SourceFile, node: Node, includeTrivia?: boolean): string;
+-    isDefaultClause(node: Node): node is DefaultClause;
+-}
+-
+-type FlowNode =
+-    | FlowStart
+-    | FlowLabel
+-    | FlowAssignment
+-    | FlowCall
+-    | FlowCondition
+-    | FlowSwitchClause
+-    | FlowArrayMutation
+-    | FlowReduceLabel
+-    ;
+-
+-interface FlowNodeBase {
+-    flags: FlowFlags;
+-    id?: number;
+-}
+-
+-interface FlowStart extends FlowNodeBase {
+-    node?: FunctionExpression | ArrowFunction | MethodDeclaration;
+-}
+-
+-interface FlowLabel extends FlowNodeBase {
+-    antecedents: FlowNode[] | undefined;
+-}
+-
+-interface FlowAssignment extends FlowNodeBase {
+-    node: Expression | VariableDeclaration | BindingElement;
+-    antecedent: FlowNode;
+-}
+-
+-interface FlowCall extends FlowNodeBase {
+-    node: CallExpression;
+-    antecedent: FlowNode;
+-}
+-
+-interface FlowCondition extends FlowNodeBase {
+-    node: Expression;
+-    antecedent: FlowNode;
+-}
+-
+-interface FlowSwitchClause extends FlowNodeBase {
+-    switchStatement: SwitchStatement;
+-    clauseStart: number;
+-    clauseEnd: number;
+-    antecedent: FlowNode;
+-}
+-
+-interface FlowArrayMutation extends FlowNodeBase {
+-    node: CallExpression | BinaryExpression;
+-    antecedent: FlowNode;
+-}
 -
 -/** @internal */
--export function init(tsModule: typeof ts) {
--    ts = tsModule;
+-export interface FlowReduceLabel extends FlowNodeBase {
+-    target: FlowLabel;
+-    antecedents: FlowNode[];
+-    antecedent: FlowNode;
+-}
+-
+-type FlowFlags = number;
+-let FlowFlags: TypeScriptModule["FlowFlags"];
+-let getSourceFileOfNode: TypeScriptModule["getSourceFileOfNode"];
+-let getSourceTextOfNodeFromSourceFile: TypeScriptModule["getSourceTextOfNodeFromSourceFile"];
+-let isDefaultClause: TypeScriptModule["isDefaultClause"];
+-
+-/** @internal */
+-export function init(ts: TypeScriptModule) {
+-    FlowFlags = ts.FlowFlags;
+-    getSourceFileOfNode = ts.getSourceFileOfNode;
+-    getSourceTextOfNodeFromSourceFile = ts.getSourceTextOfNodeFromSourceFile;
+-    isDefaultClause = ts.isDefaultClause;
 -}
 -
 -let nextDebugFlowId = -1;
@@ -626,19 +747,19 @@ index 52ced91473..0000000000
 -    }
 -
 -    const hasAntecedentFlags =
--        ts.FlowFlags.Assignment |
--        ts.FlowFlags.Condition |
--        ts.FlowFlags.SwitchClause |
--        ts.FlowFlags.ArrayMutation |
--        ts.FlowFlags.Call |
--        ts.FlowFlags.ReduceLabel;
+-        FlowFlags.Assignment |
+-        FlowFlags.Condition |
+-        FlowFlags.SwitchClause |
+-        FlowFlags.ArrayMutation |
+-        FlowFlags.Call |
+-        FlowFlags.ReduceLabel;
 -
 -    const hasNodeFlags =
--        ts.FlowFlags.Start |
--        ts.FlowFlags.Assignment |
--        ts.FlowFlags.Call |
--        ts.FlowFlags.Condition |
--        ts.FlowFlags.ArrayMutation;
+-        FlowFlags.Start |
+-        FlowFlags.Assignment |
+-        FlowFlags.Call |
+-        FlowFlags.Condition |
+-        FlowFlags.ArrayMutation;
 -
 -    const links: Record<number, FlowGraphNode> = Object.create(/*o*/ null); // eslint-disable-line no-null/no-null
 -    const nodes: FlowGraphNode[] = [];
@@ -655,11 +776,11 @@ index 52ced91473..0000000000
 -    return renderGraph();
 -
 -    function isFlowSwitchClause(f: FlowNode): f is FlowSwitchClause {
--        return !!(f.flags & ts.FlowFlags.SwitchClause);
+-        return !!(f.flags & FlowFlags.SwitchClause);
 -    }
 -
 -    function hasAntecedents(f: FlowNode): f is FlowLabel & { antecedents: FlowNode[] } {
--        return !!(f.flags & ts.FlowFlags.Label) && !!(f as FlowLabel).antecedents;
+-        return !!(f.flags & FlowFlags.Label) && !!(f as FlowLabel).antecedents;
 -    }
 -
 -    function hasAntecedent(f: FlowNode): f is Extract<FlowNode, { antecedent: FlowNode }> {
@@ -778,23 +899,23 @@ index 52ced91473..0000000000
 -    }
 -
 -    function getHeader(flags: FlowFlags) {
--        if (flags & ts.FlowFlags.Start) return "Start";
--        if (flags & ts.FlowFlags.BranchLabel) return "Branch";
--        if (flags & ts.FlowFlags.LoopLabel) return "Loop";
--        if (flags & ts.FlowFlags.Assignment) return "Assignment";
--        if (flags & ts.FlowFlags.TrueCondition) return "True";
--        if (flags & ts.FlowFlags.FalseCondition) return "False";
--        if (flags & ts.FlowFlags.SwitchClause) return "SwitchClause";
--        if (flags & ts.FlowFlags.ArrayMutation) return "ArrayMutation";
--        if (flags & ts.FlowFlags.Call) return "Call";
--        if (flags & ts.FlowFlags.ReduceLabel) return "ReduceLabel";
--        if (flags & ts.FlowFlags.Unreachable) return "Unreachable";
+-        if (flags & FlowFlags.Start) return "Start";
+-        if (flags & FlowFlags.BranchLabel) return "Branch";
+-        if (flags & FlowFlags.LoopLabel) return "Loop";
+-        if (flags & FlowFlags.Assignment) return "Assignment";
+-        if (flags & FlowFlags.TrueCondition) return "True";
+-        if (flags & FlowFlags.FalseCondition) return "False";
+-        if (flags & FlowFlags.SwitchClause) return "SwitchClause";
+-        if (flags & FlowFlags.ArrayMutation) return "ArrayMutation";
+-        if (flags & FlowFlags.Call) return "Call";
+-        if (flags & FlowFlags.ReduceLabel) return "ReduceLabel";
+-        if (flags & FlowFlags.Unreachable) return "Unreachable";
 -        throw new Error();
 -    }
 -
 -    function getNodeText(node: Node) {
--        const sourceFile = ts.getSourceFileOfNode(node);
--        return ts.getSourceTextOfNodeFromSourceFile(sourceFile, node, /*includeTrivia*/ false);
+-        const sourceFile = getSourceFileOfNode(node);
+-        return getSourceTextOfNodeFromSourceFile(sourceFile, node, /*includeTrivia*/ false);
 -    }
 -
 -    function renderFlowNode(flowNode: FlowNode, circular: boolean | "circularity") {
@@ -811,7 +932,7 @@ index 52ced91473..0000000000
 -            const clauses: string[] = [];
 -            for (let i = flowNode.clauseStart; i < flowNode.clauseEnd; i++) {
 -                const clause = flowNode.switchStatement.caseBlock.clauses[i];
--                if (ts.isDefaultClause(clause)) {
+-                if (isDefaultClause(clause)) {
 -                    clauses.push("default");
 -                }
 -                else {
@@ -940,19 +1061,16 @@ index 52ced91473..0000000000
 -}
 diff --git a/src/debug/tsconfig.json b/src/debug/tsconfig.json
 deleted file mode 100644
-index 69f9f6b454..0000000000
+index ab17c2cab1..0000000000
 --- a/src/debug/tsconfig.json
 +++ /dev/null
-@@ -1,11 +0,0 @@
+@@ -1,8 +0,0 @@
 -{
 -    "extends": "../tsconfig-base",
 -    "compilerOptions": {
 -        "target": "es2019",
 -        "lib": ["es2019"],
 -    },
--    "references": [
--        { "path": "../compiler" }
--    ],
 -    "include": ["**/*"]
 -}
 diff --git a/src/tsconfig.json b/src/tsconfig.json

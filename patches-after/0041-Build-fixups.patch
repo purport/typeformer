@@ -1,15 +1,15 @@
 From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Jake Bailey <5341706+jakebailey@users.noreply.github.com>
 Date: Mon, 17 Oct 2022 19:39:50 -0700
-Subject: [PATCH] Avoid doing work at herebyfile load
+Subject: [PATCH] Build fixups
 
 ---
- Herebyfile.mjs          | 53 +++++++++++++++++++----------------------
- scripts/build/utils.mjs | 17 +++++++++++++
- 2 files changed, 41 insertions(+), 29 deletions(-)
+ Herebyfile.mjs          | 66 ++++++++++++++++++++---------------------
+ scripts/build/utils.mjs | 17 +++++++++++
+ 2 files changed, 50 insertions(+), 33 deletions(-)
 
 diff --git a/Herebyfile.mjs b/Herebyfile.mjs
-index e29ff8d9e8..a787704ae9 100644
+index e29ff8d9e8..cbc9e1e8af 100644
 --- a/Herebyfile.mjs
 +++ b/Herebyfile.mjs
 @@ -5,7 +5,7 @@ import del from "del";
@@ -84,7 +84,13 @@ index e29ff8d9e8..a787704ae9 100644
              for (const source of lib.sources) {
                  const contents = await fs.promises.readFile(source, "utf-8");
                  // TODO(jakebailey): "\n\n" is for compatibility with our current tests; our test baselines
-@@ -186,7 +181,7 @@ async function runEsbuild(entrypoint, outfile, taskOptions = {}) {
+@@ -181,12 +176,13 @@ async function runDtsBundler(entrypoint, output) {
+  * @property {string[]} [external]
+  * @property {boolean} [exportIsTsObject]
+  * @property {boolean} [setDynamicImport]
++ * @property {boolean} [treeShaking]
+  */
+ async function runEsbuild(entrypoint, outfile, taskOptions = {}) {
      /** @type {esbuild.BuildOptions} */
      const options = {
          entryPoints: [entrypoint],
@@ -93,7 +99,46 @@ index e29ff8d9e8..a787704ae9 100644
          bundle: true,
          outfile,
          platform: "node",
-@@ -602,7 +597,7 @@ export const diffRwc = task({
+@@ -194,16 +190,13 @@ async function runEsbuild(entrypoint, outfile, taskOptions = {}) {
+         format: "cjs",
+         sourcemap: "linked",
+         sourcesContent: false,
++        treeShaking: taskOptions.treeShaking,
+         external: [
+             ...(taskOptions.external ?? []),
+             "source-map-support",
+         ],
+         supported: {
+-            // "const-and-let": false, // https://github.com/evanw/esbuild/issues/297
+             "object-rest-spread": false, // Performance enhancement, see: https://github.com/evanw/esbuild/releases/tag/v0.14.46
+-            // TODO(jakebailey): workaround for https://github.com/microsoft/TypeScript/issues/51072
+-            // Remove once 4.9 is out with the fix and monaco is updated.
+-            "template-literal": false,
+         },
+         logLevel: "warning",
+         // legalComments: "none", // If we add copyright headers to the source files, uncomment.
+@@ -382,6 +375,10 @@ const { main: server } = entrypointBuildTask({
+     builtEntrypoint: "./built/local/tsserver/server.js",
+     output: "./built/local/tsserver.js",
+     mainDeps: [generateLibs, compilerDebug],
++    // Even though this seems like an exectuable, so could be the default CJS,
++    // this is used in the browser too. Do the same thing that we do for our
++    // libraries and generate an IIFE with name `ts`, as to not pollute the global
++    // scope.
+     esbuildOptions: { exportIsTsObject: true },
+ });
+ export { server };
+@@ -432,6 +429,9 @@ const { main: tests } = entrypointBuildTask({
+     output: testRunner,
+     mainDeps: [generateLibs, compilerDebug],
+     esbuildOptions: {
++        // Ensure we never drop any dead code, which might be helpful while debugging.
++        treeShaking: false,
++        // These are directly imported via import statements and should not be bundled.
+         external: [
+             "chai",
+             "del",
+@@ -602,7 +602,7 @@ export const diffRwc = task({
   * @param {string} localBaseline Path to the local copy of the baselines
   * @param {string} refBaseline Path to the reference copy of the baselines
   */
@@ -102,7 +147,7 @@ index e29ff8d9e8..a787704ae9 100644
      /**
       * @param {string} p
       */
-@@ -629,13 +624,13 @@ function createBaselineAccept(localBaseline, refBaseline) {
+@@ -629,13 +629,13 @@ function createBaselineAccept(localBaseline, refBaseline) {
  export const baselineAccept = task({
      name: "baseline-accept",
      description: "Makes the most recent test results the new baseline, overwriting the old baseline",
@@ -118,7 +163,7 @@ index e29ff8d9e8..a787704ae9 100644
  });
  
  // TODO(rbuckton): Determine if we still need this task. Depending on a relative
-@@ -678,7 +673,7 @@ export const produceLKG = task({
+@@ -678,7 +678,7 @@ export const produceLKG = task({
              "built/local/typescript.d.ts",
              "built/local/typingsInstaller.js",
              "built/local/watchGuard.js",

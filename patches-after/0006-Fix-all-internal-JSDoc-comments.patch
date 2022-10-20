@@ -25,7 +25,7 @@ otherwise they won't be used by api-extractor, so move them if needed.
  src/compiler/core.ts                          |  307 ++-
  src/compiler/corePublic.ts                    |   18 +-
  src/compiler/emitter.ts                       |   40 +-
- src/compiler/factory/baseNodeFactory.ts       |    8 +-
+ src/compiler/factory/baseNodeFactory.ts       |    6 +-
  src/compiler/factory/emitHelpers.ts           |   14 +-
  src/compiler/factory/emitNode.ts              |   21 +-
  src/compiler/factory/nodeConverters.ts        |    2 +-
@@ -108,7 +108,7 @@ otherwise they won't be used by api-extractor, so move them if needed.
  src/services/utilities.ts                     |   98 +-
  src/typingsInstallerCore/typingsInstaller.ts  |    8 +-
  src/webServer/webServer.ts                    |    2 +-
- 93 files changed, 2819 insertions(+), 2097 deletions(-)
+ 93 files changed, 2818 insertions(+), 2096 deletions(-)
 
 diff --git a/scripts/failed-tests.cjs b/scripts/failed-tests.cjs
 index 78e90fc976..d2f3078e7b 100644
@@ -1950,7 +1950,7 @@ index eed25e4111..2d371afea0 100644
      config: ParsedCommandLine,
      host: EmitUsingBuildInfoHost,
 diff --git a/src/compiler/factory/baseNodeFactory.ts b/src/compiler/factory/baseNodeFactory.ts
-index be1bd56d05..4da1378336 100644
+index 782cee7ea7..39b9490fba 100644
 --- a/src/compiler/factory/baseNodeFactory.ts
 +++ b/src/compiler/factory/baseNodeFactory.ts
 @@ -3,8 +3,9 @@ import { Node, objectAllocator, SyntaxKind } from "../_namespaces/ts";
@@ -1975,14 +1975,7 @@ index be1bd56d05..4da1378336 100644
 + * @internal
   */
  export function createBaseNodeFactory(): BaseNodeFactory {
-     // tslint:disable variable-name
-@@ -53,4 +55,4 @@ export function createBaseNodeFactory(): BaseNodeFactory {
-     function createBaseNode(kind: SyntaxKind): Node {
-         return new (NodeConstructor || (NodeConstructor = objectAllocator.getNodeConstructor()))(kind, /*pos*/ -1, /*end*/ -1);
-     }
--}
-\ No newline at end of file
-+}
+     let NodeConstructor: new (kind: SyntaxKind, pos?: number, end?: number) => Node;
 diff --git a/src/compiler/factory/emitHelpers.ts b/src/compiler/factory/emitHelpers.ts
 index 34f8e9233a..6d10a3a781 100644
 --- a/src/compiler/factory/emitHelpers.ts
@@ -2152,7 +2145,7 @@ index 3efb85e75e..74cddf3152 100644
 \ No newline at end of file
 +};
 diff --git a/src/compiler/factory/nodeFactory.ts b/src/compiler/factory/nodeFactory.ts
-index cd10459d1d..a5d5e4310e 100644
+index a643904151..d053bac81e 100644
 --- a/src/compiler/factory/nodeFactory.ts
 +++ b/src/compiler/factory/nodeFactory.ts
 @@ -82,7 +82,7 @@ import {
@@ -2184,7 +2177,7 @@ index cd10459d1d..a5d5e4310e 100644
  export function createNodeFactory(flags: NodeFactoryFlags, baseFactory: BaseNodeFactory): NodeFactory {
      const update = flags & NodeFactoryFlags.NoOriginalNode ? updateWithoutOriginal : updateWithOriginal;
  
-@@ -6567,8 +6568,9 @@ function aggregateChildrenFlags(children: MutableNodeArray<Node>) {
+@@ -6565,8 +6566,9 @@ function aggregateChildrenFlags(children: MutableNodeArray<Node>) {
  
  /**
   * Gets the transform flags to exclude when unioning the transform flags of a subtree.
@@ -2195,7 +2188,7 @@ index cd10459d1d..a5d5e4310e 100644
  export function getTransformFlagsSubtreeExclusions(kind: SyntaxKind) {
      if (kind >= SyntaxKind.FirstTypeNode && kind <= SyntaxKind.LastTypeNode) {
          return TransformFlags.TypeExcludes;
-@@ -6850,7 +6852,7 @@ export function createInputFiles(
+@@ -6848,7 +6850,7 @@ export function createInputFiles(
      declarationMapPath: string | undefined,
      declarationMapText: string | undefined
  ): InputFiles;
@@ -2988,7 +2981,7 @@ index 6a01040365..25f450cb43 100644
      moduleSymbol: Symbol,
      checker: TypeChecker,
 diff --git a/src/compiler/parser.ts b/src/compiler/parser.ts
-index cec4f87dcc..da9050dcce 100644
+index 2701742cf3..f26231d591 100644
 --- a/src/compiler/parser.ts
 +++ b/src/compiler/parser.ts
 @@ -89,8 +89,9 @@ let SourceFileConstructor: new (kind: SyntaxKind, pos?: number, end?: number) =>
@@ -3074,7 +3067,7 @@ index cec4f87dcc..da9050dcce 100644
  // Exposed only for testing.
  export function parseJSDocTypeExpressionForTests(content: string, start?: number, length?: number) {
      return Parser.JSDocParser.parseJSDocTypeExpressionForTests(content, start, length);
-@@ -9777,7 +9779,7 @@ export function isDeclarationFileName(fileName: string): boolean {
+@@ -9775,7 +9777,7 @@ export function isDeclarationFileName(fileName: string): boolean {
      return fileExtensionIsOneOf(fileName, supportedDeclarationExtensions);
  }
  
@@ -3083,7 +3076,7 @@ index cec4f87dcc..da9050dcce 100644
  export interface PragmaContext {
      languageVersion: ScriptTarget;
      pragmas?: PragmaMap;
-@@ -9804,7 +9806,7 @@ function parseResolutionMode(mode: string | undefined, pos: number, end: number,
+@@ -9802,7 +9804,7 @@ function parseResolutionMode(mode: string | undefined, pos: number, end: number,
      return undefined;
  }
  
@@ -3092,7 +3085,7 @@ index cec4f87dcc..da9050dcce 100644
  export function processCommentPragmas(context: PragmaContext, sourceText: string): void {
      const pragmas: PragmaPseudoMapEntry[] = [];
  
-@@ -9829,10 +9831,10 @@ export function processCommentPragmas(context: PragmaContext, sourceText: string
+@@ -9827,10 +9829,10 @@ export function processCommentPragmas(context: PragmaContext, sourceText: string
      }
  }
  
@@ -14356,7 +14349,7 @@ index f07c1e33c9..b02eeed8f8 100644
  export function getImportKind(importingFile: SourceFile, exportKind: ExportKind, compilerOptions: CompilerOptions, forceImportKeyword?: boolean): ImportKind {
      switch (exportKind) {
 diff --git a/src/services/completions.ts b/src/services/completions.ts
-index 27b51f4e81..86de7d17e3 100644
+index 9a4cc6a4bd..3b41db679f 100644
 --- a/src/services/completions.ts
 +++ b/src/services/completions.ts
 @@ -100,7 +100,6 @@ export const SortText = {
@@ -14516,10 +14509,10 @@ index c7bc8a28e1..9a8978bdb2 100644
 \ No newline at end of file
 +}
 diff --git a/src/services/goToDefinition.ts b/src/services/goToDefinition.ts
-index 7d46b8e41a..b3f860170c 100644
+index fe14c8cc23..1a8ebd80f4 100644
 --- a/src/services/goToDefinition.ts
 +++ b/src/services/goToDefinition.ts
-@@ -417,8 +417,11 @@ function getDefinitionFromSymbol(typeChecker: TypeChecker, symbol: Symbol, node:
+@@ -424,8 +424,11 @@ function getDefinitionFromSymbol(typeChecker: TypeChecker, symbol: Symbol, node:
      }
  }
  
@@ -14582,7 +14575,7 @@ index 21d318d2b5..33b2162189 100644
  export function getImportOrExportSymbol(node: Node, symbol: Symbol, checker: TypeChecker, comingFromExport: boolean): ImportedSymbol | ExportedSymbol | undefined {
      return comingFromExport ? getExport() : getExport() || getImport();
 diff --git a/src/services/jsDoc.ts b/src/services/jsDoc.ts
-index 703d6adcb0..edf2e55178 100644
+index a8335e8e77..b6b7ba77b0 100644
 --- a/src/services/jsDoc.ts
 +++ b/src/services/jsDoc.ts
 @@ -337,7 +337,6 @@ export function getJSDocParameterNameCompletionDetails(name: string): Completion

@@ -5,7 +5,7 @@ Subject: [PATCH] Add dts bundling
 
 ---
  Gulpfile.mjs                                  |    38 +-
- scripts/dtsBundler.mjs                        |   289 +
+ scripts/dtsBundler.mjs                        |   423 +
  scripts/produceLKG.mjs                        |    14 +-
  src/compiler/commandLineParser.ts             |     2 +-
  src/compiler/factory/utilities.ts             |    11 +-
@@ -37,6 +37,7 @@ Subject: [PATCH] Add dts bundling
  src/compiler/transformers/utilities.ts        |     4 +-
  src/compiler/types.ts                         |    16 +-
  src/compiler/utilities.ts                     |     7 +-
+ src/compiler/watch.ts                         |     7 +-
  src/compiler/watchUtilities.ts                |     3 +-
  .../4.0/nodeFactoryTopLevelExports.ts         |   592 +-
  src/deprecatedCompat/deprecations.ts          |    67 +-
@@ -60,7 +61,7 @@ Subject: [PATCH] Add dts bundling
  .../reference/api/tsserverlibrary.d.ts        | 10998 ++++++++--------
  tests/baselines/reference/api/typescript.d.ts |  3263 +++--
  tests/cases/compiler/APILibCheck.ts           |    34 +
- 56 files changed, 7872 insertions(+), 7791 deletions(-)
+ 57 files changed, 8010 insertions(+), 7794 deletions(-)
  create mode 100644 scripts/dtsBundler.mjs
  create mode 100644 tests/baselines/reference/APILibCheck.js
  create mode 100644 tests/baselines/reference/APILibCheck.symbols
@@ -177,10 +178,10 @@ index 0f02be239f..0349e2ba7b 100644
      "   --built": "Compile using the built version of the compiler.",
 diff --git a/scripts/dtsBundler.mjs b/scripts/dtsBundler.mjs
 new file mode 100644
-index 0000000000..7635f1ee38
+index 0000000000..2d4fb145d6
 --- /dev/null
 +++ b/scripts/dtsBundler.mjs
-@@ -0,0 +1,289 @@
+@@ -0,0 +1,423 @@
 +/**
 + * WARNING: this is a very, very rudimentary d.ts bundler; it only works
 + * in the TS project thanks to our history using namespaces, which has
@@ -188,7 +189,6 @@ index 0000000000..7635f1ee38
 + * bundle as namespaces again, even though the project is modules.
 + */
 +
-+import assert from "assert";
 +import fs from "fs";
 +import path from "path";
 +import minimist from "minimist";
@@ -197,6 +197,20 @@ index 0000000000..7635f1ee38
 +
 +const __filename = url.fileURLToPath(new URL(import.meta.url));
 +const __dirname = path.dirname(__filename);
++
++// /** @type {any} */ (ts).Debug.enableDebugInfo();
++
++/** @type {(expression: unknown, message?: string, verboseDebugInfo?: string | (() => string), stackCrawlMark?: any) => asserts expression} */
++function assert(expression, message, verboseDebugInfo, stackCrawlMark) {
++    /** @type {any} */ (ts).Debug.assert(expression, message, verboseDebugInfo, stackCrawlMark ?? assert);
++}
++
++/** @type {(message?: string, stackCrawlMark?: any) => never} */
++function fail(message, stackCrawlMark) {
++    /** @type {any} */ (ts).Debug.fail(message, stackCrawlMark ?? fail);
++    throw new Error("unreachable");
++}
++
 +
 +
 +const dotDts = ".d.ts";
@@ -266,9 +280,9 @@ index 0000000000..7635f1ee38
 +const typeChecker = program.getTypeChecker();
 +
 +const sourceFile = program.getSourceFile(entrypoint);
-+assert(sourceFile);
++assert(sourceFile, "Failed to load source file");
 +const moduleSymbol = typeChecker.getSymbolAtLocation(sourceFile);
-+assert(moduleSymbol);
++assert(moduleSymbol, "Failed to get module's symbol");
 +
 +const printer = ts.createPrinter({ newLine: newLineKind });
 +
@@ -374,12 +388,12 @@ index 0000000000..7635f1ee38
 +}
 +
 +/**
-+ * @param {ts.Node} decl
++ * @param {ts.Node} node
 + */
-+function nodeToLocation(decl) {
-+    const sourceFile = decl.getSourceFile();
-+    const lc = sourceFile.getLineAndCharacterOfPosition(decl.pos);
-+    return `${sourceFile.fileName}:${lc.line}:${lc.character}`;
++function nodeToLocation(node) {
++    const sourceFile = node.getSourceFile();
++    const lc = sourceFile.getLineAndCharacterOfPosition(node.pos);
++    return `${sourceFile.fileName}:${lc.line+1}:${lc.character+1}`;
 +}
 +
 +/**
@@ -396,12 +410,125 @@ index 0000000000..7635f1ee38
 +    return node;
 +}
 +
++/** @type {Map<string, ts.Symbol>[]} */
++const scopeStack = [];
++
++/**
++ * @param {string} name
++ */
++function findInScope(name) {
++    for (let i = scopeStack.length-1; i >= 0; i--) {
++        const scope = scopeStack[i];
++        const symbol = scope.get(name);
++        if (symbol) {
++            return symbol;
++        }
++    }
++    return undefined;
++}
++
++/** @type {(symbol: ts.Symbol | undefined, excludes?: ts.SymbolFlags) => boolean} */
++function isNonLocalAlias(symbol, excludes = ts.SymbolFlags.Value | ts.SymbolFlags.Type | ts.SymbolFlags.Namespace) {
++    if (!symbol) return false;
++    return (symbol.flags & (ts.SymbolFlags.Alias | excludes)) === ts.SymbolFlags.Alias || !!(symbol.flags & ts.SymbolFlags.Alias && symbol.flags & ts.SymbolFlags.Assignment);
++}
++
++/**
++ * @param {ts.Symbol} symbol
++ */
++function resolveAlias(symbol) {
++    return typeChecker.getAliasedSymbol(symbol);
++}
++
++/**
++ * @param {ts.Symbol} symbol
++ * @param {boolean | undefined} [dontResolveAlias]
++ */
++function resolveSymbol(symbol, dontResolveAlias = undefined) {
++    return !dontResolveAlias && isNonLocalAlias(symbol) ? resolveAlias(symbol) : symbol;
++}
++
++/**
++ * @param {ts.Symbol} symbol
++ * @returns {ts.Symbol}
++ */
++function getMergedSymbol(symbol) {
++    return /** @type {any} */ (typeChecker).getMergedSymbol(symbol);
++}
++
++/**
++ * @param {ts.Symbol} s1
++ * @param {ts.Symbol} s2
++ */
++function symbolsConflict(s1, s2) {
++    // See getSymbolIfSameReference in checker.ts
++    s1 = getMergedSymbol(resolveSymbol(getMergedSymbol(s1)));
++    s2 = getMergedSymbol(resolveSymbol(getMergedSymbol(s2)));
++    if (s1 === s2) {
++        return false;
++    }
++
++    const s1Flags = s1.flags & (ts.SymbolFlags.Type | ts.SymbolFlags.Value);
++    const s2Flags = s2.flags & (ts.SymbolFlags.Type | ts.SymbolFlags.Value);
++
++    // If the two symbols differ by type/value space, ignore.
++    if (!(s1Flags & s2Flags)) {
++        return false;
++    }
++
++    return true;
++}
++
++/**
++ * @param {ts.Node} node
++ * @returns {boolean}
++ */
++function isPartOfTypeNode(node) {
++    return /** @type {any} */ (ts).isPartOfTypeNode(node);
++}
++
++/**
++ * @param {ts.Statement} decl
++ */
++function verifyMatchingSymbols(decl) {
++    ts.visitEachChild(decl, /** @type {(node: ts.Node) => ts.Node} */ function visit(node) {
++        if (ts.isIdentifier(node) && isPartOfTypeNode(node)) {
++            if (ts.isQualifiedName(node.parent) && node !== node.parent.left) {
++                return node;
++            }
++            if (ts.isParameter(node.parent) && node === node.parent.name) {
++                return node;
++            }
++            if (ts.isNamedTupleMember(node.parent) && node === node.parent.name) {
++                return node;
++            }
++
++            const symbolOfNode = typeChecker.getSymbolAtLocation(node);
++            assert(symbolOfNode, "No symbol for node", () => nodeToLocation(node));
++            const symbolInScope = findInScope(symbolOfNode.name);
++            if (!symbolInScope) {
++                // We didn't find the symbol in scope at all. Just allow it and we'll fail at test time.
++                return node;
++            }
++
++            if (symbolsConflict(symbolOfNode, symbolInScope)) {
++                fail(`Declaration at ${nodeToLocation(decl)}\n    references ${symbolOfNode.name} at ${symbolOfNode.declarations && nodeToLocation(symbolOfNode.declarations[0])},\n    but containing scope contains a symbol with the same name declared at ${symbolInScope.declarations && nodeToLocation(symbolInScope.declarations[0])}`);
++            }
++        }
++
++        return ts.visitEachChild(node, visit, nullTransformationContext);
++    }, nullTransformationContext);
++}
++
 +/**
 + * @param {string} name
 + * @param {ts.Symbol} moduleSymbol
 + */
 +function emitAsNamespace(name, moduleSymbol) {
-+    assert(moduleSymbol.flags & ts.SymbolFlags.ValueModule);
++    assert(moduleSymbol.flags & ts.SymbolFlags.ValueModule, "moduleSymbol is not a module");
++
++    scopeStack.push(new Map());
++    const currentScope = scopeStack[scopeStack.length-1];
 +
 +    const target = containsPublicAPI(moduleSymbol) ? WriteTarget.Both : WriteTarget.Internal;
 +
@@ -417,6 +544,10 @@ index 0000000000..7635f1ee38
 +
 +    const moduleExports = typeChecker.getExportsOfModule(moduleSymbol);
 +    for (const me of moduleExports) {
++        currentScope.set(me.name, me);
++    }
++
++    for (const me of moduleExports) {
 +        assert(me.declarations?.length);
 +
 +        if (me.flags & ts.SymbolFlags.Alias) {
@@ -430,8 +561,10 @@ index 0000000000..7635f1ee38
 +            const sourceFile = decl.getSourceFile();
 +
 +            if (!statement) {
-+                throw new Error(`Unhandled declaration for ${me.name} at ${nodeToLocation(decl)}`);
++                fail(`Unhandled declaration for ${me.name} at ${nodeToLocation(decl)}`);
 +            }
++
++            verifyMatchingSymbols(statement);
 +
 +            const isInternal = isInternalDeclaration(statement);
 +            if (!isInternal) {
@@ -451,6 +584,8 @@ index 0000000000..7635f1ee38
 +            writeNode(internalStatement, sourceFile, WriteTarget.Internal);
 +        }
 +    }
++
++    scopeStack.pop();
 +
 +    decreaseIndent();
 +    write(`}`, target);
@@ -616,10 +751,10 @@ index 87fef65c11..c2a17563f0 100644
      // resolving `#local` names in your own package.json
      Imports = 1 << 1,
 diff --git a/src/compiler/parser.ts b/src/compiler/parser.ts
-index da9050dcce..b0eb6b3ba5 100644
+index f26231d591..6dafc0ab0b 100644
 --- a/src/compiler/parser.ts
 +++ b/src/compiler/parser.ts
-@@ -9832,7 +9832,7 @@ export function processCommentPragmas(context: PragmaContext, sourceText: string
+@@ -9830,7 +9830,7 @@ export function processCommentPragmas(context: PragmaContext, sourceText: string
  }
  
  /** @internal */
@@ -1045,7 +1180,7 @@ index ead5ee8eea..ec9d36cc2e 100644
          factory,
          getEmitHelperFactory: emitHelpers,
 diff --git a/src/compiler/transformers/module/module.ts b/src/compiler/transformers/module/module.ts
-index 0b9c5ad57b..cb3b73b777 100644
+index f935821a16..e5ade93e74 100644
 --- a/src/compiler/transformers/module/module.ts
 +++ b/src/compiler/transformers/module/module.ts
 @@ -1,5 +1,6 @@
@@ -1243,6 +1378,38 @@ index 71009dd489..8ae950ee3f 100644
      if (!localizedDiagnosticMessages && getMessages) {
          localizedDiagnosticMessages = getMessages();
      }
+diff --git a/src/compiler/watch.ts b/src/compiler/watch.ts
+index 5048c99522..f92b33fac2 100644
+--- a/src/compiler/watch.ts
++++ b/src/compiler/watch.ts
+@@ -17,7 +17,7 @@ import {
+     packageIdToString, ParseConfigFileHost, pathIsAbsolute, Program, ProgramHost, ProjectReference,
+     ReportEmitErrorSummary, ReportFileInError, sortAndDeduplicateDiagnostics, SourceFile, sys, System,
+     targetOptionDeclaration, WatchCompilerHost, WatchCompilerHostOfConfigFile,
+-    WatchCompilerHostOfFilesAndCompilerOptions, WatchFactoryHost, WatchHost, WatchLogLevel, WatchOptions,
++    WatchCompilerHostOfFilesAndCompilerOptions, WatchFactory, WatchFactoryHost, WatchHost, WatchLogLevel, WatchOptions,
+     WatchStatusReporter, WriteFileCallback, writeFileEnsuringDirectories,
+ } from "./_namespaces/ts";
+ 
+@@ -632,7 +632,8 @@ export interface WatchTypeRegistry {
+     NodeModulesForModuleSpecifierCache: "node_modules for module specifier cache invalidation",
+ }
+ 
+-interface WatchFactory<X, Y = undefined> extends ts.WatchFactory<X, Y> {
++/** @internal */
++export interface WatchFactoryWithLog<X, Y = undefined> extends WatchFactory<X, Y> {
+     writeLog: (s: string) => void;
+ }
+ 
+@@ -640,7 +641,7 @@ interface WatchFactory<X, Y = undefined> extends ts.WatchFactory<X, Y> {
+ export function createWatchFactory<Y = undefined>(host: WatchFactoryHost & { trace?(s: string): void; }, options: { extendedDiagnostics?: boolean; diagnostics?: boolean; }) {
+     const watchLogLevel = host.trace ? options.extendedDiagnostics ? WatchLogLevel.Verbose : options.diagnostics ? WatchLogLevel.TriggerOnly : WatchLogLevel.None : WatchLogLevel.None;
+     const writeLog: (s: string) => void = watchLogLevel !== WatchLogLevel.None ? (s => host.trace!(s)) : noop;
+-    const result = getWatchFactory<WatchType, Y>(host, watchLogLevel, writeLog) as WatchFactory<WatchType, Y>;
++    const result = getWatchFactory<WatchType, Y>(host, watchLogLevel, writeLog) as WatchFactoryWithLog<WatchType, Y>;
+     result.writeLog = writeLog;
+     return result;
+ }
 diff --git a/src/compiler/watchUtilities.ts b/src/compiler/watchUtilities.ts
 index 5dce173af6..0a06364c12 100644
 --- a/src/compiler/watchUtilities.ts
@@ -2741,7 +2908,7 @@ index c54f6da012..5fa4e7e0f5 100644
      constraint?: TypeNode;
  }
 diff --git a/src/services/completions.ts b/src/services/completions.ts
-index 86de7d17e3..f3e4f3f2ec 100644
+index 3b41db679f..a9d7b81dbf 100644
 --- a/src/services/completions.ts
 +++ b/src/services/completions.ts
 @@ -124,7 +124,8 @@ export enum CompletionSource {
@@ -2794,7 +2961,7 @@ index 86de7d17e3..f3e4f3f2ec 100644
  
  const enum KeywordCompletionFilters {
      None,                           // No keywords
-@@ -1881,8 +1890,12 @@ export function getCompletionEntrySymbol(
+@@ -1882,8 +1891,12 @@ export function getCompletionEntrySymbol(
  }
  
  const enum CompletionDataKind { Data, JsDocTagName, JsDocTag, JsDocParameterName, Keywords }
@@ -2809,7 +2976,7 @@ index 86de7d17e3..f3e4f3f2ec 100644
  interface CompletionData {
      readonly kind: CompletionDataKind.Data;
      readonly symbols: readonly Symbol[];
-@@ -4319,7 +4332,8 @@ function tryGetObjectLiteralContextualType(node: ObjectLiteralExpression, typeCh
+@@ -4320,7 +4333,8 @@ function tryGetObjectLiteralContextualType(node: ObjectLiteralExpression, typeCh
      return undefined;
  }
  

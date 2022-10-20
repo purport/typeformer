@@ -12,7 +12,7 @@ more than 50%. We can also eliminate some any and such in the process.
  3 files changed, 75 insertions(+), 89 deletions(-)
 
 diff --git a/package-lock.json b/package-lock.json
-index 91a12871b0..813cdf5530 100644
+index 7ed74b2c58..b410853dab 100644
 --- a/package-lock.json
 +++ b/package-lock.json
 @@ -25,7 +25,6 @@
@@ -30,7 +30,7 @@ index 91a12871b0..813cdf5530 100644
 +                "fast-xml-parser": "^4.0.11",
                  "fs-extra": "^9.1.0",
                  "glob": "latest",
-                 "hereby": "^1.5.0",
+                 "hereby": "^1.6.0",
 @@ -53,8 +53,7 @@
                  "node-fetch": "^3.2.10",
                  "source-map-support": "latest",
@@ -41,7 +41,7 @@ index 91a12871b0..813cdf5530 100644
              },
              "engines": {
                  "node": ">=4.2.0"
-@@ -473,15 +472,6 @@
+@@ -479,15 +478,6 @@
              "integrity": "sha512-Jjakcv8Roqtio6w1gr0D7y6twbhx6gGgFGF5BLwajPpnOIOxFkakFhCq+LmyyeAz7BX6ULrjBOxdKaCDy+4+dQ==",
              "dev": true
          },
@@ -55,9 +55,9 @@ index 91a12871b0..813cdf5530 100644
 -            }
 -        },
          "node_modules/@typescript-eslint/eslint-plugin": {
-             "version": "5.40.0",
-             "resolved": "https://registry.npmjs.org/@typescript-eslint/eslint-plugin/-/eslint-plugin-5.40.0.tgz",
-@@ -2152,6 +2142,22 @@
+             "version": "5.40.1",
+             "resolved": "https://registry.npmjs.org/@typescript-eslint/eslint-plugin/-/eslint-plugin-5.40.1.tgz",
+@@ -2159,6 +2149,22 @@
              "integrity": "sha512-DCXu6Ifhqcks7TZKY3Hxp3y6qphY5SJZmrWMDrKcERSOXWQdMhU9Ig/PYrzyw/ul9jOIyh0N4M0tbC5hodg8dw==",
              "dev": true
          },
@@ -80,7 +80,7 @@ index 91a12871b0..813cdf5530 100644
          "node_modules/fastest-levenshtein": {
              "version": "1.0.16",
              "resolved": "https://registry.npmjs.org/fastest-levenshtein/-/fastest-levenshtein-1.0.16.tgz",
-@@ -3961,12 +3967,6 @@
+@@ -3940,12 +3946,6 @@
                  "url": "https://github.com/sponsors/ljharb"
              }
          },
@@ -93,7 +93,7 @@ index 91a12871b0..813cdf5530 100644
          "node_modules/semver": {
              "version": "7.3.8",
              "resolved": "https://registry.npmjs.org/semver/-/semver-7.3.8.tgz",
-@@ -4143,6 +4143,12 @@
+@@ -4122,6 +4122,12 @@
                  "url": "https://github.com/sponsors/sindresorhus"
              }
          },
@@ -106,7 +106,7 @@ index 91a12871b0..813cdf5530 100644
          "node_modules/supports-color": {
              "version": "7.2.0",
              "resolved": "https://registry.npmjs.org/supports-color/-/supports-color-7.2.0.tgz",
-@@ -4476,28 +4482,6 @@
+@@ -4455,28 +4461,6 @@
              "integrity": "sha512-l4Sp/DRseor9wL6EvV2+TuQn63dMkPjZ/sp9XkghTEbV9KlPS1xUsZ3u7/IQO4wxtcFB4bgpQPRcR3QCvezPcQ==",
              "dev": true
          },
@@ -135,7 +135,7 @@ index 91a12871b0..813cdf5530 100644
          "node_modules/yallist": {
              "version": "4.0.0",
              "resolved": "https://registry.npmjs.org/yallist/-/yallist-4.0.0.tgz",
-@@ -4889,15 +4873,6 @@
+@@ -4874,15 +4858,6 @@
              "integrity": "sha512-Jjakcv8Roqtio6w1gr0D7y6twbhx6gGgFGF5BLwajPpnOIOxFkakFhCq+LmyyeAz7BX6ULrjBOxdKaCDy+4+dQ==",
              "dev": true
          },
@@ -149,9 +149,9 @@ index 91a12871b0..813cdf5530 100644
 -            }
 -        },
          "@typescript-eslint/eslint-plugin": {
-             "version": "5.40.0",
-             "resolved": "https://registry.npmjs.org/@typescript-eslint/eslint-plugin/-/eslint-plugin-5.40.0.tgz",
-@@ -6029,6 +6004,15 @@
+             "version": "5.40.1",
+             "resolved": "https://registry.npmjs.org/@typescript-eslint/eslint-plugin/-/eslint-plugin-5.40.1.tgz",
+@@ -6015,6 +5990,15 @@
              "integrity": "sha512-DCXu6Ifhqcks7TZKY3Hxp3y6qphY5SJZmrWMDrKcERSOXWQdMhU9Ig/PYrzyw/ul9jOIyh0N4M0tbC5hodg8dw==",
              "dev": true
          },
@@ -167,7 +167,7 @@ index 91a12871b0..813cdf5530 100644
          "fastest-levenshtein": {
              "version": "1.0.16",
              "resolved": "https://registry.npmjs.org/fastest-levenshtein/-/fastest-levenshtein-1.0.16.tgz",
-@@ -7284,12 +7268,6 @@
+@@ -7254,12 +7238,6 @@
                  "is-regex": "^1.1.4"
              }
          },
@@ -180,7 +180,7 @@ index 91a12871b0..813cdf5530 100644
          "semver": {
              "version": "7.3.8",
              "resolved": "https://registry.npmjs.org/semver/-/semver-7.3.8.tgz",
-@@ -7427,6 +7405,12 @@
+@@ -7397,6 +7375,12 @@
              "integrity": "sha512-6fPc+R4ihwqP6N/aIv2f1gMH8lOVtWQHoqC4yK6oSDVVocumAsfCqjkXnqiYMhmMwS/mEHLp7Vehlt3ql6lEig==",
              "dev": true
          },
@@ -193,7 +193,7 @@ index 91a12871b0..813cdf5530 100644
          "supports-color": {
              "version": "7.2.0",
              "resolved": "https://registry.npmjs.org/supports-color/-/supports-color-7.2.0.tgz",
-@@ -7685,22 +7669,6 @@
+@@ -7655,22 +7639,6 @@
              "integrity": "sha512-l4Sp/DRseor9wL6EvV2+TuQn63dMkPjZ/sp9XkghTEbV9KlPS1xUsZ3u7/IQO4wxtcFB4bgpQPRcR3QCvezPcQ==",
              "dev": true
          },
@@ -217,7 +217,7 @@ index 91a12871b0..813cdf5530 100644
              "version": "4.0.0",
              "resolved": "https://registry.npmjs.org/yallist/-/yallist-4.0.0.tgz",
 diff --git a/package.json b/package.json
-index 1a164cbd67..bc0c36dba1 100644
+index 7b85419a52..17e3950f03 100644
 --- a/package.json
 +++ b/package.json
 @@ -51,7 +51,6 @@
@@ -236,7 +236,7 @@ index 1a164cbd67..bc0c36dba1 100644
          "fs-extra": "^9.1.0",
          "glob": "latest",
 -        "jsonc-parser": "^3.2.0",
-         "hereby": "^1.5.0",
+         "hereby": "^1.6.0",
 +        "jsonc-parser": "^3.2.0",
          "minimist": "latest",
          "mkdirp": "latest",

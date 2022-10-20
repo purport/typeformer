@@ -113,7 +113,7 @@ index 1f758b6787..ca6d9526fd 100644
  
  function createBinder(): (file: SourceFile, options: CompilerOptions) => void {
 diff --git a/src/compiler/checker.ts b/src/compiler/checker.ts
-index cdacbf525b..d331830b34 100644
+index 276a0538b5..b45e567676 100644
 --- a/src/compiler/checker.ts
 +++ b/src/compiler/checker.ts
 @@ -197,6 +197,7 @@ import {
@@ -124,7 +124,7 @@ index cdacbf525b..d331830b34 100644
  
  const ambientModuleSymbolRegex = /^".+"$/;
  const anon = "(anonymous)" as __String & string;
-@@ -42598,10 +42599,10 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
+@@ -42585,10 +42586,10 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
  
      function checkSourceFile(node: SourceFile) {
          tracing?.push(tracing.Phase.Check, "checkSourceFile", { path: node.path }, /*separateBeginAndEnd*/ true);
@@ -169,7 +169,7 @@ index 2d371afea0..9107335a1a 100644
      const typeArgumentParenthesizerRuleSelector: OrdinalParentheizerRuleSelector<Node> = {
          select: index => index === 0 ? parenthesizer.parenthesizeLeadingTypeArgument : undefined
 diff --git a/src/compiler/parser.ts b/src/compiler/parser.ts
-index b0eb6b3ba5..eabf3e8867 100644
+index 6dafc0ab0b..b161549e0f 100644
 --- a/src/compiler/parser.ts
 +++ b/src/compiler/parser.ts
 @@ -65,6 +65,7 @@ import {
