@@ -14,7 +14,7 @@ using plain files and still produce a runnable system.
  scripts/build/options.mjs                     |   5 +-
  scripts/build/prepend.mjs                     |  61 --
  scripts/build/projects.mjs                    |  56 +-
- scripts/build/tests.mjs                       |  22 +-
+ scripts/build/tests.mjs                       |   4 +-
  scripts/produceLKG.mjs                        |  32 +-
  src/cancellationToken/tsconfig.json           |   4 +-
  src/compiler/debug.ts                         |   2 +-
@@ -39,7 +39,7 @@ using plain files and still produce a runnable system.
  src/typingsInstaller/nodeTypingsInstaller.ts  |   7 +-
  src/watchGuard/tsconfig.json                  |   4 +-
  src/webServer/webServer.ts                    |  27 +-
- 32 files changed, 926 insertions(+), 410 deletions(-)
+ 32 files changed, 919 insertions(+), 399 deletions(-)
  create mode 100644 scripts/build/localization.mjs
  delete mode 100644 scripts/build/prepend.mjs
  delete mode 100644 src/debug/_namespaces/Debug.ts
@@ -51,7 +51,7 @@ using plain files and still produce a runnable system.
  delete mode 100644 src/services/exportAsModule.ts
 
 diff --git a/Gulpfile.mjs b/Gulpfile.mjs
-index ebe73a094a..0f02be239f 100644
+index a9c5d77194..c1d791eec6 100644
 --- a/Gulpfile.mjs
 +++ b/Gulpfile.mjs
 @@ -3,25 +3,53 @@ import path from "path";
@@ -123,12 +123,13 @@ index ebe73a094a..0f02be239f 100644
      .map(f => `built/local/${f}/diagnosticMessages.generated.json`)
      .concat(generatedLCGFile);
  
-@@ -98,26 +125,137 @@ const buildSrc = () => buildProject("src");
+@@ -101,23 +128,138 @@ task("build-src", series(preSrc, buildSrc));
+ const cleanSrc = () => cleanProject("src");
+ task("clean-src", cleanSrc);
  
- task("build-src", series(preSrc, buildSrc));
- 
--const cleanSrc = () => cleanProject("src");
--task("clean-src", series(preSrc, cleanSrc));
+-const buildDebugTools = () => buildProject("src/debug");
+-const cleanDebugTools = () => cleanProject("src/debug");
++
 +/** @type {string | undefined} */
 +let copyrightHeader;
 +function getCopyrightHeader() {
@@ -227,9 +228,7 @@ index ebe73a094a..0f02be239f 100644
 +    const inRelativeToOut = infile = path.relative(path.dirname(outfile), infile);
 +    fs.writeFileSync(outfile, `module.exports = require("./${inRelativeToOut}")`);
 +}
- 
--const buildDebugTools = () => buildProject("src/debug");
--const cleanDebugTools = () => cleanProject("src/debug");
++
 +const esbuildDebugTools = esbuildTask("./src/debug/compilerDebug.ts", "./built/local/compilerDebug.js");
 +
 +const buildDebugTools = () => cmdLineOptions.bundle ? esbuildDebugTools.build() : buildProject("src/debug");
@@ -268,7 +267,7 @@ index ebe73a094a..0f02be239f 100644
  task("watch-tsc", series(lkgPreBuild, parallel(watchLib, watchDiagnostics, watchTsc)));
  task("watch-tsc").description = "Watch for changes and rebuild the command-line compiler only.";
  
-@@ -127,101 +265,50 @@ const localPreBuild = parallel(generateLibs, series(generateDiagnostics, buildDe
+@@ -127,101 +269,50 @@ const localPreBuild = parallel(generateLibs, series(generateDiagnostics, buildDe
  // Pre-build steps to use based on supplied options.
  const preBuild = cmdLineOptions.lkg ? lkgPreBuild : localPreBuild;
  
@@ -397,7 +396,7 @@ index ebe73a094a..0f02be239f 100644
  buildServer.displayName = "buildServer";
  task("tsserver", series(preBuild, buildServer));
  task("tsserver").description = "Builds the language server";
-@@ -229,17 +316,18 @@ task("tsserver").flags = {
+@@ -229,17 +320,18 @@ task("tsserver").flags = {
      "   --built": "Compile using the built version of the compiler."
  };
  
@@ -422,7 +421,7 @@ index ebe73a094a..0f02be239f 100644
  task("watch-tsserver").description = "Watch for changes and rebuild the language server only";
  task("watch-tsserver").flags = {
      "   --built": "Compile using the built version of the compiler."
-@@ -260,89 +348,61 @@ task("watch-min").flags = {
+@@ -260,89 +352,61 @@ task("watch-min").flags = {
      "   --built": "Compile using the built version of the compiler."
  };
  
@@ -541,7 +540,7 @@ index ebe73a094a..0f02be239f 100644
  
  const runEslintRulesTests = () => runConsoleTests("scripts/eslint/tests", "mocha-fivemat-progress-reporter", /*runInParallel*/ false, /*watchMode*/ false);
  task("run-eslint-rules-tests", runEslintRulesTests);
-@@ -373,16 +433,29 @@ lint.displayName = "lint";
+@@ -373,16 +437,29 @@ lint.displayName = "lint";
  task("lint", lint);
  task("lint").description = "Runs eslint on the compiler and scripts sources.";
  
@@ -577,7 +576,7 @@ index ebe73a094a..0f02be239f 100644
  cleanTasks.push(cleanWatchGuard);
  
  const generateTypesMap = () => src("src/server/typesMap.json")
-@@ -425,7 +498,7 @@ const preTest = parallel(buildTsc, buildTests, buildServices, buildLssl);
+@@ -425,7 +502,7 @@ const preTest = parallel(buildTsc, buildTests, buildServices, buildLssl);
  preTest.displayName = "preTest";
  
  const runTests = () => runConsoleTests(testRunner, "mocha-fivemat-progress-reporter", /*runInParallel*/ false, /*watchMode*/ false);
@@ -586,7 +585,7 @@ index ebe73a094a..0f02be239f 100644
  task("runtests").description = "Runs the tests using the built run.js file.";
  task("runtests").flags = {
      "-t --tests=<regex>": "Pattern for tests to run.",
-@@ -444,7 +517,7 @@ task("runtests").flags = {
+@@ -444,7 +521,7 @@ task("runtests").flags = {
  };
  
  const runTestsParallel = () => runConsoleTests(testRunner, "min", /*runInParallel*/ cmdLineOptions.workers > 1, /*watchMode*/ false);
@@ -595,7 +594,7 @@ index ebe73a094a..0f02be239f 100644
  task("runtests-parallel").description = "Runs all the tests in parallel using the built run.js file.";
  task("runtests-parallel").flags = {
      "   --light": "Run tests in light mode (fewer verifications, but tests run faster).",
-@@ -498,25 +571,23 @@ const importDefinitelyTypedTests = () => exec(process.execPath, ["scripts/import
+@@ -498,25 +575,23 @@ const importDefinitelyTypedTests = () => exec(process.execPath, ["scripts/import
  task("importDefinitelyTypedTests", importDefinitelyTypedTests);
  task("importDefinitelyTypedTests").description = "Runs the importDefinitelyTypedTests script to copy DT's tests to the TS-internal RWC tests";
  
@@ -630,7 +629,7 @@ index ebe73a094a..0f02be239f 100644
      ].concat(libs.map(lib => lib.target));
      const missingFiles = expectedFiles
          .concat(localizationTargets)
-@@ -532,7 +603,8 @@ const produceLKG = async () => {
+@@ -532,7 +607,8 @@ const produceLKG = async () => {
      }
  };
  
@@ -1369,7 +1368,7 @@ index 115cd3b3d5..0000000000
 -    return prepend(data);
 -}
 diff --git a/scripts/build/projects.mjs b/scripts/build/projects.mjs
-index 1061f5521b..b33d58a6d0 100644
+index 1061f5521b..537eea00a1 100644
 --- a/scripts/build/projects.mjs
 +++ b/scripts/build/projects.mjs
 @@ -1,69 +1,57 @@
@@ -1430,7 +1429,7 @@ index 1061f5521b..b33d58a6d0 100644
 +const execTsc = (/** @type {string[]} */ ...args) =>
      exec(process.execPath,
 -         [resolve(findUpRoot(), lkg ? "./lib/tsc" : "./built/local/tsc"),
-+         [resolve(findUpRoot(), cmdLineOptions.lkg ? "./lib/tsc" : "./built/local/tsc"),
++         [resolve(findUpRoot(), cmdLineOptions.lkg ? "./lib/tsc.js" : "./built/local/tsc.js"),
            "-b", ...args],
           { hidePrompt: true });
  
@@ -1465,38 +1464,20 @@ index 1061f5521b..b33d58a6d0 100644
 -export const watchProject = (project, { lkg } = {}) => projectWatcher.enqueue(project, { lkg });
 +export const watchProject = (project) => projectWatcher.enqueue(project);
 diff --git a/scripts/build/tests.mjs b/scripts/build/tests.mjs
-index dce50403c0..4da9cab147 100644
+index dce50403c0..807e5cd03a 100644
 --- a/scripts/build/tests.mjs
 +++ b/scripts/build/tests.mjs
-@@ -122,17 +122,17 @@ export async function runConsoleTests(runJs, defaultReporter, runInParallel, _wa
-             errorStatus = exitCode;
-             error = new Error(`Process exited with status code ${errorStatus}.`);
-         }
--        else if (cmdLineOptions.ci && runJs.startsWith("built")) {
--            // finally, do a sanity check and build the compiler with the built version of itself
--            log.info("Starting sanity check build...");
--            // Cleanup everything except lint rules (we'll need those later and would rather not waste time rebuilding them)
+@@ -126,8 +126,8 @@ export async function runConsoleTests(runJs, defaultReporter, runInParallel, _wa
+             // finally, do a sanity check and build the compiler with the built version of itself
+             log.info("Starting sanity check build...");
+             // Cleanup everything except lint rules (we'll need those later and would rather not waste time rebuilding them)
 -            await exec("gulp", ["clean-tsc", "clean-services", "clean-tsserver", "clean-lssl", "clean-tests"]);
 -            const { exitCode } = await exec("gulp", ["local", "--lkg=false"]);
--            if (exitCode !== 0) {
--                errorStatus = exitCode;
--                error = new Error(`Sanity check build process exited with status code ${errorStatus}.`);
--            }
--        }
-+        // else if (cmdLineOptions.ci && runJs.startsWith("built")) {
-+        //     // finally, do a sanity check and build the compiler with the built version of itself
-+        //     log.info("Starting sanity check build...");
-+        //     // Cleanup everything except lint rules (we'll need those later and would rather not waste time rebuilding them)
-+        //     await exec("gulp", ["clean-tsc", "clean-services", "clean-tsserver", "clean-lssl", "clean-tests"]);
-+        //     const { exitCode } = await exec("gulp", ["local", "--lkg=false"]);
-+        //     if (exitCode !== 0) {
-+        //         errorStatus = exitCode;
-+        //         error = new Error(`Sanity check build process exited with status code ${errorStatus}.`);
-+        //     }
-+        // }
-     }
-     catch (e) {
-         errorStatus = undefined;
++            await exec("gulp", ["clean-src"]);
++            const { exitCode } = await exec("gulp", ["build-src", "--built"]);
+             if (exitCode !== 0) {
+                 errorStatus = exitCode;
+                 error = new Error(`Sanity check build process exited with status code ${errorStatus}.`);
 diff --git a/scripts/produceLKG.mjs b/scripts/produceLKG.mjs
 index 0d1ea0f8bc..1683b7a5c1 100644
 --- a/scripts/produceLKG.mjs

@@ -4,12 +4,12 @@ Date: Mon, 17 Oct 2022 19:39:50 -0700
 Subject: [PATCH] Build fixups
 
 ---
- Herebyfile.mjs          | 66 ++++++++++++++++++++---------------------
+ Herebyfile.mjs          | 63 +++++++++++++++++++++--------------------
  scripts/build/utils.mjs | 17 +++++++++++
- 2 files changed, 50 insertions(+), 33 deletions(-)
+ 2 files changed, 50 insertions(+), 30 deletions(-)
 
 diff --git a/Herebyfile.mjs b/Herebyfile.mjs
-index e29ff8d9e8..cbc9e1e8af 100644
+index 9c93159bdd..cbc9e1e8af 100644
 --- a/Herebyfile.mjs
 +++ b/Herebyfile.mjs
 @@ -5,7 +5,7 @@ import del from "del";
@@ -99,7 +99,7 @@ index e29ff8d9e8..cbc9e1e8af 100644
          bundle: true,
          outfile,
          platform: "node",
-@@ -194,16 +190,13 @@ async function runEsbuild(entrypoint, outfile, taskOptions = {}) {
+@@ -194,12 +190,12 @@ async function runEsbuild(entrypoint, outfile, taskOptions = {}) {
          format: "cjs",
          sourcemap: "linked",
          sourcesContent: false,
@@ -111,13 +111,9 @@ index e29ff8d9e8..cbc9e1e8af 100644
          supported: {
 -            // "const-and-let": false, // https://github.com/evanw/esbuild/issues/297
              "object-rest-spread": false, // Performance enhancement, see: https://github.com/evanw/esbuild/releases/tag/v0.14.46
--            // TODO(jakebailey): workaround for https://github.com/microsoft/TypeScript/issues/51072
--            // Remove once 4.9 is out with the fix and monaco is updated.
--            "template-literal": false,
          },
          logLevel: "warning",
-         // legalComments: "none", // If we add copyright headers to the source files, uncomment.
-@@ -382,6 +375,10 @@ const { main: server } = entrypointBuildTask({
+@@ -379,6 +375,10 @@ const { main: server } = entrypointBuildTask({
      builtEntrypoint: "./built/local/tsserver/server.js",
      output: "./built/local/tsserver.js",
      mainDeps: [generateLibs, compilerDebug],
@@ -128,7 +124,7 @@ index e29ff8d9e8..cbc9e1e8af 100644
      esbuildOptions: { exportIsTsObject: true },
  });
  export { server };
-@@ -432,6 +429,9 @@ const { main: tests } = entrypointBuildTask({
+@@ -429,6 +429,9 @@ const { main: tests } = entrypointBuildTask({
      output: testRunner,
      mainDeps: [generateLibs, compilerDebug],
      esbuildOptions: {
@@ -138,7 +134,7 @@ index e29ff8d9e8..cbc9e1e8af 100644
          external: [
              "chai",
              "del",
-@@ -602,7 +602,7 @@ export const diffRwc = task({
+@@ -599,7 +602,7 @@ export const diffRwc = task({
   * @param {string} localBaseline Path to the local copy of the baselines
   * @param {string} refBaseline Path to the reference copy of the baselines
   */
@@ -147,7 +143,7 @@ index e29ff8d9e8..cbc9e1e8af 100644
      /**
       * @param {string} p
       */
-@@ -629,13 +629,13 @@ function createBaselineAccept(localBaseline, refBaseline) {
+@@ -626,13 +629,13 @@ function createBaselineAccept(localBaseline, refBaseline) {
  export const baselineAccept = task({
      name: "baseline-accept",
      description: "Makes the most recent test results the new baseline, overwriting the old baseline",
@@ -163,7 +159,7 @@ index e29ff8d9e8..cbc9e1e8af 100644
  });
  
  // TODO(rbuckton): Determine if we still need this task. Depending on a relative
-@@ -678,7 +678,7 @@ export const produceLKG = task({
+@@ -675,7 +678,7 @@ export const produceLKG = task({
              "built/local/typescript.d.ts",
              "built/local/typingsInstaller.js",
              "built/local/watchGuard.js",

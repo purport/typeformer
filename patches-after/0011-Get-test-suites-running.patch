@@ -30,7 +30,7 @@ Subject: [PATCH] Get test suites running
  create mode 100644 src/testRunner/unittests/helpers.ts
 
 diff --git a/Gulpfile.mjs b/Gulpfile.mjs
-index 46c5827798..c328cbe4db 100644
+index 46c5827798..75252b4204 100644
 --- a/Gulpfile.mjs
 +++ b/Gulpfile.mjs
 @@ -21,6 +21,8 @@ const { src, dest, task, parallel, series, watch } = gulp;
@@ -52,7 +52,7 @@ index 46c5827798..c328cbe4db 100644
 +task("build-src", series(preSrc, buildSrc));
 +
 +const cleanSrc = () => cleanProject("src");
-+task("clean-src", series(preSrc, cleanSrc));
++task("clean-src", cleanSrc);
 +
  const buildDebugTools = () => buildProject("src/debug");
  const cleanDebugTools = () => cleanProject("src/debug");

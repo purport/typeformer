@@ -476,7 +476,7 @@ index 5606df9611..d72ffc513f 100644
 \ No newline at end of file
 +RUN npx hereby configure-insiders && npx hereby LKG && npx hereby clean && npm pack .
 diff --git a/Herebyfile.mjs b/Herebyfile.mjs
-index adbb67cc81..b6e8300258 100644
+index 03f70da26d..b6e8300258 100644
 --- a/Herebyfile.mjs
 +++ b/Herebyfile.mjs
 @@ -1,24 +1,33 @@
@@ -659,7 +659,7 @@ index adbb67cc81..b6e8300258 100644
 +});
  
 -const cleanSrc = () => cleanProject("src");
--task("clean-src", series(preSrc, cleanSrc));
+-task("clean-src", cleanSrc);
 +export const cleanSrc = task({
 +    name: "clean-src",
 +    run: () => cleanProject("src"),

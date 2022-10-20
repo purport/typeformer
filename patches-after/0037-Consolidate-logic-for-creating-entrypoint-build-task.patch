@@ -8,7 +8,7 @@ Subject: [PATCH] Consolidate logic for creating entrypoint build tasks
  1 file changed, 132 insertions(+), 189 deletions(-)
 
 diff --git a/Herebyfile.mjs b/Herebyfile.mjs
-index 74d5c3c93f..e29ff8d9e8 100644
+index 0149ecd061..9c93159bdd 100644
 --- a/Herebyfile.mjs
 +++ b/Herebyfile.mjs
 @@ -14,6 +14,9 @@ import esbuild from "esbuild";
@@ -44,7 +44,7 @@ index 74d5c3c93f..e29ff8d9e8 100644
   */
  async function runEsbuild(entrypoint, outfile, taskOptions = {}) {
      /** @type {esbuild.BuildOptions} */
-@@ -268,88 +272,98 @@ async function runEsbuild(entrypoint, outfile, taskOptions = {}) {
+@@ -265,88 +269,98 @@ async function runEsbuild(entrypoint, outfile, taskOptions = {}) {
      await esbuild.build(options);
  }
  
@@ -208,7 +208,7 @@ index 74d5c3c93f..e29ff8d9e8 100644
  
  export const dtsServices = task({
      name: "dts-services",
-@@ -358,28 +372,19 @@ export const dtsServices = task({
+@@ -355,28 +369,19 @@ export const dtsServices = task({
      run: () => runDtsBundler("./built/local/typescript/typescript.d.ts", "./built/local/typescript.d.ts"),
  });
  
@@ -247,7 +247,7 @@ index 74d5c3c93f..e29ff8d9e8 100644
  
  
  export const min = task({
-@@ -389,28 +394,18 @@ export const min = task({
+@@ -386,28 +391,18 @@ export const min = task({
  });
  
  
@@ -285,7 +285,7 @@ index 74d5c3c93f..e29ff8d9e8 100644
  
  export const dtsLssl = task({
      name: "dts-lssl",
-@@ -427,16 +422,16 @@ export const dts = task({
+@@ -424,16 +419,16 @@ export const dts = task({
  
  const testRunner = "./built/local/run.js";
  
@@ -312,7 +312,7 @@ index 74d5c3c93f..e29ff8d9e8 100644
          external: [
              "chai",
              "del",
-@@ -444,20 +439,9 @@ const bundleTests = task({
+@@ -441,20 +436,9 @@ const bundleTests = task({
              "mocha",
              "ms",
          ],
@@ -335,7 +335,7 @@ index 74d5c3c93f..e29ff8d9e8 100644
  
  
  export const runEslintRulesTests = task({
-@@ -490,72 +474,31 @@ export const lint = task({
+@@ -487,72 +471,31 @@ export const lint = task({
      }
  });
  
