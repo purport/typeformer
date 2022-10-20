@@ -5,7 +5,7 @@ Subject: [PATCH] Import performance namespace directly to enable hoisting
 
 ---
  .eslintignore                                |  2 +-
- src/.eslintrc.json                           | 24 ++++++++++-
+ src/.eslintrc.json                           | 25 +++++++++++-
  src/compiler/binder.ts                       |  8 ++--
  src/compiler/checker.ts                      |  7 ++--
  src/compiler/emitter.ts                      |  5 ++-
@@ -17,7 +17,7 @@ Subject: [PATCH] Import performance namespace directly to enable hoisting
  src/compiler/tsbuildPublic.ts                | 43 ++++++++++----------
  src/compiler/watch.ts                        | 24 +++++------
  src/executeCommandLine/executeCommandLine.ts | 41 ++++++++++---------
- 13 files changed, 129 insertions(+), 103 deletions(-)
+ 13 files changed, 130 insertions(+), 103 deletions(-)
 
 diff --git a/.eslintignore b/.eslintignore
 index c85649450c..764d07c541 100644
@@ -31,10 +31,10 @@ index c85649450c..764d07c541 100644
  /lib/**
  /src/lib/*.generated.d.ts
 diff --git a/src/.eslintrc.json b/src/.eslintrc.json
-index f7ec4c8a8f..3107761238 100644
+index f7ec4c8a8f..f29dc06406 100644
 --- a/src/.eslintrc.json
 +++ b/src/.eslintrc.json
-@@ -6,7 +6,20 @@
+@@ -6,7 +6,21 @@
      },
      "rules": {
          "@typescript-eslint/no-unnecessary-qualifier": "error",
@@ -48,6 +48,7 @@ index f7ec4c8a8f..3107761238 100644
 +            { "name": "setImmediate" },
 +            { "name": "clearImmediate" },
 +            { "name": "performance" },
++            { "name": "Iterator" },
 +            { "name": "Map" },
 +            { "name": "ReadonlyMap" },
 +            { "name": "Set" },
@@ -56,7 +57,7 @@ index f7ec4c8a8f..3107761238 100644
      },
      "overrides": [
          {
-@@ -20,7 +33,8 @@
+@@ -20,7 +34,8 @@
                  "local/no-keywords": "off",
  
                  // eslint
@@ -66,7 +67,7 @@ index f7ec4c8a8f..3107761238 100644
              }
          },
          {
-@@ -28,6 +42,12 @@
+@@ -28,6 +43,12 @@
              "rules": {
                  "@typescript-eslint/array-type": "off"
              }

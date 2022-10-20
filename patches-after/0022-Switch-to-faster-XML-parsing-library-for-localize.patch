@@ -12,7 +12,7 @@ more than 50%. We can also eliminate some any and such in the process.
  3 files changed, 74 insertions(+), 88 deletions(-)
 
 diff --git a/package-lock.json b/package-lock.json
-index 7ed74b2c58..b410853dab 100644
+index 7970af3900..1a975e5eaf 100644
 --- a/package-lock.json
 +++ b/package-lock.json
 @@ -25,7 +25,6 @@
@@ -217,7 +217,7 @@ index 7ed74b2c58..b410853dab 100644
              "version": "4.0.0",
              "resolved": "https://registry.npmjs.org/yallist/-/yallist-4.0.0.tgz",
 diff --git a/package.json b/package.json
-index a639de943e..17e3950f03 100644
+index 16e600240f..c8f2789c5c 100644
 --- a/package.json
 +++ b/package.json
 @@ -51,7 +51,6 @@

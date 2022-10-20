@@ -10,7 +10,7 @@ Subject: [PATCH] Build fixups
  3 files changed, 73 insertions(+), 42 deletions(-)
 
 diff --git a/Herebyfile.mjs b/Herebyfile.mjs
-index fc00eeb3ba..aceada0a44 100644
+index 1a6e83ae4e..ea2e304cc5 100644
 --- a/Herebyfile.mjs
 +++ b/Herebyfile.mjs
 @@ -31,8 +31,8 @@ function getCopyrightHeader() {

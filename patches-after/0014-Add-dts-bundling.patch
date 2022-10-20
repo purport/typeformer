@@ -5,7 +5,7 @@ Subject: [PATCH] Add dts bundling
 
 ---
  Gulpfile.mjs                                  |    37 +-
- scripts/dtsBundler.mjs                        |   423 +
+ scripts/dtsBundler.mjs                        |   413 +
  scripts/produceLKG.mjs                        |    14 +-
  src/compiler/commandLineParser.ts             |     2 +-
  src/compiler/factory/utilities.ts             |    11 +-
@@ -61,7 +61,7 @@ Subject: [PATCH] Add dts bundling
  .../reference/api/tsserverlibrary.d.ts        | 10998 ++++++++--------
  tests/baselines/reference/api/typescript.d.ts |  3263 +++--
  tests/cases/compiler/APILibCheck.ts           |    34 +
- 57 files changed, 8009 insertions(+), 7794 deletions(-)
+ 57 files changed, 7999 insertions(+), 7794 deletions(-)
  create mode 100644 scripts/dtsBundler.mjs
  create mode 100644 tests/baselines/reference/APILibCheck.js
  create mode 100644 tests/baselines/reference/APILibCheck.symbols
@@ -177,10 +177,10 @@ index c1d791eec6..03f70da26d 100644
      "   --built": "Compile using the built version of the compiler.",
 diff --git a/scripts/dtsBundler.mjs b/scripts/dtsBundler.mjs
 new file mode 100644
-index 0000000000..2d4fb145d6
+index 0000000000..fc17bbaebd
 --- /dev/null
 +++ b/scripts/dtsBundler.mjs
-@@ -0,0 +1,423 @@
+@@ -0,0 +1,413 @@
 +/**
 + * WARNING: this is a very, very rudimentary d.ts bundler; it only works
 + * in the TS project thanks to our history using namespaces, which has
@@ -193,24 +193,12 @@ index 0000000000..2d4fb145d6
 +import minimist from "minimist";
 +import url from "url";
 +import ts from "../lib/typescript.js";
++import assert, { fail } from "assert";
 +
 +const __filename = url.fileURLToPath(new URL(import.meta.url));
 +const __dirname = path.dirname(__filename);
 +
 +// /** @type {any} */ (ts).Debug.enableDebugInfo();
-+
-+/** @type {(expression: unknown, message?: string, verboseDebugInfo?: string | (() => string), stackCrawlMark?: any) => asserts expression} */
-+function assert(expression, message, verboseDebugInfo, stackCrawlMark) {
-+    /** @type {any} */ (ts).Debug.assert(expression, message, verboseDebugInfo, stackCrawlMark ?? assert);
-+}
-+
-+/** @type {(message?: string, stackCrawlMark?: any) => never} */
-+function fail(message, stackCrawlMark) {
-+    /** @type {any} */ (ts).Debug.fail(message, stackCrawlMark ?? fail);
-+    throw new Error("unreachable");
-+}
-+
-+
 +
 +const dotDts = ".d.ts";
 +
@@ -503,7 +491,9 @@ index 0000000000..2d4fb145d6
 +            }
 +
 +            const symbolOfNode = typeChecker.getSymbolAtLocation(node);
-+            assert(symbolOfNode, "No symbol for node", () => nodeToLocation(node));
++            if (!symbolOfNode) {
++                fail(`No symbol for node at ${nodeToLocation(node)}`);
++            }
 +            const symbolInScope = findInScope(symbolOfNode.name);
 +            if (!symbolInScope) {
 +                // We didn't find the symbol in scope at all. Just allow it and we'll fail at test time.

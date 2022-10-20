@@ -9,7 +9,7 @@ Subject: [PATCH] Build fixups
  2 files changed, 50 insertions(+), 30 deletions(-)
 
 diff --git a/Herebyfile.mjs b/Herebyfile.mjs
-index 9c93159bdd..cbc9e1e8af 100644
+index 397808d502..9d8b8d8ce6 100644
 --- a/Herebyfile.mjs
 +++ b/Herebyfile.mjs
 @@ -5,7 +5,7 @@ import del from "del";
@@ -113,7 +113,7 @@ index 9c93159bdd..cbc9e1e8af 100644
              "object-rest-spread": false, // Performance enhancement, see: https://github.com/evanw/esbuild/releases/tag/v0.14.46
          },
          logLevel: "warning",
-@@ -379,6 +375,10 @@ const { main: server } = entrypointBuildTask({
+@@ -379,6 +375,10 @@ const { main: tsserver } = entrypointBuildTask({
      builtEntrypoint: "./built/local/tsserver/server.js",
      output: "./built/local/tsserver.js",
      mainDeps: [generateLibs, compilerDebug],
@@ -123,7 +123,7 @@ index 9c93159bdd..cbc9e1e8af 100644
 +    // scope.
      esbuildOptions: { exportIsTsObject: true },
  });
- export { server };
+ export { tsserver };
 @@ -429,6 +429,9 @@ const { main: tests } = entrypointBuildTask({
      output: testRunner,
      mainDeps: [generateLibs, compilerDebug],

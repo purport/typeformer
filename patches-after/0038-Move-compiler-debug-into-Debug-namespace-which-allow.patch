@@ -15,7 +15,7 @@ Subject: [PATCH] Move compiler-debug into Debug namespace, which allows the
  delete mode 100644 src/debug/tsconfig.json
 
 diff --git a/Herebyfile.mjs b/Herebyfile.mjs
-index cbc9e1e8af..d380908e33 100644
+index 9d8b8d8ce6..9f8fbc52d8 100644
 --- a/Herebyfile.mjs
 +++ b/Herebyfile.mjs
 @@ -322,16 +322,6 @@ function entrypointBuildTask(options) {
@@ -53,7 +53,7 @@ index cbc9e1e8af..d380908e33 100644
      esbuildOptions: { exportIsTsObject: true },
  });
  export { services };
-@@ -374,7 +364,7 @@ const { main: server } = entrypointBuildTask({
+@@ -374,7 +364,7 @@ const { main: tsserver } = entrypointBuildTask({
      srcEntrypoint: "./src/tsserver/server.ts",
      builtEntrypoint: "./built/local/tsserver/server.js",
      output: "./built/local/tsserver.js",

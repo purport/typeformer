@@ -12,7 +12,7 @@ APIs.
  2 files changed, 36 insertions(+), 78 deletions(-)
 
 diff --git a/Herebyfile.mjs b/Herebyfile.mjs
-index b6e8300258..ab70539f9a 100644
+index 69d9fe170c..3c7f5e00a8 100644
 --- a/Herebyfile.mjs
 +++ b/Herebyfile.mjs
 @@ -156,6 +156,7 @@ const localizationTargets = localizationDirectories

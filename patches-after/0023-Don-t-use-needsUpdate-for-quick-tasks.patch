@@ -11,7 +11,7 @@ and be sure that the outputs are right.
  1 file changed, 21 insertions(+), 35 deletions(-)
 
 diff --git a/Herebyfile.mjs b/Herebyfile.mjs
-index ab70539f9a..47c2a4e1ef 100644
+index 3c7f5e00a8..477d5e9a93 100644
 --- a/Herebyfile.mjs
 +++ b/Herebyfile.mjs
 @@ -6,7 +6,7 @@ import esbuild from "esbuild";

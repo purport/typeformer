@@ -4,11 +4,11 @@ Date: Mon, 17 Oct 2022 17:44:31 -0700
 Subject: [PATCH] Consolidate logic for creating entrypoint build tasks
 
 ---
- Herebyfile.mjs | 321 ++++++++++++++++++++-----------------------------
- 1 file changed, 132 insertions(+), 189 deletions(-)
+ Herebyfile.mjs | 327 ++++++++++++++++++++-----------------------------
+ 1 file changed, 135 insertions(+), 192 deletions(-)
 
 diff --git a/Herebyfile.mjs b/Herebyfile.mjs
-index 0149ecd061..9c93159bdd 100644
+index 2cf2d3a23c..397808d502 100644
 --- a/Herebyfile.mjs
 +++ b/Herebyfile.mjs
 @@ -14,6 +14,9 @@ import esbuild from "esbuild";
@@ -208,7 +208,7 @@ index 0149ecd061..9c93159bdd 100644
  
  export const dtsServices = task({
      name: "dts-services",
-@@ -355,28 +369,19 @@ export const dtsServices = task({
+@@ -355,59 +369,40 @@ export const dtsServices = task({
      run: () => runDtsBundler("./built/local/typescript/typescript.d.ts", "./built/local/typescript.d.ts"),
  });
  
@@ -230,9 +230,8 @@ index 0149ecd061..9c93159bdd 100644
 -});
 -
 -export const server = task({
--    name: "tsserver",
-+const { main: server } = entrypointBuildTask({
-+    name: "server",
++const { main: tsserver } = entrypointBuildTask({
+     name: "tsserver",
      description: "Builds the language server",
 -    dependencies: [generateLibs].concat(cmdLineOptions.bundle ? [bundleServer] : [buildServer, shimServer]),
 +    buildDeps: [generateDiagnostics],
@@ -243,14 +242,16 @@ index 0149ecd061..9c93159bdd 100644
 +    mainDeps: [generateLibs, compilerDebug],
 +    esbuildOptions: { exportIsTsObject: true },
  });
-+export { server };
++export { tsserver };
  
  
  export const min = task({
-@@ -386,28 +391,18 @@ export const min = task({
- });
- 
- 
+     name: "min",
+     description: "Builds only tsc and tsserver",
+-    dependencies: [tsc, server],
+-});
+-
+-
 -const buildLssl = task({
 -    name: "build-lssl",
 -    dependencies: [generateDiagnostics],
@@ -261,13 +262,14 @@ index 0149ecd061..9c93159bdd 100644
 -    name: "bundle-lssl",
 -    dependencies: [generateDiagnostics],
 -    run: () => runEsbuild("./src/tsserverlibrary/tsserverlibrary.ts", "./built/local/tsserverlibrary.js", { exportIsTsObject: true }),
--});
--
++    dependencies: [tsc, tsserver],
+ });
+ 
 -const shimLssl = task({
 -    name: "shim-lssl",
 -    run: () => writeCJSReexport("./built/local/tsserverlibrary/tsserverlibrary.js", "./built/local/tsserverlibrary.js"),
 -});
--
+ 
 -export const lssl = task({
 +const { main: lssl, build: buildLssl } = entrypointBuildTask({
      name: "lssl",
@@ -424,6 +426,33 @@ index 0149ecd061..9c93159bdd 100644
  export const generateTypesMap = task({
      name: "generate-types-map",
      run: async () => {
+@@ -589,7 +532,7 @@ export const otherOutputs = task({
+ export const local = task({
+     name: "local",
+     description: "Builds the full compiler and services",
+-    dependencies: [localize, tsc, server, services, lssl, otherOutputs, dts],
++    dependencies: [localize, tsc, tsserver, services, lssl, otherOutputs, dts],
+ });
+ export default local;
+ 
+@@ -697,7 +640,7 @@ export const baselineAcceptRwc = task({
+ export const updateSublime = task({
+     name: "update-sublime",
+     description: "Updates the sublime plugin's tsserver",
+-    dependencies: [server],
++    dependencies: [tsserver],
+     run: async () => {
+         for (const file of ["built/local/tsserver.js", "built/local/tsserver.js.map"]) {
+             await fs.promises.copyFile(file, path.resolve("../TypeScript-Sublime-Plugin/tsserver/", path.basename(file)));
+@@ -716,7 +659,7 @@ export const importDefinitelyTypedTests = task({
+ export const produceLKG = task({
+     name: "LKG",
+     description: "Makes a new LKG out of the built js files",
+-    dependencies: [localize, tsc, server, services, lssl, otherOutputs, dts],
++    dependencies: [localize, tsc, tsserver, services, lssl, otherOutputs, dts],
+     run: async () => {
+         if (!cmdLineOptions.bundle) {
+             throw new Error("LKG cannot be created when --bundle=false");
 -- 
 2.38.0
 
