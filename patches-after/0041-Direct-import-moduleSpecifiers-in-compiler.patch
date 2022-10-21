@@ -9,7 +9,7 @@ Subject: [PATCH] Direct import moduleSpecifiers in compiler
  2 files changed, 4 insertions(+), 2 deletions(-)
 
 diff --git a/src/compiler/checker.ts b/src/compiler/checker.ts
-index b45e567676..c9f1957d02 100644
+index 846c2d91e7..be5b6a9804 100644
 --- a/src/compiler/checker.ts
 +++ b/src/compiler/checker.ts
 @@ -155,7 +155,7 @@ import {

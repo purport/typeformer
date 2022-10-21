@@ -283,7 +283,7 @@ index 5700cd02af..7a6109ce6b 100644
 +    /** @internal */ buildInfo?: BuildInfo
  }
 diff --git a/src/compiler/commandLineParser.ts b/src/compiler/commandLineParser.ts
-index 8d5fb21c3e..31dd774182 100644
+index 7e7ea32611..b7c339f69e 100644
 --- a/src/compiler/commandLineParser.ts
 +++ b/src/compiler/commandLineParser.ts
 @@ -21,7 +21,7 @@ import {
@@ -611,7 +611,7 @@ index 8d5fb21c3e..31dd774182 100644
  export function generateTSConfig(options: CompilerOptions, fileNames: readonly string[], newLine: string): string {
      const compilerOptionsMap = getSerializedCompilerOption(options);
      return writeConfigurations();
-@@ -2667,7 +2672,7 @@ export function generateTSConfig(options: CompilerOptions, fileNames: readonly s
+@@ -2676,7 +2681,7 @@ export function generateTSConfig(options: CompilerOptions, fileNames: readonly s
      }
  }
  
@@ -620,7 +620,7 @@ index 8d5fb21c3e..31dd774182 100644
  export function convertToOptionsWithAbsolutePaths(options: CompilerOptions, toAbsolutePath: (path: string) => string) {
      const result: CompilerOptions = {};
      const optionsNameMap = getOptionsNameMap().optionsNameMap;
-@@ -2727,7 +2732,7 @@ export function parseJsonSourceFileConfigFileContent(sourceFile: TsConfigSourceF
+@@ -2736,7 +2741,7 @@ export function parseJsonSourceFileConfigFileContent(sourceFile: TsConfigSourceF
      return result;
  }
  
@@ -629,7 +629,7 @@ index 8d5fb21c3e..31dd774182 100644
  export function setConfigFileInOptions(options: CompilerOptions, configFile: TsConfigSourceFile | undefined) {
      if (configFile) {
          Object.defineProperty(options, "configFile", { enumerable: false, writable: false, value: configFile });
-@@ -2744,7 +2749,7 @@ function directoryOfCombinedPath(fileName: string, basePath: string) {
+@@ -2753,7 +2758,7 @@ function directoryOfCombinedPath(fileName: string, basePath: string) {
      return getDirectoryPath(getNormalizedAbsolutePath(fileName, basePath));
  }
  
@@ -638,7 +638,7 @@ index 8d5fb21c3e..31dd774182 100644
  export const defaultIncludeSpec = "**/*";
  
  /**
-@@ -2944,12 +2949,12 @@ function shouldReportNoInputFiles(fileNames: string[], canJsonReportNoInutFiles:
+@@ -2953,12 +2958,12 @@ function shouldReportNoInputFiles(fileNames: string[], canJsonReportNoInutFiles:
      return fileNames.length === 0 && canJsonReportNoInutFiles && (!resolutionStack || resolutionStack.length === 0);
  }
  
@@ -653,7 +653,7 @@ index 8d5fb21c3e..31dd774182 100644
  export function updateErrorForNoInputFiles(fileNames: string[], configFileName: string, configFileSpecs: ConfigFileSpecs, configParseDiagnostics: Diagnostic[], canJsonReportNoInutFiles: boolean) {
      const existingErrors = configParseDiagnostics.length;
      if (shouldReportNoInputFiles(fileNames, canJsonReportNoInutFiles)) {
-@@ -3305,7 +3310,7 @@ function convertOptionsFromJson(optionsNameMap: ESMap<string, CommandLineOption>
+@@ -3314,7 +3319,7 @@ function convertOptionsFromJson(optionsNameMap: ESMap<string, CommandLineOption>
      return defaultOptions;
  }
  
@@ -662,7 +662,7 @@ index 8d5fb21c3e..31dd774182 100644
  export function convertJsonOption(opt: CommandLineOption, value: any, basePath: string, errors: Push<Diagnostic>): CompilerOptionsValue {
      if (isCompilerOptionsValue(opt, value)) {
          const optType = opt.type;
-@@ -3407,8 +3412,9 @@ const wildcardDirectoryPattern = /^[^*?]*(?=\/[^/]*[*?])/;
+@@ -3416,8 +3421,9 @@ const wildcardDirectoryPattern = /^[^*?]*(?=\/[^/]*[*?])/;
   * @param options Compiler options.
   * @param host The host used to resolve files and directories.
   * @param extraFileExtensions optionaly file extra file extension information from host
@@ -673,7 +673,7 @@ index 8d5fb21c3e..31dd774182 100644
  export function getFileNamesFromConfigSpecs(
      configFileSpecs: ConfigFileSpecs,
      basePath: string,
-@@ -3498,7 +3504,7 @@ export function getFileNamesFromConfigSpecs(
+@@ -3507,7 +3513,7 @@ export function getFileNamesFromConfigSpecs(
      return literalFiles.concat(wildcardFiles, arrayFrom(wildCardJsonFileMap.values()));
  }
  
@@ -682,7 +682,7 @@ index 8d5fb21c3e..31dd774182 100644
  export function isExcludedFile(
      pathToCheck: string,
      spec: ConfigFileSpecs,
-@@ -3535,7 +3541,7 @@ function invalidDotDotAfterRecursiveWildcard(s: string) {
+@@ -3544,7 +3550,7 @@ function invalidDotDotAfterRecursiveWildcard(s: string) {
      return lastDotIndex > wildcardIndex;
  }
  
@@ -691,7 +691,7 @@ index 8d5fb21c3e..31dd774182 100644
  export function matchesExclude(
      pathToCheck: string,
      excludeSpecs: readonly string[] | undefined,
-@@ -3726,8 +3732,9 @@ function removeWildcardFilesWithLowerPriorityExtension(file: string, wildcardFil
+@@ -3735,8 +3741,9 @@ function removeWildcardFilesWithLowerPriorityExtension(file: string, wildcardFil
  /**
   * Produces a cleaned version of compiler options with personally identifying info (aka, paths) removed.
   * Also converts enum values back to strings.
@@ -3989,7 +3989,7 @@ index eccd6ad83d..ad3ee26238 100644
      if (index < imports.length) return imports[index];
      let augIndex = imports.length;
 diff --git a/src/compiler/resolutionCache.ts b/src/compiler/resolutionCache.ts
-index b9cae8aa02..a6cce70e78 100644
+index 1a1c5bcc76..b12ef53352 100644
 --- a/src/compiler/resolutionCache.ts
 +++ b/src/compiler/resolutionCache.ts
 @@ -17,8 +17,11 @@ import {
@@ -4598,10 +4598,10 @@ index 3198bdead1..b4f4739a80 100644
  export function flattenDestructuringBinding(
      node: VariableDeclaration | ParameterDeclaration,
 diff --git a/src/compiler/transformers/es2017.ts b/src/compiler/transformers/es2017.ts
-index 118c0b4c55..193eea75be 100644
+index 061bdf0801..ba7508d1da 100644
 --- a/src/compiler/transformers/es2017.ts
 +++ b/src/compiler/transformers/es2017.ts
-@@ -742,8 +742,11 @@ export function transformES2017(context: TransformationContext) {
+@@ -819,8 +819,11 @@ export function transformES2017(context: TransformationContext) {
      }
  }
  
@@ -4931,7 +4931,7 @@ index 895a03afe6..c454d528b9 100644
       *  To dispose this project and ensure that all the necessary actions are taken and state is updated accordingly
       */
 diff --git a/src/compiler/types.ts b/src/compiler/types.ts
-index 4b20184d40..c9d728f00b 100644
+index d522515d3e..37e10cb3f0 100644
 --- a/src/compiler/types.ts
 +++ b/src/compiler/types.ts
 @@ -8,7 +8,7 @@ import {

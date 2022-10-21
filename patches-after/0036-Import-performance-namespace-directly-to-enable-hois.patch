@@ -114,7 +114,7 @@ index 1f758b6787..ca6d9526fd 100644
  
  function createBinder(): (file: SourceFile, options: CompilerOptions) => void {
 diff --git a/src/compiler/checker.ts b/src/compiler/checker.ts
-index 276a0538b5..b45e567676 100644
+index c26cc5cd63..846c2d91e7 100644
 --- a/src/compiler/checker.ts
 +++ b/src/compiler/checker.ts
 @@ -197,6 +197,7 @@ import {
@@ -125,7 +125,7 @@ index 276a0538b5..b45e567676 100644
  
  const ambientModuleSymbolRegex = /^".+"$/;
  const anon = "(anonymous)" as __String & string;
-@@ -42585,10 +42586,10 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
+@@ -42595,10 +42596,10 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
  
      function checkSourceFile(node: SourceFile) {
          tracing?.push(tracing.Phase.Check, "checkSourceFile", { path: node.path }, /*separateBeginAndEnd*/ true);

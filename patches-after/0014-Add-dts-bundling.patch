@@ -19,7 +19,7 @@ Subject: [PATCH] Add dts bundling
  src/compiler/transformers/classFields.ts      |     4 +-
  src/compiler/transformers/es2015.ts           |     4 +-
  src/compiler/transformers/es2016.ts           |     4 +-
- src/compiler/transformers/es2017.ts           |     3 +-
+ src/compiler/transformers/es2017.ts           |     4 +-
  src/compiler/transformers/es2018.ts           |     4 +-
  src/compiler/transformers/es2019.ts           |     3 +-
  src/compiler/transformers/es2020.ts           |     4 +-
@@ -61,7 +61,7 @@ Subject: [PATCH] Add dts bundling
  .../reference/api/tsserverlibrary.d.ts        | 10998 ++++++++--------
  tests/baselines/reference/api/typescript.d.ts |  3263 +++--
  tests/cases/compiler/APILibCheck.ts           |    34 +
- 57 files changed, 7999 insertions(+), 7794 deletions(-)
+ 57 files changed, 7999 insertions(+), 7795 deletions(-)
  create mode 100644 scripts/dtsBundler.mjs
  create mode 100644 tests/baselines/reference/APILibCheck.js
  create mode 100644 tests/baselines/reference/APILibCheck.symbols
@@ -633,7 +633,7 @@ index 1683b7a5c1..4f0133936c 100644
   * @param {string} fileName
   */
 diff --git a/src/compiler/commandLineParser.ts b/src/compiler/commandLineParser.ts
-index 31dd774182..2ed978e2d6 100644
+index b7c339f69e..ae189db549 100644
 --- a/src/compiler/commandLineParser.ts
 +++ b/src/compiler/commandLineParser.ts
 @@ -2081,7 +2081,7 @@ function getTsconfigRootOptionsMap() {
@@ -825,7 +825,7 @@ index ad3ee26238..33b536170e 100644
      getCurrentDirectory(): string;
      fileExists(fileName: string): boolean;
 diff --git a/src/compiler/resolutionCache.ts b/src/compiler/resolutionCache.ts
-index a6cce70e78..103676d271 100644
+index b12ef53352..740161c74f 100644
 --- a/src/compiler/resolutionCache.ts
 +++ b/src/compiler/resolutionCache.ts
 @@ -51,7 +51,8 @@ export interface ResolutionCache {
@@ -953,18 +953,19 @@ index 0d4b95afa8..ca3bbbb980 100644
          factory,
          hoistVariableDeclaration
 diff --git a/src/compiler/transformers/es2017.ts b/src/compiler/transformers/es2017.ts
-index 193eea75be..3f36d8c450 100644
+index ba7508d1da..d9cb9de299 100644
 --- a/src/compiler/transformers/es2017.ts
 +++ b/src/compiler/transformers/es2017.ts
-@@ -15,6 +15,7 @@ import {
-     TypeReferenceSerializationKind, unescapeLeadingUnderscores, VariableDeclaration, VariableDeclarationList,
-     VariableStatement, visitEachChild, visitFunctionBody, visitIterationBody, visitNode, visitNodes, visitParameterList,
-     VisitResult,
-+    Bundle,
+@@ -14,7 +14,7 @@ import {
+     setOriginalNode, setSourceMapRange, setTextRange, some, SourceFile, Statement, SyntaxKind, TextRange,
+     TransformationContext, TransformFlags, TypeNode, TypeReferenceSerializationKind, unescapeLeadingUnderscores,
+     VariableDeclaration, VariableDeclarationList, VariableStatement, visitEachChild, visitFunctionBody,
+-    visitIterationBody, visitNode, visitNodes, visitParameterList, VisitResult,
++    visitIterationBody, visitNode, visitNodes, visitParameterList, VisitResult, Bundle,
  } from "../_namespaces/ts";
  
  type SuperContainer = ClassDeclaration | MethodDeclaration | GetAccessorDeclaration | SetAccessorDeclaration | ConstructorDeclaration;
-@@ -30,7 +31,7 @@ const enum ContextFlags {
+@@ -30,7 +30,7 @@ const enum ContextFlags {
  }
  
  /** @internal */
@@ -974,7 +975,7 @@ index 193eea75be..3f36d8c450 100644
          factory,
          getEmitHelperFactory: emitHelpers,
 diff --git a/src/compiler/transformers/es2018.ts b/src/compiler/transformers/es2018.ts
-index ee7f2cbc93..d45f5a37b4 100644
+index 0eb599559b..5798e0fd33 100644
 --- a/src/compiler/transformers/es2018.ts
 +++ b/src/compiler/transformers/es2018.ts
 @@ -17,7 +17,7 @@ import {
@@ -1274,7 +1275,7 @@ index 4460f4fc45..862bdf7c8b 100644
          return undefined;
      }
 diff --git a/src/compiler/types.ts b/src/compiler/types.ts
-index c9d728f00b..6c3b39bd26 100644
+index 37e10cb3f0..34c4d59d33 100644
 --- a/src/compiler/types.ts
 +++ b/src/compiler/types.ts
 @@ -5087,7 +5087,7 @@ export interface SymbolWalker {

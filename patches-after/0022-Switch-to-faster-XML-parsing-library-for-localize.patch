@@ -12,7 +12,7 @@ more than 50%. We can also eliminate some any and such in the process.
  3 files changed, 74 insertions(+), 88 deletions(-)
 
 diff --git a/package-lock.json b/package-lock.json
-index 7970af3900..1a975e5eaf 100644
+index 922a4f9b3d..6ade87ae14 100644
 --- a/package-lock.json
 +++ b/package-lock.json
 @@ -25,7 +25,6 @@
