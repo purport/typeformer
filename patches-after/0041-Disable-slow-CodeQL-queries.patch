@@ -1,0 +1,46 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Jake Bailey <5341706+jakebailey@users.noreply.github.com>
+Date: Fri, 21 Oct 2022 18:59:12 -0700
+Subject: [PATCH] Disable slow CodeQL queries
+
+---
+ .github/codeql/codeql-configuration.yml | 26 +++++++++++++++++++++++++
+ 1 file changed, 26 insertions(+)
+
+diff --git a/.github/codeql/codeql-configuration.yml b/.github/codeql/codeql-configuration.yml
+index 402799f89d..669f76105e 100644
+--- a/.github/codeql/codeql-configuration.yml
++++ b/.github/codeql/codeql-configuration.yml
+@@ -2,3 +2,29 @@ name : CodeQL Configuration
+ 
+ paths:
+   - './src' 
++
++# These queries appear to time out after the module conversion.
++# https://github.com/github/codeql/issues/10937
++query-filters:
++  - exclude:
++      id: js/path-injection # TaintedPath.ql
++  - exclude:
++      id: js/command-line-injection # CommandInjection.ql
++  - exclude:
++      id: js/code-injection # CodeInjection.ql
++  - exclude:
++      id: js/bad-code-sanitization # ImproperCodeSanitization.ql
++  - exclude:
++      id: js/unsafe-dynamic-method-access # UnsafeDynamicMethodAccess.ql
++  - exclude:
++      id: js/clear-text-logging # CleartextLogging.ql
++  - exclude:
++      id: js/regex-injection # RegExpInjection.ql
++  - exclude:
++      id: js/unvalidated-dynamic-method-call # UnvalidatedDynamicMethodCall.ql
++  - exclude:
++      id: js/insecure-download # InsecureDownload.ql
++  - exclude:
++      id: js/prototype-polluting-assignment # PrototypePollutingAssignment.ql
++  - exclude:
++      id: js/request-forgery # RequestForgery.ql
+-- 
+2.38.0
+

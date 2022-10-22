@@ -1,23 +1,25 @@
 From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Jake Bailey <5341706+jakebailey@users.noreply.github.com>
 Date: Mon, 17 Oct 2022 21:36:05 -0700
-Subject: [PATCH] Import performance namespace directly to enable hoisting
+Subject: [PATCH] Directly import namespaces for improved esbuild output
 
+I should report this upstream, if I can manage to minimize this.
 ---
  .eslintignore                                |  2 +-
  src/.eslintrc.json                           | 25 +++++++++++-
  src/compiler/binder.ts                       |  8 ++--
- src/compiler/checker.ts                      |  7 ++--
+ src/compiler/checker.ts                      | 10 +++--
  src/compiler/emitter.ts                      |  5 ++-
  src/compiler/parser.ts                       |  7 ++--
  src/compiler/program.ts                      | 43 ++++++++++----------
  src/compiler/sourcemap.ts                    |  6 +--
  src/compiler/tracing.ts                      | 14 +++----
  src/compiler/transformer.ts                  |  8 ++--
+ src/compiler/transformers/declarations.ts    |  3 +-
  src/compiler/tsbuildPublic.ts                | 43 ++++++++++----------
  src/compiler/watch.ts                        | 24 +++++------
  src/executeCommandLine/executeCommandLine.ts | 41 ++++++++++---------
- 13 files changed, 130 insertions(+), 103 deletions(-)
+ 14 files changed, 134 insertions(+), 105 deletions(-)
 
 diff --git a/.eslintignore b/.eslintignore
 index c85649450c..764d07c541 100644
@@ -114,18 +116,28 @@ index 1f758b6787..ca6d9526fd 100644
  
  function createBinder(): (file: SourceFile, options: CompilerOptions) => void {
 diff --git a/src/compiler/checker.ts b/src/compiler/checker.ts
-index c26cc5cd63..846c2d91e7 100644
+index c26cc5cd63..be5b6a9804 100644
 --- a/src/compiler/checker.ts
 +++ b/src/compiler/checker.ts
-@@ -197,6 +197,7 @@ import {
+@@ -155,7 +155,7 @@ import {
+     mangleScopedPackageName, map, Map, mapDefined, MappedSymbol, MappedType, MappedTypeNode, MatchingKeys, maybeBind,
+     MemberName, MemberOverrideStatus, memoize, MetaProperty, MethodDeclaration, MethodSignature, minAndMax, MinusToken,
+     Modifier, ModifierFlags, modifiersToFlags, modifierToFlag, ModuleBlock, ModuleDeclaration, ModuleInstanceState,
+-    ModuleKind, ModuleResolutionKind, moduleSpecifiers, NamedDeclaration, NamedExports, NamedImportsOrExports,
++    ModuleKind, ModuleResolutionKind, NamedDeclaration, NamedExports, NamedImportsOrExports,
+     NamedTupleMember, NamespaceDeclaration, NamespaceExport, NamespaceExportDeclaration, NamespaceImport,
+     needsScopeMarker, NewExpression, Node, NodeArray, NodeBuilderFlags, nodeCanBeDecorated, NodeCheckFlags, NodeFlags,
+     nodeHasName, nodeIsDecorated, nodeIsMissing, nodeIsPresent, nodeIsSynthesized, NodeLinks,
+@@ -197,6 +197,8 @@ import {
      walkUpBindingElementsAndPatterns, walkUpParenthesizedExpressions, walkUpParenthesizedTypes,
      walkUpParenthesizedTypesAndGetParentAndChild, WhileStatement, WideningContext, WithStatement, YieldExpression,
  } from "./_namespaces/ts";
 +import * as performance from "./_namespaces/ts.performance";
++import * as moduleSpecifiers from "./_namespaces/ts.moduleSpecifiers";
  
  const ambientModuleSymbolRegex = /^".+"$/;
  const anon = "(anonymous)" as __String & string;
-@@ -42595,10 +42596,10 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
+@@ -42595,10 +42597,10 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
  
      function checkSourceFile(node: SourceFile) {
          tracing?.push(tracing.Phase.Check, "checkSourceFile", { path: node.path }, /*separateBeginAndEnd*/ true);
@@ -452,6 +464,27 @@ index dac2670b72..a00fa0b70a 100644
  
      return {
          transformed,
+diff --git a/src/compiler/transformers/declarations.ts b/src/compiler/transformers/declarations.ts
+index 095d395c5b..3e0eaed09c 100644
+--- a/src/compiler/transformers/declarations.ts
++++ b/src/compiler/transformers/declarations.ts
+@@ -28,7 +28,7 @@ import {
+     isStringANonContextualKeyword, isStringLiteral, isStringLiteralLike, isTupleTypeNode, isTypeAliasDeclaration,
+     isTypeNode, isTypeParameterDeclaration, isTypeQueryNode, isUnparsedSource, last, LateBoundDeclaration,
+     LateVisibilityPaintedStatement, length, map, Map, mapDefined, MethodDeclaration, MethodSignature, Modifier,
+-    ModifierFlags, ModuleBody, ModuleDeclaration, moduleSpecifiers, NamedDeclaration, NamespaceDeclaration,
++    ModifierFlags, ModuleBody, ModuleDeclaration, NamedDeclaration, NamespaceDeclaration,
+     needsScopeMarker, Node, NodeArray, NodeBuilderFlags, NodeFlags, NodeId, normalizeSlashes, OmittedExpression,
+     orderedRemoveItem, ParameterDeclaration, parseNodeFactory, pathContainsNodeModules, pathIsRelative,
+     PropertyDeclaration, PropertySignature, pushIfUnique, removeAllComments, Set, SetAccessorDeclaration,
+@@ -39,6 +39,7 @@ import {
+     TypeReferenceNode, unescapeLeadingUnderscores, UnparsedSource, VariableDeclaration, VariableStatement, visitArray,
+     visitEachChild, visitNode, visitNodes, VisitResult,
+ } from "../_namespaces/ts";
++import * as moduleSpecifiers from "../_namespaces/ts.moduleSpecifiers";
+ 
+ /** @internal */
+ export function getDeclarationDiagnostics(host: EmitHost, resolver: EmitResolver, file: SourceFile | undefined): DiagnosticWithLocation[] | undefined {
 diff --git a/src/compiler/tsbuildPublic.ts b/src/compiler/tsbuildPublic.ts
 index c454d528b9..b050895da5 100644
 --- a/src/compiler/tsbuildPublic.ts
