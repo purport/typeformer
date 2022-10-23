@@ -8,7 +8,7 @@ using the plain files is desired, passing `--bundle=false` will build
 using plain files and still produce a runnable system.
 ---
  .github/workflows/ci.yml                      |  44 +-
- Gulpfile.mjs                                  | 422 +++++++------
+ Gulpfile.mjs                                  | 418 +++++++------
  package-lock.json                             | 574 ++++++++++++++++++
  package.json                                  |   1 +
  scripts/build/localization.mjs                |   1 +
@@ -40,7 +40,7 @@ using plain files and still produce a runnable system.
  src/typingsInstaller/nodeTypingsInstaller.ts  |   7 +-
  src/watchGuard/tsconfig.json                  |   4 +-
  src/webServer/webServer.ts                    |  27 +-
- 33 files changed, 960 insertions(+), 409 deletions(-)
+ 33 files changed, 956 insertions(+), 409 deletions(-)
  create mode 100644 scripts/build/localization.mjs
  delete mode 100644 scripts/build/prepend.mjs
  delete mode 100644 src/debug/_namespaces/Debug.ts
@@ -125,7 +125,7 @@ index bf6cb01228..68f2cdb805 100644
 +    - name: Self build
 +      run: gulp build-src --built
 diff --git a/Gulpfile.mjs b/Gulpfile.mjs
-index a9c5d77194..c1d791eec6 100644
+index a9c5d77194..9568433841 100644
 --- a/Gulpfile.mjs
 +++ b/Gulpfile.mjs
 @@ -3,25 +3,53 @@ import path from "path";
@@ -197,7 +197,7 @@ index a9c5d77194..c1d791eec6 100644
      .map(f => `built/local/${f}/diagnosticMessages.generated.json`)
      .concat(generatedLCGFile);
  
-@@ -101,23 +128,138 @@ task("build-src", series(preSrc, buildSrc));
+@@ -101,23 +128,134 @@ task("build-src", series(preSrc, buildSrc));
  const cleanSrc = () => cleanProject("src");
  task("clean-src", cleanSrc);
  
@@ -236,10 +236,6 @@ index a9c5d77194..c1d791eec6 100644
 +        sourcemap: "linked",
 +        external: ["./node_modules/*"],
 +        conditions: ["require"],
-+        supported: {
-+            // "const-and-let": false, // https://github.com/evanw/esbuild/issues/297
-+            "object-rest-spread": false, // Performance enhancement, see: https://github.com/evanw/esbuild/releases/tag/v0.14.46
-+        },
 +        // legalComments: "none", // If we add copyright headers to the source files, uncomment.
 +        plugins: [
 +            {
@@ -341,7 +337,7 @@ index a9c5d77194..c1d791eec6 100644
  task("watch-tsc", series(lkgPreBuild, parallel(watchLib, watchDiagnostics, watchTsc)));
  task("watch-tsc").description = "Watch for changes and rebuild the command-line compiler only.";
  
-@@ -127,101 +269,50 @@ const localPreBuild = parallel(generateLibs, series(generateDiagnostics, buildDe
+@@ -127,101 +265,50 @@ const localPreBuild = parallel(generateLibs, series(generateDiagnostics, buildDe
  // Pre-build steps to use based on supplied options.
  const preBuild = cmdLineOptions.lkg ? lkgPreBuild : localPreBuild;
  
@@ -470,7 +466,7 @@ index a9c5d77194..c1d791eec6 100644
  buildServer.displayName = "buildServer";
  task("tsserver", series(preBuild, buildServer));
  task("tsserver").description = "Builds the language server";
-@@ -229,17 +320,18 @@ task("tsserver").flags = {
+@@ -229,17 +316,18 @@ task("tsserver").flags = {
      "   --built": "Compile using the built version of the compiler."
  };
  
@@ -495,7 +491,7 @@ index a9c5d77194..c1d791eec6 100644
  task("watch-tsserver").description = "Watch for changes and rebuild the language server only";
  task("watch-tsserver").flags = {
      "   --built": "Compile using the built version of the compiler."
-@@ -260,89 +352,61 @@ task("watch-min").flags = {
+@@ -260,89 +348,61 @@ task("watch-min").flags = {
      "   --built": "Compile using the built version of the compiler."
  };
  
@@ -614,7 +610,7 @@ index a9c5d77194..c1d791eec6 100644
  
  const runEslintRulesTests = () => runConsoleTests("scripts/eslint/tests", "mocha-fivemat-progress-reporter", /*runInParallel*/ false, /*watchMode*/ false);
  task("run-eslint-rules-tests", runEslintRulesTests);
-@@ -373,16 +437,29 @@ lint.displayName = "lint";
+@@ -373,16 +433,29 @@ lint.displayName = "lint";
  task("lint", lint);
  task("lint").description = "Runs eslint on the compiler and scripts sources.";
  
@@ -650,7 +646,7 @@ index a9c5d77194..c1d791eec6 100644
  cleanTasks.push(cleanWatchGuard);
  
  const generateTypesMap = () => src("src/server/typesMap.json")
-@@ -425,7 +502,7 @@ const preTest = parallel(buildTsc, buildTests, buildServices, buildLssl);
+@@ -425,7 +498,7 @@ const preTest = parallel(buildTsc, buildTests, buildServices, buildLssl);
  preTest.displayName = "preTest";
  
  const runTests = () => runConsoleTests(testRunner, "mocha-fivemat-progress-reporter", /*runInParallel*/ false, /*watchMode*/ false);
@@ -659,7 +655,7 @@ index a9c5d77194..c1d791eec6 100644
  task("runtests").description = "Runs the tests using the built run.js file.";
  task("runtests").flags = {
      "-t --tests=<regex>": "Pattern for tests to run.",
-@@ -444,7 +521,7 @@ task("runtests").flags = {
+@@ -444,7 +517,7 @@ task("runtests").flags = {
  };
  
  const runTestsParallel = () => runConsoleTests(testRunner, "min", /*runInParallel*/ cmdLineOptions.workers > 1, /*watchMode*/ false);
@@ -668,7 +664,7 @@ index a9c5d77194..c1d791eec6 100644
  task("runtests-parallel").description = "Runs all the tests in parallel using the built run.js file.";
  task("runtests-parallel").flags = {
      "   --light": "Run tests in light mode (fewer verifications, but tests run faster).",
-@@ -498,25 +575,23 @@ const importDefinitelyTypedTests = () => exec(process.execPath, ["scripts/import
+@@ -498,25 +571,23 @@ const importDefinitelyTypedTests = () => exec(process.execPath, ["scripts/import
  task("importDefinitelyTypedTests", importDefinitelyTypedTests);
  task("importDefinitelyTypedTests").description = "Runs the importDefinitelyTypedTests script to copy DT's tests to the TS-internal RWC tests";
  
@@ -703,7 +699,7 @@ index a9c5d77194..c1d791eec6 100644
      ].concat(libs.map(lib => lib.target));
      const missingFiles = expectedFiles
          .concat(localizationTargets)
-@@ -532,7 +607,8 @@ const produceLKG = async () => {
+@@ -532,7 +603,8 @@ const produceLKG = async () => {
      }
  };
  

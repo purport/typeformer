@@ -4,11 +4,11 @@ Date: Mon, 17 Oct 2022 17:44:31 -0700
 Subject: [PATCH] Consolidate logic for creating entrypoint build tasks
 
 ---
- Herebyfile.mjs | 327 ++++++++++++++++++++-----------------------------
- 1 file changed, 135 insertions(+), 192 deletions(-)
+ Herebyfile.mjs | 331 ++++++++++++++++++++-----------------------------
+ 1 file changed, 137 insertions(+), 194 deletions(-)
 
 diff --git a/Herebyfile.mjs b/Herebyfile.mjs
-index 2cf2d3a23c..397808d502 100644
+index d419ffcd15..f393b473f9 100644
 --- a/Herebyfile.mjs
 +++ b/Herebyfile.mjs
 @@ -14,6 +14,9 @@ import esbuild from "esbuild";
@@ -44,7 +44,7 @@ index 2cf2d3a23c..397808d502 100644
   */
  async function runEsbuild(entrypoint, outfile, taskOptions = {}) {
      /** @type {esbuild.BuildOptions} */
-@@ -265,88 +269,98 @@ async function runEsbuild(entrypoint, outfile, taskOptions = {}) {
+@@ -261,88 +265,98 @@ async function runEsbuild(entrypoint, outfile, taskOptions = {}) {
      await esbuild.build(options);
  }
  
@@ -70,6 +70,19 @@ index 2cf2d3a23c..397808d502 100644
 -    const inRelativeToOut = infile = path.relative(path.dirname(outfile), infile);
 -    await fs.promises.writeFile(outfile, `module.exports = require("./${inRelativeToOut}")`);
 -}
+-
+-
+-const buildCompilerDebug = task({
+-    name: "build-compiler-debug",
+-    dependencies: [generateDiagnostics],
+-    run: () => buildProject("src/debug"),
+-});
+-
+-const bundleCompilerDebug = task({
+-    name: "bundle-compiler-debug",
+-    dependencies: [generateDiagnostics],
+-    run: () => runEsbuild("./src/debug/compilerDebug.ts", "./built/local/compilerDebug.js"),
+-});
 +function entrypointBuildTask(options) {
 +    const build = task({
 +        name: `build-${options.name}`,
@@ -85,6 +98,10 @@ index 2cf2d3a23c..397808d502 100644
 +        run: () => runEsbuild(options.srcEntrypoint, options.output, options.esbuildOptions),
 +    });
  
+-const shimCompilerDebug = task({
+-    name: "shim-compiler-debug",
+-    run: () => writeCJSReexport("./built/local/debug/compilerDebug.js", "./built/local/compilerDebug.js"),
+-});
 +    /**
 +     * Writes a CJS module that reexports another CJS file. E.g. given
 +     * `options.builtEntrypoint = "./built/local/tsc/tsc.js"` and
@@ -104,28 +121,13 @@ index 2cf2d3a23c..397808d502 100644
 +            await fs.promises.writeFile(options.output, `module.exports = require("./${moduleSpecifier}")`);
 +        },
 +    });
- 
--const buildCompilerDebug = task({
--    name: "build-compiler-debug",
--    dependencies: [generateDiagnostics],
--    run: () => buildProject("src/debug"),
--});
--
--const bundleCompilerDebug = task({
--    name: "bundle-compiler-debug",
--    dependencies: [generateDiagnostics],
--    run: () => runEsbuild("./src/debug/compilerDebug.ts", "./built/local/compilerDebug.js"),
--});
++
 +    const main = task({
 +        name: options.name,
 +        description: options.description,
 +        dependencies: (options.mainDeps ?? []).concat(cmdLineOptions.bundle ? [bundle] : [build, shim]),
 +    });
- 
--const shimCompilerDebug = task({
--    name: "shim-compiler-debug",
--    run: () => writeCJSReexport("./built/local/debug/compilerDebug.js", "./built/local/compilerDebug.js"),
--});
++
 +    return { build, bundle, shim, main };
 +}
  
@@ -133,9 +135,14 @@ index 2cf2d3a23c..397808d502 100644
 +const { main: compilerDebug } = entrypointBuildTask({
      name: "compiler-debug",
 -    dependencies: cmdLineOptions.bundle ? [bundleCompilerDebug] : [buildCompilerDebug, shimCompilerDebug],
--});
--
--
++    buildDeps: [generateDiagnostics],
++    project: "src/debug",
++    srcEntrypoint: "./src/debug/compilerDebug.ts",
++    builtEntrypoint: "./built/local/debug/compilerDebug.js",
++    output: "./built/local/compilerDebug.js",
+ });
+ 
+ 
 -const buildTsc = task({
 -    name: "build-tsc",
 -    dependencies: [generateDiagnostics],
@@ -146,18 +153,13 @@ index 2cf2d3a23c..397808d502 100644
 -    name: "bundle-tsc",
 -    dependencies: [generateDiagnostics],
 -    run: () => runEsbuild("./src/tsc/tsc.ts", "./built/local/tsc.js"),
-+    buildDeps: [generateDiagnostics],
-+    project: "src/debug",
-+    srcEntrypoint: "./src/debug/compilerDebug.ts",
-+    builtEntrypoint: "./built/local/debug/compilerDebug.js",
-+    output: "./built/local/compilerDebug.js",
- });
- 
+-});
+-
 -const shimTsc = task({
 -    name: "shim-tsc",
 -    run: () => writeCJSReexport("./built/local/tsc/tsc.js", "./built/local/tsc.js"),
 -});
- 
+-
 -export const tsc = task({
 +const { main: tsc } = entrypointBuildTask({
      name: "tsc",
@@ -208,7 +210,7 @@ index 2cf2d3a23c..397808d502 100644
  
  export const dtsServices = task({
      name: "dts-services",
-@@ -355,59 +369,40 @@ export const dtsServices = task({
+@@ -351,59 +365,40 @@ export const dtsServices = task({
      run: () => runDtsBundler("./built/local/typescript/typescript.d.ts", "./built/local/typescript.d.ts"),
  });
  
@@ -249,9 +251,10 @@ index 2cf2d3a23c..397808d502 100644
      name: "min",
      description: "Builds only tsc and tsserver",
 -    dependencies: [tsc, server],
--});
--
--
++    dependencies: [tsc, tsserver],
+ });
+ 
+ 
 -const buildLssl = task({
 -    name: "build-lssl",
 -    dependencies: [generateDiagnostics],
@@ -262,14 +265,13 @@ index 2cf2d3a23c..397808d502 100644
 -    name: "bundle-lssl",
 -    dependencies: [generateDiagnostics],
 -    run: () => runEsbuild("./src/tsserverlibrary/tsserverlibrary.ts", "./built/local/tsserverlibrary.js", { exportIsTsObject: true }),
-+    dependencies: [tsc, tsserver],
- });
- 
+-});
+-
 -const shimLssl = task({
 -    name: "shim-lssl",
 -    run: () => writeCJSReexport("./built/local/tsserverlibrary/tsserverlibrary.js", "./built/local/tsserverlibrary.js"),
 -});
- 
+-
 -export const lssl = task({
 +const { main: lssl, build: buildLssl } = entrypointBuildTask({
      name: "lssl",
@@ -287,7 +289,7 @@ index 2cf2d3a23c..397808d502 100644
  
  export const dtsLssl = task({
      name: "dts-lssl",
-@@ -424,16 +419,16 @@ export const dts = task({
+@@ -420,16 +415,16 @@ export const dts = task({
  
  const testRunner = "./built/local/run.js";
  
@@ -314,7 +316,7 @@ index 2cf2d3a23c..397808d502 100644
          external: [
              "chai",
              "del",
-@@ -441,20 +436,9 @@ const bundleTests = task({
+@@ -437,20 +432,9 @@ const bundleTests = task({
              "mocha",
              "ms",
          ],
@@ -337,7 +339,7 @@ index 2cf2d3a23c..397808d502 100644
  
  
  export const runEslintRulesTests = task({
-@@ -487,72 +471,31 @@ export const lint = task({
+@@ -483,72 +467,31 @@ export const lint = task({
      }
  });
  
@@ -426,7 +428,7 @@ index 2cf2d3a23c..397808d502 100644
  export const generateTypesMap = task({
      name: "generate-types-map",
      run: async () => {
-@@ -589,7 +532,7 @@ export const otherOutputs = task({
+@@ -585,7 +528,7 @@ export const otherOutputs = task({
  export const local = task({
      name: "local",
      description: "Builds the full compiler and services",
@@ -435,7 +437,7 @@ index 2cf2d3a23c..397808d502 100644
  });
  export default local;
  
-@@ -697,7 +640,7 @@ export const baselineAcceptRwc = task({
+@@ -693,7 +636,7 @@ export const baselineAcceptRwc = task({
  export const updateSublime = task({
      name: "update-sublime",
      description: "Updates the sublime plugin's tsserver",
@@ -444,7 +446,7 @@ index 2cf2d3a23c..397808d502 100644
      run: async () => {
          for (const file of ["built/local/tsserver.js", "built/local/tsserver.js.map"]) {
              await fs.promises.copyFile(file, path.resolve("../TypeScript-Sublime-Plugin/tsserver/", path.basename(file)));
-@@ -716,7 +659,7 @@ export const importDefinitelyTypedTests = task({
+@@ -712,7 +655,7 @@ export const importDefinitelyTypedTests = task({
  export const produceLKG = task({
      name: "LKG",
      description: "Makes a new LKG out of the built js files",

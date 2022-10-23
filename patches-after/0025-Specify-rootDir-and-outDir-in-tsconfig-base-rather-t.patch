@@ -29,10 +29,10 @@ Subject: [PATCH] Specify rootDir and outDir in tsconfig-base rather than in
  21 files changed, 14 insertions(+), 30 deletions(-)
 
 diff --git a/Herebyfile.mjs b/Herebyfile.mjs
-index 477d5e9a93..db368e5dc4 100644
+index 377a1c6ff6..0064df36e4 100644
 --- a/Herebyfile.mjs
 +++ b/Herebyfile.mjs
-@@ -473,11 +473,14 @@ export const lint = task({
+@@ -469,11 +469,14 @@ export const lint = task({
  
  const esbuildCancellationToken = esbuildTask("./src/cancellationToken/cancellationToken.ts", "./built/local/cancellationToken.js");
  
@@ -49,7 +49,7 @@ index 477d5e9a93..db368e5dc4 100644
  });
  const cleanCancellationToken = task({
      name: "clean-cancellation-token",
-@@ -493,7 +496,7 @@ const buildTypingsInstaller = task({
+@@ -489,7 +492,7 @@ const buildTypingsInstaller = task({
      dependencies: [generateDiagnostics],
      run: async () => {
          if (cmdLineOptions.bundle) return esbuildTypingsInstaller.build();
@@ -58,7 +58,7 @@ index 477d5e9a93..db368e5dc4 100644
          await buildProject("src/typingsInstaller");
      },
  });
-@@ -506,11 +509,14 @@ cleanTasks.push(cleanTypingsInstaller);
+@@ -502,11 +505,14 @@ cleanTasks.push(cleanTypingsInstaller);
  
  const esbuildWatchGuard = esbuildTask("./src/watchGuard/watchGuard.ts", "./built/local/watchGuard.js");
  

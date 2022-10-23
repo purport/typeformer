@@ -4,14 +4,14 @@ Date: Fri, 14 Oct 2022 13:31:44 -0700
 Subject: [PATCH] Compute esbuild options lazily
 
 ---
- Herebyfile.mjs | 125 +++++++++++++++++++++++++------------------------
- 1 file changed, 63 insertions(+), 62 deletions(-)
+ Herebyfile.mjs | 119 +++++++++++++++++++++++++------------------------
+ 1 file changed, 60 insertions(+), 59 deletions(-)
 
 diff --git a/Herebyfile.mjs b/Herebyfile.mjs
-index db368e5dc4..1a6e83ae4e 100644
+index 0064df36e4..487167e88d 100644
 --- a/Herebyfile.mjs
 +++ b/Herebyfile.mjs
-@@ -185,75 +185,76 @@ async function runDtsBundler(entrypoint, output) {
+@@ -185,71 +185,72 @@ async function runDtsBundler(entrypoint, output) {
   * @param {boolean} exportIsTsObject True if this file exports the TS object and should have relevant code injected.
   */
   function esbuildTask(entrypoint, outfile, exportIsTsObject = false) {
@@ -32,10 +32,6 @@ index db368e5dc4..1a6e83ae4e 100644
 -        sourcemap: "linked",
 -        external: ["./node_modules/*"],
 -        conditions: ["require"],
--        supported: {
--            // "const-and-let": false, // https://github.com/evanw/esbuild/issues/297
--            "object-rest-spread": false, // Performance enhancement, see: https://github.com/evanw/esbuild/releases/tag/v0.14.46
--        },
 -        // legalComments: "none", // If we add copyright headers to the source files, uncomment.
 -        plugins: [
 -            {
@@ -57,6 +53,18 @@ index db368e5dc4..1a6e83ae4e 100644
 -                        contents = contents.replace(/__require\(/g, "require(");
 -                        await fs.promises.writeFile(outfile, contents);
 -                    });
+-                },
+-            }
+-        ]
+-    };
+-
+-    if (exportIsTsObject) {
+-        options.format = "iife"; // We use an IIFE so we can inject the code below.
+-        options.globalName = "ts"; // Name the variable ts, matching our old big bundle and so we can use the code below.
+-        options.footer = {
+-            // These snippets cannot appear in the actual source files, otherwise they will be rewritten
+-            // to things like exports or requires.
+-            js: `
 +    return {
 +        build: async () => {
 +            // Note: we do not use --minify, as that would hide function names from user backtraces
@@ -76,21 +84,6 @@ index db368e5dc4..1a6e83ae4e 100644
 +                sourcemap: "linked",
 +                external: ["./node_modules/*"],
 +                conditions: ["require"],
-+                supported: {
-+                    // "const-and-let": false, // https://github.com/evanw/esbuild/issues/297
-+                    "object-rest-spread": false, // Performance enhancement, see: https://github.com/evanw/esbuild/releases/tag/v0.14.46
-                 },
--            }
--        ]
--    };
--
--    if (exportIsTsObject) {
--        options.format = "iife"; // We use an IIFE so we can inject the code below.
--        options.globalName = "ts"; // Name the variable ts, matching our old big bundle and so we can use the code below.
--        options.footer = {
--            // These snippets cannot appear in the actual source files, otherwise they will be rewritten
--            // to things like exports or requires.
--            js: `
 +                // legalComments: "none", // If we add copyright headers to the source files, uncomment.
 +                plugins: [
 +                    {
