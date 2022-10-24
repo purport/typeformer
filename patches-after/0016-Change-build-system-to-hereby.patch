@@ -30,7 +30,7 @@ it seems like this is a good time to change things up.
  .vscode/tasks.json                            |    40 +-
  CONTRIBUTING.md                               |    66 +-
  Dockerfile                                    |     3 +-
- Herebyfile.mjs                                |  1085 +-
+ Herebyfile.mjs                                |  1086 +-
  lib/README.md                                 |     2 +-
  package-lock.json                             | 14178 ++++------------
  package.json                                  |    34 +-
@@ -46,7 +46,7 @@ it seems like this is a good time to change things up.
  src/harness/findUpDir.ts                      |     2 +-
  src/harness/harnessIO.ts                      |     2 +-
  src/webServer/webServer.ts                    |     9 +-
- 31 files changed, 3664 insertions(+), 12096 deletions(-)
+ 31 files changed, 3665 insertions(+), 12096 deletions(-)
  create mode 100644 .gulp.js
  delete mode 100644 scripts/build/sourcemaps.mjs
  delete mode 100644 scripts/types/ambient.d.ts
@@ -521,7 +521,7 @@ index 5606df9611..d72ffc513f 100644
 \ No newline at end of file
 +RUN npx hereby configure-insiders && npx hereby LKG && npx hereby clean && npm pack .
 diff --git a/Herebyfile.mjs b/Herebyfile.mjs
-index ced85affab..5d606c61fe 100644
+index ced85affab..91d0973ba9 100644
 --- a/Herebyfile.mjs
 +++ b/Herebyfile.mjs
 @@ -1,29 +1,31 @@
@@ -683,7 +683,7 @@ index ced85affab..5d606c61fe 100644
  
  // Localize diagnostics
  /**
-@@ -114,19 +139,26 @@ const localizationTargets = localizationDirectories
+@@ -114,19 +139,27 @@ const localizationTargets = localizationDirectories
      .map(f => `built/local/${f}/diagnosticMessages.generated.json`)
      .concat(generatedLCGFile);
  
@@ -692,6 +692,7 @@ index ced85affab..5d606c61fe 100644
 -        return exec(process.execPath, ["scripts/generateLocalizedDiagnosticMessages.mjs", "src/loc/lcl", "built/local", diagnosticMessagesGeneratedJson], { ignoreExitCode: true });
 +const localize = task({
 +    name: "localize",
++    dependencies: [generateDiagnostics],
 +    run: async () => {
 +        if (needsUpdate(diagnosticMessagesGeneratedJson, generatedLCGFile)) {
 +            return exec(process.execPath, ["scripts/generateLocalizedDiagnosticMessages.mjs", "src/loc/lcl", "built/local", diagnosticMessagesGeneratedJson], { ignoreExitCode: true });
@@ -720,7 +721,7 @@ index ced85affab..5d606c61fe 100644
  
  /**
   * @param {string} entrypoint
-@@ -142,40 +174,57 @@ async function runDtsBundler(entrypoint, output) {
+@@ -142,40 +175,57 @@ async function runDtsBundler(entrypoint, output) {
      ]);
  }
  
@@ -796,7 +797,7 @@ index ced85affab..5d606c61fe 100644
              {
                  name: "fix-require",
                  setup: (build) => {
-@@ -186,13 +235,12 @@ function esbuildTask(entrypoint, outfile, exportIsTsObject = false) {
+@@ -186,13 +236,12 @@ function esbuildTask(entrypoint, outfile, exportIsTsObject = false) {
                          // to be consumable by other bundlers, we need to convert these calls back to
                          // require so our imports are visible again.
                          //
@@ -813,7 +814,7 @@ index ced85affab..5d606c61fe 100644
                          await fs.promises.writeFile(outfile, contents);
                      });
                  },
-@@ -200,506 +248,507 @@ function esbuildTask(entrypoint, outfile, exportIsTsObject = false) {
+@@ -200,506 +249,507 @@ function esbuildTask(entrypoint, outfile, exportIsTsObject = false) {
          ]
      };
  
