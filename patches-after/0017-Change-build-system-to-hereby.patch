@@ -519,7 +519,7 @@ index 5606df9611..d72ffc513f 100644
 \ No newline at end of file
 +RUN npx hereby configure-insiders && npx hereby LKG && npx hereby clean && npm pack .
 diff --git a/Herebyfile.mjs b/Herebyfile.mjs
-index b51b32b931..8217c403a8 100644
+index 966a896367..fa97f68d3b 100644
 --- a/Herebyfile.mjs
 +++ b/Herebyfile.mjs
 @@ -1,24 +1,33 @@
@@ -733,7 +733,7 @@ index b51b32b931..8217c403a8 100644
      // Note: we do not use --minify, as that would hide function names from user backtraces
      // (we don't ship our sourcemaps), and would break consumers like monaco which modify
      // typescript.js for their own needs. Also, using --sourcesContent=false doesn't help,
-@@ -232,464 +269,516 @@ if (ts.server) {
+@@ -232,462 +269,514 @@ if (ts.server) {
   * @param {string} infile Relative path from the repo root to the file to be required.
   * @param {string} outfile Relative path from the repo root to the output file.
   */
@@ -767,15 +767,7 @@ index b51b32b931..8217c403a8 100644
  
  const esbuildTsc = esbuildTask("./src/tsc/tsc.ts", "./built/local/tsc.js", /* exportIsTsObject */ true);
 -const writeTscCJSShim = () => writeCJSReexport("./built/local/tsc/tsc.js", "./built/local/tsc.js");
--
  
--const buildTsc = () => {
--    if (cmdLineOptions.bundle) return esbuildTsc.build();
--    writeTscCJSShim();
--    return buildProject("src/tsc");
--};
--task("tsc", series(lkgPreBuild, buildTsc));
--task("tsc").description = "Builds the command-line compiler";
 +export const buildTsc = task({
 +    name: "tsc",
 +    description: "Builds the command-line compiler",
@@ -787,6 +779,14 @@ index b51b32b931..8217c403a8 100644
 +    }
 +});
  
+-const buildTsc = () => {
+-    if (cmdLineOptions.bundle) return esbuildTsc.build();
+-    writeTscCJSShim();
+-    return buildProject("src/tsc");
+-};
+-task("tsc", series(lkgPreBuild, buildTsc));
+-task("tsc").description = "Builds the command-line compiler";
+-
 -const cleanTsc = () => cmdLineOptions.bundle ? esbuildTsc.clean() : cleanProject("src/tsc");
 +export const cleanTsc = task({
 +    name: "clean-tsc",
@@ -817,19 +817,17 @@ index b51b32b931..8217c403a8 100644
 +    run: () => buildProject("src/typescript"),
 +});
  
- // TODO(jakebailey): rename this; no longer "services".
- 
  const esbuildServices = esbuildTask("./src/typescript/typescript.ts", "./built/local/typescript.js", /* exportIsTsObject */ true);
 -const writeServicesCJSShim = () => writeCJSReexport("./built/local/typescript/typescript.js", "./built/local/typescript.js");
 -const buildServicesProject = () => buildProject("src/typescript");
- 
+-
 -// TODO(jakebailey): rename this; no longer "services".
 -const buildServices = () => {
 -    if (cmdLineOptions.bundle) return esbuildServices.build();
 -    writeServicesCJSShim();
 -    return buildServicesProject();
 -};
--
+ 
 -task("services", series(preBuild, buildServices));
 -task("services").description = "Builds the language service";
 -task("services").flags = {
@@ -1062,7 +1060,7 @@ index b51b32b931..8217c403a8 100644
 -    writeTestsCJSShim();
 -    return watchProject("src/testRunner");
 -};
- 
+-
 -const runEslintRulesTests = () => runConsoleTests("scripts/eslint/tests", "mocha-fivemat-progress-reporter", /*runInParallel*/ false, /*watchMode*/ false);
 -task("run-eslint-rules-tests", runEslintRulesTests);
 -task("run-eslint-rules-tests").description = "Runs the eslint rule tests";
@@ -1082,7 +1080,7 @@ index b51b32b931..8217c403a8 100644
 -    }
  
 -    args.push(folder);
--
+ 
 -    log(`Linting: ${args.join(" ")}`);
 -    return exec(process.execPath, args);
 -};

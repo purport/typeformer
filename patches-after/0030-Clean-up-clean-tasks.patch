@@ -8,7 +8,7 @@ Subject: [PATCH] Clean up clean tasks
  1 file changed, 10 insertions(+), 100 deletions(-)
 
 diff --git a/Herebyfile.mjs b/Herebyfile.mjs
-index d94a0ce0e6..bd1369e971 100644
+index 1315f903af..3b636c9928 100644
 --- a/Herebyfile.mjs
 +++ b/Herebyfile.mjs
 @@ -27,10 +27,6 @@ function getCopyrightHeader() {
@@ -88,7 +88,7 @@ index d94a0ce0e6..bd1369e971 100644
  
  const buildServicesWithTsc = task({
      name: "services-src",
-@@ -346,14 +320,6 @@ export const buildServices = task({
+@@ -344,14 +318,6 @@ export const buildServices = task({
      }
  });
  
@@ -103,7 +103,7 @@ index d94a0ce0e6..bd1369e971 100644
  
  export const dtsServices = task({
      name: "dts-services",
-@@ -375,14 +341,6 @@ export const buildServer = task({
+@@ -373,14 +339,6 @@ export const buildServer = task({
      }
  });
  
@@ -118,7 +118,7 @@ index d94a0ce0e6..bd1369e971 100644
  
  export const min = task({
      name: "min",
-@@ -390,12 +348,6 @@ export const min = task({
+@@ -388,12 +346,6 @@ export const min = task({
      dependencies: [buildTsc, buildServer],
  });
  
@@ -131,7 +131,7 @@ index d94a0ce0e6..bd1369e971 100644
  
  const buildLsslWithTsc = task({
      name: "lssl-src",
-@@ -415,13 +367,6 @@ export const buildLssl = task({
+@@ -413,13 +365,6 @@ export const buildLssl = task({
      },
  });
  
@@ -145,7 +145,7 @@ index d94a0ce0e6..bd1369e971 100644
  
  export const dtsLssl = task({
      name: "dts-lssl",
-@@ -458,15 +403,6 @@ export const buildTests = task({
+@@ -456,15 +401,6 @@ export const buildTests = task({
      },
  });
  
@@ -161,7 +161,7 @@ index d94a0ce0e6..bd1369e971 100644
  
  export const runEslintRulesTests = task({
      name: "run-eslint-rules-tests",
-@@ -510,12 +446,6 @@ const buildCancellationToken = task({
+@@ -508,12 +444,6 @@ const buildCancellationToken = task({
          await buildProject("src/cancellationToken");
      },
  });
@@ -174,7 +174,7 @@ index d94a0ce0e6..bd1369e971 100644
  
  const esbuildTypingsInstaller = esbuildTask("./src/typingsInstaller/nodeTypingsInstaller.ts", "./built/local/typingsInstaller.js");
  
-@@ -528,12 +458,7 @@ const buildTypingsInstaller = task({
+@@ -526,12 +456,7 @@ const buildTypingsInstaller = task({
          await buildProject("src/typingsInstaller");
      },
  });
@@ -188,7 +188,7 @@ index d94a0ce0e6..bd1369e971 100644
  
  const esbuildWatchGuard = esbuildTask("./src/watchGuard/watchGuard.ts", "./built/local/watchGuard.js");
  
-@@ -546,12 +471,7 @@ const buildWatchGuard = task({
+@@ -544,12 +469,7 @@ const buildWatchGuard = task({
          await buildProject("src/watchGuard");
      },
  });
@@ -202,7 +202,7 @@ index d94a0ce0e6..bd1369e971 100644
  
  export const generateTypesMap = task({
      name: "generate-types-map",
-@@ -564,12 +484,6 @@ export const generateTypesMap = task({
+@@ -562,12 +482,6 @@ export const generateTypesMap = task({
      }
  });
  
@@ -215,7 +215,7 @@ index d94a0ce0e6..bd1369e971 100644
  
  // Drop a copy of diagnosticMessages.generated.json into the built/local folder. This allows
  // it to be synced to the Azure DevOps repo, so that it can get picked up by the build
-@@ -585,12 +499,6 @@ const copyBuiltLocalDiagnosticMessages = task({
+@@ -583,12 +497,6 @@ const copyBuiltLocalDiagnosticMessages = task({
      }
  });
  
@@ -228,7 +228,7 @@ index d94a0ce0e6..bd1369e971 100644
  
  export const buildOtherOutputs = task({
      name: "other-outputs",
-@@ -773,14 +681,16 @@ export const generateSpec = task({
+@@ -771,14 +679,16 @@ export const generateSpec = task({
      run: () => exec("cscript", ["//nologo", "scripts/word2md.mjs", path.resolve("doc/TypeScript Language Specification - ARCHIVED.docx"), path.resolve("doc/spec-ARCHIVED.md")]),
  });
  

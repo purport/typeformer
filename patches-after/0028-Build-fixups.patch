@@ -10,7 +10,7 @@ Subject: [PATCH] Build fixups
  3 files changed, 73 insertions(+), 42 deletions(-)
 
 diff --git a/Herebyfile.mjs b/Herebyfile.mjs
-index 487167e88d..d94a0ce0e6 100644
+index 864311e53a..1315f903af 100644
 --- a/Herebyfile.mjs
 +++ b/Herebyfile.mjs
 @@ -31,8 +31,8 @@ function getCopyrightHeader() {
@@ -151,16 +151,16 @@ index 487167e88d..d94a0ce0e6 100644
  
  export const buildTsc = task({
      name: "tsc",
-@@ -311,7 +334,7 @@ const buildServicesWithTsc = task({
- 
- // TODO(jakebailey): rename this; no longer "services".
+@@ -309,7 +332,7 @@ const buildServicesWithTsc = task({
+     run: () => buildProject("src/typescript"),
+ });
  
 -const esbuildServices = esbuildTask("./src/typescript/typescript.ts", "./built/local/typescript.js", /* exportIsTsObject */ true);
 +const esbuildServices = esbuildTask("./src/typescript/typescript.ts", "./built/local/typescript.js", { exportIsTsObject: true });
  
  export const buildServices = task({
      name: "services",
-@@ -339,7 +362,7 @@ export const dtsServices = task({
+@@ -337,7 +360,7 @@ export const dtsServices = task({
      run: () => runDtsBundler("./built/local/typescript/typescript.d.ts", "./built/local/typescript.d.ts"),
  });
  
@@ -169,7 +169,7 @@ index 487167e88d..d94a0ce0e6 100644
  
  export const buildServer = task({
      name: "tsserver",
-@@ -380,7 +403,7 @@ const buildLsslWithTsc = task({
+@@ -378,7 +401,7 @@ const buildLsslWithTsc = task({
      run: () => buildProject("src/tsserverlibrary"),
  });
  
@@ -178,7 +178,7 @@ index 487167e88d..d94a0ce0e6 100644
  
  export const buildLssl = task({
      name: "lssl",
-@@ -414,7 +437,15 @@ export const dts = task({
+@@ -412,7 +435,15 @@ export const dts = task({
  
  
  const testRunner = "./built/local/run.js";

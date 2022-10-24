@@ -1,19 +1,56 @@
 From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Jake Bailey <5341706+jakebailey@users.noreply.github.com>
-Date: Wed, 28 Sep 2022 00:41:42 -0700
-Subject: [PATCH] Remove generation of protocol.d.ts
+Date: Tue, 13 Sep 2022 13:25:45 -0700
+Subject: [PATCH] Remove typescriptServices, protocol.d.ts,
+ typescript_standalone.d.ts
 
-This file is unreferenced, and just a subset of tsserverlibrary.d.ts.
-What I've heard is that this was intended to be used to detect protocol
-chagnes, but, no test actually references it, and we have separate
-infrastructure in place to ensure that protocol changes get the
-attention they need.
+This is the same as TypeScript PR 51026.
 ---
- scripts/buildProtocol.mjs | 260 --------------------------------------
- scripts/produceLKG.mjs    |  15 ---
- 2 files changed, 275 deletions(-)
+ Gulpfile.mjs                                 |   9 -
+ scripts/buildProtocol.mjs                    | 260 -------------------
+ scripts/produceLKG.mjs                       |  29 +--
+ src/typescriptServices/_namespaces/ts.ts     |   7 -
+ src/typescriptServices/tsconfig.json         |  16 --
+ src/typescriptServices/typescriptServices.ts |  16 --
+ 6 files changed, 3 insertions(+), 334 deletions(-)
  delete mode 100644 scripts/buildProtocol.mjs
+ delete mode 100644 src/typescriptServices/_namespaces/ts.ts
+ delete mode 100644 src/typescriptServices/tsconfig.json
+ delete mode 100644 src/typescriptServices/typescriptServices.ts
 
+diff --git a/Gulpfile.mjs b/Gulpfile.mjs
+index 46c5827798..f5dc5b189f 100644
+--- a/Gulpfile.mjs
++++ b/Gulpfile.mjs
+@@ -153,20 +153,12 @@ const buildServices = (() => {
+         .pipe(rename("typescript.d.ts"))
+         .pipe(dest("built/local"));
+ 
+-    // create typescript_standalone.d.ts
+-    const createTypescriptStandaloneDts = () => src("built/local/typescriptServices.d.ts")
+-        .pipe(newer("built/local/typescript_standalone.d.ts"))
+-        .pipe(transform(content => content.replace(/declare (namespace|module) ts/g, 'declare module "typescript"')))
+-        .pipe(rename("typescript_standalone.d.ts"))
+-        .pipe(dest("built/local"));
+-
+     return series(
+         buildTypescriptServicesOut,
+         createTypescriptServicesJs,
+         createTypescriptServicesDts,
+         createTypescriptJs,
+         createTypescriptDts,
+-        createTypescriptStandaloneDts,
+     );
+ })();
+ task("services", series(preBuild, buildServices));
+@@ -186,7 +178,6 @@ const cleanServices = async () => {
+         "built/local/typescriptServices.js",
+         "built/local/typescript.js",
+         "built/local/typescript.d.ts",
+-        "built/local/typescript_standalone.d.ts"
+     ]);
+ };
+ cleanTasks.push(cleanServices);
 diff --git a/scripts/buildProtocol.mjs b/scripts/buildProtocol.mjs
 deleted file mode 100644
 index f7bc00c897..0000000000
@@ -281,10 +318,27 @@ index f7bc00c897..0000000000
 -const outputFile = process.argv[4];
 -writeProtocolFile(outputFile, protocolTs, typeScriptServicesDts);
 diff --git a/scripts/produceLKG.mjs b/scripts/produceLKG.mjs
-index 6861f4f7d6..9b2c4e7d1e 100644
+index 6861f4f7d6..0d1ea0f8bc 100644
 --- a/scripts/produceLKG.mjs
 +++ b/scripts/produceLKG.mjs
-@@ -19,7 +19,6 @@ async function produceLKG() {
+@@ -1,8 +1,8 @@
+-import childProcess from "child_process";
+ import fs from "fs-extra";
+ import path from "path";
+ import glob from "glob";
+ import url from "url";
++import del from "del";
+ 
+ const __filename = url.fileURLToPath(new URL(import.meta.url));
+ const __dirname = path.dirname(__filename);
+@@ -14,12 +14,13 @@ const copyright = fs.readFileSync(path.join(__dirname, "../CopyrightNotice.txt")
+ 
+ async function produceLKG() {
+     console.log(`Building LKG from ${source} to ${dest}`);
++    await del(`${dest.replace(/\\/g, "/")}/**`, { ignore: ["**/README.md"] });
++    await fs.mkdirp(dest);
+     await copyLibFiles();
+     await copyLocalizedDiagnostics();
      await copyTypesMap();
      await copyScriptOutputs();
      await copyDeclarationOutputs();
@@ -292,7 +346,7 @@ index 6861f4f7d6..9b2c4e7d1e 100644
      await writeGitAttributes();
  }
  
-@@ -46,20 +45,6 @@ async function copyTypesMap() {
+@@ -46,20 +47,6 @@ async function copyTypesMap() {
      await copyFromBuiltLocal("typesMap.json"); // Cannot accommodate copyright header
  }
  
@@ -313,6 +367,80 @@ index 6861f4f7d6..9b2c4e7d1e 100644
  async function copyScriptOutputs() {
      await copyWithCopyright("cancellationToken.js");
      await copyWithCopyright("tsc.release.js", "tsc.js");
+@@ -109,16 +96,6 @@ async function copyFilesWithGlob(pattern) {
+     console.log(`Copied ${files.length} files matching pattern ${pattern}`);
+ }
+ 
+-/**
+- * @param {string} path
+- * @param {string[]} args
+- */
+-async function exec(path, args = []) {
+-    const cmdLine = ["node", path, ...args].join(" ");
+-    console.log(cmdLine);
+-    childProcess.execSync(cmdLine);
+-}
+-
+ process.on("unhandledRejection", err => {
+     throw err;
+ });
+diff --git a/src/typescriptServices/_namespaces/ts.ts b/src/typescriptServices/_namespaces/ts.ts
+deleted file mode 100644
+index dc05210189..0000000000
+--- a/src/typescriptServices/_namespaces/ts.ts
++++ /dev/null
+@@ -1,7 +0,0 @@
+-/* Generated file to emulate the ts namespace. */
+-
+-export * from "../../compiler/_namespaces/ts";
+-export * from "../../jsTyping/_namespaces/ts";
+-export * from "../../services/_namespaces/ts";
+-export * from "../../deprecatedCompat/_namespaces/ts";
+-export * from "../typescriptServices";
+diff --git a/src/typescriptServices/tsconfig.json b/src/typescriptServices/tsconfig.json
+deleted file mode 100644
+index 277b98f727..0000000000
+--- a/src/typescriptServices/tsconfig.json
++++ /dev/null
+@@ -1,16 +0,0 @@
+-{
+-    "extends": "../tsconfig-library-base",
+-    "compilerOptions": {
+-        "outDir": "../../built/local"
+-    },
+-    "files": [
+-        "typescriptServices.ts",
+-        "_namespaces/ts.ts"
+-    ],
+-    "references": [
+-        { "path": "../compiler" },
+-        { "path": "../jsTyping" },
+-        { "path": "../services" },
+-        { "path": "../deprecatedCompat" }
+-    ]
+-}
+diff --git a/src/typescriptServices/typescriptServices.ts b/src/typescriptServices/typescriptServices.ts
+deleted file mode 100644
+index 4eefe91f9e..0000000000
+--- a/src/typescriptServices/typescriptServices.ts
++++ /dev/null
+@@ -1,16 +0,0 @@
+-import { Debug, LogLevel } from "./_namespaces/ts";
+-
+-// enable deprecation logging
+-declare const console: any;
+-if (typeof console !== "undefined") {
+-    Debug.loggingHost = {
+-        log(level, s) {
+-            switch (level) {
+-                case LogLevel.Error: return console.error(s);
+-                case LogLevel.Warning: return console.warn(s);
+-                case LogLevel.Info: return console.log(s);
+-                case LogLevel.Verbose: return console.log(s);
+-            }
+-        }
+-    };
+-}
 -- 
 2.38.1
 

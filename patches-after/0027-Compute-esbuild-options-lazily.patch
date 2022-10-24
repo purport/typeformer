@@ -8,7 +8,7 @@ Subject: [PATCH] Compute esbuild options lazily
  1 file changed, 60 insertions(+), 59 deletions(-)
 
 diff --git a/Herebyfile.mjs b/Herebyfile.mjs
-index 0064df36e4..487167e88d 100644
+index c74755f71d..864311e53a 100644
 --- a/Herebyfile.mjs
 +++ b/Herebyfile.mjs
 @@ -185,71 +185,72 @@ async function runDtsBundler(entrypoint, output) {

@@ -8,7 +8,7 @@ using the plain files is desired, passing `--bundle=false` will build
 using plain files and still produce a runnable system.
 ---
  .github/workflows/ci.yml                      |  44 +-
- Gulpfile.mjs                                  | 418 +++++++------
+ Gulpfile.mjs                                  | 407 ++++++++-----
  package-lock.json                             | 574 ++++++++++++++++++
  package.json                                  |   1 +
  scripts/build/localization.mjs                |   1 +
@@ -40,7 +40,7 @@ using plain files and still produce a runnable system.
  src/typingsInstaller/nodeTypingsInstaller.ts  |   7 +-
  src/watchGuard/tsconfig.json                  |   4 +-
  src/webServer/webServer.ts                    |  27 +-
- 33 files changed, 956 insertions(+), 409 deletions(-)
+ 33 files changed, 954 insertions(+), 400 deletions(-)
  create mode 100644 scripts/build/localization.mjs
  delete mode 100644 scripts/build/prepend.mjs
  delete mode 100644 src/debug/_namespaces/Debug.ts
@@ -125,7 +125,7 @@ index bf6cb01228..68f2cdb805 100644
 +    - name: Self build
 +      run: gulp build-src --built
 diff --git a/Gulpfile.mjs b/Gulpfile.mjs
-index a9c5d77194..9568433841 100644
+index 7a257b2fd4..cd4ac73c6e 100644
 --- a/Gulpfile.mjs
 +++ b/Gulpfile.mjs
 @@ -3,25 +3,53 @@ import path from "path";
@@ -337,7 +337,7 @@ index a9c5d77194..9568433841 100644
  task("watch-tsc", series(lkgPreBuild, parallel(watchLib, watchDiagnostics, watchTsc)));
  task("watch-tsc").description = "Watch for changes and rebuild the command-line compiler only.";
  
-@@ -127,101 +265,50 @@ const localPreBuild = parallel(generateLibs, series(generateDiagnostics, buildDe
+@@ -127,92 +265,48 @@ const localPreBuild = parallel(generateLibs, series(generateDiagnostics, buildDe
  // Pre-build steps to use based on supplied options.
  const preBuild = cmdLineOptions.lkg ? lkgPreBuild : localPreBuild;
  
@@ -377,24 +377,14 @@ index a9c5d77194..9568433841 100644
 -        .pipe(rename("typescript.d.ts"))
 -        .pipe(dest("built/local"));
 -
--    // // create typescript_standalone.d.ts
--    // const createTypescriptStandaloneDts = () => src("built/local/typescriptServices.d.ts")
--    //     .pipe(newer("built/local/typescript_standalone.d.ts"))
--    //     .pipe(transform(content => content.replace(/declare (namespace|module) ts/g, 'declare module "typescript"')))
--    //     .pipe(rename("typescript_standalone.d.ts"))
--    //     .pipe(dest("built/local"));
--
 -    return series(
 -        buildTypescriptServicesOut,
 -        createTypescriptServicesJs,
 -        createTypescriptServicesDts,
 -        createTypescriptJs,
 -        createTypescriptDts,
--        // createTypescriptStandaloneDts,
 -    );
 -})();
-+// TODO(jakebailey): rename this; no longer "services".
-+
 +const esbuildServices = esbuildTask("./src/typescript/typescript.ts", "./built/local/typescript.js", /* exportIsTsObject */ true);
 +const writeServicesCJSShim = () => writeCJSReexport("./built/local/typescript/typescript.js", "./built/local/typescript.js");
 +const buildServicesProject = () => buildProject("src/typescript");
@@ -422,7 +412,6 @@ index a9c5d77194..9568433841 100644
 -        "built/local/typescriptServices.js",
 -        "built/local/typescript.js",
 -        "built/local/typescript.d.ts",
--        "built/local/typescript_standalone.d.ts"
 -    ]);
 -};
 +const cleanServices = () => cmdLineOptions.bundle ? esbuildServices.clean() : cleanProject("src/typescript");
@@ -466,7 +455,7 @@ index a9c5d77194..9568433841 100644
  buildServer.displayName = "buildServer";
  task("tsserver", series(preBuild, buildServer));
  task("tsserver").description = "Builds the language server";
-@@ -229,17 +316,18 @@ task("tsserver").flags = {
+@@ -220,17 +314,18 @@ task("tsserver").flags = {
      "   --built": "Compile using the built version of the compiler."
  };
  
@@ -491,7 +480,7 @@ index a9c5d77194..9568433841 100644
  task("watch-tsserver").description = "Watch for changes and rebuild the language server only";
  task("watch-tsserver").flags = {
      "   --built": "Compile using the built version of the compiler."
-@@ -260,89 +348,61 @@ task("watch-min").flags = {
+@@ -251,89 +346,61 @@ task("watch-min").flags = {
      "   --built": "Compile using the built version of the compiler."
  };
  
@@ -610,7 +599,7 @@ index a9c5d77194..9568433841 100644
  
  const runEslintRulesTests = () => runConsoleTests("scripts/eslint/tests", "mocha-fivemat-progress-reporter", /*runInParallel*/ false, /*watchMode*/ false);
  task("run-eslint-rules-tests", runEslintRulesTests);
-@@ -373,16 +433,29 @@ lint.displayName = "lint";
+@@ -364,16 +431,29 @@ lint.displayName = "lint";
  task("lint", lint);
  task("lint").description = "Runs eslint on the compiler and scripts sources.";
  
@@ -646,7 +635,7 @@ index a9c5d77194..9568433841 100644
  cleanTasks.push(cleanWatchGuard);
  
  const generateTypesMap = () => src("src/server/typesMap.json")
-@@ -425,7 +498,7 @@ const preTest = parallel(buildTsc, buildTests, buildServices, buildLssl);
+@@ -416,7 +496,7 @@ const preTest = parallel(buildTsc, buildTests, buildServices, buildLssl);
  preTest.displayName = "preTest";
  
  const runTests = () => runConsoleTests(testRunner, "mocha-fivemat-progress-reporter", /*runInParallel*/ false, /*watchMode*/ false);
@@ -655,7 +644,7 @@ index a9c5d77194..9568433841 100644
  task("runtests").description = "Runs the tests using the built run.js file.";
  task("runtests").flags = {
      "-t --tests=<regex>": "Pattern for tests to run.",
-@@ -444,7 +517,7 @@ task("runtests").flags = {
+@@ -435,7 +515,7 @@ task("runtests").flags = {
  };
  
  const runTestsParallel = () => runConsoleTests(testRunner, "min", /*runInParallel*/ cmdLineOptions.workers > 1, /*watchMode*/ false);
@@ -664,7 +653,7 @@ index a9c5d77194..9568433841 100644
  task("runtests-parallel").description = "Runs all the tests in parallel using the built run.js file.";
  task("runtests-parallel").flags = {
      "   --light": "Run tests in light mode (fewer verifications, but tests run faster).",
-@@ -498,25 +571,23 @@ const importDefinitelyTypedTests = () => exec(process.execPath, ["scripts/import
+@@ -489,25 +569,23 @@ const importDefinitelyTypedTests = () => exec(process.execPath, ["scripts/import
  task("importDefinitelyTypedTests", importDefinitelyTypedTests);
  task("importDefinitelyTypedTests").description = "Runs the importDefinitelyTypedTests script to copy DT's tests to the TS-internal RWC tests";
  
@@ -699,7 +688,7 @@ index a9c5d77194..9568433841 100644
      ].concat(libs.map(lib => lib.target));
      const missingFiles = expectedFiles
          .concat(localizationTargets)
-@@ -532,7 +603,8 @@ const produceLKG = async () => {
+@@ -523,7 +601,8 @@ const produceLKG = async () => {
      }
  };
  
