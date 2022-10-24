@@ -27,7 +27,7 @@ it seems like this is a good time to change things up.
  .gulp.js                                      |    18 +
  .vscode/launch.template.json                  |     7 +-
  .vscode/settings.template.json                |     8 +
- .vscode/tasks.json                            |    40 +-
+ .vscode/tasks.json                            |    41 +-
  CONTRIBUTING.md                               |    66 +-
  Dockerfile                                    |     3 +-
  Herebyfile.mjs                                |  1086 +-
@@ -46,7 +46,7 @@ it seems like this is a good time to change things up.
  src/harness/findUpDir.ts                      |     2 +-
  src/harness/harnessIO.ts                      |     2 +-
  src/webServer/webServer.ts                    |     9 +-
- 31 files changed, 3664 insertions(+), 12095 deletions(-)
+ 31 files changed, 3665 insertions(+), 12095 deletions(-)
  create mode 100644 .gulp.js
  delete mode 100644 scripts/build/sourcemaps.mjs
  delete mode 100644 scripts/types/ambient.d.ts
@@ -288,10 +288,10 @@ index 43d69a60b6..4e85591e7e 100644
 +    "gulp.autoDetect": "off"
  }
 diff --git a/.vscode/tasks.json b/.vscode/tasks.json
-index 807da9ce56..63577feb3e 100644
+index 807da9ce56..f9a93035dc 100644
 --- a/.vscode/tasks.json
 +++ b/.vscode/tasks.json
-@@ -4,42 +4,42 @@
+@@ -4,42 +4,43 @@
      "version": "2.0.0",
      "tasks": [
          {
@@ -345,6 +345,7 @@ index 807da9ce56..63577feb3e 100644
 +            "type": "npm",
 +            "script": "build:tests",
 +            "group": "build",
++            "hide": true,
              "problemMatcher": [
                  "$tsc"
 -            ],
