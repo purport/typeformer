@@ -3,6 +3,8 @@ From: Jake Bailey <5341706+jakebailey@users.noreply.github.com>
 Date: Tue, 31 May 2022 11:00:25 -0700
 Subject: [PATCH] Get codebase building pre bundling
 
+This isn't totally complete, but enough to get everything building and
+tests running manually. The next commit will make the build work fully.
 ---
  Gulpfile.mjs                                  |  22 +-
  src/cancellationToken/cancellationToken.ts    |   2 -

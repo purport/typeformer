@@ -4,9 +4,9 @@ Date: Wed, 7 Sep 2022 14:04:47 -0700
 Subject: [PATCH] Fix all internal JSDoc comments
 
 If these are regular comments, then they won't appear in our d.ts files.
-But, now we are relying on api-extractor to produce out final merged
-d.ts files, so they need to be present in the "input" d.ts files,
-meaning they have to be JSDoc comments.
+But, now we are relying on an external d.ts bundler to produce our final
+merged, so they need to be present in the "input" d.ts files, meaning
+they have to be JSDoc comments.
 
 These comments only work today because all of our builds load their TS
 files from scratch, so they see the actual source files and their

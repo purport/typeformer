@@ -3,7 +3,7 @@ From: Jake Bailey <5341706+jakebailey@users.noreply.github.com>
 Date: Tue, 13 Sep 2022 16:21:03 -0700
 Subject: [PATCH] Add build via esbuild
 
-This configures the existing build tasks to use esbuild by defualt. If
+This configures the existing build tasks to use esbuild by default. If
 using the plain files is desired, passing `--bundle=false` will build
 using plain files and still produce a runnable system.
 

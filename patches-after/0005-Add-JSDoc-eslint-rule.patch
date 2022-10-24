@@ -24,7 +24,7 @@ index c3ce2174a7..f78f325002 100644
          "import/no-extraneous-dependencies": ["error", { "optionalDependencies": false }],
 diff --git a/scripts/eslint/rules/jsdoc-format.cjs b/scripts/eslint/rules/jsdoc-format.cjs
 new file mode 100644
-index 0000000000..b64ca052f0
+index 0000000000..9971c9945f
 --- /dev/null
 +++ b/scripts/eslint/rules/jsdoc-format.cjs
 @@ -0,0 +1,112 @@
@@ -114,7 +114,7 @@ index 0000000000..b64ca052f0
 +                    context.report({ messageId: "internalCommentOnParameterProperty", node: c, loc: getAtInternalLoc(c, indexInComment) });
 +                }
 +
-+                // TODO: check duplicate @internal?
++                // TODO(jakebailey): check duplicate @internal?
 +            }
 +        };
 +

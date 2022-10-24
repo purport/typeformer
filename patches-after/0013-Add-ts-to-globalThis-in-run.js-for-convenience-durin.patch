@@ -1,7 +1,8 @@
 From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Jake Bailey <5341706+jakebailey@users.noreply.github.com>
 Date: Fri, 30 Sep 2022 16:19:43 -0700
-Subject: [PATCH] Add ts to globalThis for convenience during debugging
+Subject: [PATCH] Add ts to globalThis in run.js for convenience during
+ debugging
 
 In namespaces, we'd have access to a variable named "ts" when debugging,
 because that was just the ts namespace in the current file. But when
