@@ -42,5 +42,5 @@ index 402799f89d..669f76105e 100644
 +  - exclude:
 +      id: js/request-forgery # RequestForgery.ql
 -- 
-2.38.0
+2.38.1
 

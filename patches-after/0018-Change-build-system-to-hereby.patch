@@ -24,6 +24,7 @@ it seems like this is a good time to change things up.
  .../workflows/release-branch-artifact.yaml    |     6 +-
  .github/workflows/set-version.yaml            |     2 +-
  .github/workflows/update-lkg.yml              |     2 +-
+ .gulp.js                                      |    18 +
  .vscode/launch.template.json                  |     7 +-
  .vscode/settings.template.json                |     8 +
  .vscode/tasks.json                            |    40 +-
@@ -43,7 +44,8 @@ it seems like this is a good time to change things up.
  scripts/types/ambient.d.ts                    |    90 -
  src/harness/findUpDir.ts                      |     2 +-
  src/harness/harnessIO.ts                      |     2 +-
- 28 files changed, 3560 insertions(+), 11987 deletions(-)
+ 29 files changed, 3578 insertions(+), 11987 deletions(-)
+ create mode 100644 .gulp.js
  delete mode 100644 scripts/build/sourcemaps.mjs
  delete mode 100644 scripts/types/ambient.d.ts
 
@@ -206,6 +208,30 @@ index 3505fc2830..b2fd19c02d 100644
          npm test
          git diff
          git add ./lib
+diff --git a/.gulp.js b/.gulp.js
+new file mode 100644
+index 0000000000..1cc163baef
+--- /dev/null
++++ b/.gulp.js
+@@ -0,0 +1,18 @@
++const cp = require("child_process");
++const path = require("path");
++const chalk = require("chalk");
++
++const argv = process.argv.slice(2);
++
++if (!argv.includes("--tasks-simple")) {
++    console.error(chalk.red("Warning: using gulp shim; please run hereby directly."));
++}
++
++const args = [
++    ...process.execArgv,
++    path.join(__dirname, "node_modules", ".bin", "hereby"),
++    ...argv,
++];
++
++const { status } = cp.spawnSync(process.execPath, args, { stdio: "inherit" });
++process.exit(status ?? 1);
 diff --git a/.vscode/launch.template.json b/.vscode/launch.template.json
 index e4301b81e8..a2477ed7fa 100644
 --- a/.vscode/launch.template.json
@@ -18219,5 +18245,5 @@ index 76976eab1e..35851ebe7d 100644
  
      export function runBaseline(relativeFileName: string, actual: string | null, opts?: BaselineOptions): void {
 -- 
-2.38.0
+2.38.1
 
