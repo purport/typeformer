@@ -269,13 +269,13 @@ index e4301b81e8..a2477ed7fa 100644
    ]
  }
 diff --git a/.vscode/settings.template.json b/.vscode/settings.template.json
-index ccfcfc2631..56a9b56202 100644
+index 43d69a60b6..4e85591e7e 100644
 --- a/.vscode/settings.template.json
 +++ b/.vscode/settings.template.json
-@@ -6,4 +6,12 @@
- 
-     // To use the locally built compiler, after 'npm run build':
-     // "typescript.tsdk": "built/local"
+@@ -12,4 +12,12 @@
+     //     "--ignore-revs-file",
+     //     ".git-blame-ignore-revs"
+     // ]
 +
 +    // These options search the repo recursively and slow down
 +    // the build task menu. We define our own in tasks.json.

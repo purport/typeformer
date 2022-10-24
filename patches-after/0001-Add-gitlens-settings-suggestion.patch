@@ -8,22 +8,20 @@ Subject: [PATCH] Add gitlens settings suggestion
  1 file changed, 6 insertions(+)
 
 diff --git a/.vscode/settings.template.json b/.vscode/settings.template.json
-index 56a9b56202..4a0a5afa70 100644
+index ccfcfc2631..43d69a60b6 100644
 --- a/.vscode/settings.template.json
 +++ b/.vscode/settings.template.json
-@@ -7,6 +7,12 @@
+@@ -6,4 +6,10 @@
+ 
      // To use the locally built compiler, after 'npm run build':
      // "typescript.tsdk": "built/local"
- 
++
 +    // To ignore commits listed in .git-blame-ignore-revs in GitLens:
 +    // "gitlens.advanced.blame.customArguments": [
 +    //     "--ignore-revs-file",
 +    //     ".git-blame-ignore-revs"
-+    // ],
-+
-     // These options search the repo recursively and slow down
-     // the build task menu. We define our own in tasks.json.
-     "typescript.tsc.autoDetect": "off",
++    // ]
+ }
 -- 
 2.38.1
 
