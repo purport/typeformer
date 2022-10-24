@@ -23,7 +23,7 @@ using plain files and still produce a runnable system.
  src/compiler/tsconfig.json                    |   1 -
  src/debug/_namespaces/Debug.ts                |   3 -
  src/debug/{dbg.ts => compilerDebug.ts}        |  10 -
- src/debug/tsconfig.json                       |   4 +-
+ src/debug/tsconfig.json                       |   1 -
  src/deprecatedCompat/tsconfig.json            |   1 -
  .../_namespaces/ts.server.ts                  |   3 -
  src/dynamicImportCompat/_namespaces/ts.ts     |   4 -
@@ -39,7 +39,7 @@ using plain files and still produce a runnable system.
  src/services/_namespaces/ts.ts                |   1 +
  src/services/exportAsModule.ts                |   9 -
  src/services/services.ts                      |  12 +-
- src/services/tsconfig.json                    |   2 -
+ src/services/tsconfig.json                    |   1 -
  src/testRunner/_namespaces/Harness.ts         |   1 +
  src/testRunner/tsconfig.json                  |   1 -
  src/tsc/tsconfig.json                         |   1 -
@@ -55,7 +55,7 @@ using plain files and still produce a runnable system.
  src/watchGuard/tsconfig.json                  |   1 -
  src/webServer/tsconfig.json                   |   1 -
  src/webServer/webServer.ts                    |  27 +-
- 48 files changed, 960 insertions(+), 416 deletions(-)
+ 48 files changed, 959 insertions(+), 413 deletions(-)
  create mode 100644 scripts/build/localization.mjs
  delete mode 100644 scripts/build/prepend.mjs
  delete mode 100644 src/debug/_namespaces/Debug.ts
@@ -1633,7 +1633,7 @@ index 0d1ea0f8bc..1683b7a5c1 100644
  
  async function writeGitAttributes() {
 diff --git a/src/cancellationToken/tsconfig.json b/src/cancellationToken/tsconfig.json
-index 76eca8f56c..86550f8adf 100644
+index ca3cf90c10..9249fae5d1 100644
 --- a/src/cancellationToken/tsconfig.json
 +++ b/src/cancellationToken/tsconfig.json
 @@ -1,7 +1,6 @@
@@ -1713,7 +1713,7 @@ index ffacb3f1fd..e4cbb90009 100644
              const fileUrlRoot = `file://${getRootLength(normalizedDir) === 1 ? "" : "/"}${normalizedDir}`;
              for (const node of profile.nodes) {
 diff --git a/src/compiler/tsconfig.json b/src/compiler/tsconfig.json
-index 3aa3f85519..d8029c69e4 100644
+index fdffb21450..6b8d046414 100644
 --- a/src/compiler/tsconfig.json
 +++ b/src/compiler/tsconfig.json
 @@ -1,7 +1,6 @@
@@ -1759,23 +1759,19 @@ index 3b531914d5..5eca399b05 100644
 -    module.exports = Debug;
 -}
 diff --git a/src/debug/tsconfig.json b/src/debug/tsconfig.json
-index 4f9a47f5af..be1a75e768 100644
+index 06b94b3b2c..ab17c2cab1 100644
 --- a/src/debug/tsconfig.json
 +++ b/src/debug/tsconfig.json
-@@ -3,10 +3,8 @@
+@@ -3,7 +3,6 @@
      "compilerOptions": {
          "target": "es2019",
          "lib": ["es2019"],
 -        "outDir": "../../built/local/debug"
      },
-     "files": [
--        "dbg.ts",
--        "_namespaces/Debug.ts"
-+        "compilerDebug.ts",
-     ]
+     "include": ["**/*"]
  }
 diff --git a/src/deprecatedCompat/tsconfig.json b/src/deprecatedCompat/tsconfig.json
-index f393a95585..d66abe57d9 100644
+index bbf10d13f4..2e57445669 100644
 --- a/src/deprecatedCompat/tsconfig.json
 +++ b/src/deprecatedCompat/tsconfig.json
 @@ -1,7 +1,6 @@
@@ -1835,7 +1831,7 @@ index 3abacb2133..0000000000
 -    ]
 -}
 diff --git a/src/executeCommandLine/tsconfig.json b/src/executeCommandLine/tsconfig.json
-index 21e791dfdc..39a70ef314 100644
+index 103bd54a28..c988aed5d1 100644
 --- a/src/executeCommandLine/tsconfig.json
 +++ b/src/executeCommandLine/tsconfig.json
 @@ -1,7 +1,6 @@
@@ -1871,7 +1867,7 @@ index ff8de94c2e..ff4946a41f 100644
      catch (err) {
          // ensure 'source-map-support' is triggered while we still have the handler attached by accessing `error.stack`.
 diff --git a/src/harness/tsconfig.json b/src/harness/tsconfig.json
-index 718b0fded3..d66c2d3be0 100644
+index dea8d57947..8349a27583 100644
 --- a/src/harness/tsconfig.json
 +++ b/src/harness/tsconfig.json
 @@ -1,7 +1,6 @@
@@ -1883,7 +1879,7 @@ index 718b0fded3..d66c2d3be0 100644
              "node", "mocha", "chai"
          ],
 diff --git a/src/jsTyping/tsconfig.json b/src/jsTyping/tsconfig.json
-index 986cdfb22a..d28ea253a8 100644
+index e987ba35de..048e343779 100644
 --- a/src/jsTyping/tsconfig.json
 +++ b/src/jsTyping/tsconfig.json
 @@ -1,7 +1,6 @@
@@ -1895,7 +1891,7 @@ index 986cdfb22a..d28ea253a8 100644
              "node"
          ],
 diff --git a/src/loggedIO/tsconfig.json b/src/loggedIO/tsconfig.json
-index a56535d4f3..9829567db5 100644
+index 8d51cd6926..820cd1cb57 100644
 --- a/src/loggedIO/tsconfig.json
 +++ b/src/loggedIO/tsconfig.json
 @@ -1,7 +1,6 @@
@@ -1932,7 +1928,7 @@ index 6c99b15ecb..13a2fbe6a0 100644
          if (version < this.minVersion || version > this.currentVersion) {
              return undefined;
 diff --git a/src/server/tsconfig.json b/src/server/tsconfig.json
-index 433d3b581e..674ed67018 100644
+index 340768af8e..3ab8107c3e 100644
 --- a/src/server/tsconfig.json
 +++ b/src/server/tsconfig.json
 @@ -1,7 +1,6 @@
@@ -2008,7 +2004,7 @@ index 09600bc485..c2dc0e983e 100644
  
      throw new Error("getDefaultLibFilePath is only supported when consumed as a node module. ");
 diff --git a/src/services/tsconfig.json b/src/services/tsconfig.json
-index f5341a81a7..4a3e47d443 100644
+index 3bab5eb0b8..42c124fdd8 100644
 --- a/src/services/tsconfig.json
 +++ b/src/services/tsconfig.json
 @@ -1,7 +1,6 @@
@@ -2019,14 +2015,6 @@ index f5341a81a7..4a3e47d443 100644
      },
      "references": [
          { "path": "../compiler" },
-@@ -136,7 +135,6 @@
-         "transform.ts",
-         "shims.ts",
-         "globalThisShim.ts",
--        "exportAsModule.ts",
-         "_namespaces/ts.BreakpointResolver.ts",
-         "_namespaces/ts.ts",
-         "_namespaces/ts.CallHierarchy.ts",
 diff --git a/src/testRunner/_namespaces/Harness.ts b/src/testRunner/_namespaces/Harness.ts
 index a5b5cb5ab3..a9e4e0904b 100644
 --- a/src/testRunner/_namespaces/Harness.ts
@@ -2040,7 +2028,7 @@ index a5b5cb5ab3..a9e4e0904b 100644
  if (!__filename.endsWith("Harness.js")) {
      require("../tests");
 diff --git a/src/testRunner/tsconfig.json b/src/testRunner/tsconfig.json
-index 1b0ddd4fc0..de98074792 100644
+index 3aad41e3db..2b8b1842ce 100644
 --- a/src/testRunner/tsconfig.json
 +++ b/src/testRunner/tsconfig.json
 @@ -1,7 +1,6 @@
@@ -2052,7 +2040,7 @@ index 1b0ddd4fc0..de98074792 100644
              "node", "mocha", "chai"
          ],
 diff --git a/src/tsc/tsconfig.json b/src/tsc/tsconfig.json
-index 8937be39f1..b4e1a49585 100644
+index a649d4b9fd..21e193ad5d 100644
 --- a/src/tsc/tsconfig.json
 +++ b/src/tsc/tsconfig.json
 @@ -1,7 +1,6 @@
@@ -2061,10 +2049,10 @@ index 8937be39f1..b4e1a49585 100644
      "compilerOptions": {
 -        "outDir": "../../built/local/tsc"
      },
-     "files": [
-         "tsc.ts",
+     "references": [
+         { "path": "../compiler" },
 diff --git a/src/tsconfig-base.json b/src/tsconfig-base.json
-index d3ece6a19d..29fd577914 100644
+index c3f416245b..d0efb21a15 100644
 --- a/src/tsconfig-base.json
 +++ b/src/tsconfig-base.json
 @@ -1,5 +1,8 @@
@@ -2074,9 +2062,9 @@ index d3ece6a19d..29fd577914 100644
 +        "outDir": "../built/local",
 +
          "pretty": true,
-         "lib": ["es2015.iterable", "es2015.generator", "es5"],
-         "target": "es5",
-@@ -10,6 +13,7 @@
+         "lib": ["es2018"],
+         "target": "es2018",
+@@ -11,6 +14,7 @@
          "sourceMap": true,
          "composite": true,
          "noEmitOnError": true,
@@ -2148,7 +2136,7 @@ index de9b8a0ad6..4292b8cc02 100644
  
              // We have to schedule this event to the next tick
 diff --git a/src/tsserver/tsconfig.json b/src/tsserver/tsconfig.json
-index b702499283..c2508ba284 100644
+index d687a82d6f..8408638400 100644
 --- a/src/tsserver/tsconfig.json
 +++ b/src/tsserver/tsconfig.json
 @@ -2,7 +2,6 @@
@@ -2160,7 +2148,7 @@ index b702499283..c2508ba284 100644
              "node"
          ]
 diff --git a/src/tsserverlibrary/tsconfig.json b/src/tsserverlibrary/tsconfig.json
-index 5855c7d50e..a261c45cd2 100644
+index 7253696321..97af0d9529 100644
 --- a/src/tsserverlibrary/tsconfig.json
 +++ b/src/tsserverlibrary/tsconfig.json
 @@ -1,7 +1,6 @@
@@ -2169,10 +2157,10 @@ index 5855c7d50e..a261c45cd2 100644
      "compilerOptions": {
 -        "outDir": "../../built/local/tsserverlibrary"
      },
-     "files": [
-         "tsserverlibrary.ts",
+     "references": [
+         { "path": "../compiler" },
 diff --git a/src/typescript/tsconfig.json b/src/typescript/tsconfig.json
-index f30722cadc..816a2a37a9 100644
+index a1e1447379..4bc23cc65b 100644
 --- a/src/typescript/tsconfig.json
 +++ b/src/typescript/tsconfig.json
 @@ -1,7 +1,6 @@
@@ -2181,8 +2169,8 @@ index f30722cadc..816a2a37a9 100644
      "compilerOptions": {
 -        "outDir": "../../built/local/typescript"
      },
-     "files": [
-         "typescript.ts",
+     "references": [
+         { "path": "../compiler" },
 diff --git a/src/typingsInstaller/nodeTypingsInstaller.ts b/src/typingsInstaller/nodeTypingsInstaller.ts
 index f043e44a18..c1dd5d67b4 100644
 --- a/src/typingsInstaller/nodeTypingsInstaller.ts
@@ -2212,7 +2200,7 @@ index f043e44a18..c1dd5d67b4 100644
              log);
          this.npmPath = npmLocation !== undefined ? npmLocation : getDefaultNPMLocation(process.argv[0], validateDefaultNpmLocation, this.installTypingHost);
 diff --git a/src/typingsInstaller/tsconfig.json b/src/typingsInstaller/tsconfig.json
-index 88bfb976fa..e197ac5bfa 100644
+index 7301536476..528f3580c1 100644
 --- a/src/typingsInstaller/tsconfig.json
 +++ b/src/typingsInstaller/tsconfig.json
 @@ -1,7 +1,6 @@
@@ -2224,7 +2212,7 @@ index 88bfb976fa..e197ac5bfa 100644
              "node"
          ],
 diff --git a/src/typingsInstallerCore/tsconfig.json b/src/typingsInstallerCore/tsconfig.json
-index d823be6e92..94c333f087 100644
+index e5920e87c6..83fabc202f 100644
 --- a/src/typingsInstallerCore/tsconfig.json
 +++ b/src/typingsInstallerCore/tsconfig.json
 @@ -1,7 +1,6 @@
@@ -2236,7 +2224,7 @@ index d823be6e92..94c333f087 100644
              "node"
          ],
 diff --git a/src/watchGuard/tsconfig.json b/src/watchGuard/tsconfig.json
-index eb1607930c..0067737ae2 100644
+index 0a32df080d..636a871a94 100644
 --- a/src/watchGuard/tsconfig.json
 +++ b/src/watchGuard/tsconfig.json
 @@ -1,7 +1,6 @@
@@ -2248,7 +2236,7 @@ index eb1607930c..0067737ae2 100644
              "node"
          ],
 diff --git a/src/webServer/tsconfig.json b/src/webServer/tsconfig.json
-index e1c5a2a827..89b95927dd 100644
+index 69955d2baa..5b4c1fdbf5 100644
 --- a/src/webServer/tsconfig.json
 +++ b/src/webServer/tsconfig.json
 @@ -1,7 +1,6 @@
