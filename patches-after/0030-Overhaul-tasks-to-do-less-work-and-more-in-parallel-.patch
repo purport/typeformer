@@ -5,11 +5,11 @@ Subject: [PATCH] Overhaul tasks to do less work and more in parallel, prep for
  composing them
 
 ---
- Herebyfile.mjs | 418 +++++++++++++++++++++++++++++--------------------
- 1 file changed, 248 insertions(+), 170 deletions(-)
+ Herebyfile.mjs | 422 +++++++++++++++++++++++++++++--------------------
+ 1 file changed, 248 insertions(+), 174 deletions(-)
 
 diff --git a/Herebyfile.mjs b/Herebyfile.mjs
-index 3b636c9928..d419ffcd15 100644
+index b796347931..5cd0414ea2 100644
 --- a/Herebyfile.mjs
 +++ b/Herebyfile.mjs
 @@ -2,7 +2,6 @@
@@ -198,7 +198,7 @@ index 3b636c9928..d419ffcd15 100644
  }
  
  /**
-@@ -277,99 +273,142 @@ async function writeCJSReexport(infile, outfile) {
+@@ -279,103 +275,142 @@ async function writeCJSReexport(infile, outfile) {
      await fs.promises.writeFile(outfile, `module.exports = require("./${inRelativeToOut}")`);
  }
  
@@ -208,7 +208,12 @@ index 3b636c9928..d419ffcd15 100644
 -    name: "build-debug-tools",
 +const buildCompilerDebug = task({
 +    name: "build-compiler-debug",
-+    dependencies: [generateDiagnostics],
+     dependencies: [generateDiagnostics],
+-    run: () => {
+-        if (cmdLineOptions.bundle) return esbuildDebugTools.build();
+-        writeCJSReexport("./built/local/debug/compilerDebug.js", "./built/local/compilerDebug.js")
+-        return buildProject("src/debug")
+-    },
 +    run: () => buildProject("src/debug"),
 +});
 +
@@ -231,8 +236,7 @@ index 3b636c9928..d419ffcd15 100644
 +
 +const buildTsc = task({
 +    name: "build-tsc",
-     dependencies: [generateDiagnostics],
--    run: () => cmdLineOptions.bundle ? esbuildDebugTools.build() : buildProject("src/debug"),
++    dependencies: [generateDiagnostics],
 +    run: () => buildProject("src/tsc"),
  });
  
@@ -276,13 +280,13 @@ index 3b636c9928..d419ffcd15 100644
 +    dependencies: [generateDiagnostics],
 +    run: () => runEsbuild("./src/typescript/typescript.ts", "./built/local/typescript.js", { exportIsTsObject: true }),
 +});
-+
+ 
+-export const buildServices = task({
 +const shimServices = task({
 +    name: "shim-services",
 +    run: () => writeCJSReexport("./built/local/typescript/typescript.js", "./built/local/typescript.js"),
 +});
- 
--export const buildServices = task({
++
 +export const services = task({
      name: "services",
      description: "Builds the language service",
@@ -309,14 +313,14 @@ index 3b636c9928..d419ffcd15 100644
 +    dependencies: [generateDiagnostics],
 +    run: () => buildProject("src/tsserver"),
 +});
-+
+ 
+-export const buildServer = task({
 +const bundleServer = task({
 +    name: "bundle-server",
 +    dependencies: [generateDiagnostics],
 +    run: () => runEsbuild("./src/tsserver/server.ts", "./built/local/tsserver.js", { exportIsTsObject: true }),
 +});
- 
--export const buildServer = task({
++
 +const shimServer = task({
 +    name: "shim-server",
 +    run: () => writeCJSReexport("./built/local/tsserver/server.js", "./built/local/tsserver.js"),
@@ -384,7 +388,7 @@ index 3b636c9928..d419ffcd15 100644
      run: () => runDtsBundler("./built/local/tsserverlibrary/tsserverlibrary.d.ts", "./built/local/tsserverlibrary.d.ts")
  });
  
-@@ -380,25 +419,37 @@ export const dts = task({
+@@ -386,25 +421,37 @@ export const dts = task({
  
  
  const testRunner = "./built/local/run.js";
@@ -415,15 +419,15 @@ index 3b636c9928..d419ffcd15 100644
 +            "ms",
 +        ],
 +    }),
- });
- 
--export const buildTests = task({
++});
++
 +const shimTests = task({
 +    name: "shim-tests",
 +    // TODO(jakebailey): can we modify the test loading to have a consistent entrypoint?
 +    run: () => writeCJSReexport("./built/local/testRunner/runner.js", testRunner),
-+});
-+
+ });
+ 
+-export const buildTests = task({
 +export const tests = task({
      name: "tests",
      description: "Builds the test infrastructure",
@@ -437,7 +441,7 @@ index 3b636c9928..d419ffcd15 100644
  });
  
  
-@@ -433,41 +484,68 @@ export const lint = task({
+@@ -439,41 +486,68 @@ export const lint = task({
  });
  
  
@@ -461,10 +465,10 @@ index 3b636c9928..d419ffcd15 100644
 +const cancellationToken = task({
      name: "cancellation-token",
 -    dependencies: [generateDiagnostics],
--    run: async () =>{
--        if (cmdLineOptions.bundle) return esbuildCancellationToken.build();
--        await writeCJSReexport("./built/local/cancellationToken/cancellationToken.js", "./built/local/cancellationToken.js");
--        await buildProject("src/cancellationToken");
+-    run: () => {
+-        if (cmdLineOptions.bundle) return esbuildCancellationToken.build()
+-        writeCJSReexport("./built/local/cancellationToken/cancellationToken.js", "./built/local/cancellationToken.js");
+-        return buildProject("src/cancellationToken")
 -    },
 +    dependencies: cmdLineOptions.bundle ? [bundleCancellationToken] : [buildCancellationToken, shimCancellationToken],
  });
@@ -519,16 +523,16 @@ index 3b636c9928..d419ffcd15 100644
 +const watchGuard = task({
      name: "watch-guard",
 -    dependencies: [generateDiagnostics],
--    run: async () => {
+-    run: () => {
 -        if (cmdLineOptions.bundle) return esbuildWatchGuard.build();
--        await writeCJSReexport("./built/local/watchGuard/watchGuard.js", "./built/local/watchGuard.js");
--        await buildProject("src/watchGuard");
+-        writeCJSReexport("./built/local/watchGuard/watchGuard.js", "./built/local/watchGuard.js");
+-        return buildProject("src/watchGuard");
 -    },
 +    dependencies: cmdLineOptions.bundle ? [bundleWatchGuard] : [buildWatchGuard, shimWatchGuard],
  });
  
  
-@@ -498,16 +576,16 @@ const copyBuiltLocalDiagnosticMessages = task({
+@@ -504,16 +578,16 @@ const copyBuiltLocalDiagnosticMessages = task({
  });
  
  
@@ -548,7 +552,7 @@ index 3b636c9928..d419ffcd15 100644
  });
  export default local;
  
-@@ -515,7 +593,7 @@ export default local;
+@@ -521,7 +595,7 @@ export default local;
  export const runTests = task({
      name: "runtests",
      description: "Runs the tests using the built run.js file.",
@@ -557,7 +561,7 @@ index 3b636c9928..d419ffcd15 100644
      run: () => runConsoleTests(testRunner, "mocha-fivemat-progress-reporter", /*runInParallel*/ false),
  });
  // task("runtests").flags = {
-@@ -537,7 +615,7 @@ export const runTests = task({
+@@ -543,7 +617,7 @@ export const runTests = task({
  export const runTestsParallel = task({
      name: "runtests-parallel",
      description: "Runs all the tests in parallel using the built run.js file.",
@@ -566,7 +570,7 @@ index 3b636c9928..d419ffcd15 100644
      run: () => runConsoleTests(testRunner, "min", /*runInParallel*/ cmdLineOptions.workers > 1),
  });
  // task("runtests-parallel").flags = {
-@@ -615,7 +693,7 @@ export const baselineAcceptRwc = task({
+@@ -621,7 +695,7 @@ export const baselineAcceptRwc = task({
  export const updateSublime = task({
      name: "update-sublime",
      description: "Updates the sublime plugin's tsserver",
@@ -575,7 +579,7 @@ index 3b636c9928..d419ffcd15 100644
      run: async () => {
          for (const file of ["built/local/tsserver.js", "built/local/tsserver.js.map"]) {
              await fs.promises.copyFile(file, path.resolve("../TypeScript-Sublime-Plugin/tsserver/", path.basename(file)));
-@@ -634,7 +712,7 @@ export const importDefinitelyTypedTests = task({
+@@ -640,7 +714,7 @@ export const importDefinitelyTypedTests = task({
  export const produceLKG = task({
      name: "LKG",
      description: "Makes a new LKG out of the built js files",

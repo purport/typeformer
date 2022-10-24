@@ -30,7 +30,7 @@ it seems like this is a good time to change things up.
  .vscode/tasks.json                            |    40 +-
  CONTRIBUTING.md                               |    66 +-
  Dockerfile                                    |     3 +-
- Herebyfile.mjs                                |   921 +-
+ Herebyfile.mjs                                |   947 +-
  lib/README.md                                 |     2 +-
  package-lock.json                             | 14178 ++++------------
  package.json                                  |    34 +-
@@ -44,7 +44,7 @@ it seems like this is a good time to change things up.
  scripts/types/ambient.d.ts                    |    90 -
  src/harness/findUpDir.ts                      |     2 +-
  src/harness/harnessIO.ts                      |     2 +-
- 29 files changed, 3578 insertions(+), 11987 deletions(-)
+ 29 files changed, 3591 insertions(+), 12000 deletions(-)
  create mode 100644 .gulp.js
  delete mode 100644 scripts/build/sourcemaps.mjs
  delete mode 100644 scripts/types/ambient.d.ts
@@ -519,7 +519,7 @@ index 5606df9611..d72ffc513f 100644
 \ No newline at end of file
 +RUN npx hereby configure-insiders && npx hereby LKG && npx hereby clean && npm pack .
 diff --git a/Herebyfile.mjs b/Herebyfile.mjs
-index 966a896367..fa97f68d3b 100644
+index ad0de41f68..94e399fc97 100644
 --- a/Herebyfile.mjs
 +++ b/Herebyfile.mjs
 @@ -1,24 +1,33 @@
@@ -733,26 +733,37 @@ index 966a896367..fa97f68d3b 100644
      // Note: we do not use --minify, as that would hide function names from user backtraces
      // (we don't ship our sourcemaps), and would break consumers like monaco which modify
      // typescript.js for their own needs. Also, using --sourcesContent=false doesn't help,
-@@ -232,462 +269,514 @@ if (ts.server) {
+@@ -232,474 +269,526 @@ if (ts.server) {
   * @param {string} infile Relative path from the repo root to the file to be required.
   * @param {string} outfile Relative path from the repo root to the output file.
   */
 -function writeCJSReexport(infile, outfile) {
 +async function writeCJSReexport(infile, outfile) {
-     const inRelativeToOut = infile = path.relative(path.dirname(outfile), infile);
+     const outDir = path.dirname(outfile);
+-    fs.mkdirSync(outDir, { recursive: true });
++    await fs.promises.mkdir(outDir, { recursive: true });
+     const inRelativeToOut = path.relative(outDir, infile);
 -    fs.writeFileSync(outfile, `module.exports = require("./${inRelativeToOut}")`);
 +    await fs.promises.writeFile(outfile, `module.exports = require("./${inRelativeToOut}")`);
  }
  
  const esbuildDebugTools = esbuildTask("./src/debug/compilerDebug.ts", "./built/local/compilerDebug.js");
  
--const buildDebugTools = () => cmdLineOptions.bundle ? esbuildDebugTools.build() : buildProject("src/debug");
+-const buildDebugTools = () => {
+-    if (cmdLineOptions.bundle) return esbuildDebugTools.build();
+-    writeCJSReexport("./built/local/debug/compilerDebug.js", "./built/local/compilerDebug.js")
+-    return buildProject("src/debug")
+-};
 -const cleanDebugTools = () => cmdLineOptions.bundle ? esbuildDebugTools.build() : cleanProject("src/debug");
 -cleanTasks.push(cleanDebugTools);
 +const buildDebugTools = task({
 +    name: "build-debug-tools",
 +    dependencies: [generateDiagnostics],
-+    run: () => cmdLineOptions.bundle ? esbuildDebugTools.build() : buildProject("src/debug"),
++    run: () => {
++        if (cmdLineOptions.bundle) return esbuildDebugTools.build();
++        writeCJSReexport("./built/local/debug/compilerDebug.js", "./built/local/compilerDebug.js")
++        return buildProject("src/debug")
++    },
 +});
  
 -// Pre-build steps when targeting the LKG compiler
@@ -1121,13 +1132,20 @@ index 966a896367..fa97f68d3b 100644
  
  const esbuildCancellationToken = esbuildTask("./src/cancellationToken/cancellationToken.ts", "./built/local/cancellationToken.js");
  
- // No need for writeCJSReexport, this outputs to the right place.
--const buildCancellationToken = () => cmdLineOptions.bundle ? esbuildCancellationToken.build() : buildProject("src/cancellationToken");
+-const buildCancellationToken = () => {
+-    if (cmdLineOptions.bundle) return esbuildCancellationToken.build()
+-    writeCJSReexport("./built/local/cancellationToken/cancellationToken.js", "./built/local/cancellationToken.js");
+-    return buildProject("src/cancellationToken")
+-};
 -const cleanCancellationToken = () => cmdLineOptions.bundle ? esbuildCancellationToken.clean() : cleanProject("src/cancellationToken");
 +const buildCancellationToken = task({
 +    name: "cancellation-token",
 +    dependencies: [generateDiagnostics],
-+    run: () => cmdLineOptions.bundle ? esbuildCancellationToken.build() : buildProject("src/cancellationToken"),
++    run: () => {
++        if (cmdLineOptions.bundle) return esbuildCancellationToken.build()
++        writeCJSReexport("./built/local/cancellationToken/cancellationToken.js", "./built/local/cancellationToken.js");
++        return buildProject("src/cancellationToken")
++    },
 +});
 +const cleanCancellationToken = task({
 +    name: "clean-cancellation-token",
@@ -1140,7 +1158,7 @@ index 966a896367..fa97f68d3b 100644
  
 -const buildTypingsInstaller = () => {
 -    if (cmdLineOptions.bundle) return esbuildTypingsInstaller.build();
--    writeCJSReexport("./built/typingsInstaller/nodeTypingsInstaller.js", "./built/local/typingsInstaller.js");
+-    writeCJSReexport("./built/local/typingsInstaller/nodeTypingsInstaller.js", "./built/local/typingsInstaller.js");
 -    return buildProject("src/typingsInstaller");
 -};
 -const cleanTypingsInstaller = () => cmdLineOptions.bundle ? esbuildTypingsInstaller.clean() : cleanProject("src/typingsInstaller");
@@ -1149,7 +1167,7 @@ index 966a896367..fa97f68d3b 100644
 +    dependencies: [generateDiagnostics],
 +    run: async () => {
 +        if (cmdLineOptions.bundle) return esbuildTypingsInstaller.build();
-+        await writeCJSReexport("./built/typingsInstaller/nodeTypingsInstaller.js", "./built/local/typingsInstaller.js");
++        await writeCJSReexport("./built/local/typingsInstaller/nodeTypingsInstaller.js", "./built/local/typingsInstaller.js");
 +        await buildProject("src/typingsInstaller");
 +    },
 +});
@@ -1162,13 +1180,20 @@ index 966a896367..fa97f68d3b 100644
  
  const esbuildWatchGuard = esbuildTask("./src/watchGuard/watchGuard.ts", "./built/local/watchGuard.js");
  
- // No need for writeCJSReexport, this outputs to the right place.
--const buildWatchGuard = () => cmdLineOptions.bundle ? esbuildWatchGuard.build() : buildProject("src/watchGuard");
+-const buildWatchGuard = () => {
+-    if (cmdLineOptions.bundle) return esbuildWatchGuard.build();
+-    writeCJSReexport("./built/local/watchGuard/watchGuard.js", "./built/local/watchGuard.js");
+-    return buildProject("src/watchGuard");
+-};
 -const cleanWatchGuard = () => cmdLineOptions.bundle ? esbuildWatchGuard.clean() : cleanProject("src/watchGuard");
 +const buildWatchGuard = task({
 +    name: "watch-guard",
 +    dependencies: [generateDiagnostics],
-+    run: () => cmdLineOptions.bundle ? esbuildWatchGuard.build() : buildProject("src/watchGuard"),
++    run: () => {
++        if (cmdLineOptions.bundle) return esbuildWatchGuard.build();
++        writeCJSReexport("./built/local/watchGuard/watchGuard.js", "./built/local/watchGuard.js");
++        return buildProject("src/watchGuard");
++    },
 +});
 +const cleanWatchGuard = task({
 +    name: "clean-watch-guard",

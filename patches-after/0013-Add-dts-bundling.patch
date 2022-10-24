@@ -69,7 +69,7 @@ Subject: [PATCH] Add dts bundling
  create mode 100644 tests/cases/compiler/APILibCheck.ts
 
 diff --git a/Gulpfile.mjs b/Gulpfile.mjs
-index cd4ac73c6e..966a896367 100644
+index f75872388f..ad0de41f68 100644
 --- a/Gulpfile.mjs
 +++ b/Gulpfile.mjs
 @@ -128,6 +128,19 @@ task("build-src", series(preSrc, buildSrc));
@@ -92,7 +92,7 @@ index cd4ac73c6e..966a896367 100644
  
  /** @type {string | undefined} */
  let copyrightHeader;
-@@ -269,6 +282,7 @@ const esbuildServices = esbuildTask("./src/typescript/typescript.ts", "./built/l
+@@ -275,6 +288,7 @@ const esbuildServices = esbuildTask("./src/typescript/typescript.ts", "./built/l
  const writeServicesCJSShim = () => writeCJSReexport("./built/local/typescript/typescript.js", "./built/local/typescript.js");
  const buildServicesProject = () => buildProject("src/typescript");
  
@@ -100,7 +100,7 @@ index cd4ac73c6e..966a896367 100644
  const buildServices = () => {
      if (cmdLineOptions.bundle) return esbuildServices.build();
      writeServicesCJSShim();
-@@ -298,6 +312,9 @@ task("watch-services").flags = {
+@@ -304,6 +318,9 @@ task("watch-services").flags = {
      "   --built": "Compile using the built version of the compiler."
  };
  
@@ -110,7 +110,7 @@ index cd4ac73c6e..966a896367 100644
  
  const esbuildServer = esbuildTask("./src/tsserver/server.ts", "./built/local/tsserver.js", /* exportIsTsObject */ true);
  const writeServerCJSShim = () => writeCJSReexport("./built/local/tsserver/server.js", "./built/local/tsserver.js");
-@@ -349,10 +366,11 @@ task("watch-min").flags = {
+@@ -355,10 +372,11 @@ task("watch-min").flags = {
  const esbuildLssl = esbuildTask("./src/tsserverlibrary/tsserverlibrary.ts", "./built/local/tsserverlibrary.js", /* exportIsTsObject */ true);
  const writeLsslCJSShim = () => writeCJSReexport("./built/local/tsserverlibrary/tsserverlibrary.js", "./built/local/tsserverlibrary.js");
  
@@ -123,7 +123,7 @@ index cd4ac73c6e..966a896367 100644
  };
  task("lssl", series(preBuild, buildLssl));
  task("lssl").description = "Builds language service server library";
-@@ -376,6 +394,14 @@ task("watch-lssl").flags = {
+@@ -382,6 +400,14 @@ task("watch-lssl").flags = {
      "   --built": "Compile using the built version of the compiler."
  };
  
@@ -138,7 +138,7 @@ index cd4ac73c6e..966a896367 100644
  const testRunner = "./built/local/run.js";
  const esbuildTests = esbuildTask("./src/testRunner/_namespaces/Harness.ts", testRunner);
  const writeTestsCJSShim = () => writeCJSReexport("./built/local/testRunner/runner.js", testRunner);
-@@ -480,7 +506,7 @@ const buildOtherOutputs = parallel(buildCancellationToken, buildTypingsInstaller
+@@ -492,7 +518,7 @@ const buildOtherOutputs = parallel(buildCancellationToken, buildTypingsInstaller
  task("other-outputs", series(preBuild, buildOtherOutputs));
  task("other-outputs").description = "Builds miscelaneous scripts and documents distributed with the LKG";
  
@@ -147,7 +147,7 @@ index cd4ac73c6e..966a896367 100644
  task("local").description = "Builds the full compiler and services";
  task("local").flags = {
      "   --built": "Compile using the built version of the compiler."
-@@ -496,7 +522,7 @@ const preTest = parallel(buildTsc, buildTests, buildServices, buildLssl);
+@@ -508,7 +534,7 @@ const preTest = parallel(buildTsc, buildTests, buildServices, buildLssl);
  preTest.displayName = "preTest";
  
  const runTests = () => runConsoleTests(testRunner, "mocha-fivemat-progress-reporter", /*runInParallel*/ false, /*watchMode*/ false);
@@ -156,7 +156,7 @@ index cd4ac73c6e..966a896367 100644
  task("runtests").description = "Runs the tests using the built run.js file.";
  task("runtests").flags = {
      "-t --tests=<regex>": "Pattern for tests to run.",
-@@ -515,7 +541,7 @@ task("runtests").flags = {
+@@ -527,7 +553,7 @@ task("runtests").flags = {
  };
  
  const runTestsParallel = () => runConsoleTests(testRunner, "min", /*runInParallel*/ cmdLineOptions.workers > 1, /*watchMode*/ false);
@@ -165,7 +165,7 @@ index cd4ac73c6e..966a896367 100644
  task("runtests-parallel").description = "Runs all the tests in parallel using the built run.js file.";
  task("runtests-parallel").flags = {
      "   --light": "Run tests in light mode (fewer verifications, but tests run faster).",
-@@ -601,8 +627,7 @@ const produceLKG = async () => {
+@@ -613,8 +639,7 @@ const produceLKG = async () => {
      }
  };
  
