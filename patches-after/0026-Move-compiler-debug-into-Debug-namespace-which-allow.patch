@@ -15,7 +15,7 @@ Subject: [PATCH] Move compiler-debug into Debug namespace, which allows the
  delete mode 100644 src/debug/tsconfig.json
 
 diff --git a/Herebyfile.mjs b/Herebyfile.mjs
-index bc975ce074..d97b45e7b8 100644
+index 4d605a1204..d97b45e7b8 100644
 --- a/Herebyfile.mjs
 +++ b/Herebyfile.mjs
 @@ -320,16 +320,6 @@ function entrypointBuildTask(options) {
@@ -28,7 +28,7 @@ index bc975ce074..d97b45e7b8 100644
 -    project: "src/debug",
 -    srcEntrypoint: "./src/debug/compilerDebug.ts",
 -    builtEntrypoint: "./built/local/debug/compilerDebug.js",
--    output: "./built/local/compilerDebug.js",
+-    output: "./built/local/compiler-debug.js",
 -});
 -
 -
@@ -81,7 +81,7 @@ index bc975ce074..d97b45e7b8 100644
          // Ensure we never drop any dead code, which might be helpful while debugging.
          treeShaking: false,
 diff --git a/src/compiler/debug.ts b/src/compiler/debug.ts
-index c766bf6875..3daeedcc07 100644
+index 591cd8945d..3daeedcc07 100644
 --- a/src/compiler/debug.ts
 +++ b/src/compiler/debug.ts
 @@ -1,18 +1,18 @@
@@ -146,7 +146,7 @@ index c766bf6875..3daeedcc07 100644
 -        try {
 -            if (sys && sys.require) {
 -                const basePath = getDirectoryPath(resolvePath(sys.getExecutingFilePath()));
--                const result = sys.require(basePath, "./compilerDebug") as RequireResult<ExtendedDebugModule>;
+-                const result = sys.require(basePath, "./compiler-debug") as RequireResult<ExtendedDebugModule>;
 -                if (!result.error) {
 -                    result.module.init(ts);
 -                    extendedDebugModule = result.module;

@@ -11,7 +11,7 @@ and be sure that the outputs are right.
  1 file changed, 20 insertions(+), 32 deletions(-)
 
 diff --git a/Herebyfile.mjs b/Herebyfile.mjs
-index 5e9cb07e0b..bc975ce074 100644
+index 91d0973ba9..4d605a1204 100644
 --- a/Herebyfile.mjs
 +++ b/Herebyfile.mjs
 @@ -5,7 +5,7 @@ import del from "del";

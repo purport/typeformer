@@ -18,7 +18,6 @@ using plain files and still produce a runnable system.
  scripts/build/tests.mjs                       |  11 -
  scripts/produceLKG.mjs                        |  32 +-
  src/cancellationToken/tsconfig.json           |   1 -
- src/compiler/debug.ts                         |   2 +-
  src/compiler/sys.ts                           |  23 +-
  src/compiler/tsconfig.json                    |   1 -
  src/debug/_namespaces/Debug.ts                |   3 -
@@ -55,7 +54,7 @@ using plain files and still produce a runnable system.
  src/watchGuard/tsconfig.json                  |   1 -
  src/webServer/tsconfig.json                   |   1 -
  src/webServer/webServer.ts                    |  27 +-
- 48 files changed, 959 insertions(+), 413 deletions(-)
+ 47 files changed, 958 insertions(+), 412 deletions(-)
  create mode 100644 scripts/build/localization.mjs
  delete mode 100644 scripts/build/prepend.mjs
  delete mode 100644 src/debug/_namespaces/Debug.ts
@@ -140,7 +139,7 @@ index bf6cb01228..68f2cdb805 100644
 +    - name: Self build
 +      run: gulp build-src --built
 diff --git a/Gulpfile.mjs b/Gulpfile.mjs
-index 7a257b2fd4..f75872388f 100644
+index 7a257b2fd4..4ad45b2d4e 100644
 --- a/Gulpfile.mjs
 +++ b/Gulpfile.mjs
 @@ -3,25 +3,53 @@ import path from "path";
@@ -316,11 +315,11 @@ index 7a257b2fd4..f75872388f 100644
 +    fs.writeFileSync(outfile, `module.exports = require("./${inRelativeToOut}")`);
 +}
 +
-+const esbuildDebugTools = esbuildTask("./src/debug/compilerDebug.ts", "./built/local/compilerDebug.js");
++const esbuildDebugTools = esbuildTask("./src/debug/compilerDebug.ts", "./built/local/compiler-debug.js");
 +
 +const buildDebugTools = () => {
 +    if (cmdLineOptions.bundle) return esbuildDebugTools.build();
-+    writeCJSReexport("./built/local/debug/compilerDebug.js", "./built/local/compilerDebug.js")
++    writeCJSReexport("./built/local/debug/compilerDebug.js", "./built/local/compiler-debug.js")
 +    return buildProject("src/debug")
 +};
 +const cleanDebugTools = () => cmdLineOptions.bundle ? esbuildDebugTools.build() : cleanProject("src/debug");
@@ -1644,19 +1643,6 @@ index ca3cf90c10..9249fae5d1 100644
          "module": "commonjs",
          "types": [
              "node"
-diff --git a/src/compiler/debug.ts b/src/compiler/debug.ts
-index 591cd8945d..c766bf6875 100644
---- a/src/compiler/debug.ts
-+++ b/src/compiler/debug.ts
-@@ -721,7 +721,7 @@ export namespace Debug {
-         try {
-             if (sys && sys.require) {
-                 const basePath = getDirectoryPath(resolvePath(sys.getExecutingFilePath()));
--                const result = sys.require(basePath, "./compiler-debug") as RequireResult<ExtendedDebugModule>;
-+                const result = sys.require(basePath, "./compilerDebug") as RequireResult<ExtendedDebugModule>;
-                 if (!result.error) {
-                     result.module.init(ts);
-                     extendedDebugModule = result.module;
 diff --git a/src/compiler/sys.ts b/src/compiler/sys.ts
 index ffacb3f1fd..e4cbb90009 100644
 --- a/src/compiler/sys.ts

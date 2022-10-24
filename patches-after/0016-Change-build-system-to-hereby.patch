@@ -521,7 +521,7 @@ index 5606df9611..d72ffc513f 100644
 \ No newline at end of file
 +RUN npx hereby configure-insiders && npx hereby LKG && npx hereby clean && npm pack .
 diff --git a/Herebyfile.mjs b/Herebyfile.mjs
-index ad0de41f68..9713132702 100644
+index ced85affab..5d606c61fe 100644
 --- a/Herebyfile.mjs
 +++ b/Herebyfile.mjs
 @@ -1,29 +1,31 @@
@@ -926,11 +926,11 @@ index ad0de41f68..9713132702 100644
 +    return { build, bundle, shim, main };
  }
  
--const esbuildDebugTools = esbuildTask("./src/debug/compilerDebug.ts", "./built/local/compilerDebug.js");
+-const esbuildDebugTools = esbuildTask("./src/debug/compilerDebug.ts", "./built/local/compiler-debug.js");
 -
 -const buildDebugTools = () => {
 -    if (cmdLineOptions.bundle) return esbuildDebugTools.build();
--    writeCJSReexport("./built/local/debug/compilerDebug.js", "./built/local/compilerDebug.js")
+-    writeCJSReexport("./built/local/debug/compilerDebug.js", "./built/local/compiler-debug.js")
 -    return buildProject("src/debug")
 -};
 -const cleanDebugTools = () => cmdLineOptions.bundle ? esbuildDebugTools.build() : cleanProject("src/debug");
@@ -1014,7 +1014,7 @@ index ad0de41f68..9713132702 100644
 +    project: "src/debug",
 +    srcEntrypoint: "./src/debug/compilerDebug.ts",
 +    builtEntrypoint: "./built/local/debug/compilerDebug.js",
-+    output: "./built/local/compilerDebug.js",
++    output: "./built/local/compiler-debug.js",
 +});
  
 -const esbuildServer = esbuildTask("./src/tsserver/server.ts", "./built/local/tsserver.js", /* exportIsTsObject */ true);
