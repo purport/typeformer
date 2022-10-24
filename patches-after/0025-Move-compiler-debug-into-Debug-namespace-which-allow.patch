@@ -4,6 +4,16 @@ Date: Sat, 15 Oct 2022 00:03:22 -0700
 Subject: [PATCH] Move compiler-debug into Debug namespace, which allows the
  compiler to be tree shaken
 
+This debug code was added quite a while ago, constructed such that we
+wouldn't have to ship this code to our users.
+
+However, this is the sole place in the compiler project where the ts
+namespace "escapes" the bundle. By moving this debug code into the
+compiler itself, we no longer have any references to the ts namespace
+itself for our bundles that don't export anything (tsc,
+typingsInstaller). This lets bundlers tree shake the compiler, reducing
+the size of our output by _5.7 MB_ (a ridiculous improvement for
+_adding_ code).
 ---
  Herebyfile.mjs             |  20 +-
  src/compiler/debug.ts      | 428 +++++++++++++++++++++++++++----

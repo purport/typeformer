@@ -3,6 +3,7 @@ From: Jake Bailey <5341706+jakebailey@users.noreply.github.com>
 Date: Sat, 24 Sep 2022 09:37:10 -0700
 Subject: [PATCH] Add JSDoc eslint rule
 
+See the next commit for a more fleshed-out description.
 ---
  .eslintrc.json                        |   1 +
  scripts/eslint/rules/jsdoc-format.cjs | 112 ++++++++++++++++++++++++++

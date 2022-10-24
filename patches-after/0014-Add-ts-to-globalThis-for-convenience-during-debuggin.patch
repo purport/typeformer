@@ -3,6 +3,15 @@ From: Jake Bailey <5341706+jakebailey@users.noreply.github.com>
 Date: Fri, 30 Sep 2022 16:19:43 -0700
 Subject: [PATCH] Add ts to globalThis for convenience during debugging
 
+In namespaces, we'd have access to a variable named "ts" when debugging,
+because that was just the ts namespace in the current file. But when
+modules, that variable doesn't exist, either because we are pure modules
+(so no ts variable), or named something else (when bundled, for export).
+
+Tack a "ts" object onto the globals, which should make this easier. Of
+course, someone may eventually declare a variable in the top level scope
+named "ts" and break this, but we can cross that bridge when we come to
+it.
 ---
  src/testRunner/runner.ts | 3 +++
  1 file changed, 3 insertions(+)

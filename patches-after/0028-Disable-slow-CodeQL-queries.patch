@@ -3,6 +3,7 @@ From: Jake Bailey <5341706+jakebailey@users.noreply.github.com>
 Date: Fri, 21 Oct 2022 18:59:12 -0700
 Subject: [PATCH] Disable slow CodeQL queries
 
+See issue 10937 on github.com/github/codeql.
 ---
  .github/codeql/codeql-configuration.yml | 26 +++++++++++++++++++++++++
  1 file changed, 26 insertions(+)

@@ -1,8 +1,9 @@
 From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Jake Bailey <5341706+jakebailey@users.noreply.github.com>
 Date: Tue, 18 Oct 2022 19:49:16 -0700
-Subject: [PATCH] Remove Promise redeclaration, our target includes Promise
+Subject: [PATCH] Remove Promise redeclaration
 
+Now that we target ES2018, we don't need to declare this ourselves.
 ---
  src/services/utilities.ts | 18 ------------------
  1 file changed, 18 deletions(-)

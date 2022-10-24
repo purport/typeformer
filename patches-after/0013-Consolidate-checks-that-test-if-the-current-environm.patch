@@ -4,6 +4,15 @@ Date: Mon, 26 Sep 2022 16:44:27 -0700
 Subject: [PATCH] Consolidate checks that test if the current environment is
  Node
 
+When bundled, it's very likely that the function "require" will actually
+exist at runtime, so we can't use this to determine if we are running in
+Node. Consolidate that logic and use other things to check instead.
+
+This is still not perfectly accurate, but I don't want to change this
+_too_ much, lest someone downstream depend on our inconsistent logic.
+
+There are yet other places this commit does not fix; search for "typeof
+process" for more examples.
 ---
  src/compiler/core.ts            | 16 ++++++++++++++++
  src/compiler/performanceCore.ts |  4 ++--

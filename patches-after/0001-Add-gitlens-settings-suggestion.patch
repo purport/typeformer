@@ -3,6 +3,13 @@ From: Jake Bailey <5341706+jakebailey@users.noreply.github.com>
 Date: Fri, 14 Oct 2022 15:49:39 -0700
 Subject: [PATCH] Add gitlens settings suggestion
 
+While GitHub automatically uses this file if present, GitLens in VS Code
+does not. Add the right option to our example settings.json for those
+who use the extension.
+
+Unfortunately, you can't leave this enabled if you want to look at the
+repo _without_ the file; git blame just crashes when the file isn't
+present. I'm not sure that there's a workaround for that.
 ---
  .vscode/settings.template.json | 6 ++++++
  1 file changed, 6 insertions(+)

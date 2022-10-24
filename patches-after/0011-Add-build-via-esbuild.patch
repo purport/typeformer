@@ -6,6 +6,9 @@ Subject: [PATCH] Add build via esbuild
 This configures the existing build tasks to use esbuild by defualt. If
 using the plain files is desired, passing `--bundle=false` will build
 using plain files and still produce a runnable system.
+
+This is only a basic build; a more efficient build is provided later
+when gulp is replaced by hereby.
 ---
  .github/workflows/ci.yml                      |  44 +-
  Gulpfile.mjs                                  | 419 ++++++++-----

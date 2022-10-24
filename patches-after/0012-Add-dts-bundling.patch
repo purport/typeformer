@@ -3,6 +3,12 @@ From: Jake Bailey <5341706+jakebailey@users.noreply.github.com>
 Date: Fri, 2 Sep 2022 16:39:54 -0700
 Subject: [PATCH] Add dts bundling
 
+This adds a "small" d.ts bundler script. This script is very basic,
+using Node printing to produce its output. Generally speaking, this is
+inadvisable as it completely disregards name shadowing, globals, etc.
+However, in our case, we don't care about the globals, and we can opt to
+restructure our codebase in order to avoid conflict, which we largely
+had to do anyway when we were namespaces and everything was in scope.
 ---
  Gulpfile.mjs                                  |    37 +-
  scripts/dtsBundler.mjs                        |   413 +

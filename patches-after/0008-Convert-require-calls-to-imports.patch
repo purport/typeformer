@@ -3,6 +3,12 @@ From: Jake Bailey <5341706+jakebailey@users.noreply.github.com>
 Date: Thu, 26 May 2022 17:00:27 -0700
 Subject: [PATCH] Convert require calls to imports
 
+Although the existing require calls would work fine, it's more
+consistent to make them actual imports and let them be converted at
+compile/bundle time. It also lets us emit ESM if needed.
+
+There are still conditional requires present for things like the node
+System, but that's a more difficult problem to solve.
 ---
  src/cancellationToken/cancellationToken.ts     |  2 +-
  src/harness/findUpDir.ts                       |  4 ++--
