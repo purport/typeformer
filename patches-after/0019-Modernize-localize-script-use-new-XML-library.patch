@@ -1,15 +1,20 @@
 From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Jake Bailey <5341706+jakebailey@users.noreply.github.com>
-Date: Sun, 9 Oct 2022 20:43:20 -0700
-Subject: [PATCH] Switch to faster XML parsing library for localize
+Date: Sun, 9 Oct 2022 20:12:45 -0700
+Subject: [PATCH] Modernize localize script, use new XML library
 
-Switching to a newer/faster/maintained library speeds up this script by
-more than 50%. We can also eliminate some any and such in the process.
+This file is pretty much the same as it was when it was committed in
+2017; these days, we can write clearer code with async/await and new FS
+APIs.
+
+Additionally, we can improve the performance of this script by using a
+newer/faster/maintained XML library. This will enable us to run the
+script unconditionally in a later commit.
 ---
- package-lock.json                             | 110 +++++++-----------
+ package-lock.json                             | 110 +++++---------
  package.json                                  |   5 +-
- .../generateLocalizedDiagnosticMessages.mjs   |  47 +++++---
- 3 files changed, 74 insertions(+), 88 deletions(-)
+ .../generateLocalizedDiagnosticMessages.mjs   | 142 ++++++++----------
+ 3 files changed, 100 insertions(+), 157 deletions(-)
 
 diff --git a/package-lock.json b/package-lock.json
 index 922a4f9b3d..6ade87ae14 100644
@@ -247,16 +252,13 @@ index 16e600240f..c8f2789c5c 100644
      "scripts": {
          "test": "hereby runtests-parallel --light=false",
 diff --git a/scripts/generateLocalizedDiagnosticMessages.mjs b/scripts/generateLocalizedDiagnosticMessages.mjs
-index 73c30e8615..45e393fc3e 100644
+index e07f6629a1..45e393fc3e 100644
 --- a/scripts/generateLocalizedDiagnosticMessages.mjs
 +++ b/scripts/generateLocalizedDiagnosticMessages.mjs
-@@ -1,9 +1,26 @@
+@@ -1,8 +1,28 @@
  import fs from "fs";
  import path from "path";
 -import xml2js from "xml2js";
--import util from "util";
--
--const parseString = util.promisify(xml2js.parseString);
 +import { XMLParser } from "fast-xml-parser";
 +
 +/** @typedef {{
@@ -279,36 +281,82 @@ index 73c30e8615..45e393fc3e 100644
 +}} ParsedLCL */
 +void 0;
  
- async function main() {
+-function main() {
++async function main() {
      const args = process.argv.slice(2);
-@@ -31,15 +48,17 @@ async function main() {
+     if (args.length !== 3) {
+         console.log("Usage:");
+@@ -15,38 +35,33 @@ function main() {
+     const diagnosticsMapFilePath = args[2];
+ 
+     // generate the lcg file for enu
+-    generateLCGFile();
++    await generateLCGFile();
+ 
+     // generate other langs
+-    fs.readdir(inputPath, (err, files) => {
+-        handleError(err);
+-        files.forEach(visitDirectory);
+-    });
++    const files = await fs.promises.readdir(inputPath);
++    await Promise.all(files.map(visitDirectory));
+ 
+     return;
+ 
+     /**
+      * @param {string} name
       */
-     async function visitDirectory(name) {
+-    function visitDirectory(name) {
++    async function visitDirectory(name) {
          const inputFilePath = path.join(inputPath, name, "diagnosticMessages", "diagnosticMessages.generated.json.lcl");
--        const contents = await fs.promises.readFile(inputFilePath, "utf-8");
--        const result = await parseString(contents);
--        if (!result || !result.LCX || !result.LCX.$ || !result.LCX.$.TgtCul) {
--            console.error("Unexpected XML file structure. Expected to find result.LCX.$.TgtCul.");
+-
+-        fs.readFile(inputFilePath, (err, data) => {
+-            handleError(err);
+-            xml2js.parseString(data.toString(), (err, result) => {
+-                handleError(err);
+-                if (!result || !result.LCX || !result.LCX.$ || !result.LCX.$.TgtCul) {
+-                    console.error("Unexpected XML file structure. Expected to find result.LCX.$.TgtCul.");
+-                    process.exit(1);
+-                }
+-                const outputDirectoryName = getPreferredLocaleName(result.LCX.$.TgtCul).toLowerCase();
+-                if (!outputDirectoryName) {
+-                    console.error(`Invalid output locale name for '${result.LCX.$.TgtCul}'.`);
+-                    process.exit(1);
+-                }
+-                writeFile(path.join(outputPath, outputDirectoryName, "diagnosticMessages.generated.json"), xmlObjectToString(result));
+-            });
+-        });
 +        const contents = await fs.promises.readFile(inputFilePath);
 +        /** @type {ParsedLCL} */
 +        // eslint-disable-next-line local/object-literal-surrounding-space
 +        const result = new XMLParser({ ignoreAttributes: false, attributeNamePrefix: "$_"}).parse(contents);
 +        if (!result || !result.LCX || !result.LCX.$_TgtCul) {
 +            console.error("Unexpected XML file structure. Expected to find result.LCX.$_TgtCul.");
-             process.exit(1);
-         }
--        const outputDirectoryName = getPreferredLocaleName(result.LCX.$.TgtCul).toLowerCase();
++            process.exit(1);
++        }
 +        const outputDirectoryName = getPreferredLocaleName(result.LCX.$_TgtCul).toLowerCase();
-         if (!outputDirectoryName) {
--            console.error(`Invalid output locale name for '${result.LCX.$.TgtCul}'.`);
++        if (!outputDirectoryName) {
 +            console.error(`Invalid output locale name for '${result.LCX.$_TgtCul}'.`);
-             process.exit(1);
-         }
-         await writeFile(path.join(outputPath, outputDirectoryName, "diagnosticMessages.generated.json"), xmlObjectToString(result));
-@@ -77,14 +96,14 @@ async function main() {
++            process.exit(1);
++        }
++        await writeFile(path.join(outputPath, outputDirectoryName, "diagnosticMessages.generated.json"), xmlObjectToString(result));
      }
  
      /**
+@@ -81,24 +96,14 @@ function main() {
+     }
+ 
+     /**
+-     * @param {null | object} err
+-     */
+-    function handleError(err) {
+-        if (err) {
+-            console.error(err);
+-            process.exit(1);
+-        }
+-    }
+-
+-    /**
 -     * @param {any} o
 +     * @param {ParsedLCL} o
       */
@@ -324,6 +372,82 @@ index 73c30e8615..45e393fc3e 100644
  
              if (typeof ItemId !== "string" || typeof val !== "string") {
                  console.error("Unexpected XML file structure");
+@@ -115,55 +120,26 @@ function main() {
+         return JSON.stringify(out, undefined, 2);
+     }
+ 
+-
+-    /**
+-     * @param {string} directoryPath
+-     * @param {() => void} action
+-     */
+-    function ensureDirectoryExists(directoryPath, action) {
+-        fs.exists(directoryPath, exists => {
+-            if (!exists) {
+-                const basePath = path.dirname(directoryPath);
+-                if (basePath !== directoryPath) {
+-                    return ensureDirectoryExists(basePath, () => fs.mkdir(directoryPath, action));
+-                }
+-            }
+-            action();
+-        });
+-    }
+-
+     /**
+      * @param {string} fileName
+      * @param {string} contents
+      */
+-    function writeFile(fileName, contents) {
+-        ensureDirectoryExists(path.dirname(fileName), () => {
+-            fs.writeFile(fileName, contents, handleError);
+-        });
++    async function writeFile(fileName, contents) {
++        await fs.promises.mkdir(path.dirname(fileName), { recursive: true });
++        await fs.promises.writeFile(fileName, contents);
+     }
+ 
+-    /**
+-     * @param {Record<string, string>} o
+-     */
+-    function objectToList(o) {
+-        const list = [];
+-        for (const key in o) {
+-            list.push({ key, value: o[key] });
+-        }
+-        return list;
+-    }
+-
+-    function generateLCGFile() {
+-        return fs.readFile(diagnosticsMapFilePath, (err, data) => {
+-            handleError(err);
+-            writeFile(
+-                path.join(outputPath, "enu", "diagnosticMessages.generated.json.lcg"),
+-                getLCGFileXML(
+-                    objectToList(JSON.parse(data.toString()))
+-                        .sort((a, b) => a.key > b.key ? 1 : -1)  // lcg sorted by property keys
+-                        .reduce((s, { key, value }) => s + getItemXML(key, value), "")
+-                ));
+-        });
++    async function generateLCGFile() {
++        const contents = await fs.promises.readFile(diagnosticsMapFilePath, "utf-8");
++        await writeFile(
++            path.join(outputPath, "enu", "diagnosticMessages.generated.json.lcg"),
++            getLCGFileXML(
++                Object.entries(JSON.parse(contents))
++                    .sort((a, b) => a[0] > b[0] ? 1 : -1)  // lcg sorted by property keys
++                    .reduce((s, [key, value]) => s + getItemXML(key, value), "")
++            ),
++        );
++        return;
+ 
+         /**
+          * @param {string} key
+@@ -204,4 +180,4 @@ function main() {
+     }
+ }
+ 
+-main();
++await main();
 -- 
 2.38.1
 
