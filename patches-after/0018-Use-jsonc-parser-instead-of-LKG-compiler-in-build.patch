@@ -66,7 +66,7 @@ index 4687661e16..16e600240f 100644
          "mkdirp": "latest",
          "mocha": "latest",
 diff --git a/scripts/build/utils.mjs b/scripts/build/utils.mjs
-index 1356bfb018..e5f82cd19c 100644
+index 9cca5c278a..3bf99758d8 100644
 --- a/scripts/build/utils.mjs
 +++ b/scripts/build/utils.mjs
 @@ -2,11 +2,11 @@

@@ -7,33 +7,32 @@ needsUpdate may be wrong when the branch changes; these ones are now so
 fast thanks to being pure JS that we can just always run their contents
 and be sure that the outputs are right.
 ---
- Herebyfile.mjs | 56 +++++++++++++++++++-------------------------------
- 1 file changed, 21 insertions(+), 35 deletions(-)
+ Herebyfile.mjs | 52 +++++++++++++++++++-------------------------------
+ 1 file changed, 20 insertions(+), 32 deletions(-)
 
 diff --git a/Herebyfile.mjs b/Herebyfile.mjs
-index 1d7e6bcf10..e2137794c1 100644
+index 5e9cb07e0b..bc975ce074 100644
 --- a/Herebyfile.mjs
 +++ b/Herebyfile.mjs
-@@ -6,7 +6,7 @@ import esbuild from "esbuild";
+@@ -5,7 +5,7 @@ import del from "del";
  import { task } from "hereby";
  import _glob from "glob";
  import util from "util";
--import { exec, readJson, needsUpdate, getDiffTool, getDirSize } from "./scripts/build/utils.mjs";
-+import { exec, readJson, getDiffTool, getDirSize } from "./scripts/build/utils.mjs";
+-import { exec, readJson, needsUpdate, getDiffTool, getDirSize, memoize } from "./scripts/build/utils.mjs";
++import { exec, readJson, getDiffTool, getDirSize, memoize } from "./scripts/build/utils.mjs";
  import { runConsoleTests, refBaseline, localBaseline, refRwcBaseline, localRwcBaseline } from "./scripts/build/tests.mjs";
  import { buildProject as realBuildProject, cleanProject } from "./scripts/build/projects.mjs";
  import { localizationDirectories } from "./scripts/build/localization.mjs";
-@@ -84,23 +84,19 @@ export const generateLibs = task({
+@@ -80,20 +80,18 @@ export const generateLibs = task({
      description: "Builds the library targets",
      run: async () => {
          await fs.promises.mkdir("./built/local", { recursive: true });
--        const allSources = libs.flatMap((lib) => lib.sources);
--        const allTargets = libs.flatMap((lib) => lib.target);
--        if (needsUpdate([copyright, ...allSources], allTargets)) {
--            for (const lib of libs) {
--                let output = getCopyrightHeader();
--
--                await fs.promises.writeFile(lib.target, getCopyrightHeader());
+-        const allSources = libs().flatMap((lib) => lib.sources);
+-        const allTargets = libs().flatMap((lib) => lib.target);
+-        if (needsUpdate([copyrightFilename, ...allSources], allTargets)) {
+-            for (const lib of libs()) {
+-                let output = await copyright();
+-    
 -                for (const source of lib.sources) {
 -                    const contents = await fs.promises.readFile(source, "utf-8");
 -                    // TODO(jakebailey): "\n\n" is for compatibility with our current tests; our test baselines
@@ -41,12 +40,9 @@ index 1d7e6bcf10..e2137794c1 100644
 -                    // or remove lib.d.ts line numbers from our baselines.
 -                    output += "\n\n" + contents.replace(/\r\n/g, "\n");
 -                }
--
--                await fs.promises.writeFile(lib.target, output);
-+        for (const lib of libs) {
-+            let output = getCopyrightHeader();
++        for (const lib of libs()) {
++            let output = await copyright();
 +
-+            await fs.promises.writeFile(lib.target, getCopyrightHeader());
 +            for (const source of lib.sources) {
 +                const contents = await fs.promises.readFile(source, "utf-8");
 +                // TODO(jakebailey): "\n\n" is for compatibility with our current tests; our test baselines
@@ -59,7 +55,7 @@ index 1d7e6bcf10..e2137794c1 100644
          }
      },
  });
-@@ -121,9 +117,7 @@ export const generateDiagnostics = task({
+@@ -107,9 +105,7 @@ export const generateDiagnostics = task({
      name: "generate-diagnostics",
      description: "Generates a diagnostic file in TypeScript based on an input JSON file",
      run: async () => {
@@ -70,7 +66,7 @@ index 1d7e6bcf10..e2137794c1 100644
      }
  });
  
-@@ -157,11 +151,7 @@ const localizationTargets = localizationDirectories
+@@ -142,11 +138,7 @@ const localizationTargets = localizationDirectories
  const localize = task({
      name: "localize",
      dependencies: [generateDiagnostics],
@@ -83,7 +79,7 @@ index 1d7e6bcf10..e2137794c1 100644
  });
  
  export const buildSrc = task({
-@@ -540,11 +530,9 @@ export const generateTypesMap = task({
+@@ -510,11 +502,9 @@ export const generateTypesMap = task({
      run: async () => {
          const source = "src/server/typesMap.json";
          const target = "built/local/typesMap.json";
@@ -98,7 +94,7 @@ index 1d7e6bcf10..e2137794c1 100644
      }
  });
  
-@@ -563,11 +551,9 @@ const copyBuiltLocalDiagnosticMessages = task({
+@@ -527,11 +517,9 @@ const copyBuiltLocalDiagnosticMessages = task({
      name: "copy-built-local-diagnostic-messages",
      dependencies: [generateDiagnostics],
      run: async () => {
