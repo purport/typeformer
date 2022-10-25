@@ -6,8 +6,8 @@ Subject: [PATCH] Add JSDoc eslint rule
 See the next commit for a more fleshed-out description.
 ---
  .eslintrc.json                        |   1 +
- scripts/eslint/rules/jsdoc-format.cjs | 112 ++++++++++++++++++++++++++
- 2 files changed, 113 insertions(+)
+ scripts/eslint/rules/jsdoc-format.cjs | 110 ++++++++++++++++++++++++++
+ 2 files changed, 111 insertions(+)
  create mode 100644 scripts/eslint/rules/jsdoc-format.cjs
 
 diff --git a/.eslintrc.json b/.eslintrc.json
@@ -24,10 +24,10 @@ index c3ce2174a7..f78f325002 100644
          "import/no-extraneous-dependencies": ["error", { "optionalDependencies": false }],
 diff --git a/scripts/eslint/rules/jsdoc-format.cjs b/scripts/eslint/rules/jsdoc-format.cjs
 new file mode 100644
-index 0000000000..9971c9945f
+index 0000000000..86783b3547
 --- /dev/null
 +++ b/scripts/eslint/rules/jsdoc-format.cjs
-@@ -0,0 +1,112 @@
+@@ -0,0 +1,110 @@
 +const { TSESTree } = require("@typescript-eslint/utils");
 +const { createRule } = require("./utils.cjs");
 +
@@ -113,8 +113,6 @@ index 0000000000..9971c9945f
 +                else if (node.type === "TSParameterProperty") {
 +                    context.report({ messageId: "internalCommentOnParameterProperty", node: c, loc: getAtInternalLoc(c, indexInComment) });
 +                }
-+
-+                // TODO(jakebailey): check duplicate @internal?
 +            }
 +        };
 +
