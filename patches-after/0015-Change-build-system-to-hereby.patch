@@ -522,7 +522,7 @@ index 5606df9611..d72ffc513f 100644
 \ No newline at end of file
 +RUN npx hereby configure-insiders && npx hereby LKG && npx hereby clean && npm pack .
 diff --git a/Herebyfile.mjs b/Herebyfile.mjs
-index ced85affab..91d0973ba9 100644
+index e5c78c78cd..939057af88 100644
 --- a/Herebyfile.mjs
 +++ b/Herebyfile.mjs
 @@ -1,29 +1,31 @@
@@ -762,7 +762,7 @@ index ced85affab..91d0973ba9 100644
          bundle: true,
          outfile,
          platform: "node",
-         target: "es2018", // Covers Node 10.
+         target: "es2018",
          format: "cjs",
          sourcemap: "linked",
 -        external: ["./node_modules/*"],

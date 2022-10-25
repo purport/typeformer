@@ -75,7 +75,7 @@ had to do anyway when we were namespaces and everything was in scope.
  create mode 100644 tests/cases/compiler/APILibCheck.ts
 
 diff --git a/Gulpfile.mjs b/Gulpfile.mjs
-index 4ad45b2d4e..ced85affab 100644
+index 14cda731b2..e5c78c78cd 100644
 --- a/Gulpfile.mjs
 +++ b/Gulpfile.mjs
 @@ -128,6 +128,19 @@ task("build-src", series(preSrc, buildSrc));

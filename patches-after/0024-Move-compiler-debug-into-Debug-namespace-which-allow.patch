@@ -25,7 +25,7 @@ _adding_ code).
  delete mode 100644 src/debug/tsconfig.json
 
 diff --git a/Herebyfile.mjs b/Herebyfile.mjs
-index 4d605a1204..d97b45e7b8 100644
+index c1b570c84e..6d477bc5e8 100644
 --- a/Herebyfile.mjs
 +++ b/Herebyfile.mjs
 @@ -320,16 +320,6 @@ function entrypointBuildTask(options) {
