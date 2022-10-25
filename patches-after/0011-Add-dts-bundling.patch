@@ -21,7 +21,7 @@ had to do anyway when we were namespaces and everything was in scope.
  src/compiler/program.ts                       |     4 +-
  src/compiler/resolutionCache.ts               |     6 +-
  src/compiler/sys.ts                           |     4 +-
- src/compiler/tracing.ts                       |     9 +-
+ src/compiler/tracing.ts                       |     7 +-
  src/compiler/transformers/classFields.ts      |     4 +-
  src/compiler/transformers/es2015.ts           |     4 +-
  src/compiler/transformers/es2016.ts           |     4 +-
@@ -67,7 +67,7 @@ had to do anyway when we were namespaces and everything was in scope.
  .../reference/api/tsserverlibrary.d.ts        | 10998 ++++++++--------
  tests/baselines/reference/api/typescript.d.ts |  3263 +++--
  tests/cases/compiler/APILibCheck.ts           |    34 +
- 57 files changed, 7999 insertions(+), 7795 deletions(-)
+ 57 files changed, 7997 insertions(+), 7795 deletions(-)
  create mode 100644 scripts/dtsBundler.mjs
  create mode 100644 tests/baselines/reference/APILibCheck.js
  create mode 100644 tests/baselines/reference/APILibCheck.symbols
@@ -877,17 +877,15 @@ index e4cbb90009..0fbddaaa95 100644
  // TODO: GH#18217 Methods on System are often used as if they are certainly defined
  export interface System {
 diff --git a/src/compiler/tracing.ts b/src/compiler/tracing.ts
-index 9ec10f1d90..9d29f38851 100644
+index 9ec10f1d90..02b2b4bd00 100644
 --- a/src/compiler/tracing.ts
 +++ b/src/compiler/tracing.ts
-@@ -12,8 +12,13 @@ import {
+@@ -12,8 +12,11 @@ import {
  export let tracing: typeof tracingEnabled | undefined;
  // enable the above using startTracing()
  
 -// `tracingEnabled` should never be used directly, only through the above
 -namespace tracingEnabled {
-+// TODO(jakebailey): Rework this to not use namespaces.
-+
 +/**
 + * Do not use this directly; instead @see {tracing}.
 + * @internal

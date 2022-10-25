@@ -376,7 +376,7 @@ index f353e8db7f..c218775359 100644
      // Current source map file and its index in the sources list
      const rawSources: string[] = [];
 diff --git a/src/compiler/tracing.ts b/src/compiler/tracing.ts
-index 9d29f38851..ea01f2d5e9 100644
+index 02b2b4bd00..2102592d1a 100644
 --- a/src/compiler/tracing.ts
 +++ b/src/compiler/tracing.ts
 @@ -1,9 +1,9 @@
@@ -390,7 +390,7 @@ index 9d29f38851..ea01f2d5e9 100644
  
  /* Tracing events for the compiler. */
  
-@@ -174,13 +174,13 @@ export namespace tracingEnabled {
+@@ -172,13 +172,13 @@ export namespace tracingEnabled {
          // In server mode, there's no easy way to dump type information, so we drop events that would require it.
          if (mode === "server" && phase === Phase.CheckTypes) return;
  
@@ -407,7 +407,7 @@ index 9d29f38851..ea01f2d5e9 100644
      }
  
      function getLocation(node: Node | undefined) {
-@@ -202,7 +202,7 @@ export namespace tracingEnabled {
+@@ -200,7 +200,7 @@ export namespace tracingEnabled {
      }
  
      function dumpTypes(types: readonly Type[]) {
@@ -416,7 +416,7 @@ index 9d29f38851..ea01f2d5e9 100644
  
          const typesPath = legend[legend.length - 1].typesPath!;
          const typesFd = fs.openSync(typesPath, "w");
-@@ -331,8 +331,8 @@ export namespace tracingEnabled {
+@@ -329,8 +329,8 @@ export namespace tracingEnabled {
  
          fs.closeSync(typesFd);
  

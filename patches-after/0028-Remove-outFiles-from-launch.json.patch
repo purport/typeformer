@@ -1,0 +1,29 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Jake Bailey <5341706+jakebailey@users.noreply.github.com>
+Date: Mon, 24 Oct 2022 20:45:16 -0700
+Subject: [PATCH] Remove outFiles from launch.json
+
+The troubleshooting wizard for the debugger actually says that this
+option is no longer recommended; removing it enables us to use source
+maps if we happen to be debugging while in --bundle=false mode.
+---
+ .vscode/launch.template.json | 3 ---
+ 1 file changed, 3 deletions(-)
+
+diff --git a/.vscode/launch.template.json b/.vscode/launch.template.json
+index a2477ed7fa..134216381d 100644
+--- a/.vscode/launch.template.json
++++ b/.vscode/launch.template.json
+@@ -44,9 +44,6 @@
+       "smartStep": true,
+       "preLaunchTask": "npm: build:tests",
+       "console": "integratedTerminal",
+-      "outFiles": [
+-        "${workspaceRoot}/built/local/run.js"
+-      ],
+       "customDescriptionGenerator": "'__tsDebuggerDisplay' in this ? this.__tsDebuggerDisplay(defaultValue) : defaultValue"
+     },
+     {
+-- 
+2.38.1
+
