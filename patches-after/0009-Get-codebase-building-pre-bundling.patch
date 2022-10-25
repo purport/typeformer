@@ -13,7 +13,7 @@ tests running manually. The next commit will make the build work fully.
  src/compiler/tsconfig.json                    |  80 +-----
  src/compiler/tsconfig.release.json            |  10 -
  src/debug/tsconfig.json                       |  11 +-
- src/deprecatedCompat/tsconfig.json            |  17 +-
+ src/deprecatedCompat/tsconfig.json            |  18 +-
  src/dynamicImportCompat/tsconfig.json         |   9 +-
  src/executeCommandLine/tsconfig.json          |   7 +-
  src/executeCommandLine/tsconfig.release.json  |  11 -
@@ -77,7 +77,7 @@ tests running manually. The next commit will make the build work fully.
  src/watchGuard/tsconfig.json                  |  10 +-
  src/webServer/tsconfig.json                   |  10 +-
  tests/cases/fourslash/fourslash.ts            |   3 +-
- 71 files changed, 612 insertions(+), 1198 deletions(-)
+ 71 files changed, 612 insertions(+), 1199 deletions(-)
  delete mode 100644 src/compiler/tsconfig.release.json
  delete mode 100644 src/executeCommandLine/tsconfig.release.json
  delete mode 100644 src/testRunner/_namespaces/ts.textStorage.ts
@@ -355,16 +355,16 @@ index 45353e0557..06b94b3b2c 100644
 +    "include": ["**/*"]
  }
 diff --git a/src/deprecatedCompat/tsconfig.json b/src/deprecatedCompat/tsconfig.json
-index 5eecec15a0..bbf10d13f4 100644
+index 5eecec15a0..571628bf16 100644
 --- a/src/deprecatedCompat/tsconfig.json
 +++ b/src/deprecatedCompat/tsconfig.json
-@@ -1,22 +1,11 @@
+@@ -1,22 +1,10 @@
  {
      "extends": "../tsconfig-base",
      "compilerOptions": {
 -        "outDir": "../../built/local",
-+        "outDir": "../../built/local/deprecatedCompat",
-         "experimentalDecorators": true
+-        "experimentalDecorators": true
++        "outDir": "../../built/local/deprecatedCompat"
      },
      "references": [
          { "path": "../compiler" }

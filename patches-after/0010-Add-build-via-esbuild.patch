@@ -1760,17 +1760,17 @@ index 06b94b3b2c..ab17c2cab1 100644
      "include": ["**/*"]
  }
 diff --git a/src/deprecatedCompat/tsconfig.json b/src/deprecatedCompat/tsconfig.json
-index bbf10d13f4..2e57445669 100644
+index 571628bf16..e0e98fac65 100644
 --- a/src/deprecatedCompat/tsconfig.json
 +++ b/src/deprecatedCompat/tsconfig.json
 @@ -1,7 +1,6 @@
  {
      "extends": "../tsconfig-base",
      "compilerOptions": {
--        "outDir": "../../built/local/deprecatedCompat",
-         "experimentalDecorators": true
+-        "outDir": "../../built/local/deprecatedCompat"
      },
      "references": [
+         { "path": "../compiler" }
 diff --git a/src/dynamicImportCompat/_namespaces/ts.server.ts b/src/dynamicImportCompat/_namespaces/ts.server.ts
 deleted file mode 100644
 index 729da9c24e..0000000000
