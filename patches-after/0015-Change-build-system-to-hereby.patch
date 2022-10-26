@@ -18,7 +18,7 @@ it seems like this is a good time to change things up.
  .devcontainer/Dockerfile                      |     2 +-
  .github/pull_request_template.md              |     2 +-
  .../workflows/accept-baselines-fix-lints.yaml |     4 +-
- .github/workflows/ci.yml                      |    14 +-
+ .github/workflows/ci.yml                      |    15 +-
  .github/workflows/new-release-branch.yaml     |     2 +-
  .github/workflows/nightly.yaml                |     8 +-
  .../workflows/release-branch-artifact.yaml    |     6 +-
@@ -27,10 +27,10 @@ it seems like this is a good time to change things up.
  .gulp.js                                      |    18 +
  .vscode/launch.template.json                  |     7 +-
  .vscode/settings.template.json                |     8 +
- .vscode/tasks.json                            |    41 +-
+ .vscode/tasks.json                            |    49 +-
  CONTRIBUTING.md                               |    66 +-
  Dockerfile                                    |     3 +-
- Herebyfile.mjs                                |  1086 +-
+ Herebyfile.mjs                                |  1088 +-
  lib/README.md                                 |     2 +-
  package-lock.json                             | 14176 ++++------------
  package.json                                  |    34 +-
@@ -46,7 +46,7 @@ it seems like this is a good time to change things up.
  src/harness/findUpDir.ts                      |     2 +-
  src/harness/harnessIO.ts                      |     2 +-
  src/webServer/webServer.ts                    |     9 +-
- 31 files changed, 3665 insertions(+), 12095 deletions(-)
+ 31 files changed, 3674 insertions(+), 12097 deletions(-)
  create mode 100644 .gulp.js
  delete mode 100644 scripts/build/sourcemaps.mjs
  delete mode 100644 scripts/types/ambient.d.ts
@@ -90,23 +90,23 @@ index 0294ead0b9..cb65de2c81 100644
          git add ./tests/baselines/reference
          git diff --cached
 diff --git a/.github/workflows/ci.yml b/.github/workflows/ci.yml
-index 68f2cdb805..95e789ce06 100644
+index 68f2cdb805..1f01407772 100644
 --- a/.github/workflows/ci.yml
 +++ b/.github/workflows/ci.yml
-@@ -70,10 +70,10 @@ jobs:
+@@ -69,11 +69,8 @@ jobs:
+     - name: Adding playwright
        run: npm install --no-save --no-package-lock playwright
  
-     - name: Build local
+-    - name: Build local
 -      run: gulp local
-+      run: npx hereby local
- 
+-
      - name: Validate the browser can import TypeScript
 -      run: gulp test-browser-integration
 +      run: npx hereby test-browser-integration
  
    typecheck:
      runs-on: ubuntu-latest
-@@ -102,10 +102,10 @@ jobs:
+@@ -102,10 +99,10 @@ jobs:
      - run:  npm ci
  
      - name: Build scripts
@@ -119,7 +119,7 @@ index 68f2cdb805..95e789ce06 100644
  
    self-check:
      runs-on: ubuntu-latest
-@@ -119,10 +119,10 @@ jobs:
+@@ -119,10 +116,10 @@ jobs:
      - run:  npm ci
  
      - name: Build tsc
@@ -288,10 +288,10 @@ index 43d69a60b6..4e85591e7e 100644
 +    "gulp.autoDetect": "off"
  }
 diff --git a/.vscode/tasks.json b/.vscode/tasks.json
-index 807da9ce56..f9a93035dc 100644
+index 807da9ce56..cd3687bae7 100644
 --- a/.vscode/tasks.json
 +++ b/.vscode/tasks.json
-@@ -4,42 +4,43 @@
+@@ -4,42 +4,51 @@
      "version": "2.0.0",
      "tasks": [
          {
@@ -302,11 +302,32 @@ index 807da9ce56..f9a93035dc 100644
 -                "kind": "build",
 -                "isDefault": true
 -            },
-+            "label": "tsc --build ./src --watch",
++            // Kept for backwards compat for old launch.json files so it's
++            // less annoying if moving up to the new build or going back to
++            // the old build.
++            //
++            // This is first because the acutal "npm: build:tests" task
++            // below has the same script value, and VS Code ignores labels
++            // and deduplicates them.
++            // https://github.com/microsoft/vscode/issues/93001
++            "label": "gulp: tests",
++            "type": "npm",
++            "script": "build:tests",
++            "group": "build",
++            "hide": true,
+             "problemMatcher": [
+                 "$tsc"
+             ]
+         },
+         {
+-            "type": "gulp",
+-            "label": "gulp: tsc",
+-            "task": "tsc",
++            "label": "tsc: watch ./src",
 +            "type": "shell",
 +            "command": "node",
 +            "args": ["${workspaceFolder}/lib/tsc.js", "--build", "${workspaceFolder}/src", "--watch"],
-+            "group": "build",
+             "group": "build",
 +            "isBackground": true,
              "problemMatcher": [
 -                "$tsc"
@@ -315,8 +336,8 @@ index 807da9ce56..f9a93035dc 100644
          },
          {
 -            "type": "gulp",
--            "label": "gulp: tsc",
--            "task": "tsc",
+-            "label": "gulp: tests",
+-            "task": "tests",
 +            "label": "npm: build:compiler",
 +            "type": "npm",
 +            "script": "build:compiler",
@@ -327,25 +348,12 @@ index 807da9ce56..f9a93035dc 100644
          },
          {
 -            "type": "gulp",
--            "label": "gulp: tests",
--            "task": "tests",
+-            "task": "services",
+-            "label": "gulp: services",
 +            "label": "npm: build:tests",
 +            "type": "npm",
 +            "script": "build:tests",
-             "group": "build",
-             "problemMatcher": [
-                 "$tsc"
-             ]
-         },
-         {
--            "type": "gulp",
--            "task": "services",
--            "label": "gulp: services",
-+            "label": "gulp: tests", // Kept for backwards compat for old launch.json files.
-+            "type": "npm",
-+            "script": "build:tests",
 +            "group": "build",
-+            "hide": true,
              "problemMatcher": [
                  "$tsc"
 -            ],
@@ -522,7 +530,7 @@ index 5606df9611..d72ffc513f 100644
 \ No newline at end of file
 +RUN npx hereby configure-insiders && npx hereby LKG && npx hereby clean && npm pack .
 diff --git a/Herebyfile.mjs b/Herebyfile.mjs
-index e5c78c78cd..939057af88 100644
+index e5c78c78cd..a6930d4afb 100644
 --- a/Herebyfile.mjs
 +++ b/Herebyfile.mjs
 @@ -1,29 +1,31 @@
@@ -684,7 +692,7 @@ index e5c78c78cd..939057af88 100644
  
  // Localize diagnostics
  /**
-@@ -114,19 +139,27 @@ const localizationTargets = localizationDirectories
+@@ -114,19 +139,28 @@ const localizationTargets = localizationDirectories
      .map(f => `built/local/${f}/diagnosticMessages.generated.json`)
      .concat(generatedLCGFile);
  
@@ -708,6 +716,7 @@ index e5c78c78cd..939057af88 100644
 -task("build-src", series(preSrc, buildSrc));
 +export const buildSrc = task({
 +    name: "build-src",
++    description: "Builds the src project (all code)",
 +    dependencies: [generateDiagnostics],
 +    run: () => buildProject("src"),
 +});
@@ -722,7 +731,7 @@ index e5c78c78cd..939057af88 100644
  
  /**
   * @param {string} entrypoint
-@@ -142,40 +175,57 @@ async function runDtsBundler(entrypoint, output) {
+@@ -142,40 +176,57 @@ async function runDtsBundler(entrypoint, output) {
      ]);
  }
  
@@ -798,7 +807,7 @@ index e5c78c78cd..939057af88 100644
              {
                  name: "fix-require",
                  setup: (build) => {
-@@ -186,13 +236,12 @@ function esbuildTask(entrypoint, outfile, exportIsTsObject = false) {
+@@ -186,13 +237,12 @@ function esbuildTask(entrypoint, outfile, exportIsTsObject = false) {
                          // to be consumable by other bundlers, we need to convert these calls back to
                          // require so our imports are visible again.
                          //
@@ -815,7 +824,7 @@ index e5c78c78cd..939057af88 100644
                          await fs.promises.writeFile(outfile, contents);
                      });
                  },
-@@ -200,506 +249,507 @@ function esbuildTask(entrypoint, outfile, exportIsTsObject = false) {
+@@ -200,506 +250,508 @@ function esbuildTask(entrypoint, outfile, exportIsTsObject = false) {
          ]
      };
  
@@ -1491,6 +1500,7 @@ index e5c78c78cd..939057af88 100644
 +export const testBrowserIntegration = task({
 +    name: "test-browser-integration",
 +    description: "Runs scripts/browserIntegrationTest.mjs which tests that typescript.js loads in a browser",
++    dependencies: [services],
 +    run: () => exec(process.execPath, ["scripts/browserIntegrationTest.mjs"]),
 +});
  

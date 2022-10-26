@@ -25,10 +25,10 @@ _adding_ code).
  delete mode 100644 src/debug/tsconfig.json
 
 diff --git a/Herebyfile.mjs b/Herebyfile.mjs
-index c1b570c84e..6d477bc5e8 100644
+index 825db0ddc1..ef86b2733f 100644
 --- a/Herebyfile.mjs
 +++ b/Herebyfile.mjs
-@@ -320,16 +320,6 @@ function entrypointBuildTask(options) {
+@@ -321,16 +321,6 @@ function entrypointBuildTask(options) {
      return { build, bundle, shim, main };
  }
  
@@ -45,7 +45,7 @@ index c1b570c84e..6d477bc5e8 100644
  const { main: tsc } = entrypointBuildTask({
      name: "tsc",
      description: "Builds the command-line compiler",
-@@ -338,7 +328,7 @@ const { main: tsc } = entrypointBuildTask({
+@@ -339,7 +329,7 @@ const { main: tsc } = entrypointBuildTask({
      srcEntrypoint: "./src/tsc/tsc.ts",
      builtEntrypoint: "./built/local/tsc/tsc.js",
      output: "./built/local/tsc.js",
@@ -54,7 +54,7 @@ index c1b570c84e..6d477bc5e8 100644
  });
  export { tsc };
  
-@@ -351,7 +341,7 @@ const { main: services, build: buildServices } = entrypointBuildTask({
+@@ -352,7 +342,7 @@ const { main: services, build: buildServices } = entrypointBuildTask({
      srcEntrypoint: "./src/typescript/typescript.ts",
      builtEntrypoint: "./built/local/typescript/typescript.js",
      output: "./built/local/typescript.js",
@@ -63,7 +63,7 @@ index c1b570c84e..6d477bc5e8 100644
      esbuildOptions: { exportIsTsObject: true },
  });
  export { services };
-@@ -372,7 +362,7 @@ const { main: tsserver } = entrypointBuildTask({
+@@ -373,7 +363,7 @@ const { main: tsserver } = entrypointBuildTask({
      srcEntrypoint: "./src/tsserver/server.ts",
      builtEntrypoint: "./built/local/tsserver/server.js",
      output: "./built/local/tsserver.js",
@@ -72,7 +72,7 @@ index c1b570c84e..6d477bc5e8 100644
      // Even though this seems like an exectuable, so could be the default CJS,
      // this is used in the browser too. Do the same thing that we do for our
      // libraries and generate an IIFE with name `ts`, as to not pollute the global
-@@ -397,7 +387,7 @@ const { main: lssl, build: buildLssl } = entrypointBuildTask({
+@@ -398,7 +388,7 @@ const { main: lssl, build: buildLssl } = entrypointBuildTask({
      srcEntrypoint: "./src/tsserverlibrary/tsserverlibrary.ts",
      builtEntrypoint: "./built/local/tsserverlibrary/tsserverlibrary.js",
      output: "./built/local/tsserverlibrary.js",
@@ -81,7 +81,7 @@ index c1b570c84e..6d477bc5e8 100644
      esbuildOptions: { exportIsTsObject: true },
  });
  export { lssl };
-@@ -425,7 +415,7 @@ const { main: tests } = entrypointBuildTask({
+@@ -426,7 +416,7 @@ const { main: tests } = entrypointBuildTask({
      srcEntrypoint: "./src/testRunner/_namespaces/Harness.ts",
      builtEntrypoint: "./built/local/testRunner/runner.js",
      output: testRunner,
