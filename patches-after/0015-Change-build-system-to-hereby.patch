@@ -212,7 +212,7 @@ index 3505fc2830..b2fd19c02d 100644
          git add ./lib
 diff --git a/.gulp.js b/.gulp.js
 new file mode 100644
-index 0000000000..1cc163baef
+index 0000000000..553e103d29
 --- /dev/null
 +++ b/.gulp.js
 @@ -0,0 +1,18 @@
@@ -228,7 +228,7 @@ index 0000000000..1cc163baef
 +
 +const args = [
 +    ...process.execArgv,
-+    path.join(__dirname, "node_modules", ".bin", "hereby"),
++    path.join(__dirname, "node_modules", "hereby", "bin", "hereby.js"),
 +    ...argv,
 +];
 +
