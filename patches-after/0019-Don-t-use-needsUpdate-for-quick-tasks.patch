@@ -11,19 +11,19 @@ and be sure that the outputs are right.
  1 file changed, 20 insertions(+), 32 deletions(-)
 
 diff --git a/Herebyfile.mjs b/Herebyfile.mjs
-index a6930d4afb..825db0ddc1 100644
+index 25ca294e3b..3f24ba98e2 100644
 --- a/Herebyfile.mjs
 +++ b/Herebyfile.mjs
-@@ -5,7 +5,7 @@ import del from "del";
- import { task } from "hereby";
+@@ -6,7 +6,7 @@ import { task } from "hereby";
  import _glob from "glob";
  import util from "util";
+ import chalk from "chalk";
 -import { exec, readJson, needsUpdate, getDiffTool, getDirSize, memoize } from "./scripts/build/utils.mjs";
 +import { exec, readJson, getDiffTool, getDirSize, memoize } from "./scripts/build/utils.mjs";
  import { runConsoleTests, refBaseline, localBaseline, refRwcBaseline, localRwcBaseline } from "./scripts/build/tests.mjs";
- import { buildProject as realBuildProject, cleanProject } from "./scripts/build/projects.mjs";
+ import { buildProject as realBuildProject, cleanProject, watchProject } from "./scripts/build/projects.mjs";
  import { localizationDirectories } from "./scripts/build/localization.mjs";
-@@ -80,20 +80,18 @@ export const generateLibs = task({
+@@ -81,20 +81,18 @@ export const generateLibs = task({
      description: "Builds the library targets",
      run: async () => {
          await fs.promises.mkdir("./built/local", { recursive: true });
@@ -55,7 +55,7 @@ index a6930d4afb..825db0ddc1 100644
          }
      },
  });
-@@ -107,9 +105,7 @@ export const generateDiagnostics = task({
+@@ -108,9 +106,7 @@ export const generateDiagnostics = task({
      name: "generate-diagnostics",
      description: "Generates a diagnostic file in TypeScript based on an input JSON file",
      run: async () => {
@@ -66,7 +66,7 @@ index a6930d4afb..825db0ddc1 100644
      }
  });
  
-@@ -142,11 +138,7 @@ const localizationTargets = localizationDirectories
+@@ -143,11 +139,7 @@ const localizationTargets = localizationDirectories
  const localize = task({
      name: "localize",
      dependencies: [generateDiagnostics],
@@ -79,7 +79,7 @@ index a6930d4afb..825db0ddc1 100644
  });
  
  export const buildSrc = task({
-@@ -511,11 +503,9 @@ export const generateTypesMap = task({
+@@ -550,11 +542,9 @@ export const generateTypesMap = task({
      run: async () => {
          const source = "src/server/typesMap.json";
          const target = "built/local/typesMap.json";
@@ -94,7 +94,7 @@ index a6930d4afb..825db0ddc1 100644
      }
  });
  
-@@ -528,11 +518,9 @@ const copyBuiltLocalDiagnosticMessages = task({
+@@ -567,11 +557,9 @@ const copyBuiltLocalDiagnosticMessages = task({
      name: "copy-built-local-diagnostic-messages",
      dependencies: [generateDiagnostics],
      run: async () => {
