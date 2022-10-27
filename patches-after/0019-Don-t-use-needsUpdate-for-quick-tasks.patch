@@ -11,7 +11,7 @@ and be sure that the outputs are right.
  1 file changed, 20 insertions(+), 32 deletions(-)
 
 diff --git a/Herebyfile.mjs b/Herebyfile.mjs
-index 25ca294e3b..3f24ba98e2 100644
+index 912a73373b..19828a7b8e 100644
 --- a/Herebyfile.mjs
 +++ b/Herebyfile.mjs
 @@ -6,7 +6,7 @@ import { task } from "hereby";
@@ -79,7 +79,7 @@ index 25ca294e3b..3f24ba98e2 100644
  });
  
  export const buildSrc = task({
-@@ -550,11 +542,9 @@ export const generateTypesMap = task({
+@@ -558,11 +550,9 @@ export const generateTypesMap = task({
      run: async () => {
          const source = "src/server/typesMap.json";
          const target = "built/local/typesMap.json";
@@ -94,7 +94,7 @@ index 25ca294e3b..3f24ba98e2 100644
      }
  });
  
-@@ -567,11 +557,9 @@ const copyBuiltLocalDiagnosticMessages = task({
+@@ -575,11 +565,9 @@ const copyBuiltLocalDiagnosticMessages = task({
      name: "copy-built-local-diagnostic-messages",
      dependencies: [generateDiagnostics],
      run: async () => {

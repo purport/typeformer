@@ -25,10 +25,10 @@ _adding_ code).
  delete mode 100644 src/debug/tsconfig.json
 
 diff --git a/Herebyfile.mjs b/Herebyfile.mjs
-index 3f24ba98e2..5dfd9f07ca 100644
+index 19828a7b8e..4e660695bc 100644
 --- a/Herebyfile.mjs
 +++ b/Herebyfile.mjs
-@@ -352,15 +352,6 @@ function entrypointBuildTask(options) {
+@@ -360,15 +360,6 @@ function entrypointBuildTask(options) {
      return { build, bundle, shim, main, watch };
  }
  
@@ -44,7 +44,7 @@ index 3f24ba98e2..5dfd9f07ca 100644
  
  const { main: tsc, watch: watchTsc } = entrypointBuildTask({
      name: "tsc",
-@@ -370,7 +361,7 @@ const { main: tsc, watch: watchTsc } = entrypointBuildTask({
+@@ -378,7 +369,7 @@ const { main: tsc, watch: watchTsc } = entrypointBuildTask({
      srcEntrypoint: "./src/tsc/tsc.ts",
      builtEntrypoint: "./built/local/tsc/tsc.js",
      output: "./built/local/tsc.js",
@@ -53,7 +53,7 @@ index 3f24ba98e2..5dfd9f07ca 100644
  });
  export { tsc, watchTsc };
  
-@@ -383,7 +374,7 @@ const { main: services, build: buildServices, watch: watchServices } = entrypoin
+@@ -391,7 +382,7 @@ const { main: services, build: buildServices, watch: watchServices } = entrypoin
      srcEntrypoint: "./src/typescript/typescript.ts",
      builtEntrypoint: "./built/local/typescript/typescript.js",
      output: "./built/local/typescript.js",
@@ -62,7 +62,7 @@ index 3f24ba98e2..5dfd9f07ca 100644
      bundlerOptions: { exportIsTsObject: true },
  });
  export { services, watchServices };
-@@ -404,7 +395,7 @@ const { main: tsserver, watch: watchTsserver } = entrypointBuildTask({
+@@ -412,7 +403,7 @@ const { main: tsserver, watch: watchTsserver } = entrypointBuildTask({
      srcEntrypoint: "./src/tsserver/server.ts",
      builtEntrypoint: "./built/local/tsserver/server.js",
      output: "./built/local/tsserver.js",
@@ -71,7 +71,7 @@ index 3f24ba98e2..5dfd9f07ca 100644
      // Even though this seems like an exectuable, so could be the default CJS,
      // this is used in the browser too. Do the same thing that we do for our
      // libraries and generate an IIFE with name `ts`, as to not pollute the global
-@@ -437,7 +428,7 @@ const { main: lssl, build: buildLssl, watch: watchLssl } = entrypointBuildTask({
+@@ -445,7 +436,7 @@ const { main: lssl, build: buildLssl, watch: watchLssl } = entrypointBuildTask({
      srcEntrypoint: "./src/tsserverlibrary/tsserverlibrary.ts",
      builtEntrypoint: "./built/local/tsserverlibrary/tsserverlibrary.js",
      output: "./built/local/tsserverlibrary.js",
@@ -80,7 +80,7 @@ index 3f24ba98e2..5dfd9f07ca 100644
      bundlerOptions: { exportIsTsObject: true },
  });
  export { lssl, watchLssl };
-@@ -465,7 +456,7 @@ const { main: tests, watch: watchTests } = entrypointBuildTask({
+@@ -473,7 +464,7 @@ const { main: tests, watch: watchTests } = entrypointBuildTask({
      srcEntrypoint: "./src/testRunner/_namespaces/Harness.ts",
      builtEntrypoint: "./built/local/testRunner/runner.js",
      output: testRunner,

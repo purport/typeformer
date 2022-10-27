@@ -30,7 +30,7 @@ it seems like this is a good time to change things up.
  .vscode/tasks.json                            |    49 +-
  CONTRIBUTING.md                               |    66 +-
  Dockerfile                                    |     3 +-
- Herebyfile.mjs                                |  1183 +-
+ Herebyfile.mjs                                |  1189 +-
  lib/README.md                                 |     2 +-
  package-lock.json                             | 14176 ++++------------
  package.json                                  |    34 +-
@@ -47,7 +47,7 @@ it seems like this is a good time to change things up.
  src/harness/findUpDir.ts                      |     2 +-
  src/harness/harnessIO.ts                      |     2 +-
  src/webServer/webServer.ts                    |     9 +-
- 32 files changed, 3749 insertions(+), 12119 deletions(-)
+ 32 files changed, 3756 insertions(+), 12118 deletions(-)
  create mode 100644 .gulp.js
  delete mode 100644 scripts/build/sourcemaps.mjs
  delete mode 100644 scripts/types/ambient.d.ts
@@ -531,7 +531,7 @@ index 5606df9611..d72ffc513f 100644
 \ No newline at end of file
 +RUN npx hereby configure-insiders && npx hereby LKG && npx hereby clean && npm pack .
 diff --git a/Herebyfile.mjs b/Herebyfile.mjs
-index e5c78c78cd..25ca294e3b 100644
+index e5c78c78cd..912a73373b 100644
 --- a/Herebyfile.mjs
 +++ b/Herebyfile.mjs
 @@ -1,29 +1,32 @@
@@ -693,7 +693,7 @@ index e5c78c78cd..25ca294e3b 100644
  
  // Localize diagnostics
  /**
-@@ -114,19 +140,28 @@ const localizationTargets = localizationDirectories
+@@ -114,19 +140,36 @@ const localizationTargets = localizationDirectories
      .map(f => `built/local/${f}/diagnosticMessages.generated.json`)
      .concat(generatedLCGFile);
  
@@ -709,17 +709,24 @@ index e5c78c78cd..25ca294e3b 100644
 +        }
      }
 -};
--
--const preSrc = parallel(generateLibs, series(buildScripts, generateDiagnostics, localize));
--const buildSrc = () => buildProject("src");
 +});
  
--task("build-src", series(preSrc, buildSrc));
+-const preSrc = parallel(generateLibs, series(buildScripts, generateDiagnostics, localize));
+-const buildSrc = () => buildProject("src");
 +export const buildSrc = task({
 +    name: "build-src",
 +    description: "Builds the src project (all code)",
 +    dependencies: [generateDiagnostics],
 +    run: () => buildProject("src"),
++});
+ 
+-task("build-src", series(preSrc, buildSrc));
++export const watchSrc = task({
++    name: "watch-src",
++    description: "Watches the src project (all code)",
++    hiddenFromTaskList: true,
++    dependencies: [generateDiagnostics],
++    run: () => watchProject("src"),
 +});
  
 -const cleanSrc = () => cleanProject("src");
@@ -732,7 +739,7 @@ index e5c78c78cd..25ca294e3b 100644
  
  /**
   * @param {string} entrypoint
-@@ -142,564 +177,634 @@ async function runDtsBundler(entrypoint, output) {
+@@ -142,564 +185,634 @@ async function runDtsBundler(entrypoint, output) {
      ]);
  }
  
