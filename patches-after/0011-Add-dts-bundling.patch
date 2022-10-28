@@ -3083,10 +3083,10 @@ index e599ad7366..9e627cae13 100644
      documentation: SymbolDisplayPart[];
      symbolKind: ScriptElementKind;
 diff --git a/src/services/textChanges.ts b/src/services/textChanges.ts
-index 2ddc725e83..4673304be2 100644
+index 2751851140..36c1e11d52 100644
 --- a/src/services/textChanges.ts
 +++ b/src/services/textChanges.ts
-@@ -1192,7 +1192,8 @@ function assignPositionsToNodeArray(nodes: NodeArray<any>, visitor: Visitor, tes
+@@ -1213,7 +1213,8 @@ function assignPositionsToNodeArray(nodes: NodeArray<any>, visitor: Visitor, tes
      return nodeArray;
  }
  

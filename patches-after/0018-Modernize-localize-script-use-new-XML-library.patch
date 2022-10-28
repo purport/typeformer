@@ -17,7 +17,7 @@ script unconditionally in a later commit.
  3 files changed, 100 insertions(+), 157 deletions(-)
 
 diff --git a/package-lock.json b/package-lock.json
-index 933b714c13..7e13d1a5da 100644
+index 860d93db50..3c3f3cbae2 100644
 --- a/package-lock.json
 +++ b/package-lock.json
 @@ -25,7 +25,6 @@
@@ -60,9 +60,9 @@ index 933b714c13..7e13d1a5da 100644
 -            }
 -        },
          "node_modules/@typescript-eslint/eslint-plugin": {
-             "version": "5.40.1",
-             "resolved": "https://registry.npmjs.org/@typescript-eslint/eslint-plugin/-/eslint-plugin-5.40.1.tgz",
-@@ -2159,6 +2149,22 @@
+             "version": "5.41.0",
+             "resolved": "https://registry.npmjs.org/@typescript-eslint/eslint-plugin/-/eslint-plugin-5.41.0.tgz",
+@@ -2160,6 +2150,22 @@
              "integrity": "sha512-DCXu6Ifhqcks7TZKY3Hxp3y6qphY5SJZmrWMDrKcERSOXWQdMhU9Ig/PYrzyw/ul9jOIyh0N4M0tbC5hodg8dw==",
              "dev": true
          },
@@ -85,7 +85,7 @@ index 933b714c13..7e13d1a5da 100644
          "node_modules/fastest-levenshtein": {
              "version": "1.0.16",
              "resolved": "https://registry.npmjs.org/fastest-levenshtein/-/fastest-levenshtein-1.0.16.tgz",
-@@ -3940,12 +3946,6 @@
+@@ -3941,12 +3947,6 @@
                  "url": "https://github.com/sponsors/ljharb"
              }
          },
@@ -98,7 +98,7 @@ index 933b714c13..7e13d1a5da 100644
          "node_modules/semver": {
              "version": "7.3.8",
              "resolved": "https://registry.npmjs.org/semver/-/semver-7.3.8.tgz",
-@@ -4122,6 +4122,12 @@
+@@ -4123,6 +4123,12 @@
                  "url": "https://github.com/sponsors/sindresorhus"
              }
          },
@@ -111,7 +111,7 @@ index 933b714c13..7e13d1a5da 100644
          "node_modules/supports-color": {
              "version": "7.2.0",
              "resolved": "https://registry.npmjs.org/supports-color/-/supports-color-7.2.0.tgz",
-@@ -4455,28 +4461,6 @@
+@@ -4456,28 +4462,6 @@
              "integrity": "sha512-l4Sp/DRseor9wL6EvV2+TuQn63dMkPjZ/sp9XkghTEbV9KlPS1xUsZ3u7/IQO4wxtcFB4bgpQPRcR3QCvezPcQ==",
              "dev": true
          },
@@ -140,7 +140,7 @@ index 933b714c13..7e13d1a5da 100644
          "node_modules/yallist": {
              "version": "4.0.0",
              "resolved": "https://registry.npmjs.org/yallist/-/yallist-4.0.0.tgz",
-@@ -4874,15 +4858,6 @@
+@@ -4875,15 +4859,6 @@
              "integrity": "sha512-Jjakcv8Roqtio6w1gr0D7y6twbhx6gGgFGF5BLwajPpnOIOxFkakFhCq+LmyyeAz7BX6ULrjBOxdKaCDy+4+dQ==",
              "dev": true
          },
@@ -154,9 +154,9 @@ index 933b714c13..7e13d1a5da 100644
 -            }
 -        },
          "@typescript-eslint/eslint-plugin": {
-             "version": "5.40.1",
-             "resolved": "https://registry.npmjs.org/@typescript-eslint/eslint-plugin/-/eslint-plugin-5.40.1.tgz",
-@@ -6015,6 +5990,15 @@
+             "version": "5.41.0",
+             "resolved": "https://registry.npmjs.org/@typescript-eslint/eslint-plugin/-/eslint-plugin-5.41.0.tgz",
+@@ -6017,6 +5992,15 @@
              "integrity": "sha512-DCXu6Ifhqcks7TZKY3Hxp3y6qphY5SJZmrWMDrKcERSOXWQdMhU9Ig/PYrzyw/ul9jOIyh0N4M0tbC5hodg8dw==",
              "dev": true
          },
@@ -172,7 +172,7 @@ index 933b714c13..7e13d1a5da 100644
          "fastest-levenshtein": {
              "version": "1.0.16",
              "resolved": "https://registry.npmjs.org/fastest-levenshtein/-/fastest-levenshtein-1.0.16.tgz",
-@@ -7254,12 +7238,6 @@
+@@ -7256,12 +7240,6 @@
                  "is-regex": "^1.1.4"
              }
          },
@@ -185,7 +185,7 @@ index 933b714c13..7e13d1a5da 100644
          "semver": {
              "version": "7.3.8",
              "resolved": "https://registry.npmjs.org/semver/-/semver-7.3.8.tgz",
-@@ -7397,6 +7375,12 @@
+@@ -7399,6 +7377,12 @@
              "integrity": "sha512-6fPc+R4ihwqP6N/aIv2f1gMH8lOVtWQHoqC4yK6oSDVVocumAsfCqjkXnqiYMhmMwS/mEHLp7Vehlt3ql6lEig==",
              "dev": true
          },
@@ -198,7 +198,7 @@ index 933b714c13..7e13d1a5da 100644
          "supports-color": {
              "version": "7.2.0",
              "resolved": "https://registry.npmjs.org/supports-color/-/supports-color-7.2.0.tgz",
-@@ -7655,22 +7639,6 @@
+@@ -7657,22 +7641,6 @@
              "integrity": "sha512-l4Sp/DRseor9wL6EvV2+TuQn63dMkPjZ/sp9XkghTEbV9KlPS1xUsZ3u7/IQO4wxtcFB4bgpQPRcR3QCvezPcQ==",
              "dev": true
          },
@@ -252,7 +252,7 @@ index b62551cd72..96f93ee712 100644
      "scripts": {
          "test": "hereby runtests-parallel --light=false",
 diff --git a/scripts/generateLocalizedDiagnosticMessages.mjs b/scripts/generateLocalizedDiagnosticMessages.mjs
-index e07f6629a1..45e393fc3e 100644
+index e32ba78d03..4970c9453f 100644
 --- a/scripts/generateLocalizedDiagnosticMessages.mjs
 +++ b/scripts/generateLocalizedDiagnosticMessages.mjs
 @@ -1,8 +1,28 @@

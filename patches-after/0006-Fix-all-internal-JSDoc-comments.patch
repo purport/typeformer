@@ -123,7 +123,7 @@ index 78e90fc976..d2f3078e7b 100644
  /**
   * .failed-tests reporter
 diff --git a/scripts/processDiagnosticMessages.mjs b/scripts/processDiagnosticMessages.mjs
-index 26cf24d796..747af17bd4 100644
+index 9b46eb6630..33069ce66a 100644
 --- a/scripts/processDiagnosticMessages.mjs
 +++ b/scripts/processDiagnosticMessages.mjs
 @@ -9,6 +9,7 @@ import fs from "fs";
@@ -703,7 +703,7 @@ index 7e7ea32611..b7c339f69e 100644
      const out: CompilerOptions = {};
      for (const key in opts) {
 diff --git a/src/compiler/core.ts b/src/compiler/core.ts
-index e7590ce90b..a0cc5b1854 100644
+index 05a2b6bf08..e69910846e 100644
 --- a/src/compiler/core.ts
 +++ b/src/compiler/core.ts
 @@ -41,11 +41,12 @@ export function length(array: readonly any[] | undefined): number {
@@ -1500,15 +1500,15 @@ index e7590ce90b..a0cc5b1854 100644
   */
  export function compareTextSpans(a: Partial<TextSpan> | undefined, b: Partial<TextSpan> | undefined): Comparison {
      return compareValues(a?.start, b?.start) || compareValues(a?.length, b?.length);
-@@ -2158,7 +2245,6 @@ export function min<T>(a: T, b: T, compare: Comparer<T>): T {
-     return compare(a, b) === Comparison.LessThan ? a : b;
+@@ -2162,7 +2249,6 @@ export function min<T>(items: readonly T[], compare: Comparer<T>): T | undefined
+     return reduceLeft(items, (x, y) => compare(x, y) === Comparison.LessThan ? x : y);
  }
  
 -/** @internal */
  /**
   * Compare two strings using a case-insensitive ordinal comparison.
   *
-@@ -2170,6 +2256,8 @@ export function min<T>(a: T, b: T, compare: Comparer<T>): T {
+@@ -2174,6 +2260,8 @@ export function min<T>(items: readonly T[], compare: Comparer<T>): T | undefined
   * value of each code-point after applying `toUpperCase` to each string. We always map both
   * strings to their upper-case form as some unicode characters do not properly round-trip to
   * lowercase (such as `ẞ` (German sharp capital s)).
@@ -1517,7 +1517,7 @@ index e7590ce90b..a0cc5b1854 100644
   */
  export function compareStringsCaseInsensitive(a: string, b: string) {
      if (a === b) return Comparison.EqualTo;
-@@ -2180,7 +2268,6 @@ export function compareStringsCaseInsensitive(a: string, b: string) {
+@@ -2184,7 +2272,6 @@ export function compareStringsCaseInsensitive(a: string, b: string) {
      return a < b ? Comparison.LessThan : a > b ? Comparison.GreaterThan : Comparison.EqualTo;
  }
  
@@ -1525,7 +1525,7 @@ index e7590ce90b..a0cc5b1854 100644
  /**
   * Compare two strings using a case-sensitive ordinal comparison.
   *
-@@ -2190,6 +2277,8 @@ export function compareStringsCaseInsensitive(a: string, b: string) {
+@@ -2194,6 +2281,8 @@ export function compareStringsCaseInsensitive(a: string, b: string) {
   *
   * Case-sensitive comparisons compare both strings one code-point at a time using the integer
   * value of each code-point.
@@ -1534,7 +1534,7 @@ index e7590ce90b..a0cc5b1854 100644
   */
  export function compareStringsCaseSensitive(a: string | undefined, b: string | undefined): Comparison {
      return compareComparableValues(a, b);
-@@ -2304,7 +2393,6 @@ export function setUILocale(value: string | undefined) {
+@@ -2308,7 +2397,6 @@ export function setUILocale(value: string | undefined) {
      }
  }
  
@@ -1542,7 +1542,7 @@ index e7590ce90b..a0cc5b1854 100644
  /**
   * Compare two strings in a using the case-sensitive sort behavior of the UI locale.
   *
-@@ -2314,6 +2402,8 @@ export function setUILocale(value: string | undefined) {
+@@ -2318,6 +2406,8 @@ export function setUILocale(value: string | undefined) {
   *
   * Case-sensitive comparisons compare strings that differ in base characters, or
   * accents/diacritic marks, or case as unequal.
@@ -1551,7 +1551,7 @@ index e7590ce90b..a0cc5b1854 100644
   */
  export function compareStringsCaseSensitiveUI(a: string, b: string) {
      const comparer = uiComparerCaseSensitive || (uiComparerCaseSensitive = createUIStringComparer(uiLocale));
-@@ -2328,13 +2418,16 @@ export function compareProperties<T extends object, K extends keyof T>(a: T | un
+@@ -2332,13 +2422,16 @@ export function compareProperties<T extends object, K extends keyof T>(a: T | un
          comparer(a[key], b[key]);
  }
  
@@ -1571,7 +1571,7 @@ index e7590ce90b..a0cc5b1854 100644
  /**
   * Given a name and a list of names that are *not* equal to the name, return a spelling suggestion if there is one that is close enough.
   * Names less than length 3 only check for case-insensitive equality.
-@@ -2346,6 +2439,8 @@ export function compareBooleans(a: boolean, b: boolean): Comparison {
+@@ -2350,6 +2443,8 @@ export function compareBooleans(a: boolean, b: boolean): Comparison {
   *      * Whose levenshtein distance is more than 0.4 of the length of the name
   *        (0.4 allows 1 substitution/transposition for every 5 characters,
   *         and 1 insertion/deletion at 3 characters)
@@ -1580,7 +1580,7 @@ index e7590ce90b..a0cc5b1854 100644
   */
  export function getSpellingSuggestion<T>(name: string, candidates: T[], getName: (candidate: T) => string | undefined): T | undefined {
      const maximumLengthDifference = Math.max(2, Math.floor(name.length * 0.34));
-@@ -2445,9 +2540,10 @@ export function stringContains(str: string, substring: string): boolean {
+@@ -2449,9 +2544,10 @@ export function stringContains(str: string, substring: string): boolean {
      return str.indexOf(substring) !== -1;
  }
  
@@ -1592,7 +1592,7 @@ index e7590ce90b..a0cc5b1854 100644
   */
  export function removeMinAndVersionNumbers(fileName: string) {
      // We used to use the regex /[.-]((min)|(\d+(\.\d+)*))$/ and would just .replace it twice.
-@@ -2497,8 +2593,11 @@ export function removeMinAndVersionNumbers(fileName: string) {
+@@ -2501,8 +2597,11 @@ export function removeMinAndVersionNumbers(fileName: string) {
      return end === fileName.length ? fileName : fileName.slice(0, end);
  }
  
@@ -1606,7 +1606,7 @@ index e7590ce90b..a0cc5b1854 100644
  export function orderedRemoveItem<T>(array: T[], item: T): boolean {
      for (let i = 0; i < array.length; i++) {
          if (array[i] === item) {
-@@ -2509,8 +2608,11 @@ export function orderedRemoveItem<T>(array: T[], item: T): boolean {
+@@ -2513,8 +2612,11 @@ export function orderedRemoveItem<T>(array: T[], item: T): boolean {
      return false;
  }
  
@@ -1620,7 +1620,7 @@ index e7590ce90b..a0cc5b1854 100644
  export function orderedRemoveItemAt<T>(array: T[], index: number): void {
      // This seems to be faster than either `array.splice(i, 1)` or `array.copyWithin(i, i+ 1)`.
      for (let i = index; i < array.length - 1; i++) {
-@@ -2526,8 +2628,11 @@ export function unorderedRemoveItemAt<T>(array: T[], index: number): void {
+@@ -2530,8 +2632,11 @@ export function unorderedRemoveItemAt<T>(array: T[], index: number): void {
      array.pop();
  }
  
@@ -1634,7 +1634,7 @@ index e7590ce90b..a0cc5b1854 100644
  export function unorderedRemoveItem<T>(array: T[], item: T) {
      return unorderedRemoveFirstItemWhere(array, element => element === item);
  }
-@@ -2550,8 +2655,11 @@ export function createGetCanonicalFileName(useCaseSensitiveFileNames: boolean):
+@@ -2554,8 +2659,11 @@ export function createGetCanonicalFileName(useCaseSensitiveFileNames: boolean):
      return useCaseSensitiveFileNames ? identity : toFileNameLowerCase;
  }
  
@@ -1648,7 +1648,7 @@ index e7590ce90b..a0cc5b1854 100644
  export interface Pattern {
      prefix: string;
      suffix: string;
-@@ -2562,18 +2670,22 @@ export function patternText({ prefix, suffix }: Pattern): string {
+@@ -2566,18 +2674,22 @@ export function patternText({ prefix, suffix }: Pattern): string {
      return `${prefix}*${suffix}`;
  }
  
@@ -1674,7 +1674,7 @@ index e7590ce90b..a0cc5b1854 100644
  export function findBestPatternMatch<T>(values: readonly T[], getPattern: (value: T) => Pattern, candidate: string): T | undefined {
      let matchedValue: T | undefined;
      // use length of prefix as betterness criteria
-@@ -2725,25 +2837,27 @@ function cartesianProductWorker<T>(arrays: readonly (readonly T[])[], result: (r
+@@ -2729,25 +2841,27 @@ function cartesianProductWorker<T>(arrays: readonly (readonly T[])[], result: (r
  }
  
  
@@ -1704,7 +1704,7 @@ index e7590ce90b..a0cc5b1854 100644
   */
  export function padRight(s: string, length: number, padString: " " = " ") {
      return length <= s.length ? s : s + padString.repeat(length - s.length);
-@@ -2761,21 +2875,24 @@ export function takeWhile<T>(array: readonly T[], predicate: (element: T) => boo
+@@ -2765,21 +2879,24 @@ export function takeWhile<T>(array: readonly T[], predicate: (element: T) => boo
      return array.slice(0, index);
  }
  
@@ -1977,7 +1977,7 @@ index 782cee7ea7..39b9490fba 100644
  export function createBaseNodeFactory(): BaseNodeFactory {
      let NodeConstructor: new (kind: SyntaxKind, pos?: number, end?: number) => Node;
 diff --git a/src/compiler/factory/emitHelpers.ts b/src/compiler/factory/emitHelpers.ts
-index 34f8e9233a..6d10a3a781 100644
+index 6b05b1c72a..8783c52b76 100644
 --- a/src/compiler/factory/emitHelpers.ts
 +++ b/src/compiler/factory/emitHelpers.ts
 @@ -412,7 +412,7 @@ export function createEmitHelperFactory(context: TransformationContext): EmitHel
@@ -2002,7 +2002,7 @@ index 34f8e9233a..6d10a3a781 100644
   */
  export function helperString(input: TemplateStringsArray, ...args: string[]) {
      return (uniqueName: EmitHelperUniqueNameCallback) => {
-@@ -878,7 +879,6 @@ export const exportStarHelper: UnscopedEmitHelper = {
+@@ -880,7 +881,6 @@ export const exportStarHelper: UnscopedEmitHelper = {
              };`
  };
  
@@ -2010,7 +2010,7 @@ index 34f8e9233a..6d10a3a781 100644
  /**
   * Parameters:
   *  @param receiver — The object from which the private member will be read.
-@@ -926,6 +926,8 @@ export const exportStarHelper: UnscopedEmitHelper = {
+@@ -928,6 +928,8 @@ export const exportStarHelper: UnscopedEmitHelper = {
   *
   * Reading from a private static method (TS 4.3+):
   *      __classPrivateFieldGet(<any>, <constructor>, "m", <function>)
@@ -2019,7 +2019,7 @@ index 34f8e9233a..6d10a3a781 100644
   */
  export const classPrivateFieldGetHelper: UnscopedEmitHelper = {
      name: "typescript:classPrivateFieldGet",
-@@ -939,7 +941,6 @@ export const classPrivateFieldGetHelper: UnscopedEmitHelper = {
+@@ -941,7 +943,6 @@ export const classPrivateFieldGetHelper: UnscopedEmitHelper = {
              };`
  };
  
@@ -2027,7 +2027,7 @@ index 34f8e9233a..6d10a3a781 100644
  /**
   * Parameters:
   *  @param receiver — The object on which the private member will be set.
-@@ -990,6 +991,8 @@ export const classPrivateFieldGetHelper: UnscopedEmitHelper = {
+@@ -992,6 +993,8 @@ export const classPrivateFieldGetHelper: UnscopedEmitHelper = {
   * Writing to a private static method (TS 4.3+):
   *      __classPrivateFieldSet(<any>, <constructor>, <any>, "m", <function>)
   *      NOTE: This always results in a runtime error.
@@ -2036,7 +2036,7 @@ index 34f8e9233a..6d10a3a781 100644
   */
  export const classPrivateFieldSetHelper: UnscopedEmitHelper = {
      name: "typescript:classPrivateFieldSet",
-@@ -1004,7 +1007,6 @@ export const classPrivateFieldSetHelper: UnscopedEmitHelper = {
+@@ -1006,7 +1009,6 @@ export const classPrivateFieldSetHelper: UnscopedEmitHelper = {
              };`
  };
  
@@ -2044,7 +2044,7 @@ index 34f8e9233a..6d10a3a781 100644
  /**
   * Parameters:
   *  @param state — One of the following:
-@@ -1016,6 +1018,8 @@ export const classPrivateFieldSetHelper: UnscopedEmitHelper = {
+@@ -1018,6 +1020,8 @@ export const classPrivateFieldSetHelper: UnscopedEmitHelper = {
   * Usage:
   * This helper is used to transform `#field in expression` to
   *      `__classPrivateFieldIn(<weakMap/weakSet/constructor>, expression)`
@@ -2963,7 +2963,7 @@ index 5d71e94904..87fef65c11 100644
      const traceEnabled = isTraceEnabled(compilerOptions, host);
      if (traceEnabled) {
 diff --git a/src/compiler/moduleSpecifiers.ts b/src/compiler/moduleSpecifiers.ts
-index 6a01040365..25f450cb43 100644
+index 27075cf9e4..b6ddd551cf 100644
 --- a/src/compiler/moduleSpecifiers.ts
 +++ b/src/compiler/moduleSpecifiers.ts
 @@ -180,8 +180,11 @@ function tryGetModuleSpecifiersFromCacheWorker(
@@ -14917,7 +14917,7 @@ index f954eea53b..73079ef532 100644
  export type ReadMapFile = (mapFileName: string, mapFileNameFromDts: string | undefined) => string | undefined | DocumentPositionMapper | false;
  
 diff --git a/src/services/textChanges.ts b/src/services/textChanges.ts
-index 2aec0843d2..2ddc725e83 100644
+index 0f3562715c..2751851140 100644
 --- a/src/services/textChanges.ts
 +++ b/src/services/textChanges.ts
 @@ -110,7 +110,6 @@ function hasCommentsBeforeLineBreak(text: string, start: number) {
@@ -14937,7 +14937,7 @@ index 2aec0843d2..2ddc725e83 100644
   */
  export interface ConfigurableStartEnd extends ConfigurableStart, ConfigurableEnd {}
  
-@@ -1614,9 +1615,12 @@ namespace deleteDeclaration {
+@@ -1635,9 +1636,12 @@ namespace deleteDeclaration {
      }
  }
  

@@ -9,13 +9,13 @@ See issue 10937 on github.com/github/codeql.
  1 file changed, 26 insertions(+)
 
 diff --git a/.github/codeql/codeql-configuration.yml b/.github/codeql/codeql-configuration.yml
-index 402799f89d..669f76105e 100644
+index a9e8b576b7..3470e9f25a 100644
 --- a/.github/codeql/codeql-configuration.yml
 +++ b/.github/codeql/codeql-configuration.yml
-@@ -2,3 +2,29 @@ name : CodeQL Configuration
- 
- paths:
-   - './src' 
+@@ -6,3 +6,29 @@ paths:
+   - Gulpfile.mjs
+ paths-ignore:
+   - src/lib
 +
 +# These queries appear to time out after the module conversion.
 +# https://github.com/github/codeql/issues/10937

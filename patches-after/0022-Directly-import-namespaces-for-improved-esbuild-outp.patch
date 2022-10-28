@@ -116,7 +116,7 @@ index 1f758b6787..ca6d9526fd 100644
  
  function createBinder(): (file: SourceFile, options: CompilerOptions) => void {
 diff --git a/src/compiler/checker.ts b/src/compiler/checker.ts
-index c26cc5cd63..be5b6a9804 100644
+index c717c4fe54..99377952e3 100644
 --- a/src/compiler/checker.ts
 +++ b/src/compiler/checker.ts
 @@ -155,7 +155,7 @@ import {
