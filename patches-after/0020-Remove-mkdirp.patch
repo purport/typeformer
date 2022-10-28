@@ -12,7 +12,7 @@ function in recursive mode instead.
  3 files changed, 2 insertions(+), 43 deletions(-)
 
 diff --git a/package-lock.json b/package-lock.json
-index 5106699894..9bd57b9ffb 100644
+index 7e13d1a5da..6685da28c7 100644
 --- a/package-lock.json
 +++ b/package-lock.json
 @@ -19,7 +19,6 @@
@@ -24,7 +24,7 @@ index 5106699894..9bd57b9ffb 100644
                  "@types/ms": "latest",
                  "@types/node": "latest",
 @@ -46,7 +45,6 @@
-                 "hereby": "^1.6.1",
+                 "hereby": "^1.6.3",
                  "jsonc-parser": "^3.2.0",
                  "minimist": "latest",
 -                "mkdirp": "latest",
@@ -96,7 +96,7 @@ index 5106699894..9bd57b9ffb 100644
              "version": "10.1.0",
              "resolved": "https://registry.npmjs.org/mocha/-/mocha-10.1.0.tgz",
 diff --git a/package.json b/package.json
-index bdada8370d..05a08c8841 100644
+index 96f93ee712..14492f0cc5 100644
 --- a/package.json
 +++ b/package.json
 @@ -45,7 +45,6 @@
@@ -108,7 +108,7 @@ index bdada8370d..05a08c8841 100644
          "@types/ms": "latest",
          "@types/node": "latest",
 @@ -72,7 +71,6 @@
-         "hereby": "^1.6.1",
+         "hereby": "^1.6.3",
          "jsonc-parser": "^3.2.0",
          "minimist": "latest",
 -        "mkdirp": "latest",

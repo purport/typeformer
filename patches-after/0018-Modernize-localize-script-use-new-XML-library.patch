@@ -17,7 +17,7 @@ script unconditionally in a later commit.
  3 files changed, 100 insertions(+), 157 deletions(-)
 
 diff --git a/package-lock.json b/package-lock.json
-index 549fd66133..5106699894 100644
+index 933b714c13..7e13d1a5da 100644
 --- a/package-lock.json
 +++ b/package-lock.json
 @@ -25,7 +25,6 @@
@@ -35,7 +35,7 @@ index 549fd66133..5106699894 100644
 +                "fast-xml-parser": "^4.0.11",
                  "fs-extra": "^9.1.0",
                  "glob": "latest",
-                 "hereby": "^1.6.1",
+                 "hereby": "^1.6.3",
 @@ -53,8 +53,7 @@
                  "node-fetch": "^3.2.10",
                  "source-map-support": "latest",
@@ -222,7 +222,7 @@ index 549fd66133..5106699894 100644
              "version": "4.0.0",
              "resolved": "https://registry.npmjs.org/yallist/-/yallist-4.0.0.tgz",
 diff --git a/package.json b/package.json
-index fbdae0a791..bdada8370d 100644
+index b62551cd72..96f93ee712 100644
 --- a/package.json
 +++ b/package.json
 @@ -51,7 +51,6 @@
@@ -240,7 +240,7 @@ index fbdae0a791..bdada8370d 100644
 +        "fast-xml-parser": "^4.0.11",
          "fs-extra": "^9.1.0",
          "glob": "latest",
-         "hereby": "^1.6.1",
+         "hereby": "^1.6.3",
 @@ -79,8 +79,7 @@
          "node-fetch": "^3.2.10",
          "source-map-support": "latest",
