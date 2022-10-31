@@ -7,11 +7,12 @@ needsUpdate may be wrong when the branch changes; these ones are now so
 fast thanks to being pure JS that we can just always run their contents
 and be sure that the outputs are right.
 ---
- Herebyfile.mjs | 52 +++++++++++++++++++-------------------------------
- 1 file changed, 20 insertions(+), 32 deletions(-)
+ Herebyfile.mjs                        | 58 +++++++++++++--------------
+ scripts/processDiagnosticMessages.mjs | 25 ++++++++----
+ 2 files changed, 46 insertions(+), 37 deletions(-)
 
 diff --git a/Herebyfile.mjs b/Herebyfile.mjs
-index 912a73373b..19828a7b8e 100644
+index 66cf92ba0b..5a1caf6216 100644
 --- a/Herebyfile.mjs
 +++ b/Herebyfile.mjs
 @@ -6,7 +6,7 @@ import { task } from "hereby";
@@ -19,7 +20,7 @@ index 912a73373b..19828a7b8e 100644
  import util from "util";
  import chalk from "chalk";
 -import { exec, readJson, needsUpdate, getDiffTool, getDirSize, memoize } from "./scripts/build/utils.mjs";
-+import { exec, readJson, getDiffTool, getDirSize, memoize } from "./scripts/build/utils.mjs";
++import { exec, readJson, getDiffTool, getDirSize, memoize, needsUpdate } from "./scripts/build/utils.mjs";
  import { runConsoleTests, refBaseline, localBaseline, refRwcBaseline, localRwcBaseline } from "./scripts/build/tests.mjs";
  import { buildProject as realBuildProject, cleanProject, watchProject } from "./scripts/build/projects.mjs";
  import { localizationDirectories } from "./scripts/build/localization.mjs";
@@ -32,7 +33,7 @@ index 912a73373b..19828a7b8e 100644
 -        if (needsUpdate([copyrightFilename, ...allSources], allTargets)) {
 -            for (const lib of libs()) {
 -                let output = await copyright();
--    
+-
 -                for (const source of lib.sources) {
 -                    const contents = await fs.promises.readFile(source, "utf-8");
 -                    // TODO(jakebailey): "\n\n" is for compatibility with our current tests; our test baselines
@@ -66,20 +67,33 @@ index 912a73373b..19828a7b8e 100644
      }
  });
  
-@@ -143,11 +139,7 @@ const localizationTargets = localizationDirectories
- const localize = task({
-     name: "localize",
-     dependencies: [generateDiagnostics],
--    run: async () => {
--        if (needsUpdate(diagnosticMessagesGeneratedJson, generatedLCGFile)) {
--            return exec(process.execPath, ["scripts/generateLocalizedDiagnosticMessages.mjs", "src/loc/lcl", "built/local", diagnosticMessagesGeneratedJson], { ignoreExitCode: true });
--        }
--    }
-+    run: () => exec(process.execPath, ["scripts/generateLocalizedDiagnosticMessages.mjs", "src/loc/lcl", "built/local", diagnosticMessagesGeneratedJson], { ignoreExitCode: true }),
+@@ -408,7 +404,11 @@ export const dtsServices = task({
+     name: "dts-services",
+     description: "Bundles typescript.d.ts",
+     dependencies: [buildServices],
+-    run: () => runDtsBundler("./built/local/typescript/typescript.d.ts", "./built/local/typescript.d.ts"),
++    run: async () => {
++        if (needsUpdate("./built/local/typescript/tsconfig.tsbuildinfo", ["./built/local/typescript.d.ts", "./built/local/typescript.internal.d.ts"])) {
++            runDtsBundler("./built/local/typescript/typescript.d.ts", "./built/local/typescript.d.ts");
++        }
++    },
  });
  
- export const buildSrc = task({
-@@ -558,11 +550,9 @@ export const generateTypesMap = task({
+ 
+@@ -462,7 +462,11 @@ export const dtsLssl = task({
+     name: "dts-lssl",
+     description: "Bundles tsserverlibrary.d.ts",
+     dependencies: [buildLssl],
+-    run: () => runDtsBundler("./built/local/tsserverlibrary/tsserverlibrary.d.ts", "./built/local/tsserverlibrary.d.ts")
++    run: async () => {
++        if (needsUpdate("./built/local/tsserverlibrary/tsconfig.tsbuildinfo", ["./built/local/tsserverlibrary.d.ts", "./built/local/tsserverlibrary.internal.d.ts"])) {
++            await runDtsBundler("./built/local/tsserverlibrary/tsserverlibrary.d.ts", "./built/local/tsserverlibrary.d.ts");
++        }
++    }
+ });
+ 
+ export const dts = task({
+@@ -558,11 +562,9 @@ export const generateTypesMap = task({
      run: async () => {
          const source = "src/server/typesMap.json";
          const target = "built/local/typesMap.json";
@@ -94,7 +108,7 @@ index 912a73373b..19828a7b8e 100644
      }
  });
  
-@@ -575,11 +565,9 @@ const copyBuiltLocalDiagnosticMessages = task({
+@@ -575,11 +577,9 @@ const copyBuiltLocalDiagnosticMessages = task({
      name: "copy-built-local-diagnostic-messages",
      dependencies: [generateDiagnostics],
      run: async () => {
@@ -109,6 +123,62 @@ index 912a73373b..19828a7b8e 100644
      }
  });
  
+diff --git a/scripts/processDiagnosticMessages.mjs b/scripts/processDiagnosticMessages.mjs
+index 33069ce66a..2b36942cc4 100644
+--- a/scripts/processDiagnosticMessages.mjs
++++ b/scripts/processDiagnosticMessages.mjs
+@@ -13,7 +13,7 @@ void 0;
+ 
+ /** @typedef {Map<string, DiagnosticDetails>} InputDiagnosticMessageTable */
+ 
+-function main() {
++async function main() {
+     if (process.argv.length < 3) {
+         console.log("Usage:");
+         console.log("\tnode processDiagnosticMessages.mjs <diagnostic-json-input-file>");
+@@ -24,15 +24,24 @@ function main() {
+      * @param {string} fileName
+      * @param {string} contents
+      */
+-    function writeFile(fileName, contents) {
+-        fs.writeFile(path.join(path.dirname(inputFilePath), fileName), contents, { encoding: "utf-8" }, err => {
+-            if (err) throw err;
+-        });
++     async function writeFile(fileName, contents) {
++        const filePath = path.join(path.dirname(inputFilePath), fileName);
++        try {
++            const existingContents = await fs.promises.readFile(filePath, "utf-8");
++            if (existingContents === contents) {
++                return;
++            }
++        }
++        catch {
++            // Just write the file.
++        }
++
++        await fs.promises.writeFile(filePath, contents, { encoding: "utf-8" });
+     }
+ 
+     const inputFilePath = process.argv[2].replace(/\\/g, "/");
+     console.log(`Reading diagnostics from ${inputFilePath}`);
+-    const inputStr = fs.readFileSync(inputFilePath, { encoding: "utf-8" });
++    const inputStr = await fs.promises.readFile(inputFilePath, { encoding: "utf-8" });
+ 
+     /** @type {{ [key: string]: DiagnosticDetails }} */
+     const diagnosticMessagesJson = JSON.parse(inputStr);
+@@ -47,10 +56,10 @@ function main() {
+ 
+     const infoFileOutput = buildInfoFileOutput(diagnosticMessages, inputFilePath);
+     checkForUniqueCodes(diagnosticMessages);
+-    writeFile("diagnosticInformationMap.generated.ts", infoFileOutput);
++    await writeFile("diagnosticInformationMap.generated.ts", infoFileOutput);
+ 
+     const messageOutput = buildDiagnosticMessageOutput(diagnosticMessages);
+-    writeFile("diagnosticMessages.generated.json", messageOutput);
++    await writeFile("diagnosticMessages.generated.json", messageOutput);
+ }
+ 
+ /**
 -- 
 2.38.1
 

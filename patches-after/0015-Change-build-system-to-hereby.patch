@@ -532,7 +532,7 @@ index 5606df9611..d72ffc513f 100644
 \ No newline at end of file
 +RUN npx hereby configure-insiders && npx hereby LKG && npx hereby clean && npm pack .
 diff --git a/Herebyfile.mjs b/Herebyfile.mjs
-index e5c78c78cd..912a73373b 100644
+index e5c78c78cd..66cf92ba0b 100644
 --- a/Herebyfile.mjs
 +++ b/Herebyfile.mjs
 @@ -1,29 +1,32 @@
@@ -646,7 +646,7 @@ index e5c78c78cd..912a73373b 100644
 +        if (needsUpdate([copyrightFilename, ...allSources], allTargets)) {
 +            for (const lib of libs()) {
 +                let output = await copyright();
-+    
++
 +                for (const source of lib.sources) {
 +                    const contents = await fs.promises.readFile(source, "utf-8");
 +                    // TODO(jakebailey): "\n\n" is for compatibility with our current tests; our test baselines
@@ -967,7 +967,7 @@ index e5c78c78cd..912a73373b 100644
 -// Pre-build steps to use based on supplied options.
 -const preBuild = cmdLineOptions.lkg ? lkgPreBuild : localPreBuild;
 +        return options;
-+    })
++    });
  
 -const esbuildServices = esbuildTask("./src/typescript/typescript.ts", "./built/local/typescript.js", /* exportIsTsObject */ true);
 -const writeServicesCJSShim = () => writeCJSReexport("./built/local/typescript/typescript.js", "./built/local/typescript.js");
@@ -975,7 +975,7 @@ index e5c78c78cd..912a73373b 100644
 +    return {
 +        build: async () => esbuild.build(await getOptions()),
 +        watch: async () => esbuild.build({ ...await getOptions(), watch: true, logLevel: "info" }),
-+    }
++    };
 +}
  
 -// TODO(jakebailey): rename this; no longer "services".
@@ -1065,7 +1065,7 @@ index e5c78c78cd..912a73373b 100644
 +            }
 +            return bundler.watch();
 +        }
-+    })
++    });
  
 -cleanTasks.push(cleanServices);
 -task("clean-services", cleanServices);
