@@ -728,7 +728,7 @@ index 7a257b2fd4..14cda731b2 100644
  task("LKG").flags = {
      "   --built": "Compile using the built version of the compiler.",
 diff --git a/package-lock.json b/package-lock.json
-index 563e5d5a89..2394f98026 100644
+index c8f17b7814..ae71bcd2cf 100644
 --- a/package-lock.json
 +++ b/package-lock.json
 @@ -41,6 +41,7 @@
@@ -778,7 +778,7 @@ index 563e5d5a89..2394f98026 100644
          "node_modules/@eslint/eslintrc": {
              "version": "1.3.3",
              "resolved": "https://registry.npmjs.org/@eslint/eslintrc/-/eslintrc-1.3.3.tgz",
-@@ -2265,6 +2298,363 @@
+@@ -2266,6 +2299,363 @@
                  "es6-symbol": "^3.1.1"
              }
          },
@@ -1142,7 +1142,7 @@ index 563e5d5a89..2394f98026 100644
          "node_modules/escalade": {
              "version": "3.1.1",
              "resolved": "https://registry.npmjs.org/escalade/-/escalade-3.1.1.tgz",
-@@ -8679,6 +9069,20 @@
+@@ -8686,6 +9076,20 @@
                  "jsdoc-type-pratt-parser": "~3.1.0"
              }
          },
@@ -1163,7 +1163,7 @@ index 563e5d5a89..2394f98026 100644
          "@eslint/eslintrc": {
              "version": "1.3.3",
              "resolved": "https://registry.npmjs.org/@eslint/eslintrc/-/eslintrc-1.3.3.tgz",
-@@ -10396,6 +10800,176 @@
+@@ -10404,6 +10808,176 @@
                  "es6-symbol": "^3.1.1"
              }
          },
@@ -1341,7 +1341,7 @@ index 563e5d5a89..2394f98026 100644
              "version": "3.1.1",
              "resolved": "https://registry.npmjs.org/escalade/-/escalade-3.1.1.tgz",
 diff --git a/package.json b/package.json
-index 384d29f05c..1049b1aa1a 100644
+index 215a104ee5..cc99dc581c 100644
 --- a/package.json
 +++ b/package.json
 @@ -67,6 +67,7 @@

@@ -116,7 +116,7 @@ index 1f758b6787..ca6d9526fd 100644
  
  function createBinder(): (file: SourceFile, options: CompilerOptions) => void {
 diff --git a/src/compiler/checker.ts b/src/compiler/checker.ts
-index c717c4fe54..99377952e3 100644
+index 99632e4b26..8bd1d50827 100644
 --- a/src/compiler/checker.ts
 +++ b/src/compiler/checker.ts
 @@ -155,7 +155,7 @@ import {
@@ -137,7 +137,7 @@ index c717c4fe54..99377952e3 100644
  
  const ambientModuleSymbolRegex = /^".+"$/;
  const anon = "(anonymous)" as __String & string;
-@@ -42595,10 +42597,10 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
+@@ -42613,10 +42615,10 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
  
      function checkSourceFile(node: SourceFile) {
          tracing?.push(tracing.Phase.Check, "checkSourceFile", { path: node.path }, /*separateBeginAndEnd*/ true);
@@ -214,7 +214,7 @@ index 6dafc0ab0b..b161549e0f 100644
      return result;
  }
 diff --git a/src/compiler/program.ts b/src/compiler/program.ts
-index 33b536170e..8e8f4c4170 100644
+index fb1189c37c..5ca222b471 100644
 --- a/src/compiler/program.ts
 +++ b/src/compiler/program.ts
 @@ -59,6 +59,7 @@ import {
@@ -259,7 +259,7 @@ index 33b536170e..8e8f4c4170 100644
          }
          catch (e) {
              if (onError) {
-@@ -1118,7 +1119,7 @@ export function createProgram(rootNamesOrOptions: readonly string[] | CreateProg
+@@ -1122,7 +1123,7 @@ export function createProgram(rootNamesOrOptions: readonly string[] | CreateProg
      const sourceFilesFoundSearchingNodeModules = new Map<string, boolean>();
  
      tracing?.push(tracing.Phase.Program, "createProgram", { configFilePath: options.configFilePath, rootDir: options.rootDir }, /*separateBeginAndEnd*/ true);
@@ -268,7 +268,7 @@ index 33b536170e..8e8f4c4170 100644
  
      const host = createProgramOptions.host || createCompilerHost(options);
      const configParsingHost = parseConfigHostFromCompilerHostLike(host);
-@@ -1424,8 +1425,8 @@ export function createProgram(rootNamesOrOptions: readonly string[] | CreateProg
+@@ -1428,8 +1429,8 @@ export function createProgram(rootNamesOrOptions: readonly string[] | CreateProg
      });
  
      verifyCompilerOptions();
@@ -279,7 +279,7 @@ index 33b536170e..8e8f4c4170 100644
      tracing?.pop();
  
      return program;
-@@ -1465,10 +1466,10 @@ export function createProgram(rootNamesOrOptions: readonly string[] | CreateProg
+@@ -1469,10 +1470,10 @@ export function createProgram(rootNamesOrOptions: readonly string[] | CreateProg
          const containingFileName = getNormalizedAbsolutePath(containingFile.originalFileName, currentDirectory);
          const redirectedReference = getRedirectReferenceForResolution(containingFile);
          tracing?.push(tracing.Phase.Program, "resolveModuleNamesWorker", { containingFileName });
@@ -293,7 +293,7 @@ index 33b536170e..8e8f4c4170 100644
          tracing?.pop();
          pullDiagnosticsFromCache(moduleNames, containingFile);
          return result;
-@@ -1480,10 +1481,10 @@ export function createProgram(rootNamesOrOptions: readonly string[] | CreateProg
+@@ -1484,10 +1485,10 @@ export function createProgram(rootNamesOrOptions: readonly string[] | CreateProg
          const redirectedReference = !isString(containingFile) ? getRedirectReferenceForResolution(containingFile) : undefined;
          const containingFileMode = !isString(containingFile) ? containingFile.impliedNodeFormat : undefined;
          tracing?.push(tracing.Phase.Program, "resolveTypeReferenceDirectiveNamesWorker", { containingFileName });
@@ -307,7 +307,7 @@ index 33b536170e..8e8f4c4170 100644
          tracing?.pop();
          return result;
      }
-@@ -2028,7 +2029,7 @@ export function createProgram(rootNamesOrOptions: readonly string[] | CreateProg
+@@ -2032,7 +2033,7 @@ export function createProgram(rootNamesOrOptions: readonly string[] | CreateProg
      function emitBuildInfo(writeFileCallback?: WriteFileCallback): EmitResult {
          Debug.assert(!outFile(options));
          tracing?.push(tracing.Phase.Emit, "emitBuildInfo", {}, /*separateBeginAndEnd*/ true);
@@ -316,7 +316,7 @@ index 33b536170e..8e8f4c4170 100644
          const emitResult = emitFiles(
              notImplementedResolver,
              getEmitHost(writeFileCallback),
-@@ -2038,8 +2039,8 @@ export function createProgram(rootNamesOrOptions: readonly string[] | CreateProg
+@@ -2042,8 +2043,8 @@ export function createProgram(rootNamesOrOptions: readonly string[] | CreateProg
              /*onlyBuildInfo*/ true
          );
  
@@ -327,7 +327,7 @@ index 33b536170e..8e8f4c4170 100644
          tracing?.pop();
          return emitResult;
      }
-@@ -2123,7 +2124,7 @@ export function createProgram(rootNamesOrOptions: readonly string[] | CreateProg
+@@ -2127,7 +2128,7 @@ export function createProgram(rootNamesOrOptions: readonly string[] | CreateProg
          // checked is to not pass the file to getEmitResolver.
          const emitResolver = getTypeChecker().getEmitResolver(outFile(options) ? undefined : sourceFile, cancellationToken);
  
@@ -336,7 +336,7 @@ index 33b536170e..8e8f4c4170 100644
  
          const emitResult = emitFiles(
              emitResolver,
-@@ -2135,8 +2136,8 @@ export function createProgram(rootNamesOrOptions: readonly string[] | CreateProg
+@@ -2139,8 +2140,8 @@ export function createProgram(rootNamesOrOptions: readonly string[] | CreateProg
              forceDtsEmit
          );
  

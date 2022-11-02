@@ -639,10 +639,10 @@ index 1683b7a5c1..4f0133936c 100644
   * @param {string} fileName
   */
 diff --git a/src/compiler/commandLineParser.ts b/src/compiler/commandLineParser.ts
-index b7c339f69e..ae189db549 100644
+index 508a58006a..d8fca55394 100644
 --- a/src/compiler/commandLineParser.ts
 +++ b/src/compiler/commandLineParser.ts
-@@ -2081,7 +2081,7 @@ function getTsconfigRootOptionsMap() {
+@@ -2078,7 +2078,7 @@ function getTsconfigRootOptionsMap() {
  }
  
  /** @internal */
@@ -809,7 +809,7 @@ index 34a59208d6..fd8a559c75 100644
 -export const perfLogger: PerfLogger = etwModule && etwModule.logEvent ? etwModule : nullLogger;
 +export const perfLogger: PerfLogger = etwModule?.logEvent ? etwModule : nullLogger;
 diff --git a/src/compiler/program.ts b/src/compiler/program.ts
-index ad3ee26238..33b536170e 100644
+index 15d7c33af7..fb1189c37c 100644
 --- a/src/compiler/program.ts
 +++ b/src/compiler/program.ts
 @@ -210,7 +210,7 @@ export function createCompilerHostWorker(options: CompilerOptions, setParentNode
@@ -821,7 +821,7 @@ index ad3ee26238..33b536170e 100644
      fileExists(fileName: string): boolean;
      readFile(fileName: string, encoding?: string): string | undefined;
      directoryExists?(directory: string): boolean;
-@@ -4318,7 +4318,7 @@ export function filterSemanticDiagnostics(diagnostic: readonly Diagnostic[], opt
+@@ -4322,7 +4322,7 @@ export function filterSemanticDiagnostics(diagnostic: readonly Diagnostic[], opt
  }
  
  /** @internal */
@@ -979,15 +979,15 @@ index ba7508d1da..d9cb9de299 100644
          factory,
          getEmitHelperFactory: emitHelpers,
 diff --git a/src/compiler/transformers/es2018.ts b/src/compiler/transformers/es2018.ts
-index 0eb599559b..5798e0fd33 100644
+index 6e23bb337d..195ed4ffe0 100644
 --- a/src/compiler/transformers/es2018.ts
 +++ b/src/compiler/transformers/es2018.ts
 @@ -17,7 +17,7 @@ import {
-     SourceFile, startOnNewLine, Statement, SyntaxKind, TaggedTemplateExpression, TextRange, Token,
-     TransformationContext, TransformFlags, unwrapInnermostStatementOfLabel, VariableDeclaration, VariableStatement,
-     visitEachChild, visitIterationBody, visitLexicalEnvironment, visitNode, visitNodes, visitParameterList, VisitResult,
--    VoidExpression, YieldExpression,
-+    VoidExpression, YieldExpression, Bundle,
+     skipParentheses, some, SourceFile, startOnNewLine, Statement, SyntaxKind, TaggedTemplateExpression, TextRange,
+     Token, TransformationContext, TransformFlags, unwrapInnermostStatementOfLabel, VariableDeclaration,
+     VariableStatement, visitEachChild, visitIterationBody, visitLexicalEnvironment, visitNode, visitNodes,
+-    visitParameterList, VisitResult, VoidExpression, YieldExpression,
++    visitParameterList, VisitResult, VoidExpression, YieldExpression, Bundle,
  } from "../_namespaces/ts";
  
  const enum ESNextSubstitutionFlags {
@@ -1093,7 +1093,7 @@ index 9cc1b5e739..770153e4e6 100644
  
    function transformSourceFile(node: SourceFile) {
 diff --git a/src/compiler/transformers/generators.ts b/src/compiler/transformers/generators.ts
-index 9c62a751da..ef5550a83a 100644
+index d0a92f18ac..d1e9a5a6ec 100644
 --- a/src/compiler/transformers/generators.ts
 +++ b/src/compiler/transformers/generators.ts
 @@ -1,6 +1,6 @@
@@ -3234,7 +3234,7 @@ index 0000000000..5b06711a80
 +>tsserverlibraryInternal : typeof tsserverlibraryInternal
 +
 diff --git a/tests/baselines/reference/api/tsserverlibrary.d.ts b/tests/baselines/reference/api/tsserverlibrary.d.ts
-index 90dd9ed780..c3caa56a8a 100644
+index 1e42d98208..a6fd2581fc 100644
 --- a/tests/baselines/reference/api/tsserverlibrary.d.ts
 +++ b/tests/baselines/reference/api/tsserverlibrary.d.ts
 @@ -14,6 +14,3944 @@ and limitations under the License.
@@ -7179,7 +7179,7 @@ index 90dd9ed780..c3caa56a8a 100644
 +            responseRequired?: boolean;
 +        }
 +    }
-     const versionMajorMinor = "4.9";
+     const versionMajorMinor = "5.0";
      /** The version of the TypeScript compiler release */
      const version: string;
 @@ -46,7 +3984,10 @@ declare namespace ts {
@@ -16653,7 +16653,7 @@ index 90dd9ed780..c3caa56a8a 100644
 +export = ts;
 \ No newline at end of file
 diff --git a/tests/baselines/reference/api/typescript.d.ts b/tests/baselines/reference/api/typescript.d.ts
-index 54e4c654e3..469af997a8 100644
+index f574fc2325..da7b630c76 100644
 --- a/tests/baselines/reference/api/typescript.d.ts
 +++ b/tests/baselines/reference/api/typescript.d.ts
 @@ -46,7 +46,10 @@ declare namespace ts {

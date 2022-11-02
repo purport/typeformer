@@ -12,7 +12,7 @@ function in recursive mode instead.
  3 files changed, 2 insertions(+), 43 deletions(-)
 
 diff --git a/package-lock.json b/package-lock.json
-index 3c3f3cbae2..25667ede93 100644
+index 20d5c40051..5cd67cd174 100644
 --- a/package-lock.json
 +++ b/package-lock.json
 @@ -19,7 +19,6 @@
@@ -47,7 +47,7 @@ index 3c3f3cbae2..25667ede93 100644
          "node_modules/@types/mocha": {
              "version": "10.0.0",
              "resolved": "https://registry.npmjs.org/@types/mocha/-/mocha-10.0.0.tgz",
-@@ -3170,18 +3159,6 @@
+@@ -3171,18 +3160,6 @@
                  "url": "https://github.com/sponsors/ljharb"
              }
          },
@@ -66,7 +66,7 @@ index 3c3f3cbae2..25667ede93 100644
          "node_modules/mocha": {
              "version": "10.1.0",
              "resolved": "https://registry.npmjs.org/mocha/-/mocha-10.1.0.tgz",
-@@ -4811,15 +4788,6 @@
+@@ -4818,15 +4795,6 @@
              "integrity": "sha512-jhuKLIRrhvCPLqwPcx6INqmKeiA5EWrsCOPhrlFSrbrmU4ZMPjj5Ul/oLCMDO98XRUIwVm78xICz4EPCektzeQ==",
              "dev": true
          },
@@ -82,7 +82,7 @@ index 3c3f3cbae2..25667ede93 100644
          "@types/mocha": {
              "version": "10.0.0",
              "resolved": "https://registry.npmjs.org/@types/mocha/-/mocha-10.0.0.tgz",
-@@ -6716,12 +6684,6 @@
+@@ -6724,12 +6692,6 @@
              "integrity": "sha512-bzfL1YUZsP41gmu/qjrEk0Q6i2ix/cVeAhbCbqH9u3zYutS1cLg00qhrD0M2MVdCcx4Sc0UpP2eBWo9rotpq6g==",
              "dev": true
          },
@@ -96,7 +96,7 @@ index 3c3f3cbae2..25667ede93 100644
              "version": "10.1.0",
              "resolved": "https://registry.npmjs.org/mocha/-/mocha-10.1.0.tgz",
 diff --git a/package.json b/package.json
-index 96f93ee712..14492f0cc5 100644
+index 8b5d6b2356..d497c8daec 100644
 --- a/package.json
 +++ b/package.json
 @@ -45,7 +45,6 @@
