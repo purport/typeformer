@@ -16,18 +16,18 @@ than importing the entire LKG typescript.js library.
  3 files changed, 16 insertions(+), 37 deletions(-)
 
 diff --git a/package-lock.json b/package-lock.json
-index 8c6d365f6d..3aae17f1a6 100644
+index b08964e17c..50f2fe3270 100644
 --- a/package-lock.json
 +++ b/package-lock.json
 @@ -44,6 +44,7 @@
                  "fs-extra": "^9.1.0",
                  "glob": "latest",
-                 "hereby": "^1.6.3",
+                 "hereby": "^1.6.4",
 +                "jsonc-parser": "^3.2.0",
                  "minimist": "latest",
                  "mkdirp": "latest",
                  "mocha": "latest",
-@@ -3026,6 +3027,12 @@
+@@ -3020,6 +3021,12 @@
                  "json5": "lib/cli.js"
              }
          },
@@ -40,7 +40,7 @@ index 8c6d365f6d..3aae17f1a6 100644
          "node_modules/jsonfile": {
              "version": "6.1.0",
              "resolved": "https://registry.npmjs.org/jsonfile/-/jsonfile-6.1.0.tgz",
-@@ -6627,6 +6634,12 @@
+@@ -6621,6 +6628,12 @@
                  "minimist": "^1.2.0"
              }
          },
@@ -54,13 +54,13 @@ index 8c6d365f6d..3aae17f1a6 100644
              "version": "6.1.0",
              "resolved": "https://registry.npmjs.org/jsonfile/-/jsonfile-6.1.0.tgz",
 diff --git a/package.json b/package.json
-index b2a5d88aa9..9bd2ee7d2e 100644
+index 6a15e7ac3a..24e1552019 100644
 --- a/package.json
 +++ b/package.json
 @@ -70,6 +70,7 @@
          "fs-extra": "^9.1.0",
          "glob": "latest",
-         "hereby": "^1.6.3",
+         "hereby": "^1.6.4",
 +        "jsonc-parser": "^3.2.0",
          "minimist": "latest",
          "mkdirp": "latest",

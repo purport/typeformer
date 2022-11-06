@@ -7,12 +7,12 @@ needsUpdate may be wrong when the branch changes; these ones are now so
 fast thanks to being pure JS that we can just always run their contents
 and be sure that the outputs are right.
 ---
- Herebyfile.mjs                        | 58 +++++++++++++--------------
- scripts/processDiagnosticMessages.mjs | 25 ++++++++----
- 2 files changed, 46 insertions(+), 37 deletions(-)
+ Herebyfile.mjs                        | 60 +++++++++++++--------------
+ scripts/processDiagnosticMessages.mjs | 25 +++++++----
+ 2 files changed, 46 insertions(+), 39 deletions(-)
 
 diff --git a/Herebyfile.mjs b/Herebyfile.mjs
-index 66cf92ba0b..5a1caf6216 100644
+index 400403b354..5a1caf6216 100644
 --- a/Herebyfile.mjs
 +++ b/Herebyfile.mjs
 @@ -6,7 +6,7 @@ import { task } from "hereby";
@@ -24,7 +24,7 @@ index 66cf92ba0b..5a1caf6216 100644
  import { runConsoleTests, refBaseline, localBaseline, refRwcBaseline, localRwcBaseline } from "./scripts/build/tests.mjs";
  import { buildProject as realBuildProject, cleanProject, watchProject } from "./scripts/build/projects.mjs";
  import { localizationDirectories } from "./scripts/build/localization.mjs";
-@@ -81,20 +81,18 @@ export const generateLibs = task({
+@@ -81,22 +81,18 @@ export const generateLibs = task({
      description: "Builds the library targets",
      run: async () => {
          await fs.promises.mkdir("./built/local", { recursive: true });
@@ -41,6 +41,8 @@ index 66cf92ba0b..5a1caf6216 100644
 -                    // or remove lib.d.ts line numbers from our baselines.
 -                    output += "\n\n" + contents.replace(/\r\n/g, "\n");
 -                }
+-
+-                await fs.promises.writeFile(lib.target, output);
 +        for (const lib of libs()) {
 +            let output = await copyright();
 +
@@ -56,7 +58,7 @@ index 66cf92ba0b..5a1caf6216 100644
          }
      },
  });
-@@ -108,9 +106,7 @@ export const generateDiagnostics = task({
+@@ -110,9 +106,7 @@ export const generateDiagnostics = task({
      name: "generate-diagnostics",
      description: "Generates a diagnostic file in TypeScript based on an input JSON file",
      run: async () => {
@@ -67,7 +69,7 @@ index 66cf92ba0b..5a1caf6216 100644
      }
  });
  
-@@ -408,7 +404,11 @@ export const dtsServices = task({
+@@ -410,7 +404,11 @@ export const dtsServices = task({
      name: "dts-services",
      description: "Bundles typescript.d.ts",
      dependencies: [buildServices],
@@ -80,7 +82,7 @@ index 66cf92ba0b..5a1caf6216 100644
  });
  
  
-@@ -462,7 +462,11 @@ export const dtsLssl = task({
+@@ -464,7 +462,11 @@ export const dtsLssl = task({
      name: "dts-lssl",
      description: "Bundles tsserverlibrary.d.ts",
      dependencies: [buildLssl],
@@ -93,7 +95,7 @@ index 66cf92ba0b..5a1caf6216 100644
  });
  
  export const dts = task({
-@@ -558,11 +562,9 @@ export const generateTypesMap = task({
+@@ -560,11 +562,9 @@ export const generateTypesMap = task({
      run: async () => {
          const source = "src/server/typesMap.json";
          const target = "built/local/typesMap.json";
@@ -108,7 +110,7 @@ index 66cf92ba0b..5a1caf6216 100644
      }
  });
  
-@@ -575,11 +577,9 @@ const copyBuiltLocalDiagnosticMessages = task({
+@@ -577,11 +577,9 @@ const copyBuiltLocalDiagnosticMessages = task({
      name: "copy-built-local-diagnostic-messages",
      dependencies: [generateDiagnostics],
      run: async () => {

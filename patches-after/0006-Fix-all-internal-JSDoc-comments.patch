@@ -24,12 +24,12 @@ otherwise they won't be used by api-extractor, so move them if needed.
  src/compiler/commandLineParser.ts             |  111 +-
  src/compiler/core.ts                          |  307 ++-
  src/compiler/corePublic.ts                    |   18 +-
- src/compiler/emitter.ts                       |   40 +-
+ src/compiler/emitter.ts                       |   38 +-
  src/compiler/factory/baseNodeFactory.ts       |    6 +-
  src/compiler/factory/emitHelpers.ts           |   14 +-
  src/compiler/factory/emitNode.ts              |   21 +-
  src/compiler/factory/nodeConverters.ts        |    2 +-
- src/compiler/factory/nodeFactory.ts           |   12 +-
+ src/compiler/factory/nodeFactory.ts           |   14 +-
  src/compiler/factory/nodeTests.ts             |   42 +-
  src/compiler/factory/utilities.ts             |   68 +-
  src/compiler/moduleNameResolver.ts            |   84 +-
@@ -39,7 +39,7 @@ otherwise they won't be used by api-extractor, so move them if needed.
  src/compiler/perfLogger.ts                    |    7 +-
  src/compiler/performance.ts                   |   32 +-
  src/compiler/performanceCore.ts               |    9 +-
- src/compiler/program.ts                       |   60 +-
+ src/compiler/program.ts                       |   64 +-
  src/compiler/resolutionCache.ts               |   10 +-
  src/compiler/scanner.ts                       |   46 +-
  src/compiler/semver.ts                        |    6 +-
@@ -56,8 +56,8 @@ otherwise they won't be used by api-extractor, so move them if needed.
  src/compiler/transformers/typeSerializer.ts   |    2 +-
  src/compiler/transformers/utilities.ts        |   27 +-
  src/compiler/tsbuild.ts                       |    2 +-
- src/compiler/tsbuildPublic.ts                 |   63 +-
- src/compiler/types.ts                         | 1761 +++++++++--------
+ src/compiler/tsbuildPublic.ts                 |   65 +-
+ src/compiler/types.ts                         | 1763 +++++++++--------
  src/compiler/utilities.ts                     |  375 ++--
  src/compiler/utilitiesPublic.ts               |  187 +-
  src/compiler/visitorPublic.ts                 |   26 +-
@@ -108,7 +108,7 @@ otherwise they won't be used by api-extractor, so move them if needed.
  src/services/utilities.ts                     |   98 +-
  src/typingsInstallerCore/typingsInstaller.ts  |    8 +-
  src/webServer/webServer.ts                    |    2 +-
- 93 files changed, 2820 insertions(+), 2098 deletions(-)
+ 93 files changed, 2824 insertions(+), 2102 deletions(-)
 
 diff --git a/scripts/failed-tests.cjs b/scripts/failed-tests.cjs
 index 78e90fc976..d2f3078e7b 100644
@@ -147,7 +147,7 @@ index 785bcf93f1..1bed91726a 100644
  /**
   * @param {Word.Document} doc
 diff --git a/src/compiler/builder.ts b/src/compiler/builder.ts
-index 12e9c2c70d..788a145cc8 100644
+index fbb5b46097..05364b78c9 100644
 --- a/src/compiler/builder.ts
 +++ b/src/compiler/builder.ts
 @@ -92,9 +92,10 @@ export const enum BuilderFileEmit {
@@ -1812,10 +1812,10 @@ index 0727cf392e..aa0933e9e6 100644
 +/** @internal */
  export const Set = NativeCollections.tryGetNativeSet();
 diff --git a/src/compiler/emitter.ts b/src/compiler/emitter.ts
-index eed25e4111..2d371afea0 100644
+index e878783ff0..5f2e3603e2 100644
 --- a/src/compiler/emitter.ts
 +++ b/src/compiler/emitter.ts
-@@ -81,12 +81,11 @@ import {
+@@ -82,12 +82,11 @@ import {
  
  const brackets = createBracketsMap();
  
@@ -1829,7 +1829,7 @@ index eed25e4111..2d371afea0 100644
  /**
   * Iterates over the source files that are expected to have an emit output.
   *
-@@ -95,6 +94,8 @@ export function isBuildInfoFile(file: string) {
+@@ -96,6 +95,8 @@ export function isBuildInfoFile(file: string) {
   * @param sourceFilesOrTargetSourceFile
   *   If an array, the full list of source files to emit.
   *   Else, calls `getSourceFilesToEmit` with the (optional) target source file to determine the list of source files to emit.
@@ -1838,7 +1838,7 @@ index eed25e4111..2d371afea0 100644
   */
  export function forEachEmittedFile<T>(
      host: EmitHost, action: (emitFileNames: EmitFileNames, sourceFileOrBundle: SourceFile | Bundle | undefined) => T,
-@@ -151,7 +152,7 @@ export function getTsBuildInfoEmitOutputFilePath(options: CompilerOptions) {
+@@ -152,7 +153,7 @@ export function getTsBuildInfoEmitOutputFilePath(options: CompilerOptions) {
      return buildInfoExtensionLess + Extension.TsBuildInfo;
  }
  
@@ -1847,7 +1847,7 @@ index eed25e4111..2d371afea0 100644
  export function getOutputPathsForBundle(options: CompilerOptions, forceDtsPaths: boolean): EmitFileNames {
      const outPath = outFile(options)!;
      const jsFilePath = options.emitDeclarationOnly ? undefined : outPath;
-@@ -162,7 +163,7 @@ export function getOutputPathsForBundle(options: CompilerOptions, forceDtsPaths:
+@@ -163,7 +164,7 @@ export function getOutputPathsForBundle(options: CompilerOptions, forceDtsPaths:
      return { jsFilePath, sourceMapFilePath, declarationFilePath, declarationMapPath, buildInfoPath };
  }
  
@@ -1856,7 +1856,7 @@ index eed25e4111..2d371afea0 100644
  export function getOutputPathsFor(sourceFile: SourceFile | Bundle, host: EmitHost, forceDtsPaths: boolean): EmitFileNames {
      const options = host.getCompilerOptions();
      if (sourceFile.kind === SyntaxKind.Bundle) {
-@@ -186,7 +187,7 @@ function getSourceMapFilePath(jsFilePath: string, options: CompilerOptions) {
+@@ -187,7 +188,7 @@ function getSourceMapFilePath(jsFilePath: string, options: CompilerOptions) {
      return (options.sourceMap && !options.inlineSourceMap) ? jsFilePath + ".map" : undefined;
  }
  
@@ -1865,7 +1865,7 @@ index eed25e4111..2d371afea0 100644
  export function getOutputExtension(fileName: string, options: CompilerOptions): Extension {
      return fileExtensionIs(fileName, Extension.Json) ? Extension.Json :
      options.jsx === JsxEmit.Preserve && fileExtensionIsOneOf(fileName, [Extension.Jsx, Extension.Tsx]) ? Extension.Jsx :
-@@ -204,7 +205,7 @@ function getOutputPathWithoutChangingExt(inputFileName: string, configFile: Pars
+@@ -205,7 +206,7 @@ function getOutputPathWithoutChangingExt(inputFileName: string, configFile: Pars
          inputFileName;
  }
  
@@ -1874,7 +1874,7 @@ index eed25e4111..2d371afea0 100644
  export function getOutputDeclarationFileName(inputFileName: string, configFile: ParsedCommandLine, ignoreCase: boolean, getCommonSourceDirectory?: () => string) {
      return changeExtension(
          getOutputPathWithoutChangingExt(inputFileName, configFile, ignoreCase, configFile.options.declarationDir || configFile.options.outDir, getCommonSourceDirectory),
-@@ -263,7 +264,7 @@ function getOwnOutputFileNames(configFile: ParsedCommandLine, inputFileName: str
+@@ -264,7 +265,7 @@ function getOwnOutputFileNames(configFile: ParsedCommandLine, inputFileName: str
      }
  }
  
@@ -1883,7 +1883,7 @@ index eed25e4111..2d371afea0 100644
  export function getCommonSourceDirectory(
      options: CompilerOptions,
      emittedFiles: () => readonly string[],
-@@ -295,7 +296,7 @@ export function getCommonSourceDirectory(
+@@ -296,7 +297,7 @@ export function getCommonSourceDirectory(
      return commonSourceDirectory;
  }
  
@@ -1892,7 +1892,7 @@ index eed25e4111..2d371afea0 100644
  export function getCommonSourceDirectoryOfConfig({ options, fileNames }: ParsedCommandLine, ignoreCase: boolean): string {
      return getCommonSourceDirectory(
          options,
-@@ -305,7 +306,7 @@ export function getCommonSourceDirectoryOfConfig({ options, fileNames }: ParsedC
+@@ -306,7 +307,7 @@ export function getCommonSourceDirectoryOfConfig({ options, fileNames }: ParsedC
      );
  }
  
@@ -1901,7 +1901,7 @@ index eed25e4111..2d371afea0 100644
  export function getAllProjectOutputs(configFile: ParsedCommandLine, ignoreCase: boolean): readonly string[] {
      const { addOutput, getOutputs } = createAddOutput();
      if (outFile(configFile.options)) {
-@@ -334,7 +335,7 @@ export function getOutputFileNames(commandLine: ParsedCommandLine, inputFileName
+@@ -335,7 +336,7 @@ export function getOutputFileNames(commandLine: ParsedCommandLine, inputFileName
      return getOutputs();
  }
  
@@ -1910,7 +1910,7 @@ index eed25e4111..2d371afea0 100644
  export function getFirstProjectOutput(configFile: ParsedCommandLine, ignoreCase: boolean): string {
      if (outFile(configFile.options)) {
          const { jsFilePath } = getOutputPathsForBundle(configFile.options, /*forceDtsPaths*/ false);
-@@ -356,7 +357,7 @@ export function getFirstProjectOutput(configFile: ParsedCommandLine, ignoreCase:
+@@ -357,7 +358,7 @@ export function getFirstProjectOutput(configFile: ParsedCommandLine, ignoreCase:
      return Debug.fail(`project ${configFile.options.configFilePath} expected to have at least one output`);
  }
  
@@ -1919,7 +1919,7 @@ index eed25e4111..2d371afea0 100644
  // targetSourceFile is when users only want one file in entire project to be emitted. This is used in compileOnSave feature
  export function emitFiles(resolver: EmitResolver, host: EmitHost, targetSourceFile: SourceFile | undefined, { scriptTransformers, declarationTransformers }: EmitTransformers, emitOnlyDtsFiles?: boolean, onlyBuildInfo?: boolean, forceDtsEmit?: boolean): EmitResult {
      const compilerOptions = host.getCompilerOptions();
-@@ -726,17 +727,17 @@ export function emitFiles(resolver: EmitResolver, host: EmitHost, targetSourceFi
+@@ -727,17 +728,17 @@ export function emitFiles(resolver: EmitResolver, host: EmitHost, targetSourceFi
      }
  }
  
@@ -1940,7 +1940,7 @@ index eed25e4111..2d371afea0 100644
  export const notImplementedResolver: EmitResolver = {
      hasGlobalName: notImplemented,
      getReferencedExportContainer: notImplemented,
-@@ -781,11 +782,14 @@ export const notImplementedResolver: EmitResolver = {
+@@ -782,8 +783,11 @@ export const notImplementedResolver: EmitResolver = {
      isImportRequiredByAugmentation: notImplemented,
  };
  
@@ -1953,12 +1953,8 @@ index eed25e4111..2d371afea0 100644
 + */
  export type EmitUsingBuildInfoResult = string | readonly OutputFile[];
  
--/*@internal*/
-+/** @internal */
- export interface EmitUsingBuildInfoHost extends ModuleResolutionHost {
-     getCurrentDirectory(): string;
-     getCanonicalFileName(fileName: string): string;
-@@ -822,7 +826,7 @@ function createSourceFilesFromBundleBuildInfo(bundle: BundleBuildInfo, buildInfo
+ function createSourceFilesFromBundleBuildInfo(bundle: BundleBuildInfo, buildInfoDirectory: string, host: CompilerHost): readonly SourceFile[] {
+@@ -813,7 +817,7 @@ function createSourceFilesFromBundleBuildInfo(bundle: BundleBuildInfo, buildInfo
      });
  }
  
@@ -1966,7 +1962,7 @@ index eed25e4111..2d371afea0 100644
 +/** @internal */
  export function emitUsingBuildInfo(
      config: ParsedCommandLine,
-     host: EmitUsingBuildInfoHost,
+     host: CompilerHost,
 diff --git a/src/compiler/factory/baseNodeFactory.ts b/src/compiler/factory/baseNodeFactory.ts
 index 782cee7ea7..39b9490fba 100644
 --- a/src/compiler/factory/baseNodeFactory.ts
@@ -2163,7 +2159,7 @@ index 3efb85e75e..74cddf3152 100644
 \ No newline at end of file
 +};
 diff --git a/src/compiler/factory/nodeFactory.ts b/src/compiler/factory/nodeFactory.ts
-index a643904151..d053bac81e 100644
+index 55f96780e7..f2f111efb2 100644
 --- a/src/compiler/factory/nodeFactory.ts
 +++ b/src/compiler/factory/nodeFactory.ts
 @@ -82,7 +82,7 @@ import {
@@ -2206,15 +2202,24 @@ index a643904151..d053bac81e 100644
  export function getTransformFlagsSubtreeExclusions(kind: SyntaxKind) {
      if (kind >= SyntaxKind.FirstTypeNode && kind <= SyntaxKind.LastTypeNode) {
          return TransformFlags.TypeExcludes;
-@@ -6848,7 +6850,7 @@ export function createInputFiles(
-     declarationMapPath: string | undefined,
-     declarationMapText: string | undefined
- ): InputFiles;
+@@ -6876,7 +6878,7 @@ export function createInputFiles(
+             declarationMapTextOrBuildInfoPath,
+         );
+ }
 -/*@internal*/
 +/** @internal */
- export function createInputFiles(
+ export function createInputFilesWithFilePaths(
+     readFileText: (path: string) => string | undefined,
+     javascriptPath: string,
+@@ -6929,7 +6931,7 @@ export function createInputFilesWithFilePaths(
+     });
+     return node;
+ }
+-/*@internal*/
++/** @internal */
+ export function createInputFilesWithFileTexts(
+     javascriptPath: string | undefined,
      javascriptText: string,
-     declarationText: string,
 diff --git a/src/compiler/factory/nodeTests.ts b/src/compiler/factory/nodeTests.ts
 index 172b7d332a..f391dbb1ed 100644
 --- a/src/compiler/factory/nodeTests.ts
@@ -3754,10 +3759,10 @@ index 15d3c41994..ce65f1d889 100644
 \ No newline at end of file
 +    () => +(new Date());
 diff --git a/src/compiler/program.ts b/src/compiler/program.ts
-index 241384aa1a..15d7c33af7 100644
+index 94ef7cb021..a474c4d1d0 100644
 --- a/src/compiler/program.ts
 +++ b/src/compiler/program.ts
-@@ -73,7 +73,7 @@ export function resolveTripleslashReference(moduleName: string, containingFile:
+@@ -74,7 +74,7 @@ export function resolveTripleslashReference(moduleName: string, containingFile:
      return normalizePath(referencedFileName);
  }
  
@@ -3766,8 +3771,26 @@ index 241384aa1a..15d7c33af7 100644
  export function computeCommonSourceDirectoryOfFilenames(fileNames: readonly string[], currentDirectory: string, getCanonicalFileName: GetCanonicalFileName): string {
      let commonPathComponents: string[] | undefined;
      const failed = forEach(fileNames, sourceFile => {
-@@ -123,7 +123,7 @@ export function createCompilerHost(options: CompilerOptions, setParentNodes?: bo
+@@ -124,7 +124,7 @@ export function createCompilerHost(options: CompilerOptions, setParentNodes?: bo
      return createCompilerHostWorker(options, setParentNodes);
+ }
+ 
+-/*@internal*/
++/** @internal */
+ export function createGetSourceFile(
+     readFile: ProgramHost<any>["readFile"],
+     getCompilerOptions: () => CompilerOptions,
+@@ -148,7 +148,7 @@ export function createGetSourceFile(
+     };
+ }
+ 
+-/*@internal*/
++/** @internal */
+ export function createWriteFileMeasuringIO(
+     actualWriteFile: (path: string, data: string, writeByteOrderMark: boolean) => void,
+     createDirectory: (path: string) => void,
+@@ -181,7 +181,7 @@ export function createWriteFileMeasuringIO(
+     };
  }
  
 -/*@internal*/
@@ -3775,7 +3798,7 @@ index 241384aa1a..15d7c33af7 100644
  export function createCompilerHostWorker(options: CompilerOptions, setParentNodes?: boolean, system = sys): CompilerHost {
      const existingDirectories = new Map<string, boolean>();
      const getCanonicalFileName = createGetCanonicalFileName(system.useCaseSensitiveFileNames);
-@@ -209,7 +209,7 @@ export function createCompilerHostWorker(options: CompilerOptions, setParentNode
+@@ -229,7 +229,7 @@ export function createCompilerHostWorker(options: CompilerOptions, setParentNode
      return compilerHost;
  }
  
@@ -3784,7 +3807,7 @@ index 241384aa1a..15d7c33af7 100644
  interface CompilerHostLikeForCache {
      fileExists(fileName: string): boolean;
      readFile(fileName: string, encoding?: string): string | undefined;
-@@ -218,7 +218,7 @@ interface CompilerHostLikeForCache {
+@@ -238,7 +238,7 @@ interface CompilerHostLikeForCache {
      writeFile?: WriteFileCallback;
  }
  
@@ -3793,7 +3816,7 @@ index 241384aa1a..15d7c33af7 100644
  export function changeCompilerHostLikeToUseCache(
      host: CompilerHostLikeForCache,
      toPath: (fileName: string) => Path,
-@@ -334,7 +334,7 @@ export function changeCompilerHostLikeToUseCache(
+@@ -354,7 +354,7 @@ export function changeCompilerHostLikeToUseCache(
  }
  
  export function getPreEmitDiagnostics(program: Program, sourceFile?: SourceFile, cancellationToken?: CancellationToken): readonly Diagnostic[];
@@ -3802,7 +3825,7 @@ index 241384aa1a..15d7c33af7 100644
  export function getPreEmitDiagnostics(program: Program | BuilderProgram, sourceFile?: SourceFile, cancellationToken?: CancellationToken): readonly Diagnostic[] {
      let diagnostics: Diagnostic[] | undefined;
      diagnostics = addRange(diagnostics, program.getConfigFileParsingDiagnostics());
-@@ -460,7 +460,7 @@ function formatCodeSpan(file: SourceFile, start: number, length: number, indent:
+@@ -480,7 +480,7 @@ function formatCodeSpan(file: SourceFile, start: number, length: number, indent:
      return context;
  }
  
@@ -3811,7 +3834,7 @@ index 241384aa1a..15d7c33af7 100644
  export function formatLocation(file: SourceFile, start: number, host: FormatDiagnosticsHost, color = formatColorAndReset) {
      const { line: firstLine, character: firstLineChar } = getLineAndCharacterOfPosition(file, start); // TODO: GH#18217
      const relativeFileName = host ? convertToRelativePath(file.fileName, host.getCurrentDirectory(), fileName => host.getCanonicalFileName(fileName)) : file.fileName;
-@@ -533,7 +533,7 @@ export function flattenDiagnosticMessageText(diag: string | DiagnosticMessageCha
+@@ -553,7 +553,7 @@ export function flattenDiagnosticMessageText(diag: string | DiagnosticMessageCha
      return result;
  }
  
@@ -3820,7 +3843,7 @@ index 241384aa1a..15d7c33af7 100644
  export function loadWithTypeDirectiveCache<T>(names: string[] | readonly FileReference[], containingFile: string, redirectedReference: ResolvedProjectReference | undefined, containingFileMode: SourceFile["impliedNodeFormat"], loader: (name: string, containingFile: string, redirectedReference: ResolvedProjectReference | undefined, resolutionMode: SourceFile["impliedNodeFormat"]) => T): T[] {
      if (names.length === 0) {
          return [];
-@@ -565,8 +565,8 @@ export function loadWithTypeDirectiveCache<T>(names: string[] | readonly FileRef
+@@ -585,8 +585,8 @@ export function loadWithTypeDirectiveCache<T>(names: string[] | readonly FileRef
   * @internal
   */
  export interface SourceFileImportsList {
@@ -3831,7 +3854,7 @@ index 241384aa1a..15d7c33af7 100644
      impliedNodeFormat?: SourceFile["impliedNodeFormat"];
  }
  
-@@ -596,7 +596,7 @@ export function getModeForResolutionAtIndex(file: SourceFileImportsList, index:
+@@ -616,7 +616,7 @@ export function getModeForResolutionAtIndex(file: SourceFileImportsList, index:
      return getModeForUsageLocation(file, getModuleNameStringLiteralAt(file, index));
  }
  
@@ -3840,7 +3863,7 @@ index 241384aa1a..15d7c33af7 100644
  export function isExclusivelyTypeOnlyImportOrExport(decl: ImportDeclaration | ExportDeclaration) {
      if (isExportDeclaration(decl)) {
          return decl.isTypeOnly;
-@@ -643,7 +643,7 @@ export function getModeForUsageLocation(file: {impliedNodeFormat?: SourceFile["i
+@@ -663,7 +663,7 @@ export function getModeForUsageLocation(file: {impliedNodeFormat?: SourceFile["i
      return exprParentParent && isImportEqualsDeclaration(exprParentParent) ? ModuleKind.CommonJS : ModuleKind.ESNext;
  }
  
@@ -3849,7 +3872,7 @@ index 241384aa1a..15d7c33af7 100644
  export function getResolutionModeOverrideForClause(clause: AssertClause | undefined, grammarErrorOnNode?: (node: Node, diagnostic: DiagnosticMessage) => void) {
      if (!clause) return undefined;
      if (length(clause.elements) !== 1) {
-@@ -664,7 +664,7 @@ export function getResolutionModeOverrideForClause(clause: AssertClause | undefi
+@@ -684,7 +684,7 @@ export function getResolutionModeOverrideForClause(clause: AssertClause | undefi
      return elem.value.text === "import" ? ModuleKind.ESNext : ModuleKind.CommonJS;
  }
  
@@ -3858,7 +3881,7 @@ index 241384aa1a..15d7c33af7 100644
  export function loadWithModeAwareCache<T>(names: string[], containingFile: SourceFile, containingFileName: string, redirectedReference: ResolvedProjectReference | undefined, loader: (name: string, resolverMode: ModuleKind.CommonJS | ModuleKind.ESNext | undefined, containingFileName: string, redirectedReference: ResolvedProjectReference | undefined) => T): T[] {
      if (names.length === 0) {
          return [];
-@@ -688,7 +688,7 @@ export function loadWithModeAwareCache<T>(names: string[], containingFile: Sourc
+@@ -708,7 +708,7 @@ export function loadWithModeAwareCache<T>(names: string[], containingFile: Sourc
      return resolutions;
  }
  
@@ -3867,7 +3890,7 @@ index 241384aa1a..15d7c33af7 100644
  export function forEachResolvedProjectReference<T>(
      resolvedProjectReferences: readonly (ResolvedProjectReference | undefined)[] | undefined,
      cb: (resolvedProjectReference: ResolvedProjectReference, parent: ResolvedProjectReference | undefined) => T | undefined
-@@ -733,7 +733,7 @@ function forEachProjectReference<T>(
+@@ -753,7 +753,7 @@ function forEachProjectReference<T>(
      }
  }
  
@@ -3876,7 +3899,7 @@ index 241384aa1a..15d7c33af7 100644
  export const inferredTypesContainingFile = "__inferred type names__.ts";
  
  interface DiagnosticCache<T extends Diagnostic> {
-@@ -741,7 +741,7 @@ interface DiagnosticCache<T extends Diagnostic> {
+@@ -761,7 +761,7 @@ interface DiagnosticCache<T extends Diagnostic> {
      allDiagnostics?: readonly T[];
  }
  
@@ -3885,7 +3908,7 @@ index 241384aa1a..15d7c33af7 100644
  export function isReferencedFile(reason: FileIncludeReason | undefined): reason is ReferencedFile {
      switch (reason?.kind) {
          case FileIncludeKind.Import:
-@@ -754,7 +754,7 @@ export function isReferencedFile(reason: FileIncludeReason | undefined): reason
+@@ -774,7 +774,7 @@ export function isReferencedFile(reason: FileIncludeReason | undefined): reason
      }
  }
  
@@ -3894,7 +3917,7 @@ index 241384aa1a..15d7c33af7 100644
  export interface ReferenceFileLocation {
      file: SourceFile;
      pos: number;
-@@ -762,19 +762,19 @@ export interface ReferenceFileLocation {
+@@ -782,19 +782,19 @@ export interface ReferenceFileLocation {
      packageId: PackageId | undefined;
  }
  
@@ -3917,7 +3940,7 @@ index 241384aa1a..15d7c33af7 100644
  export function getReferencedFileLocation(getSourceFileByPath: (path: Path) => SourceFile | undefined, ref: ReferencedFile): ReferenceFileLocation | SyntheticReferenceFileLocation {
      const file = Debug.checkDefined(getSourceFileByPath(ref.file));
      const { kind, index } = ref;
-@@ -805,8 +805,9 @@ export function getReferencedFileLocation(getSourceFileByPath: (path: Path) => S
+@@ -825,8 +825,9 @@ export function getReferencedFileLocation(getSourceFileByPath: (path: Path) => S
  
  /**
   * Determines if program structure is upto date or needs to be recreated
@@ -3928,7 +3951,7 @@ index 241384aa1a..15d7c33af7 100644
  export function isProgramUptoDate(
      program: Program | undefined,
      rootFileNames: string[],
-@@ -912,7 +913,7 @@ export function getImpliedNodeFormatForFile(fileName: Path, packageJsonInfoCache
+@@ -932,7 +933,7 @@ export function getImpliedNodeFormatForFile(fileName: Path, packageJsonInfoCache
      return typeof result === "object" ? result.impliedNodeFormat : result;
  }
  
@@ -3937,7 +3960,7 @@ index 241384aa1a..15d7c33af7 100644
  export function getImpliedNodeFormatForFileWorker(
      fileName: string,
      packageJsonInfoCache: PackageJsonInfoCache | undefined,
-@@ -4271,10 +4272,10 @@ function updateHostForUseSourceOfProjectReferenceRedirect(host: HostForUseSource
+@@ -4292,10 +4293,10 @@ function updateHostForUseSourceOfProjectReferenceRedirect(host: HostForUseSource
      }
  }
  
@@ -3950,7 +3973,7 @@ index 241384aa1a..15d7c33af7 100644
  export function handleNoEmitOptions<T extends BuilderProgram>(
      program: Program | T,
      sourceFile: SourceFile | undefined,
-@@ -4315,12 +4316,12 @@ export function handleNoEmitOptions<T extends BuilderProgram>(
+@@ -4336,12 +4337,12 @@ export function handleNoEmitOptions<T extends BuilderProgram>(
      return { diagnostics, sourceMaps: undefined, emittedFiles, emitSkipped: true };
  }
  
@@ -3965,7 +3988,7 @@ index 241384aa1a..15d7c33af7 100644
  interface CompilerHostLike {
      useCaseSensitiveFileNames(): boolean;
      getCurrentDirectory(): string;
-@@ -4331,7 +4332,7 @@ interface CompilerHostLike {
+@@ -4352,7 +4353,7 @@ interface CompilerHostLike {
      onUnRecoverableConfigFileDiagnostic?: DiagnosticReporter;
  }
  
@@ -3974,16 +3997,16 @@ index 241384aa1a..15d7c33af7 100644
  export function parseConfigHostFromCompilerHostLike(host: CompilerHostLike, directoryStructureHost: DirectoryStructureHost = host): ParseConfigFileHost {
      return {
          fileExists: f => directoryStructureHost.fileExists(f),
-@@ -4352,7 +4353,7 @@ export function parseConfigHostFromCompilerHostLike(host: CompilerHostLike, dire
+@@ -4373,7 +4374,7 @@ export function parseConfigHostFromCompilerHostLike(host: CompilerHostLike, dire
      fileExists(fileName: string): boolean;
  }
  
 -/* @internal */
 +/** @internal */
- export function createPrependNodes(projectReferences: readonly ProjectReference[] | undefined, getCommandLine: (ref: ProjectReference, index: number) => ParsedCommandLine | undefined, readFile: (path: string) => string | undefined) {
-     if (!projectReferences) return emptyArray;
-     let nodes: InputFiles[] | undefined;
-@@ -4382,11 +4383,12 @@ export function resolveProjectReferencePath(hostOrRef: ResolveProjectReferencePa
+ export function createPrependNodes(
+     projectReferences: readonly ProjectReference[] | undefined,
+     getCommandLine: (ref: ProjectReference, index: number) => ParsedCommandLine | undefined,
+@@ -4408,11 +4409,12 @@ export function resolveProjectReferencePath(hostOrRef: ResolveProjectReferencePa
      return resolveConfigFileProjectName(passedInRef.path);
  }
  
@@ -3997,7 +4020,7 @@ index 241384aa1a..15d7c33af7 100644
   */
  export function getResolutionDiagnostic(options: CompilerOptions, { extension }: ResolvedModuleFull): DiagnosticMessage | undefined {
      switch (extension) {
-@@ -4426,7 +4428,7 @@ function getModuleNames({ imports, moduleAugmentations }: SourceFile): string[]
+@@ -4452,7 +4454,7 @@ function getModuleNames({ imports, moduleAugmentations }: SourceFile): string[]
      return res;
  }
  
@@ -4814,7 +4837,7 @@ index ad20ff97b4..a927555fbe 100644
 \ No newline at end of file
 +}
 diff --git a/src/compiler/tsbuildPublic.ts b/src/compiler/tsbuildPublic.ts
-index 895a03afe6..c454d528b9 100644
+index 8d013ee4c5..397428a845 100644
 --- a/src/compiler/tsbuildPublic.ts
 +++ b/src/compiler/tsbuildPublic.ts
 @@ -37,24 +37,24 @@ export interface BuildOptions {
@@ -4879,11 +4902,13 @@ index 895a03afe6..c454d528b9 100644
  export function getCurrentTime(host: { now?(): Date; }) {
      return host.now ? host.now() : new Date();
  }
-@@ -131,10 +134,10 @@ export interface SolutionBuilderHostBase<T extends BuilderProgram> extends Progr
+@@ -131,11 +134,11 @@ export interface SolutionBuilderHostBase<T extends BuilderProgram> extends Progr
      // TODO: To do better with watch mode and normal build mode api that creates program and emits files
      // This currently helps enable --diagnostics and --extendedDiagnostics
      afterProgramEmitAndDiagnostics?(program: T): void;
+-    /*@internal*/ beforeEmitBundle?(config: ParsedCommandLine): void;
 -    /*@internal*/ afterEmitBundle?(config: ParsedCommandLine): void;
++    /** @internal */ beforeEmitBundle?(config: ParsedCommandLine): void;
 +    /** @internal */ afterEmitBundle?(config: ParsedCommandLine): void;
  
      // For testing
@@ -4892,7 +4917,7 @@ index 895a03afe6..c454d528b9 100644
  }
  
  export interface SolutionBuilderHost<T extends BuilderProgram> extends SolutionBuilderHostBase<T> {
-@@ -144,22 +147,22 @@ export interface SolutionBuilderHost<T extends BuilderProgram> extends SolutionB
+@@ -145,22 +148,22 @@ export interface SolutionBuilderHost<T extends BuilderProgram> extends SolutionB
  export interface SolutionBuilderWithWatchHost<T extends BuilderProgram> extends SolutionBuilderHostBase<T>, WatchHost {
  }
  
@@ -4920,7 +4945,7 @@ index 895a03afe6..c454d528b9 100644
  export function getBuildOrderFromAnyBuildOrder(anyBuildOrder: AnyBuildOrder): BuildOrder {
      return isCircularBuildOrder(anyBuildOrder) ? anyBuildOrder.buildOrder : anyBuildOrder;
  }
-@@ -172,12 +175,12 @@ export interface SolutionBuilder<T extends BuilderProgram> {
+@@ -173,12 +176,12 @@ export interface SolutionBuilder<T extends BuilderProgram> {
      getNextInvalidatedProject(cancellationToken?: CancellationToken): InvalidatedProject<T> | undefined;
  
      // Currently used for testing but can be made public if needed:
@@ -4937,7 +4962,7 @@ index 895a03afe6..c454d528b9 100644
  }
  
  /**
-@@ -682,8 +685,8 @@ export enum InvalidatedProjectKind {
+@@ -683,8 +686,8 @@ export enum InvalidatedProjectKind {
  export interface InvalidatedProjectBase {
      readonly kind: InvalidatedProjectKind;
      readonly project: ResolvedConfigFileName;
@@ -4949,7 +4974,7 @@ index 895a03afe6..c454d528b9 100644
       *  To dispose this project and ensure that all the necessary actions are taken and state is updated accordingly
       */
 diff --git a/src/compiler/types.ts b/src/compiler/types.ts
-index d522515d3e..37e10cb3f0 100644
+index dddd15f4e9..b685c68633 100644
 --- a/src/compiler/types.ts
 +++ b/src/compiler/types.ts
 @@ -8,7 +8,7 @@ import {
@@ -7482,7 +7507,7 @@ index d522515d3e..37e10cb3f0 100644
      variances?: VarianceFlags[];  // Variance of each type parameter
  }
  
-@@ -5952,43 +6027,43 @@ export interface TupleTypeReference extends TypeReference {
+@@ -5955,43 +6030,43 @@ export interface TupleTypeReference extends TypeReference {
  
  export interface UnionOrIntersectionType extends Type {
      types: Type[];                    // Constituent types
@@ -7540,7 +7565,7 @@ index d522515d3e..37e10cb3f0 100644
  // An instantiated anonymous type has a target and a mapper
  export interface AnonymousType extends ObjectType {
      target?: AnonymousType;  // Instantiation target
-@@ -5996,12 +6071,12 @@ export interface AnonymousType extends ObjectType {
+@@ -5999,12 +6074,12 @@ export interface AnonymousType extends ObjectType {
      instantiations?: ESMap<string, Type>; // Instantiations of generic type alias (undefined if non-generic)
  }
  
@@ -7555,7 +7580,7 @@ index d522515d3e..37e10cb3f0 100644
  export interface MappedType extends AnonymousType {
      declaration: MappedTypeNode;
      typeParameter?: TypeParameter;
-@@ -6018,14 +6093,14 @@ export interface EvolvingArrayType extends ObjectType {
+@@ -6021,14 +6096,14 @@ export interface EvolvingArrayType extends ObjectType {
      finalArrayType?: Type;  // Final array type of evolving array type
  }
  
@@ -7572,7 +7597,7 @@ index d522515d3e..37e10cb3f0 100644
  // Resolved object, union, or intersection type
  export interface ResolvedType extends ObjectType, UnionOrIntersectionType {
      members: SymbolTable;             // Properties by name
-@@ -6035,7 +6110,7 @@ export interface ResolvedType extends ObjectType, UnionOrIntersectionType {
+@@ -6038,7 +6113,7 @@ export interface ResolvedType extends ObjectType, UnionOrIntersectionType {
      indexInfos: readonly IndexInfo[];  // Index signatures
  }
  
@@ -7581,7 +7606,7 @@ index d522515d3e..37e10cb3f0 100644
  // Object literals are initially marked fresh. Freshness disappears following an assignment,
  // before a type assertion, or when an object literal's type is widened. The regular
  // version of a fresh type is identical except for the TypeFlags.FreshObjectLiteral flag.
-@@ -6043,7 +6118,7 @@ export interface FreshObjectLiteralType extends ResolvedType {
+@@ -6046,7 +6121,7 @@ export interface FreshObjectLiteralType extends ResolvedType {
      regularType: ResolvedType;  // Regular version of fresh type
  }
  
@@ -7590,7 +7615,7 @@ index d522515d3e..37e10cb3f0 100644
  export interface IterationTypes {
      readonly yieldType: Type;
      readonly returnType: Type;
-@@ -6051,7 +6126,7 @@ export interface IterationTypes {
+@@ -6054,7 +6129,7 @@ export interface IterationTypes {
  }
  
  // Just a place to cache element types of iterables and iterators
@@ -7599,7 +7624,7 @@ index d522515d3e..37e10cb3f0 100644
  export interface IterableOrIteratorType extends ObjectType, UnionType {
      iterationTypesOfGeneratorReturnType?: IterationTypes;
      iterationTypesOfAsyncGeneratorReturnType?: IterationTypes;
-@@ -6062,46 +6137,49 @@ export interface IterableOrIteratorType extends ObjectType, UnionType {
+@@ -6065,46 +6140,49 @@ export interface IterableOrIteratorType extends ObjectType, UnionType {
      iterationTypesOfIteratorResult?: IterationTypes;
  }
  
@@ -7662,7 +7687,7 @@ index d522515d3e..37e10cb3f0 100644
  export const enum AccessFlags {
      None = 0,
      IncludeUndefined = 1 << 0,
-@@ -6121,7 +6199,7 @@ export const enum AccessFlags {
+@@ -6124,7 +6202,7 @@ export const enum AccessFlags {
  export interface IndexedAccessType extends InstantiableType {
      objectType: Type;
      indexType: Type;
@@ -7671,7 +7696,7 @@ index d522515d3e..37e10cb3f0 100644
      accessFlags: AccessFlags;  // Only includes AccessFlags.Persistent
      constraint?: Type;
      simplifiedForReading?: Type;
-@@ -6133,7 +6211,7 @@ export type TypeVariable = TypeParameter | IndexedAccessType;
+@@ -6136,7 +6214,7 @@ export type TypeVariable = TypeParameter | IndexedAccessType;
  // keyof T types (TypeFlags.Index)
  export interface IndexType extends InstantiableType {
      type: InstantiableType | UnionOrIntersectionType;
@@ -7680,7 +7705,7 @@ index d522515d3e..37e10cb3f0 100644
      stringsOnly: boolean;
  }
  
-@@ -6156,13 +6234,13 @@ export interface ConditionalType extends InstantiableType {
+@@ -6159,13 +6237,13 @@ export interface ConditionalType extends InstantiableType {
      extendsType: Type;
      resolvedTrueType?: Type;
      resolvedFalseType?: Type;
@@ -7698,7 +7723,7 @@ index d522515d3e..37e10cb3f0 100644
      combinedMapper?: TypeMapper;
  }
  
-@@ -6188,7 +6266,7 @@ export interface SubstitutionType extends InstantiableType {
+@@ -6191,7 +6269,7 @@ export interface SubstitutionType extends InstantiableType {
      constraint: Type;  // Constraint that target type is known to satisfy
  }
  
@@ -7707,7 +7732,7 @@ index d522515d3e..37e10cb3f0 100644
  export const enum JsxReferenceKind {
      Component,
      Function,
-@@ -6200,7 +6278,7 @@ export const enum SignatureKind {
+@@ -6203,7 +6281,7 @@ export const enum SignatureKind {
      Construct,
  }
  
@@ -7716,7 +7741,7 @@ index d522515d3e..37e10cb3f0 100644
  export const enum SignatureFlags {
      None = 0,
  
-@@ -6223,44 +6301,44 @@ export const enum SignatureFlags {
+@@ -6226,44 +6304,44 @@ export const enum SignatureFlags {
  }
  
  export interface Signature {
@@ -7778,7 +7803,7 @@ index d522515d3e..37e10cb3f0 100644
      instantiations?: ESMap<string, Signature>;    // Generic signature instantiation cache
  }
  
-@@ -6276,7 +6354,7 @@ export interface IndexInfo {
+@@ -6279,7 +6357,7 @@ export interface IndexInfo {
      declaration?: IndexSignatureDeclaration;
  }
  
@@ -7787,7 +7812,7 @@ index d522515d3e..37e10cb3f0 100644
  export const enum TypeMapKind {
      Simple,
      Array,
-@@ -6286,7 +6364,7 @@ export const enum TypeMapKind {
+@@ -6289,7 +6367,7 @@ export const enum TypeMapKind {
      Merged,
  }
  
@@ -7796,7 +7821,7 @@ index d522515d3e..37e10cb3f0 100644
  export type TypeMapper =
      | { kind: TypeMapKind.Simple, source: Type, target: Type }
      | { kind: TypeMapKind.Array, sources: readonly Type[], targets: readonly Type[] | undefined }
-@@ -6312,7 +6390,7 @@ export const enum InferencePriority {
+@@ -6315,7 +6393,7 @@ export const enum InferencePriority {
      Circularity = -1,  // Inference circularity (value less than all other priorities)
  }
  
@@ -7805,7 +7830,7 @@ index d522515d3e..37e10cb3f0 100644
  export interface InferenceInfo {
      typeParameter: TypeParameter;            // Type parameter for which inferences are being made
      candidates: Type[] | undefined;          // Candidates in covariant positions (or undefined)
-@@ -6324,7 +6402,7 @@ export interface InferenceInfo {
+@@ -6327,7 +6405,7 @@ export interface InferenceInfo {
      impliedArity?: number;
  }
  
@@ -7814,7 +7839,7 @@ index d522515d3e..37e10cb3f0 100644
  export const enum InferenceFlags {
      None            =      0,  // No special inference behaviors
      NoDefault       = 1 << 0,  // Infer unknownType for no inferences (otherwise anyType or emptyObjectType)
-@@ -6339,8 +6417,9 @@ export const enum InferenceFlags {
+@@ -6342,8 +6420,9 @@ export const enum InferenceFlags {
   * Generally, Ternary.Maybe is used as the result of a relation that depends on itself, and
   * Ternary.Unknown is used as the result of a variance check that depends on itself. We make
   * a distinction because we don't want to cache circular variance check results.
@@ -7825,7 +7850,7 @@ index d522515d3e..37e10cb3f0 100644
  export const enum Ternary {
      False = 0,
      Unknown = 1,
-@@ -6348,10 +6427,10 @@ export const enum Ternary {
+@@ -6351,10 +6430,10 @@ export const enum Ternary {
      True = -1
  }
  
@@ -7838,7 +7863,7 @@ index d522515d3e..37e10cb3f0 100644
  export interface InferenceContext {
      inferences: InferenceInfo[];                  // Inferences made for each type parameter
      signature?: Signature;                        // Generic signature for which inferences are made (if any)
-@@ -6364,13 +6443,13 @@ export interface InferenceContext {
+@@ -6367,13 +6446,13 @@ export interface InferenceContext {
      intraExpressionInferenceSites?: IntraExpressionInferenceSite[];
  }
  
@@ -7854,7 +7879,7 @@ index d522515d3e..37e10cb3f0 100644
  export interface WideningContext {
      parent?: WideningContext;       // Parent context
      propertyName?: __String;        // Name of property in parent
-@@ -6378,7 +6457,7 @@ export interface WideningContext {
+@@ -6381,7 +6460,7 @@ export interface WideningContext {
      resolvedProperties?: Symbol[];  // Properties occurring in sibling object literals
  }
  
@@ -7863,7 +7888,7 @@ index d522515d3e..37e10cb3f0 100644
  export const enum AssignmentDeclarationKind {
      None,
      /// exports.name = expr
-@@ -6421,7 +6500,7 @@ export interface DiagnosticMessage {
+@@ -6424,7 +6503,7 @@ export interface DiagnosticMessage {
      message: string;
      reportsUnnecessary?: {};
      reportsDeprecated?: {};
@@ -7872,7 +7897,7 @@ index d522515d3e..37e10cb3f0 100644
      elidedInCompatabilityPyramid?: boolean;
  }
  
-@@ -6445,7 +6524,7 @@ export interface Diagnostic extends DiagnosticRelatedInformation {
+@@ -6448,7 +6527,7 @@ export interface Diagnostic extends DiagnosticRelatedInformation {
      reportsDeprecated?: {}
      source?: string;
      relatedInformation?: DiagnosticRelatedInformation[];
@@ -7881,7 +7906,7 @@ index d522515d3e..37e10cb3f0 100644
  }
  
  export interface DiagnosticRelatedInformation {
-@@ -6463,7 +6542,7 @@ export interface DiagnosticWithLocation extends Diagnostic {
+@@ -6466,7 +6545,7 @@ export interface DiagnosticWithLocation extends Diagnostic {
      length: number;
  }
  
@@ -7890,7 +7915,7 @@ index d522515d3e..37e10cb3f0 100644
  export interface DiagnosticWithDetachedLocation extends Diagnostic {
      file: undefined;
      fileName: string;
-@@ -6477,7 +6556,7 @@ export enum DiagnosticCategory {
+@@ -6480,7 +6559,7 @@ export enum DiagnosticCategory {
      Suggestion,
      Message
  }
@@ -7899,7 +7924,7 @@ index d522515d3e..37e10cb3f0 100644
  export function diagnosticCategoryName(d: { category: DiagnosticCategory }, lowerCase = true): string {
      const name = DiagnosticCategory[d.category];
      return lowerCase ? name.toLowerCase() : name;
-@@ -6551,29 +6630,36 @@ export enum PollingWatchKind {
+@@ -6554,29 +6633,36 @@ export enum PollingWatchKind {
  export type CompilerOptionsValue = string | number | boolean | (string | number)[] | string[] | MapLike<string[]> | PluginImport[] | ProjectReference[] | null | undefined;
  
  export interface CompilerOptions {
@@ -7945,7 +7970,7 @@ index d522515d3e..37e10cb3f0 100644
      disableSizeLimit?: boolean;
      disableSourceOfProjectReferenceRedirect?: boolean;
      disableSolutionSearching?: boolean;
-@@ -6584,22 +6670,22 @@ export interface CompilerOptions {
+@@ -6587,22 +6673,22 @@ export interface CompilerOptions {
      exactOptionalPropertyTypes?: boolean;
      experimentalDecorators?: boolean;
      forceConsistentCasingInFileNames?: boolean;
@@ -7976,7 +8001,7 @@ index d522515d3e..37e10cb3f0 100644
      locale?: string;
      mapRoot?: string;
      maxNodeModuleJsDepth?: number;
-@@ -6609,7 +6695,7 @@ export interface CompilerOptions {
+@@ -6612,7 +6698,7 @@ export interface CompilerOptions {
      moduleDetection?: ModuleDetectionKind;
      newLine?: NewLineKind;
      noEmit?: boolean;
@@ -7985,7 +8010,7 @@ index d522515d3e..37e10cb3f0 100644
      noEmitHelpers?: boolean;
      noEmitOnError?: boolean;
      noErrorTruncation?: boolean;
-@@ -6625,23 +6711,27 @@ export interface CompilerOptions {
+@@ -6628,23 +6714,27 @@ export interface CompilerOptions {
      assumeChangesOnlyAffectDirectDependencies?: boolean;
      noLib?: boolean;
      noResolve?: boolean;
@@ -8019,7 +8044,7 @@ index d522515d3e..37e10cb3f0 100644
      reactNamespace?: string;
      jsxFactory?: string;
      jsxFragmentFactory?: string;
-@@ -6664,7 +6754,7 @@ export interface CompilerOptions {
+@@ -6667,7 +6757,7 @@ export interface CompilerOptions {
      stripInternal?: boolean;
      suppressExcessPropertyErrors?: boolean;
      suppressImplicitAnyIndexErrors?: boolean;
@@ -8028,7 +8053,7 @@ index d522515d3e..37e10cb3f0 100644
      target?: ScriptTarget;
      traceResolution?: boolean;
      useUnknownInCatchVariables?: boolean;
-@@ -6672,10 +6762,10 @@ export interface CompilerOptions {
+@@ -6675,10 +6765,10 @@ export interface CompilerOptions {
      types?: string[];
      /** Paths used to compute primary types search locations */
      typeRoots?: string[];
@@ -8042,7 +8067,7 @@ index d522515d3e..37e10cb3f0 100644
      useDefineForClassFields?: boolean;
  
      [option: string]: CompilerOptionsValue | TsConfigSourceFile | undefined;
-@@ -6808,7 +6898,7 @@ export const enum WatchDirectoryFlags {
+@@ -6811,7 +6901,7 @@ export const enum WatchDirectoryFlags {
      Recursive = 1 << 0,
  }
  
@@ -8051,7 +8076,7 @@ index d522515d3e..37e10cb3f0 100644
  export interface ConfigFileSpecs {
      filesSpecs: readonly string[] | undefined;
      /**
-@@ -6826,7 +6916,7 @@ export interface ConfigFileSpecs {
+@@ -6829,7 +6919,7 @@ export interface ConfigFileSpecs {
      isDefaultIncludeSpec: boolean;
  }
  
@@ -8060,7 +8085,7 @@ index d522515d3e..37e10cb3f0 100644
  export type RequireResult<T = {}> =
      | { module: T, modulePath?: string, error: undefined }
      | { module: undefined, modulePath?: undefined, error: { stack?: string, message?: string } };
-@@ -6840,7 +6930,7 @@ export interface CreateProgramOptions {
+@@ -6843,7 +6933,7 @@ export interface CreateProgramOptions {
      configFileParsingDiagnostics?: readonly Diagnostic[];
  }
  
@@ -8069,7 +8094,7 @@ index d522515d3e..37e10cb3f0 100644
  export interface CommandLineOptionBase {
      name: string;
      type: "string" | "number" | "boolean" | "object" | "list" | ESMap<string, number | string>;    // a value of a primitive type, or an object literal mapping named values to actual values
-@@ -6867,37 +6957,37 @@ export interface CommandLineOptionBase {
+@@ -6870,37 +6960,37 @@ export interface CommandLineOptionBase {
      extraValidation?: (value: CompilerOptionsValue) => [DiagnosticMessage, ...string[]] | undefined; // Additional validation to be performed for the value to be valid
  }
  
@@ -8113,7 +8138,7 @@ index d522515d3e..37e10cb3f0 100644
  export interface DidYouMeanOptionsDiagnostics {
      alternateMode?: AlternateModeDiagnostics;
      optionDeclarations: CommandLineOption[];
-@@ -6905,24 +6995,24 @@ export interface DidYouMeanOptionsDiagnostics {
+@@ -6908,24 +6998,24 @@ export interface DidYouMeanOptionsDiagnostics {
      unknownDidYouMeanDiagnostic: DiagnosticMessage,
  }
  
@@ -8142,7 +8167,7 @@ index d522515d3e..37e10cb3f0 100644
  export const enum CharacterCodes {
      nullCharacter = 0,
      maxAsciiCharacter = 0x7F,
-@@ -7157,11 +7247,11 @@ export const enum Extension {
+@@ -7160,11 +7250,11 @@ export const enum Extension {
  
  export interface ResolvedModuleWithFailedLookupLocations {
      readonly resolvedModule: ResolvedModuleFull | undefined;
@@ -8157,7 +8182,7 @@ index d522515d3e..37e10cb3f0 100644
      readonly resolutionDiagnostics: Diagnostic[]
  }
  
-@@ -7184,13 +7274,13 @@ export interface ResolvedTypeReferenceDirective {
+@@ -7187,13 +7277,13 @@ export interface ResolvedTypeReferenceDirective {
  export interface ResolvedTypeReferenceDirectiveWithFailedLookupLocations {
      readonly resolvedTypeReferenceDirective: ResolvedTypeReferenceDirective | undefined;
      readonly failedLookupLocations: string[];
@@ -8175,7 +8200,7 @@ index d522515d3e..37e10cb3f0 100644
  export type HasChangedAutomaticTypeDirectiveNames = () => boolean;
  
  export interface CompilerHost extends ModuleResolutionHost {
-@@ -7223,35 +7313,36 @@ export interface CompilerHost extends ModuleResolutionHost {
+@@ -7226,36 +7316,37 @@ export interface CompilerHost extends ModuleResolutionHost {
       */
      resolveTypeReferenceDirectives?(typeReferenceDirectiveNames: string[] | readonly FileReference[], containingFile: string, redirectedReference: ResolvedProjectReference | undefined, options: CompilerOptions, containingFileMode?: SourceFile["impliedNodeFormat"] | undefined): (ResolvedTypeReferenceDirective | undefined)[];
      getEnvironmentVariable?(name: string): string | undefined;
@@ -8201,8 +8226,10 @@ index d522515d3e..37e10cb3f0 100644
      // For testing:
 -    /*@internal*/ disableUseFileVersionAsSignature?: boolean;
 -    /*@internal*/ storeFilesChangingSignatureDuringEmit?: boolean;
+-    /*@internal*/ getBuildInfo?(fileName: string, configFilePath: string | undefined): BuildInfo | undefined;
 +    /** @internal */ disableUseFileVersionAsSignature?: boolean;
 +    /** @internal */ storeFilesChangingSignatureDuringEmit?: boolean;
++    /** @internal */ getBuildInfo?(fileName: string, configFilePath: string | undefined): BuildInfo | undefined;
  }
  
 -/** true if --out otherwise source file name */
@@ -8224,7 +8251,7 @@ index d522515d3e..37e10cb3f0 100644
  export const enum TransformFlags {
      None = 0,
  
-@@ -7346,11 +7437,11 @@ export interface SourceMapRange extends TextRange {
+@@ -7350,11 +7441,11 @@ export interface SourceMapRange extends TextRange {
  export interface SourceMapSource {
      fileName: string;
      text: string;
@@ -8238,7 +8265,7 @@ index d522515d3e..37e10cb3f0 100644
  export interface EmitNode {
      annotatedNodes?: Node[];                 // Tracks Parse-tree nodes with EmitNodes for eventual cleanup.
      flags: EmitFlags;                        // Flags that customize emit
-@@ -7368,23 +7459,23 @@ export interface EmitNode {
+@@ -7372,23 +7463,23 @@ export interface EmitNode {
      typeNode?: TypeNode;                         // VariableDeclaration type
  }
  
@@ -8266,7 +8293,7 @@ index d522515d3e..37e10cb3f0 100644
  export const enum SnippetKind {
      TabStop,                                // `$1`, `$2`
      Placeholder,                            // `${1:foo}`
-@@ -7422,11 +7513,11 @@ export const enum EmitFlags {
+@@ -7426,11 +7517,11 @@ export const enum EmitFlags {
      HasEndOfDeclarationMarker = 1 << 22,    // Declaration has an associated NotEmittedStatement to mark the end of the declaration
      Iterator = 1 << 23,                     // The expression to a `yield*` should be treated as an Iterator when down-leveling, not an Iterable.
      NoAsciiEscaping = 1 << 24,              // When synthesizing nodes that lack an original node or textSourceNode, we want to write the text on the node with ASCII escaping substitutions.
@@ -8283,7 +8310,7 @@ index d522515d3e..37e10cb3f0 100644
  }
  
  export interface EmitHelperBase {
-@@ -7443,14 +7534,14 @@ export interface ScopedEmitHelper extends EmitHelperBase {
+@@ -7447,14 +7538,14 @@ export interface ScopedEmitHelper extends EmitHelperBase {
  
  export interface UnscopedEmitHelper extends EmitHelperBase {
      readonly scoped: false;                                         // Indicates whether the helper MUST be emitted in the current scope.
@@ -8300,7 +8327,7 @@ index d522515d3e..37e10cb3f0 100644
  export type UniqueNameHandler = (baseName: string, checkFn?: (name: string) => boolean, optimistic?: boolean) => string;
  
  export type EmitHelperUniqueNameCallback = (name: string) => string;
-@@ -7458,8 +7549,9 @@ export type EmitHelperUniqueNameCallback = (name: string) => string;
+@@ -7462,8 +7553,9 @@ export type EmitHelperUniqueNameCallback = (name: string) => string;
  /**
   * Used by the checker, this enum keeps track of external emit helpers that should be type
   * checked.
@@ -8311,7 +8338,7 @@ index d522515d3e..37e10cb3f0 100644
  export const enum ExternalEmitHelpers {
      Extends = 1 << 0,               // __extends (used by the ES2015 class transformation)
      Assign = 1 << 1,                // __assign (used by Jsx and ESNext object spread transformations)
-@@ -7513,7 +7605,7 @@ export const enum EmitHint {
+@@ -7517,7 +7609,7 @@ export const enum EmitHint {
      JsxAttributeValue,   // Emitting a JSX attribute value
  }
  
@@ -8320,7 +8347,7 @@ index d522515d3e..37e10cb3f0 100644
  export interface SourceFileMayBeEmittedHost {
      getCompilerOptions(): CompilerOptions;
      isSourceFileFromExternalLibrary(file: SourceFile): boolean;
-@@ -7521,7 +7613,7 @@ export interface SourceFileMayBeEmittedHost {
+@@ -7525,7 +7617,7 @@ export interface SourceFileMayBeEmittedHost {
      isSourceOfProjectReferenceRedirect(fileName: string): boolean;
  }
  
@@ -8329,7 +8356,7 @@ index d522515d3e..37e10cb3f0 100644
  export interface EmitHost extends ScriptReferenceHost, ModuleSpecifierResolutionHost, SourceFileMayBeEmittedHost {
      getSourceFiles(): readonly SourceFile[];
      useCaseSensitiveFileNames(): boolean;
-@@ -7544,7 +7636,7 @@ export interface EmitHost extends ScriptReferenceHost, ModuleSpecifierResolution
+@@ -7548,7 +7640,7 @@ export interface EmitHost extends ScriptReferenceHost, ModuleSpecifierResolution
      createHash?(data: string): string;
  }
  
@@ -8338,7 +8365,7 @@ index d522515d3e..37e10cb3f0 100644
  export interface PropertyDescriptorAttributes {
      enumerable?: boolean | Expression;
      configurable?: boolean | Expression;
-@@ -7566,7 +7658,7 @@ export const enum OuterExpressionKinds {
+@@ -7570,7 +7662,7 @@ export const enum OuterExpressionKinds {
      ExcludeJSDocTypeAssertion = 1 << 4,
  }
  
@@ -8347,7 +8374,7 @@ index d522515d3e..37e10cb3f0 100644
  export type OuterExpression =
      | ParenthesizedExpression
      | TypeAssertion
-@@ -7577,13 +7669,13 @@ export type OuterExpression =
+@@ -7581,13 +7673,13 @@ export type OuterExpression =
  
  export type TypeOfTag = "undefined" | "number" | "bigint" | "boolean" | "string" | "symbol" | "object" | "function";
  
@@ -8363,7 +8390,7 @@ index d522515d3e..37e10cb3f0 100644
  export interface ParenthesizerRules {
      getParenthesizeLeftSideOfBinaryForOperator(binaryOperator: SyntaxKind): (leftSide: Expression) => Expression;
      getParenthesizeRightSideOfBinaryForOperator(binaryOperator: SyntaxKind): (rightSide: Expression) => Expression;
-@@ -7618,7 +7710,7 @@ export interface ParenthesizerRules {
+@@ -7622,7 +7714,7 @@ export interface ParenthesizerRules {
      parenthesizeTypeArguments(typeParameters: readonly TypeNode[] | undefined): NodeArray<TypeNode> | undefined;
  }
  
@@ -8372,7 +8399,7 @@ index d522515d3e..37e10cb3f0 100644
  export interface NodeConverters {
      convertToFunctionBlock(node: ConciseBody, multiLine?: boolean): Block;
      convertToFunctionExpression(node: FunctionDeclaration): FunctionExpression;
-@@ -7630,7 +7722,7 @@ export interface NodeConverters {
+@@ -7634,7 +7726,7 @@ export interface NodeConverters {
      convertToAssignmentElementTarget(node: BindingOrAssignmentElementTarget): Expression;
  }
  
@@ -8381,7 +8408,7 @@ index d522515d3e..37e10cb3f0 100644
  export interface GeneratedNamePart {
      /** an additional prefix to insert before the text sourced from `node` */
      prefix?: string;
-@@ -7640,10 +7732,10 @@ export interface GeneratedNamePart {
+@@ -7644,10 +7736,10 @@ export interface GeneratedNamePart {
  }
  
  export interface NodeFactory {
@@ -8396,7 +8423,7 @@ index d522515d3e..37e10cb3f0 100644
      createNodeArray<T extends Node>(elements?: readonly T[], hasTrailingComma?: boolean): NodeArray<T>;
  
      //
-@@ -7653,7 +7745,7 @@ export interface NodeFactory {
+@@ -7657,7 +7749,7 @@ export interface NodeFactory {
      createNumericLiteral(value: string | number, numericLiteralFlags?: TokenFlags): NumericLiteral;
      createBigIntLiteral(value: string | PseudoBigInt): BigIntLiteral;
      createStringLiteral(text: string, isSingleQuote?: boolean): StringLiteral;
@@ -8405,7 +8432,7 @@ index d522515d3e..37e10cb3f0 100644
      createStringLiteralFromNode(sourceNode: PropertyNameLiteral | PrivateIdentifier, isSingleQuote?: boolean): StringLiteral;
      createRegularExpressionLiteral(text: string): RegularExpressionLiteral;
  
-@@ -7662,8 +7754,8 @@ export interface NodeFactory {
+@@ -7666,8 +7758,8 @@ export interface NodeFactory {
      //
  
      createIdentifier(text: string): Identifier;
@@ -8416,7 +8443,7 @@ index d522515d3e..37e10cb3f0 100644
  
      /**
       * Create a unique temporary variable.
-@@ -7675,7 +7767,7 @@ export interface NodeFactory {
+@@ -7679,7 +7771,7 @@ export interface NodeFactory {
       * setting `EmitFlags.ReuseTempVariableScope` on the nested function itself.
       */
      createTempVariable(recordTempVariable: ((node: Identifier) => void) | undefined, reservedInNestedScopes?: boolean): Identifier;
@@ -8425,7 +8452,7 @@ index d522515d3e..37e10cb3f0 100644
  
      /**
       * Create a unique temporary variable for use in a loop.
-@@ -7687,17 +7779,17 @@ export interface NodeFactory {
+@@ -7691,17 +7783,17 @@ export interface NodeFactory {
  
      /** Create a unique name based on the supplied text. */
      createUniqueName(text: string, flags?: GeneratedIdentifierFlags): Identifier;
@@ -8447,7 +8474,7 @@ index d522515d3e..37e10cb3f0 100644
  
      //
      // Punctuation
-@@ -7713,7 +7805,7 @@ export interface NodeFactory {
+@@ -7717,7 +7809,7 @@ export interface NodeFactory {
      createToken<TKind extends ModifierSyntaxKind>(token: TKind): ModifierToken<TKind>;
      createToken<TKind extends KeywordSyntaxKind>(token: TKind): KeywordToken<TKind>;
      createToken<TKind extends SyntaxKind.Unknown | SyntaxKind.EndOfFileToken>(token: TKind): Token<TKind>;
@@ -8456,7 +8483,7 @@ index d522515d3e..37e10cb3f0 100644
  
      //
      // Reserved words
-@@ -7775,7 +7867,7 @@ export interface NodeFactory {
+@@ -7779,7 +7871,7 @@ export interface NodeFactory {
      createConstructSignature(typeParameters: readonly TypeParameterDeclaration[] | undefined, parameters: readonly ParameterDeclaration[], type: TypeNode | undefined): ConstructSignatureDeclaration;
      updateConstructSignature(node: ConstructSignatureDeclaration, typeParameters: NodeArray<TypeParameterDeclaration> | undefined, parameters: NodeArray<ParameterDeclaration>, type: TypeNode | undefined): ConstructSignatureDeclaration;
      createIndexSignature(modifiers: readonly Modifier[] | undefined, parameters: readonly ParameterDeclaration[], type: TypeNode): IndexSignatureDeclaration;
@@ -8465,7 +8492,7 @@ index d522515d3e..37e10cb3f0 100644
      updateIndexSignature(node: IndexSignatureDeclaration, modifiers: readonly Modifier[] | undefined, parameters: readonly ParameterDeclaration[], type: TypeNode): IndexSignatureDeclaration;
      createTemplateLiteralTypeSpan(type: TypeNode, literal: TemplateMiddle | TemplateTail): TemplateLiteralTypeSpan;
      updateTemplateLiteralTypeSpan(node: TemplateLiteralTypeSpan, type: TypeNode, literal: TemplateMiddle | TemplateTail): TemplateLiteralTypeSpan;
-@@ -7902,11 +7994,11 @@ export interface NodeFactory {
+@@ -7906,11 +7998,11 @@ export interface NodeFactory {
      createTemplateTail(text: string | undefined, rawText: string, templateFlags?: TokenFlags): TemplateTail;
      createNoSubstitutionTemplateLiteral(text: string, rawText?: string): NoSubstitutionTemplateLiteral;
      createNoSubstitutionTemplateLiteral(text: string | undefined, rawText: string): NoSubstitutionTemplateLiteral;
@@ -8480,7 +8507,7 @@ index d522515d3e..37e10cb3f0 100644
      updateYieldExpression(node: YieldExpression, asteriskToken: AsteriskToken | undefined, expression: Expression | undefined): YieldExpression;
      createSpreadElement(expression: Expression): SpreadElement;
      updateSpreadElement(node: SpreadElement, expression: Expression): SpreadElement;
-@@ -8024,7 +8116,7 @@ export interface NodeFactory {
+@@ -8028,7 +8120,7 @@ export interface NodeFactory {
      updateNamedExports(node: NamedExports, elements: readonly ExportSpecifier[]): NamedExports;
      createExportSpecifier(isTypeOnly: boolean, propertyName: string | Identifier | undefined, name: string | Identifier): ExportSpecifier;
      updateExportSpecifier(node: ExportSpecifier, isTypeOnly: boolean, propertyName: Identifier | undefined, name: Identifier): ExportSpecifier;
@@ -8489,7 +8516,7 @@ index d522515d3e..37e10cb3f0 100644
  
      //
      // Module references
-@@ -8179,30 +8271,30 @@ export interface NodeFactory {
+@@ -8183,30 +8275,30 @@ export interface NodeFactory {
      createSourceFile(statements: readonly Statement[], endOfFileToken: EndOfFileToken, flags: NodeFlags): SourceFile;
      updateSourceFile(node: SourceFile, statements: readonly Statement[], isDeclarationFile?: boolean, referencedFiles?: readonly FileReference[], typeReferences?: readonly FileReference[], hasNoDefaultLib?: boolean, libReferences?: readonly FileReference[]): SourceFile;
  
@@ -8532,7 +8559,7 @@ index d522515d3e..37e10cb3f0 100644
      createCommaListExpression(elements: readonly Expression[]): CommaListExpression;
      updateCommaListExpression(node: CommaListExpression, elements: readonly Expression[]): CommaListExpression;
      createBundle(sourceFiles: readonly SourceFile[], prepends?: readonly (UnparsedSource | InputFiles)[]): Bundle;
-@@ -8260,19 +8352,19 @@ export interface NodeFactory {
+@@ -8264,19 +8356,19 @@ export interface NodeFactory {
      createExportDefault(expression: Expression): ExportAssignment;
      createExternalModuleExport(exportName: Identifier): ExportDeclaration;
  
@@ -8565,7 +8592,7 @@ index d522515d3e..37e10cb3f0 100644
      /**
       * Wraps an expression that cannot be an assignment target in an expression that can be.
       *
-@@ -8287,9 +8379,11 @@ export interface NodeFactory {
+@@ -8291,9 +8383,11 @@ export interface NodeFactory {
       *
       * @param paramName
       * @param expression
@@ -8579,7 +8606,7 @@ index d522515d3e..37e10cb3f0 100644
      /**
       * Gets the internal name of a declaration. This is primarily used for declarations that can be
       * referred to by name in the body of an ES5 class function body. An internal name will *never*
-@@ -8300,8 +8394,10 @@ export interface NodeFactory {
+@@ -8304,8 +8398,10 @@ export interface NodeFactory {
       * @param node The declaration.
       * @param allowComments A value indicating whether comments may be emitted for the name.
       * @param allowSourceMaps A value indicating whether source maps may be emitted for the name.
@@ -8591,7 +8618,7 @@ index d522515d3e..37e10cb3f0 100644
      /**
       * Gets the local name of a declaration. This is primarily used for declarations that can be
       * referred to by name in the declaration's immediate scope (classes, enums, namespaces). A
-@@ -8311,8 +8407,10 @@ export interface NodeFactory {
+@@ -8315,8 +8411,10 @@ export interface NodeFactory {
       * @param node The declaration.
       * @param allowComments A value indicating whether comments may be emitted for the name.
       * @param allowSourceMaps A value indicating whether source maps may be emitted for the name.
@@ -8603,7 +8630,7 @@ index d522515d3e..37e10cb3f0 100644
      /**
       * Gets the export name of a declaration. This is primarily used for declarations that can be
       * referred to by name in the declaration's immediate scope (classes, enums, namespaces). An
-@@ -8322,16 +8420,20 @@ export interface NodeFactory {
+@@ -8326,16 +8424,20 @@ export interface NodeFactory {
       * @param node The declaration.
       * @param allowComments A value indicating whether comments may be emitted for the name.
       * @param allowSourceMaps A value indicating whether source maps may be emitted for the name.
@@ -8626,7 +8653,7 @@ index d522515d3e..37e10cb3f0 100644
      /**
       * Gets a namespace-qualified name for use in expressions.
       *
-@@ -8339,8 +8441,10 @@ export interface NodeFactory {
+@@ -8343,8 +8445,10 @@ export interface NodeFactory {
       * @param name The name.
       * @param allowComments A value indicating whether comments may be emitted for the name.
       * @param allowSourceMaps A value indicating whether source maps may be emitted for the name.
@@ -8638,7 +8665,7 @@ index d522515d3e..37e10cb3f0 100644
      /**
       * Gets the exported name of a declaration for use in expressions.
       *
-@@ -8351,62 +8455,76 @@ export interface NodeFactory {
+@@ -8355,62 +8459,76 @@ export interface NodeFactory {
       * @param node The declaration.
       * @param allowComments A value indicating whether comments may be emitted for the name.
       * @param allowSourceMaps A value indicating whether source maps may be emitted for the name.
@@ -8729,7 +8756,7 @@ index d522515d3e..37e10cb3f0 100644
  export const enum LexicalEnvironmentFlags {
      None = 0,
      InParameters = 1 << 0, // currently visiting a parameter list
-@@ -8422,8 +8540,8 @@ export interface CoreTransformationContext {
+@@ -8426,8 +8544,8 @@ export interface CoreTransformationContext {
      /** Starts a new lexical environment. */
      startLexicalEnvironment(): void;
  
@@ -8740,7 +8767,7 @@ index d522515d3e..37e10cb3f0 100644
  
      /** Suspends the current lexical environment, usually after visiting a parameter list. */
      suspendLexicalEnvironment(): void;
-@@ -8440,21 +8558,24 @@ export interface CoreTransformationContext {
+@@ -8444,21 +8562,24 @@ export interface CoreTransformationContext {
      /** Hoists a variable declaration to the containing scope. */
      hoistVariableDeclaration(node: Identifier): void;
  
@@ -8773,7 +8800,7 @@ index d522515d3e..37e10cb3f0 100644
  
      /** Records a request for a non-scoped emit helper in the current context. */
      requestEmitHelper(helper: EmitHelper): void;
-@@ -8498,7 +8619,7 @@ export interface TransformationContext extends CoreTransformationContext {
+@@ -8502,7 +8623,7 @@ export interface TransformationContext extends CoreTransformationContext {
       */
      onEmitNode: (hint: EmitHint, node: Node, emitCallback: (hint: EmitHint, node: Node) => void) => void;
  
@@ -8782,7 +8809,7 @@ index d522515d3e..37e10cb3f0 100644
  }
  
  export interface TransformationResult<T extends Node> {
-@@ -8593,14 +8714,14 @@ export interface Printer {
+@@ -8597,14 +8718,14 @@ export interface Printer {
       * Prints a bundle of source files as-is, without any emit transformations.
       */
      printBundle(bundle: Bundle): string;
@@ -8803,7 +8830,7 @@ index d522515d3e..37e10cb3f0 100644
  export const enum BundleFileSectionKind {
      Prologue = "prologue",
      EmitHelpers = "emitHelpers",
-@@ -8616,51 +8737,51 @@ export const enum BundleFileSectionKind {
+@@ -8620,51 +8741,51 @@ export const enum BundleFileSectionKind {
      // comments?
  }
  
@@ -8864,7 +8891,7 @@ index d522515d3e..37e10cb3f0 100644
  export type BundleFileSection =
      BundleFilePrologue
      | BundleFileEmitHelpers
-@@ -8669,31 +8790,31 @@ export type BundleFileSection =
+@@ -8673,31 +8794,31 @@ export type BundleFileSection =
      | BundleFilePrepend
      | BundleFileTextLike;
  
@@ -8901,7 +8928,7 @@ index d522515d3e..37e10cb3f0 100644
  export interface BundleFileInfo {
      sections: BundleFileSection[];
      hash?: string;
-@@ -8701,7 +8822,7 @@ export interface BundleFileInfo {
+@@ -8705,7 +8826,7 @@ export interface BundleFileInfo {
      sources?: SourceFileInfo;
  }
  
@@ -8910,7 +8937,7 @@ index d522515d3e..37e10cb3f0 100644
  export interface BundleBuildInfo {
      js?: BundleFileInfo;
      dts?: BundleFileInfo;
-@@ -8709,7 +8830,7 @@ export interface BundleBuildInfo {
+@@ -8713,7 +8834,7 @@ export interface BundleBuildInfo {
      sourceFiles: readonly string[];
  }
  
@@ -8919,7 +8946,7 @@ index d522515d3e..37e10cb3f0 100644
  export interface BuildInfo {
      bundle?: BundleBuildInfo;
      program?: ProgramBuildInfo;
-@@ -8764,16 +8885,16 @@ export interface PrintHandlers {
+@@ -8768,16 +8889,16 @@ export interface PrintHandlers {
       * ```
       */
      substituteNode?(hint: EmitHint, node: Node): Node;
@@ -8946,7 +8973,7 @@ index d522515d3e..37e10cb3f0 100644
  }
  
  export interface PrinterOptions {
-@@ -8781,23 +8902,23 @@ export interface PrinterOptions {
+@@ -8785,23 +8906,23 @@ export interface PrinterOptions {
      newLine?: NewLineKind;
      omitTrailingSemicolon?: boolean;
      noEmitHelpers?: boolean;
@@ -8987,7 +9014,7 @@ index d522515d3e..37e10cb3f0 100644
  export interface RawSourceMap {
      version: 3;
      file: string;
-@@ -8810,8 +8931,9 @@ export interface RawSourceMap {
+@@ -8814,8 +8935,9 @@ export interface RawSourceMap {
  
  /**
   * Generates a source map.
@@ -8998,7 +9025,7 @@ index d522515d3e..37e10cb3f0 100644
  export interface SourceMapGenerator {
      getSources(): readonly string[];
      /**
-@@ -8848,7 +8970,7 @@ export interface SourceMapGenerator {
+@@ -8852,7 +8974,7 @@ export interface SourceMapGenerator {
      toString(): string;
  }
  
@@ -9007,7 +9034,7 @@ index d522515d3e..37e10cb3f0 100644
  export interface DocumentPositionMapperHost {
      getSourceFileLike(fileName: string): SourceFileLike | undefined;
      getCanonicalFileName(path: string): string;
-@@ -8857,20 +8979,21 @@ export interface DocumentPositionMapperHost {
+@@ -8861,20 +8983,21 @@ export interface DocumentPositionMapperHost {
  
  /**
   * Maps positions between source and generated files.
@@ -9032,7 +9059,7 @@ index d522515d3e..37e10cb3f0 100644
  export interface EmitTextWriter extends SymbolWriter {
      write(s: string): void;
      writeTrailingSemicolon(text: string): void;
-@@ -8894,12 +9017,12 @@ export interface GetEffectiveTypeRootsHost {
+@@ -8898,12 +9021,12 @@ export interface GetEffectiveTypeRootsHost {
      getCurrentDirectory?(): string;
  }
  
@@ -9047,7 +9074,7 @@ index d522515d3e..37e10cb3f0 100644
  export interface ModuleSpecifierResolutionHost {
      useCaseSensitiveFileNames?(): boolean;
      fileExists(path: string): boolean;
-@@ -8919,26 +9042,26 @@ export interface ModuleSpecifierResolutionHost {
+@@ -8923,26 +9046,26 @@ export interface ModuleSpecifierResolutionHost {
      getFileIncludeReasons(): MultiMap<Path, FileIncludeReason>;
  }
  
@@ -9078,7 +9105,7 @@ index d522515d3e..37e10cb3f0 100644
  export interface ModuleSpecifierCache {
      get(fromFileName: Path, toFileName: Path, preferences: UserPreferences, options: ModuleSpecifierOptions): Readonly<ResolvedModuleSpecifierInfo> | undefined;
      set(fromFileName: Path, toFileName: Path, preferences: UserPreferences, options: ModuleSpecifierOptions, modulePaths: readonly ModulePath[], moduleSpecifiers: readonly string[]): void;
-@@ -8949,7 +9072,7 @@ export interface ModuleSpecifierCache {
+@@ -8953,7 +9076,7 @@ export interface ModuleSpecifierCache {
  }
  
  // Note: this used to be deprecated in our public API, but is still used internally
@@ -9087,7 +9114,7 @@ index d522515d3e..37e10cb3f0 100644
  export interface SymbolTracker {
      // Called when the symbol writer encounters a symbol to write.  Currently only used by the
      // declaration emitter to help determine if it should patch up the final declaration file
-@@ -8979,7 +9102,7 @@ export interface TextChangeRange {
+@@ -8983,7 +9106,7 @@ export interface TextChangeRange {
      newLength: number;
  }
  
@@ -9096,7 +9123,7 @@ index d522515d3e..37e10cb3f0 100644
  export interface DiagnosticCollection {
      // Adds a diagnostic to this diagnostic collection.
      add(diagnostic: Diagnostic): void;
-@@ -9088,7 +9211,7 @@ export const enum ListFormat {
+@@ -9092,7 +9215,7 @@ export const enum ListFormat {
      JSDocComment = MultiLine | AsteriskDelimited,
  }
  
@@ -9105,7 +9132,7 @@ index d522515d3e..37e10cb3f0 100644
  export const enum PragmaKindFlags {
      None            =      0,
      /**
-@@ -9112,14 +9235,14 @@ export const enum PragmaKindFlags {
+@@ -9116,14 +9239,14 @@ export const enum PragmaKindFlags {
      Default = All,
  }
  
@@ -9122,7 +9149,7 @@ index d522515d3e..37e10cb3f0 100644
  export interface PragmaDefinition<T1 extends string = string, T2 extends string = string, T3 extends string = string, T4 extends string = string> {
      args?:
          | readonly [PragmaArgumentSpecification<T1>]
-@@ -9132,7 +9255,7 @@ export interface PragmaDefinition<T1 extends string = string, T2 extends string
+@@ -9136,7 +9259,7 @@ export interface PragmaDefinition<T1 extends string = string, T2 extends string
  
  // While not strictly a type, this is here because `PragmaMap` needs to be here to be used with `SourceFile`, and we don't
  //  fancy effectively defining it twice, once in value-space and once in type-space
@@ -9131,7 +9158,7 @@ index d522515d3e..37e10cb3f0 100644
  export const commentPragmas = {
      "reference": {
          args: [
-@@ -9176,43 +9299,44 @@ export const commentPragmas = {
+@@ -9180,43 +9303,44 @@ export const commentPragmas = {
      },
  } as const;
  
@@ -9185,7 +9212,7 @@ index d522515d3e..37e10cb3f0 100644
  export interface ReadonlyPragmaMap extends ReadonlyESMap<string, PragmaPseudoMap[keyof PragmaPseudoMap] | PragmaPseudoMap[keyof PragmaPseudoMap][]> {
      get<TKey extends keyof PragmaPseudoMap>(key: TKey): PragmaPseudoMap[TKey] | PragmaPseudoMap[TKey][];
      forEach(action: <TKey extends keyof PragmaPseudoMap>(value: PragmaPseudoMap[TKey] | PragmaPseudoMap[TKey][], key: TKey) => void): void;
-@@ -9222,15 +9346,16 @@ export interface ReadonlyPragmaMap extends ReadonlyESMap<string, PragmaPseudoMap
+@@ -9226,15 +9350,16 @@ export interface ReadonlyPragmaMap extends ReadonlyESMap<string, PragmaPseudoMap
   * A strongly-typed es6 map of pragma entries, the values of which are either a single argument
   * value (if only one was found), or an array of multiple argument values if the pragma is present
   * in multiple places
@@ -9204,7 +9231,7 @@ index d522515d3e..37e10cb3f0 100644
  export interface CommentDirectivesMap {
      getUnusedExpectations(): CommentDirective[];
      markUsed(matchedLine: number): boolean;
-@@ -9274,7 +9399,7 @@ export interface PseudoBigInt {
+@@ -9278,7 +9403,7 @@ export interface PseudoBigInt {
      base10Value: string;
  }
  
@@ -11213,7 +11240,7 @@ index 3dcb96b072..2f22a76e0e 100644
  export function visitEachChild<T extends Node>(node: T | undefined, visitor: Visitor, context: TransformationContext, nodesVisitor = visitNodes, tokenVisitor?: Visitor, nodeVisitor: NodeVisitor = visitNode): T | undefined {
      if (node === undefined) {
 diff --git a/src/compiler/watch.ts b/src/compiler/watch.ts
-index 0dfc5fa92e..5048c99522 100644
+index 23a6a885c0..8ded484ca6 100644
 --- a/src/compiler/watch.ts
 +++ b/src/compiler/watch.ts
 @@ -27,9 +27,10 @@ const sysFormatDiagnosticsHost: FormatDiagnosticsHost | undefined = sys ? {
@@ -11278,7 +11305,7 @@ index 0dfc5fa92e..5048c99522 100644
   */
  export function emitFilesAndReportErrors<T extends BuilderProgram>(
      program: Program | T,
-@@ -719,9 +726,10 @@ export function setGetSourceFileAsHashVersioned(compilerHost: CompilerHost, host
+@@ -686,9 +693,10 @@ export function setGetSourceFileAsHashVersioned(compilerHost: CompilerHost, host
      };
  }
  
@@ -11290,7 +11317,7 @@ index 0dfc5fa92e..5048c99522 100644
   */
  export function createProgramHost<T extends BuilderProgram = EmitAndSemanticDiagnosticsBuilderProgram>(system: System, createProgram: CreateProgram<T> | undefined): ProgramHost<T> {
      const getDefaultLibLocation = memoize(() => getDirectoryPath(normalizePath(system.getExecutingFilePath())));
-@@ -798,9 +806,10 @@ export interface CreateWatchCompilerHostOfConfigFileInput<T extends BuilderProgr
+@@ -765,9 +773,10 @@ export interface CreateWatchCompilerHostOfConfigFileInput<T extends BuilderProgr
      watchOptionsToExtend?: WatchOptions;
      extraFileExtensions?: readonly FileExtensionInfo[];
  }
@@ -11302,7 +11329,7 @@ index 0dfc5fa92e..5048c99522 100644
   */
  export function createWatchCompilerHostOfConfigFile<T extends BuilderProgram = EmitAndSemanticDiagnosticsBuilderProgram>({
      configFileName, optionsToExtend, watchOptionsToExtend, extraFileExtensions,
-@@ -823,9 +832,10 @@ export interface CreateWatchCompilerHostOfFilesAndCompilerOptionsInput<T extends
+@@ -790,9 +799,10 @@ export interface CreateWatchCompilerHostOfFilesAndCompilerOptionsInput<T extends
      watchOptions: WatchOptions | undefined;
      projectReferences?: readonly ProjectReference[];
  }
@@ -14689,7 +14716,7 @@ index 41f9b72547..3fb1751875 100644
      refactors.set(name, refactor);
  }
 diff --git a/src/services/refactors/extractSymbol.ts b/src/services/refactors/extractSymbol.ts
-index f74c962b38..b8f98c3969 100644
+index 5658571535..90bd6ed39a 100644
 --- a/src/services/refactors/extractSymbol.ts
 +++ b/src/services/refactors/extractSymbol.ts
 @@ -49,10 +49,11 @@ registerRefactor(refactorName, {
@@ -14773,7 +14800,7 @@ index 24ffc608fa..acafb54f1e 100644
  export function refactorKindBeginsWith(known: string, requested: string | undefined): boolean {
      if(!requested) return true;
 diff --git a/src/services/services.ts b/src/services/services.ts
-index bed85b5649..09600bc485 100644
+index 4588c64ea9..10a1299bcc 100644
 --- a/src/services/services.ts
 +++ b/src/services/services.ts
 @@ -473,7 +473,7 @@ class IdentifierObject extends TokenOrIdentifierObject implements Identifier {

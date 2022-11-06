@@ -43,7 +43,7 @@ had to do anyway when we were namespaces and everything was in scope.
  src/compiler/transformers/utilities.ts        |     4 +-
  src/compiler/types.ts                         |    16 +-
  src/compiler/utilities.ts                     |     7 +-
- src/compiler/watch.ts                         |     7 +-
+ src/compiler/watch.ts                         |    21 +-
  src/compiler/watchUtilities.ts                |     3 +-
  .../4.0/nodeFactoryTopLevelExports.ts         |   592 +-
  src/deprecatedCompat/deprecations.ts          |    67 +-
@@ -67,7 +67,7 @@ had to do anyway when we were namespaces and everything was in scope.
  .../reference/api/tsserverlibrary.d.ts        | 10998 ++++++++--------
  tests/baselines/reference/api/typescript.d.ts |  3263 +++--
  tests/cases/compiler/APILibCheck.ts           |    34 +
- 57 files changed, 7997 insertions(+), 7795 deletions(-)
+ 57 files changed, 8005 insertions(+), 7801 deletions(-)
  create mode 100644 scripts/dtsBundler.mjs
  create mode 100644 tests/baselines/reference/APILibCheck.js
  create mode 100644 tests/baselines/reference/APILibCheck.symbols
@@ -809,10 +809,10 @@ index 34a59208d6..fd8a559c75 100644
 -export const perfLogger: PerfLogger = etwModule && etwModule.logEvent ? etwModule : nullLogger;
 +export const perfLogger: PerfLogger = etwModule?.logEvent ? etwModule : nullLogger;
 diff --git a/src/compiler/program.ts b/src/compiler/program.ts
-index 15d7c33af7..fb1189c37c 100644
+index a474c4d1d0..b565d0918d 100644
 --- a/src/compiler/program.ts
 +++ b/src/compiler/program.ts
-@@ -210,7 +210,7 @@ export function createCompilerHostWorker(options: CompilerOptions, setParentNode
+@@ -230,7 +230,7 @@ export function createCompilerHostWorker(options: CompilerOptions, setParentNode
  }
  
  /** @internal */
@@ -821,7 +821,7 @@ index 15d7c33af7..fb1189c37c 100644
      fileExists(fileName: string): boolean;
      readFile(fileName: string, encoding?: string): string | undefined;
      directoryExists?(directory: string): boolean;
-@@ -4322,7 +4322,7 @@ export function filterSemanticDiagnostics(diagnostic: readonly Diagnostic[], opt
+@@ -4343,7 +4343,7 @@ export function filterSemanticDiagnostics(diagnostic: readonly Diagnostic[], opt
  }
  
  /** @internal */
@@ -1279,7 +1279,7 @@ index 4460f4fc45..862bdf7c8b 100644
          return undefined;
      }
 diff --git a/src/compiler/types.ts b/src/compiler/types.ts
-index 37e10cb3f0..34c4d59d33 100644
+index b685c68633..8380ec0ee7 100644
 --- a/src/compiler/types.ts
 +++ b/src/compiler/types.ts
 @@ -5087,7 +5087,7 @@ export interface SymbolWalker {
@@ -1291,7 +1291,7 @@ index 37e10cb3f0..34c4d59d33 100644
      writeKeyword(text: string): void;
      writeOperator(text: string): void;
      writePunctuation(text: string): void;
-@@ -9236,7 +9236,7 @@ export const enum PragmaKindFlags {
+@@ -9240,7 +9240,7 @@ export const enum PragmaKindFlags {
  }
  
  /** @internal */
@@ -1300,7 +1300,7 @@ index 37e10cb3f0..34c4d59d33 100644
      name: TName; // Determines the name of the key in the resulting parsed type, type parameter to cause literal type inference
      optional?: boolean;
      captureSpan?: boolean;
-@@ -9300,20 +9300,20 @@ export const commentPragmas = {
+@@ -9304,20 +9304,20 @@ export const commentPragmas = {
  } as const;
  
  /** @internal */
@@ -1325,7 +1325,7 @@ index 37e10cb3f0..34c4d59d33 100644
      [K in keyof T]: PragmaArgTypeOptional<T[K], T[K] extends {name: infer TName} ? TName extends string ? TName : never : never>
  }[Extract<keyof T, number>]; // The mapped type maps over only the tuple members, but this reindex gets _all_ members - by extracting only `number` keys, we get only the tuple members
  
-@@ -9322,13 +9322,13 @@ type ArgumentDefinitionToFieldUnion<T extends readonly PragmaArgumentSpecificati
+@@ -9326,13 +9326,13 @@ type ArgumentDefinitionToFieldUnion<T extends readonly PragmaArgumentSpecificati
   *
   * @internal
   */
@@ -1373,19 +1373,58 @@ index 71009dd489..8ae950ee3f 100644
          localizedDiagnosticMessages = getMessages();
      }
 diff --git a/src/compiler/watch.ts b/src/compiler/watch.ts
-index 5048c99522..f92b33fac2 100644
+index 8ded484ca6..dcb2a1b395 100644
 --- a/src/compiler/watch.ts
 +++ b/src/compiler/watch.ts
-@@ -17,7 +17,7 @@ import {
-     packageIdToString, ParseConfigFileHost, pathIsAbsolute, Program, ProgramHost, ProjectReference,
-     ReportEmitErrorSummary, ReportFileInError, sortAndDeduplicateDiagnostics, SourceFile, sys, System,
+@@ -1,11 +1,10 @@
+-import * as ts from "./_namespaces/ts";
+ import {
+     addRange, BuilderProgram, CancellationToken, chainDiagnosticMessages, combinePaths, CompilerHost, CompilerOptions,
+     contains, convertToRelativePath, copyProperties, countWhere, createCompilerDiagnostic,
+     createEmitAndSemanticDiagnosticsBuilderProgram, createGetCanonicalFileName, createGetSourceFile,
+     createIncrementalCompilerHost, createIncrementalProgram, CreateProgram, createWriteFileMeasuringIO,
+     CustomTransformers, Debug, Diagnostic, DiagnosticCategory, DiagnosticMessage, DiagnosticMessageChain,
+-    DiagnosticReporter, Diagnostics, DirectoryStructureHost, EmitAndSemanticDiagnosticsBuilderProgram, emptyArray,
++    DiagnosticReporter, Diagnostics, DirectoryStructureHost, EmitAndSemanticDiagnosticsBuilderProgram, EmitResult, emptyArray,
+     endsWith, ExitStatus, ExtendedConfigCacheEntry, Extension, externalHelpersModuleNameText, FileExtensionInfo,
+     fileExtensionIs, FileIncludeKind, FileIncludeReason, FileWatcher, filter, find, flattenDiagnosticMessageText,
+     forEach, forEachEntry, ForegroundColorEscapeSequences, formatColorAndReset, formatDiagnostic, FormatDiagnosticsHost,
+@@ -14,10 +13,10 @@ import {
+     getParsedCommandLineOfConfigFile, getPatternFromSpec, getReferencedFileLocation, getRegexFromPattern,
+     getRelativePathFromDirectory, getWatchFactory, HasCurrentDirectory, isExternalOrCommonJsModule, isReferencedFile,
+     isReferenceFileLocation, isString, last, Map, maybeBind, memoize, ModuleKind, noop, normalizePath, outFile,
+-    packageIdToString, ParseConfigFileHost, pathIsAbsolute, Program, ProgramHost, ProjectReference,
+-    ReportEmitErrorSummary, ReportFileInError, sortAndDeduplicateDiagnostics, SourceFile, sys, System,
++    packageIdToString, ParseConfigFileHost, ParsedCommandLine, pathIsAbsolute, Program, ProgramHost, ProjectReference,
++    ReportEmitErrorSummary, ReportFileInError, sortAndDeduplicateDiagnostics, SortedReadonlyArray, SourceFile, sys, System,
      targetOptionDeclaration, WatchCompilerHost, WatchCompilerHostOfConfigFile,
 -    WatchCompilerHostOfFilesAndCompilerOptions, WatchFactoryHost, WatchHost, WatchLogLevel, WatchOptions,
 +    WatchCompilerHostOfFilesAndCompilerOptions, WatchFactory, WatchFactoryHost, WatchHost, WatchLogLevel, WatchOptions,
-     WatchStatusReporter, WriteFileCallback, writeFileEnsuringDirectories,
+     WatchStatusReporter, WriteFileCallback,
  } from "./_namespaces/ts";
  
-@@ -632,7 +632,8 @@ export interface WatchTypeRegistry {
+@@ -121,7 +120,7 @@ export function createWatchStatusReporter(system: System, pretty?: boolean): Wat
+  *
+  * @internal
+  */
+-export function parseConfigFileWithSystem(configFileName: string, optionsToExtend: CompilerOptions, extendedConfigCache: Map<ExtendedConfigCacheEntry> | undefined, watchOptionsToExtend: WatchOptions | undefined, system: System, reportDiagnostic: DiagnosticReporter) {
++export function parseConfigFileWithSystem(configFileName: string, optionsToExtend: CompilerOptions, extendedConfigCache: Map<ExtendedConfigCacheEntry> | undefined, watchOptionsToExtend: WatchOptions | undefined, system: System, reportDiagnostic: DiagnosticReporter): ParsedCommandLine | undefined {
+     const host: ParseConfigFileHost = system as any;
+     host.onUnRecoverableConfigFileDiagnostic = diagnostic => reportUnrecoverableDiagnostic(system, reportDiagnostic, diagnostic);
+     const result = getParsedCommandLineOfConfigFile(configFileName, optionsToExtend, host, extendedConfigCache, watchOptionsToExtend);
+@@ -481,7 +480,10 @@ export function emitFilesAndReportErrors<T extends BuilderProgram>(
+     cancellationToken?: CancellationToken,
+     emitOnlyDtsFiles?: boolean,
+     customTransformers?: CustomTransformers
+-) {
++): {
++    emitResult: EmitResult;
++    diagnostics: SortedReadonlyArray<Diagnostic>;
++} {
+     const isListFilesOnly = !!program.getCompilerOptions().listFilesOnly;
+ 
+     // First get and report any syntactic errors.
+@@ -632,7 +634,8 @@ export interface WatchTypeRegistry {
      NodeModulesForModuleSpecifierCache: "node_modules for module specifier cache invalidation",
  }
  
@@ -1395,7 +1434,7 @@ index 5048c99522..f92b33fac2 100644
      writeLog: (s: string) => void;
  }
  
-@@ -640,7 +641,7 @@ interface WatchFactory<X, Y = undefined> extends ts.WatchFactory<X, Y> {
+@@ -640,7 +643,7 @@ interface WatchFactory<X, Y = undefined> extends ts.WatchFactory<X, Y> {
  export function createWatchFactory<Y = undefined>(host: WatchFactoryHost & { trace?(s: string): void; }, options: { extendedDiagnostics?: boolean; diagnostics?: boolean; }) {
      const watchLogLevel = host.trace ? options.extendedDiagnostics ? WatchLogLevel.Verbose : options.diagnostics ? WatchLogLevel.TriggerOnly : WatchLogLevel.None : WatchLogLevel.None;
      const writeLog: (s: string) => void = watchLogLevel !== WatchLogLevel.None ? (s => host.trace!(s)) : noop;
@@ -3031,7 +3070,7 @@ index 7dfb4558e1..f8204d4f4b 100644
          || compareIdentifiers(s1.propertyName || s1.name, s2.propertyName || s2.name)
          || compareIdentifiers(s1.name, s2.name);
 diff --git a/src/services/refactors/extractSymbol.ts b/src/services/refactors/extractSymbol.ts
-index b8f98c3969..8a6190df3b 100644
+index 90bd6ed39a..473b841111 100644
 --- a/src/services/refactors/extractSymbol.ts
 +++ b/src/services/refactors/extractSymbol.ts
 @@ -255,7 +255,8 @@ export namespace Messages {
@@ -3234,7 +3273,7 @@ index 0000000000..5b06711a80
 +>tsserverlibraryInternal : typeof tsserverlibraryInternal
 +
 diff --git a/tests/baselines/reference/api/tsserverlibrary.d.ts b/tests/baselines/reference/api/tsserverlibrary.d.ts
-index 1e42d98208..a6fd2581fc 100644
+index 814bd404fc..7f6df0bd58 100644
 --- a/tests/baselines/reference/api/tsserverlibrary.d.ts
 +++ b/tests/baselines/reference/api/tsserverlibrary.d.ts
 @@ -14,6 +14,3944 @@ and limitations under the License.
@@ -9234,7 +9273,7 @@ index 1e42d98208..a6fd2581fc 100644
 -    export interface IncompleteType {
 +    type FlowType = Type | IncompleteType;
 +    interface IncompleteType {
-         flags: TypeFlags;
+         flags: TypeFlags | 0;
          type: Type;
      }
 -    export interface AmdDependency {
@@ -9703,9 +9742,9 @@ index 1e42d98208..a6fd2581fc 100644
 -    export interface TupleType extends GenericType {
 +    interface TupleType extends GenericType {
          elementFlags: readonly ElementFlags[];
+         /** Number of required or variadic elements */
          minLength: number;
-         fixedLength: number;
-@@ -2788,37 +6856,37 @@ declare namespace ts {
+@@ -2791,37 +6859,37 @@ declare namespace ts {
          readonly: boolean;
          labeledElementDeclarations?: readonly (NamedTupleMember | ParameterDeclaration)[];
      }
@@ -9755,7 +9794,7 @@ index 1e42d98208..a6fd2581fc 100644
          node: ConditionalTypeNode;
          checkType: Type;
          extendsType: Type;
-@@ -2829,46 +6897,55 @@ declare namespace ts {
+@@ -2832,46 +6900,55 @@ declare namespace ts {
          aliasSymbol?: Symbol;
          aliasTypeArguments?: Type[];
      }
@@ -9820,7 +9859,7 @@ index 1e42d98208..a6fd2581fc 100644
          NakedTypeVariable = 1,
          SpeculativeTuple = 2,
          SubstituteSource = 4,
-@@ -2885,13 +6962,13 @@ declare namespace ts {
+@@ -2888,13 +6965,13 @@ declare namespace ts {
          Circularity = -1
      }
      /** @deprecated Use FileExtensionInfo instead. */
@@ -9837,7 +9876,7 @@ index 1e42d98208..a6fd2581fc 100644
          key: string;
          category: DiagnosticCategory;
          code: number;
-@@ -2905,20 +6982,20 @@ declare namespace ts {
+@@ -2908,20 +6985,20 @@ declare namespace ts {
       * While it seems that DiagnosticMessageChain is structurally similar to DiagnosticMessage,
       * the difference is that messages are all preformatted in DMC.
       */
@@ -9861,7 +9900,7 @@ index 1e42d98208..a6fd2581fc 100644
          category: DiagnosticCategory;
          code: number;
          file: SourceFile | undefined;
-@@ -2926,24 +7003,24 @@ declare namespace ts {
+@@ -2929,24 +7006,24 @@ declare namespace ts {
          length: number | undefined;
          messageText: string | DiagnosticMessageChain;
      }
@@ -9890,7 +9929,7 @@ index 1e42d98208..a6fd2581fc 100644
          /**
           * Files with imports, exports and/or import.meta are considered modules
           */
-@@ -2957,10 +7034,10 @@ declare namespace ts {
+@@ -2960,10 +7037,10 @@ declare namespace ts {
           */
          Force = 3
      }
@@ -9903,7 +9942,7 @@ index 1e42d98208..a6fd2581fc 100644
          /** A normalized path on disk */
          path: string;
          /** The path as the user originally wrote it */
-@@ -2970,7 +7047,7 @@ declare namespace ts {
+@@ -2973,7 +7050,7 @@ declare namespace ts {
          /** True if it is intended that this reference form a circularity */
          circular?: boolean;
      }
@@ -9912,7 +9951,7 @@ index 1e42d98208..a6fd2581fc 100644
          FixedPollingInterval = 0,
          PriorityPollingInterval = 1,
          DynamicPriorityPolling = 2,
-@@ -2978,20 +7055,20 @@ declare namespace ts {
+@@ -2981,20 +7058,20 @@ declare namespace ts {
          UseFsEvents = 4,
          UseFsEventsOnParentDirectory = 5
      }
@@ -9937,7 +9976,7 @@ index 1e42d98208..a6fd2581fc 100644
          allowJs?: boolean;
          allowSyntheticDefaultImports?: boolean;
          allowUmdGlobalAccess?: boolean;
-@@ -3090,7 +7167,7 @@ declare namespace ts {
+@@ -3093,7 +7170,7 @@ declare namespace ts {
          useDefineForClassFields?: boolean;
          [option: string]: CompilerOptionsValue | TsConfigSourceFile | undefined;
      }
@@ -9946,7 +9985,7 @@ index 1e42d98208..a6fd2581fc 100644
          watchFile?: WatchFileKind;
          watchDirectory?: WatchDirectoryKind;
          fallbackPolling?: PollingWatchKind;
-@@ -3099,7 +7176,7 @@ declare namespace ts {
+@@ -3102,7 +7179,7 @@ declare namespace ts {
          excludeFiles?: string[];
          [option: string]: CompilerOptionsValue | undefined;
      }
@@ -9955,7 +9994,7 @@ index 1e42d98208..a6fd2581fc 100644
          /**
           * @deprecated typingOptions.enableAutoDiscovery
           * Use typeAcquisition.enable instead.
-@@ -3111,7 +7188,7 @@ declare namespace ts {
+@@ -3114,7 +7191,7 @@ declare namespace ts {
          disableFilenameBasedTypeAcquisition?: boolean;
          [option: string]: CompilerOptionsValue | undefined;
      }
@@ -9964,7 +10003,7 @@ index 1e42d98208..a6fd2581fc 100644
          None = 0,
          CommonJS = 1,
          AMD = 2,
-@@ -3124,7 +7201,7 @@ declare namespace ts {
+@@ -3127,7 +7204,7 @@ declare namespace ts {
          Node16 = 100,
          NodeNext = 199
      }
@@ -9973,7 +10012,7 @@ index 1e42d98208..a6fd2581fc 100644
          None = 0,
          Preserve = 1,
          React = 2,
-@@ -3132,21 +7209,21 @@ declare namespace ts {
+@@ -3135,21 +7212,21 @@ declare namespace ts {
          ReactJSX = 4,
          ReactJSXDev = 5
      }
@@ -9999,7 +10038,7 @@ index 1e42d98208..a6fd2581fc 100644
          Unknown = 0,
          JS = 1,
          JSX = 2,
-@@ -3160,7 +7237,7 @@ declare namespace ts {
+@@ -3163,7 +7240,7 @@ declare namespace ts {
           */
          Deferred = 7
      }
@@ -10008,7 +10047,7 @@ index 1e42d98208..a6fd2581fc 100644
          ES3 = 0,
          ES5 = 1,
          ES2015 = 2,
-@@ -3175,12 +7252,12 @@ declare namespace ts {
+@@ -3178,12 +7255,12 @@ declare namespace ts {
          JSON = 100,
          Latest = 99
      }
@@ -10023,7 +10062,7 @@ index 1e42d98208..a6fd2581fc 100644
          options: CompilerOptions;
          typeAcquisition?: TypeAcquisition;
          fileNames: string[];
-@@ -3191,11 +7268,11 @@ declare namespace ts {
+@@ -3194,11 +7271,11 @@ declare namespace ts {
          wildcardDirectories?: MapLike<WatchDirectoryFlags>;
          compileOnSave?: boolean;
      }
@@ -10037,7 +10076,7 @@ index 1e42d98208..a6fd2581fc 100644
          rootNames: readonly string[];
          options: CompilerOptions;
          projectReferences?: readonly ProjectReference[];
-@@ -3203,7 +7280,7 @@ declare namespace ts {
+@@ -3206,7 +7283,7 @@ declare namespace ts {
          oldProgram?: Program;
          configFileParsingDiagnostics?: readonly Diagnostic[];
      }
@@ -10046,7 +10085,7 @@ index 1e42d98208..a6fd2581fc 100644
          fileExists(fileName: string): boolean;
          readFile(fileName: string): string | undefined;
          trace?(s: string): void;
-@@ -3220,7 +7297,7 @@ declare namespace ts {
+@@ -3223,7 +7300,7 @@ declare namespace ts {
      /**
       * Used by services to specify the minimum host area required to set up source files under any compilation settings
       */
@@ -10055,7 +10094,7 @@ index 1e42d98208..a6fd2581fc 100644
          getCompilationSettings(): CompilerOptions;
          getCompilerHost?(): CompilerHost | undefined;
      }
-@@ -3231,7 +7308,7 @@ declare namespace ts {
+@@ -3234,7 +7311,7 @@ declare namespace ts {
       *
       * Prefer to return a `ResolvedModuleFull` so that the file type does not have to be inferred.
       */
@@ -10064,7 +10103,7 @@ index 1e42d98208..a6fd2581fc 100644
          /** Path of the file the module was resolved to. */
          resolvedFileName: string;
          /** True if `resolvedFileName` comes from `node_modules`. */
-@@ -3242,7 +7319,7 @@ declare namespace ts {
+@@ -3245,7 +7322,7 @@ declare namespace ts {
       * Prefer this over `ResolvedModule`.
       * If changing this, remember to change `moduleResolutionIsEqualTo`.
       */
@@ -10073,7 +10112,7 @@ index 1e42d98208..a6fd2581fc 100644
          /**
           * Extension of resolvedFileName. This must match what's at the end of resolvedFileName.
           * This is optional for backwards-compatibility, but will be added if not provided.
-@@ -3254,7 +7331,7 @@ declare namespace ts {
+@@ -3257,7 +7334,7 @@ declare namespace ts {
       * Unique identifier with a package name and version.
       * If changing this, remember to change `packageIdIsEqual`.
       */
@@ -10082,7 +10121,7 @@ index 1e42d98208..a6fd2581fc 100644
          /**
           * Name of the package.
           * Should not include `@types`.
-@@ -3269,7 +7346,7 @@ declare namespace ts {
+@@ -3272,7 +7349,7 @@ declare namespace ts {
          /** Version of the package, e.g. "1.2.3" */
          version: string;
      }
@@ -10091,7 +10130,7 @@ index 1e42d98208..a6fd2581fc 100644
          Ts = ".ts",
          Tsx = ".tsx",
          Dts = ".d.ts",
-@@ -3284,21 +7361,21 @@ declare namespace ts {
+@@ -3287,21 +7364,21 @@ declare namespace ts {
          Cts = ".cts",
          Dcts = ".d.cts"
      }
@@ -10117,7 +10156,7 @@ index 1e42d98208..a6fd2581fc 100644
          getSourceFile(fileName: string, languageVersionOrOptions: ScriptTarget | CreateSourceFileOptions, onError?: (message: string) => void, shouldCreateNewSourceFile?: boolean): SourceFile | undefined;
          getSourceFileByPath?(fileName: string, path: Path, languageVersionOrOptions: ScriptTarget | CreateSourceFileOptions, onError?: (message: string) => void, shouldCreateNewSourceFile?: boolean): SourceFile | undefined;
          getCancellationToken?(): CancellationToken;
-@@ -3325,15 +7402,18 @@ declare namespace ts {
+@@ -3328,15 +7405,18 @@ declare namespace ts {
          createHash?(data: string): string;
          getParsedCommandLine?(fileName: string): ParsedCommandLine | undefined;
      }
@@ -10139,7 +10178,7 @@ index 1e42d98208..a6fd2581fc 100644
          None = 0,
          SingleLine = 1,
          AdviseOnEmitNode = 2,
-@@ -3362,25 +7442,25 @@ declare namespace ts {
+@@ -3365,25 +7445,25 @@ declare namespace ts {
          NoHoisting = 2097152,
          HasEndOfDeclarationMarker = 4194304,
          Iterator = 8388608,
@@ -10172,7 +10211,7 @@ index 1e42d98208..a6fd2581fc 100644
          SourceFile = 0,
          Expression = 1,
          IdentifierName = 2,
-@@ -3389,7 +7469,7 @@ declare namespace ts {
+@@ -3392,7 +7472,7 @@ declare namespace ts {
          EmbeddedStatement = 5,
          JsxAttributeValue = 6
      }
@@ -10181,7 +10220,7 @@ index 1e42d98208..a6fd2581fc 100644
          Parentheses = 1,
          TypeAssertions = 2,
          NonNullAssertions = 4,
-@@ -3398,8 +7478,8 @@ declare namespace ts {
+@@ -3401,8 +7481,8 @@ declare namespace ts {
          All = 15,
          ExcludeJSDocTypeAssertion = 16
      }
@@ -10192,7 +10231,7 @@ index 1e42d98208..a6fd2581fc 100644
          createNodeArray<T extends Node>(elements?: readonly T[], hasTrailingComma?: boolean): NodeArray<T>;
          createNumericLiteral(value: string | number, numericLiteralFlags?: TokenFlags): NumericLiteral;
          createBigIntLiteral(value: string | PseudoBigInt): BigIntLiteral;
-@@ -3864,71 +7944,244 @@ declare namespace ts {
+@@ -3867,71 +7947,244 @@ declare namespace ts {
          createExternalModuleExport(exportName: Identifier): ExportDeclaration;
          restoreOuterExpressions(outerExpression: Expression | undefined, innerExpression: Expression, kinds?: OuterExpressionKinds): Expression;
      }
@@ -10491,7 +10530,7 @@ index 1e42d98208..a6fd2581fc 100644
          /**
           * Emits a node with possible notification.
           *
-@@ -3952,25 +8205,25 @@ declare namespace ts {
+@@ -3955,25 +8208,25 @@ declare namespace ts {
       * A function that is used to initialize and return a `Transformer` callback, which in turn
       * will be used to transform one or more nodes.
       */
@@ -10524,7 +10563,7 @@ index 1e42d98208..a6fd2581fc 100644
          /**
           * Print a node and its subtree as-is, without any emit transformations.
           * @param hint A value indicating the purpose of a node. This is primarily used to
-@@ -3998,7 +8251,7 @@ declare namespace ts {
+@@ -4001,7 +8254,7 @@ declare namespace ts {
           */
          printBundle(bundle: Bundle): string;
      }
@@ -10533,7 +10572,7 @@ index 1e42d98208..a6fd2581fc 100644
          /**
           * A hook used by the Printer when generating unique names to avoid collisions with
           * globally defined names that exist outside of the current source file.
-@@ -4046,29 +8299,29 @@ declare namespace ts {
+@@ -4049,29 +8302,29 @@ declare namespace ts {
           */
          substituteNode?(hint: EmitHint, node: Node): Node;
      }
@@ -10569,7 +10608,7 @@ index 1e42d98208..a6fd2581fc 100644
          None = 0,
          SingleLine = 0,
          MultiLine = 1,
-@@ -4138,7 +8391,7 @@ declare namespace ts {
+@@ -4141,7 +8394,7 @@ declare namespace ts {
          IndexSignatureParameters = 8848,
          JSDocComment = 33
      }
@@ -10578,7 +10617,7 @@ index 1e42d98208..a6fd2581fc 100644
          readonly disableSuggestions?: boolean;
          readonly quotePreference?: "auto" | "double" | "single";
          readonly includeCompletionsForModuleExports?: boolean;
-@@ -4170,23 +8423,19 @@ declare namespace ts {
+@@ -4173,23 +8426,19 @@ declare namespace ts {
          readonly autoImportFileExcludePatterns?: string[];
      }
      /** Represents a bigint literal value without requiring bigint support */
@@ -10608,7 +10647,7 @@ index 1e42d98208..a6fd2581fc 100644
          args: string[];
          newLine: string;
          useCaseSensitiveFileNames: boolean;
-@@ -4228,14 +8477,31 @@ declare namespace ts {
+@@ -4231,14 +8480,31 @@ declare namespace ts {
          base64decode?(input: string): string;
          base64encode?(input: string): string;
      }
@@ -10646,7 +10685,7 @@ index 1e42d98208..a6fd2581fc 100644
      type ErrorCallback = (message: DiagnosticMessage, length: number) => void;
      interface Scanner {
          getStartPos(): number;
-@@ -4276,29 +8542,6 @@ declare namespace ts {
+@@ -4279,29 +8545,6 @@ declare namespace ts {
          scanRange<T>(start: number, length: number, callback: () => T): T;
          tryScan<T>(callback: () => T): T;
      }
@@ -10676,7 +10715,7 @@ index 1e42d98208..a6fd2581fc 100644
      function isExternalModuleNameRelative(moduleName: string): boolean;
      function sortAndDeduplicateDiagnostics<T extends Diagnostic>(diagnostics: readonly T[]): SortedReadonlyArray<T>;
      function getDefaultLibFileName(options: CompilerOptions): string;
-@@ -4318,7 +8561,6 @@ declare namespace ts {
+@@ -4321,7 +8564,6 @@ declare namespace ts {
      function textChangeRangeNewSpan(range: TextChangeRange): TextSpan;
      function textChangeRangeIsUnchanged(range: TextChangeRange): boolean;
      function createTextChangeRange(span: TextSpan, newLength: number): TextChangeRange;
@@ -10684,7 +10723,7 @@ index 1e42d98208..a6fd2581fc 100644
      /**
       * Called to merge all the changes that occurred across several versions of a script snapshot
       * into a single change.  i.e. if a user keeps making successive edits to a script we will
-@@ -4329,10 +8571,6 @@ declare namespace ts {
+@@ -4332,10 +8574,6 @@ declare namespace ts {
       */
      function collapseTextChangeRangesAcrossMultipleVersions(changes: readonly TextChangeRange[]): TextChangeRange;
      function getTypeParameterOwner(d: Declaration): Declaration | undefined;
@@ -10695,7 +10734,7 @@ index 1e42d98208..a6fd2581fc 100644
      function isParameterPropertyDeclaration(node: Node, parent: Node): node is ParameterPropertyDeclaration;
      function isEmptyBindingPattern(node: BindingName): node is BindingPattern;
      function isEmptyBindingElement(node: BindingElement): boolean;
-@@ -4568,12 +8806,14 @@ declare namespace ts {
+@@ -4571,12 +8809,14 @@ declare namespace ts {
      function isJSDocLinkLike(node: Node): node is JSDocLink | JSDocLinkCode | JSDocLinkPlain;
      function hasRestParameter(s: SignatureDeclaration | JSDocSignature): boolean;
      function isRestParameter(node: ParameterDeclaration | JSDocParameterTag): boolean;
@@ -10714,9 +10753,9 @@ index 1e42d98208..a6fd2581fc 100644
 +    function createUnparsedSourceFile(inputFile: InputFiles, type: "js" | "dts", stripInternal?: boolean): UnparsedSource;
 +    function createUnparsedSourceFile(text: string, mapPath: string | undefined, map: string | undefined): UnparsedSource;
      function createInputFiles(javascriptText: string, declarationText: string): InputFiles;
-     function createInputFiles(readFileText: (path: string) => string | undefined, javascriptPath: string, javascriptMapPath: string | undefined, declarationPath: string, declarationMapPath: string | undefined, buildInfoPath: string | undefined): InputFiles;
      function createInputFiles(javascriptText: string, declarationText: string, javascriptMapPath: string | undefined, javascriptMapText: string | undefined, declarationMapPath: string | undefined, declarationMapText: string | undefined): InputFiles;
-@@ -4582,8 +8822,7 @@ declare namespace ts {
+     function createInputFiles(readFileText: (path: string) => string | undefined, javascriptPath: string, javascriptMapPath: string | undefined, declarationPath: string, declarationMapPath: string | undefined, buildInfoPath: string | undefined): InputFiles;
+@@ -4585,8 +8825,7 @@ declare namespace ts {
       */
      function createSourceMapSource(fileName: string, text: string, skipTrivia?: (pos: number) => number): SourceMapSource;
      function setOriginalNode<T extends Node>(node: T, original: Node | undefined): T;
@@ -10726,7 +10765,7 @@ index 1e42d98208..a6fd2581fc 100644
      /**
       * Clears any `EmitNode` entries from parse-tree nodes.
       * @param sourceFile A source file.
-@@ -4652,8 +8891,6 @@ declare namespace ts {
+@@ -4655,8 +8894,6 @@ declare namespace ts {
       * Moves matching emit helpers from a source node to a target node.
       */
      function moveEmitHelpers(source: Node, target: Node, predicate: (helper: EmitHelper) => boolean): void;
@@ -10735,7 +10774,7 @@ index 1e42d98208..a6fd2581fc 100644
      function isNumericLiteral(node: Node): node is NumericLiteral;
      function isBigIntLiteral(node: Node): node is BigIntLiteral;
      function isStringLiteral(node: Node): node is StringLiteral;
-@@ -4854,13 +9091,9 @@ declare namespace ts {
+@@ -4857,13 +9094,9 @@ declare namespace ts {
      function isJSDocUnknownTag(node: Node): node is JSDocUnknownTag;
      function isJSDocPropertyTag(node: Node): node is JSDocPropertyTag;
      function isJSDocImplementsTag(node: Node): node is JSDocImplementsTag;
@@ -10749,7 +10788,7 @@ index 1e42d98208..a6fd2581fc 100644
      /**
       * Invokes a callback for each child of the given node. The 'cbNode' callback is invoked for all child nodes
       * stored in properties. If a 'cbNodes' callback is specified, it is invoked for embedded arrays; otherwise,
-@@ -4874,8 +9107,18 @@ declare namespace ts {
+@@ -4877,8 +9110,18 @@ declare namespace ts {
       * @remarks `forEachChild` must visit the children of a node in the order
       * that they appear in the source code. The language service depends on this property to locate nodes by position.
       */
@@ -10770,7 +10809,7 @@ index 1e42d98208..a6fd2581fc 100644
          languageVersion: ScriptTarget;
          /**
           * Controls the format the file is detected as - this can be derived from only the path
-@@ -4890,45 +9133,16 @@ declare namespace ts {
+@@ -4893,45 +9136,16 @@ declare namespace ts {
           */
          setExternalModuleIndicator?: (file: SourceFile) => void;
      }
@@ -10819,7 +10858,7 @@ index 1e42d98208..a6fd2581fc 100644
          config?: any;
          error?: Diagnostic;
      };
-@@ -4937,7 +9151,7 @@ declare namespace ts {
+@@ -4940,7 +9154,7 @@ declare namespace ts {
       * @param fileName The path to the config file
       * @param jsonText The text of the config file
       */
@@ -10828,7 +10867,7 @@ index 1e42d98208..a6fd2581fc 100644
          config?: any;
          error?: Diagnostic;
      };
-@@ -4945,11 +9159,11 @@ declare namespace ts {
+@@ -4948,11 +9162,11 @@ declare namespace ts {
       * Read tsconfig.json file
       * @param fileName The path to the config file
       */
@@ -10842,7 +10881,7 @@ index 1e42d98208..a6fd2581fc 100644
      /**
       * Parse the contents of a config file (tsconfig.json).
       * @param json The contents of the config file to parse
-@@ -4957,7 +9171,7 @@ declare namespace ts {
+@@ -4960,7 +9174,7 @@ declare namespace ts {
       * @param basePath A root directory to resolve relative path entries in the config
       *    file to. e.g. outDir
       */
@@ -10851,7 +10890,7 @@ index 1e42d98208..a6fd2581fc 100644
      /**
       * Parse the contents of a config file (tsconfig.json).
       * @param jsonNode The contents of the config file to parse
-@@ -4965,8 +9179,32 @@ declare namespace ts {
+@@ -4968,8 +9182,32 @@ declare namespace ts {
       * @param basePath A root directory to resolve relative path entries in the config
       *    file to. e.g. outDir
       */
@@ -10886,7 +10925,7 @@ index 1e42d98208..a6fd2581fc 100644
          raw: any;
          options?: CompilerOptions;
          watchOptions?: WatchOptions;
-@@ -4976,28 +9214,17 @@ declare namespace ts {
+@@ -4979,28 +9217,17 @@ declare namespace ts {
           */
          extendedConfigPath?: string;
      }
@@ -10918,7 +10957,7 @@ index 1e42d98208..a6fd2581fc 100644
      /**
       * Given a set of options, returns the set of type directive names
       *   that should be included for this program automatically.
-@@ -5006,10 +9233,16 @@ declare namespace ts {
+@@ -5009,10 +9236,16 @@ declare namespace ts {
       * More type directives might appear in the program later as a result of loading actual source files;
       *   this list is only the set of defaults that are implicitly included.
       */
@@ -10938,7 +10977,7 @@ index 1e42d98208..a6fd2581fc 100644
          get(key: string, mode: ModuleKind.CommonJS | ModuleKind.ESNext | undefined): T | undefined;
          set(key: string, mode: ModuleKind.CommonJS | ModuleKind.ESNext | undefined, value: T): this;
          delete(key: string, mode: ModuleKind.CommonJS | ModuleKind.ESNext | undefined): this;
-@@ -5021,7 +9254,7 @@ declare namespace ts {
+@@ -5024,7 +9257,7 @@ declare namespace ts {
       * Cached resolutions per containing directory.
       * This assumes that any module id will have the same resolution for sibling files located in the same folder.
       */
@@ -10947,7 +10986,7 @@ index 1e42d98208..a6fd2581fc 100644
          getOrCreateCacheForDirectory(directoryName: string, redirectedReference?: ResolvedProjectReference): ModeAwareCache<T>;
          clear(): void;
          /**
-@@ -5030,32 +9263,23 @@ declare namespace ts {
+@@ -5033,32 +9266,23 @@ declare namespace ts {
           */
          update(options: CompilerOptions): void;
      }
@@ -10984,7 +11023,7 @@ index 1e42d98208..a6fd2581fc 100644
      /**
       * Visits a Node using the supplied visitor, possibly returning a new Node in its place.
       *
-@@ -5140,31 +9364,22 @@ declare namespace ts {
+@@ -5143,31 +9367,22 @@ declare namespace ts {
       * @param context A lexical environment context for the visitor.
       */
      function visitEachChild<T extends Node>(node: T | undefined, visitor: Visitor, context: TransformationContext, nodesVisitor?: typeof visitNodes, tokenVisitor?: Visitor): T | undefined;
@@ -11025,7 +11064,7 @@ index 1e42d98208..a6fd2581fc 100644
      /**
       * Calculates the final resolution mode for an import at some index within a file's imports list. This is generally the explicitly
       * defined mode of the import if provided, or, if not, the mode of the containing file (with some exceptions: import=require is always commonjs, dynamic import is always esm).
-@@ -5172,7 +9387,7 @@ declare namespace ts {
+@@ -5175,7 +9390,7 @@ declare namespace ts {
       * @param file File to fetch the resolution mode within
       * @param index Index into the file's complete resolution list to get the resolution of - this is a concatenation of the file's imports and module augmentations
       */
@@ -11034,7 +11073,7 @@ index 1e42d98208..a6fd2581fc 100644
      /**
       * Calculates the final resolution mode for a given module reference node. This is generally the explicitly provided resolution mode, if
       * one exists, or the mode of the containing source file. (Excepting import=require, which is always commonjs, and dynamic import, which is always esm).
-@@ -5182,10 +9397,10 @@ declare namespace ts {
+@@ -5185,10 +9400,10 @@ declare namespace ts {
       * @param usage The module reference string
       * @returns The final resolution mode of the import
       */
@@ -11048,7 +11087,7 @@ index 1e42d98208..a6fd2581fc 100644
      /**
       * A function for determining if a given file is esm or cjs format, assuming modern node module resolution rules, as configured by the
       * `options` parameter.
-@@ -5196,7 +9411,7 @@ declare namespace ts {
+@@ -5199,7 +9414,7 @@ declare namespace ts {
       * @param options The compiler options to perform the analysis under - relevant options are `moduleResolution` and `traceResolution`
       * @returns `undefined` if the path has no relevant implied format, `ModuleKind.ESNext` for esm format, and `ModuleKind.CommonJS` for cjs format
       */
@@ -11057,7 +11096,7 @@ index 1e42d98208..a6fd2581fc 100644
      /**
       * Create a new 'Program' instance. A Program is an immutable collection of 'SourceFile's and a 'CompilerOptions'
       * that represent a compilation unit.
-@@ -5207,7 +9422,7 @@ declare namespace ts {
+@@ -5210,7 +9425,7 @@ declare namespace ts {
       * @param createProgramOptions - The options for creating a program.
       * @returns A 'Program' object.
       */
@@ -11066,7 +11105,7 @@ index 1e42d98208..a6fd2581fc 100644
      /**
       * Create a new 'Program' instance. A Program is an immutable collection of 'SourceFile's and a 'CompilerOptions'
       * that represent a compilation unit.
-@@ -5222,19 +9437,21 @@ declare namespace ts {
+@@ -5225,19 +9440,21 @@ declare namespace ts {
       * @param configFileParsingDiagnostics - error during config file parsing
       * @returns A 'Program' object.
       */
@@ -11097,7 +11136,7 @@ index 1e42d98208..a6fd2581fc 100644
      interface EmitOutput {
          outputFiles: OutputFile[];
          emitSkipped: boolean;
-@@ -5244,8 +9461,22 @@ declare namespace ts {
+@@ -5247,8 +9464,22 @@ declare namespace ts {
          writeByteOrderMark: boolean;
          text: string;
      }
@@ -11122,7 +11161,7 @@ index 1e42d98208..a6fd2581fc 100644
      type AffectedFileResult<T> = {
          result: T;
          affected: SourceFile | Program;
-@@ -5357,31 +9588,27 @@ declare namespace ts {
+@@ -5360,31 +9591,27 @@ declare namespace ts {
           */
          emitNextAffectedFile(writeFile?: WriteFileCallback, cancellationToken?: CancellationToken, emitOnlyDtsFiles?: boolean, customTransformers?: CustomTransformers): AffectedFileResult<EmitResult>;
      }
@@ -11164,7 +11203,7 @@ index 1e42d98208..a6fd2581fc 100644
      interface IncrementalProgramOptions<T extends BuilderProgram> {
          rootNames: readonly string[];
          options: CompilerOptions;
-@@ -5390,7 +9617,6 @@ declare namespace ts {
+@@ -5393,7 +9620,6 @@ declare namespace ts {
          host?: CompilerHost;
          createProgram?: CreateProgram<T>;
      }
@@ -11172,7 +11211,7 @@ index 1e42d98208..a6fd2581fc 100644
      type WatchStatusReporter = (diagnostic: Diagnostic, newLine: string, options: CompilerOptions, errorCount?: number) => void;
      /** Create the program with rootNames and options, if they are undefined, oldProgram and new configFile diagnostics create new program */
      type CreateProgram<T extends BuilderProgram> = (rootNames: readonly string[] | undefined, options: CompilerOptions | undefined, host?: CompilerHost, oldProgram?: T, configFileParsingDiagnostics?: readonly Diagnostic[], projectReferences?: readonly ProjectReference[] | undefined) => T;
-@@ -5506,20 +9732,13 @@ declare namespace ts {
+@@ -5509,20 +9735,13 @@ declare namespace ts {
          updateRootFileNames(fileNames: string[]): void;
      }
      /**
@@ -11199,7 +11238,7 @@ index 1e42d98208..a6fd2581fc 100644
      interface BuildOptions {
          dry?: boolean;
          force?: boolean;
-@@ -5562,14 +9781,6 @@ declare namespace ts {
+@@ -5565,14 +9784,6 @@ declare namespace ts {
          cleanReferences(project?: string): ExitStatus;
          getNextInvalidatedProject(cancellationToken?: CancellationToken): InvalidatedProject<T> | undefined;
      }
@@ -11214,7 +11253,7 @@ index 1e42d98208..a6fd2581fc 100644
      enum InvalidatedProjectKind {
          Build = 0,
          UpdateBundle = 1,
-@@ -5609,165 +9820,7 @@ declare namespace ts {
+@@ -5612,165 +9823,7 @@ declare namespace ts {
          emit(writeFile?: WriteFileCallback, customTransformers?: CustomTransformers): EmitResult | BuildInvalidedProject<T> | undefined;
      }
      type InvalidatedProject<T extends BuilderProgram> = UpdateOutputFileStampsProject | BuildInvalidedProject<T> | UpdateBundleProject<T>;
@@ -11381,7 +11420,7 @@ index 1e42d98208..a6fd2581fc 100644
      /**
       * Represents an immutable snapshot of a script at a specified time.Once acquired, the
       * snapshot is observably immutable. i.e. the same calls with the same parameters will return
-@@ -6410,7 +10463,6 @@ declare namespace ts {
+@@ -6413,7 +10466,6 @@ declare namespace ts {
          readonly indentMultiLineObjectLiteralBeginningOnBlankLine?: boolean;
          readonly semicolons?: SemicolonPreference;
      }
@@ -11389,7 +11428,7 @@ index 1e42d98208..a6fd2581fc 100644
      interface DefinitionInfo extends DocumentSpan {
          kind: ScriptElementKind;
          name: string;
-@@ -6893,18 +10945,13 @@ declare namespace ts {
+@@ -6896,18 +10948,13 @@ declare namespace ts {
          span: TextSpan;
          preferences: UserPreferences;
      }
@@ -11409,7 +11448,7 @@ index 1e42d98208..a6fd2581fc 100644
      /**
       * The document registry represents a store of SourceFile objects that can be shared between
       * multiple LanguageService instances. A LanguageService instance holds on the SourceFile (AST)
-@@ -6967,8 +11014,9 @@ declare namespace ts {
+@@ -6970,8 +11017,9 @@ declare namespace ts {
           * @param fileName The name of the file to be released
           * @param compilationSettings The compilation settings used to acquire the file
           * @param scriptKind The script kind of the file to be released
@@ -11420,7 +11459,7 @@ index 1e42d98208..a6fd2581fc 100644
          releaseDocument(fileName: string, compilationSettings: CompilerOptions, scriptKind?: ScriptKind): void;
          /**
           * Informs the DocumentRegistry that a file is not needed any longer.
-@@ -6991,12 +11039,9 @@ declare namespace ts {
+@@ -6994,12 +11042,9 @@ declare namespace ts {
      type DocumentRegistryBucketKey = string & {
          __bucketKey: any;
      };
@@ -11435,7 +11474,7 @@ index 1e42d98208..a6fd2581fc 100644
      interface TranspileOptions {
          compilerOptions?: CompilerOptions;
          fileName?: string;
-@@ -7010,4642 +11055,624 @@ declare namespace ts {
+@@ -7013,4642 +11058,624 @@ declare namespace ts {
          diagnostics?: Diagnostic[];
          sourceMapText?: string;
      }
@@ -16392,7 +16431,7 @@ index 1e42d98208..a6fd2581fc 100644
      /** @deprecated Use `factory.createToken` or the factory supplied by your transformation context instead. */
      const createToken: <TKind extends SyntaxKind>(kind: TKind) => Token<TKind>;
      /** @deprecated Use `factory.createIdentifier` or the factory supplied by your transformation context instead. */
-@@ -11777,256 +11804,11 @@ declare namespace ts {
+@@ -11780,256 +11807,11 @@ declare namespace ts {
       * @deprecated Use an appropriate `factory.update...` method instead, use `setCommentRange` or `setSourceMapRange`, and avoid setting `parent`.
       */
      const getMutableClone: <T extends Node>(node: T) => T;
@@ -16653,7 +16692,7 @@ index 1e42d98208..a6fd2581fc 100644
 +export = ts;
 \ No newline at end of file
 diff --git a/tests/baselines/reference/api/typescript.d.ts b/tests/baselines/reference/api/typescript.d.ts
-index f574fc2325..da7b630c76 100644
+index f52dce2910..662dbd127b 100644
 --- a/tests/baselines/reference/api/typescript.d.ts
 +++ b/tests/baselines/reference/api/typescript.d.ts
 @@ -46,7 +46,10 @@ declare namespace ts {
@@ -18708,7 +18747,7 @@ index f574fc2325..da7b630c76 100644
 -    export interface IncompleteType {
 +    type FlowType = Type | IncompleteType;
 +    interface IncompleteType {
-         flags: TypeFlags;
+         flags: TypeFlags | 0;
          type: Type;
      }
 -    export interface AmdDependency {
@@ -19177,9 +19216,9 @@ index f574fc2325..da7b630c76 100644
 -    export interface TupleType extends GenericType {
 +    interface TupleType extends GenericType {
          elementFlags: readonly ElementFlags[];
+         /** Number of required or variadic elements */
          minLength: number;
-         fixedLength: number;
-@@ -2788,37 +2918,37 @@ declare namespace ts {
+@@ -2791,37 +2921,37 @@ declare namespace ts {
          readonly: boolean;
          labeledElementDeclarations?: readonly (NamedTupleMember | ParameterDeclaration)[];
      }
@@ -19229,7 +19268,7 @@ index f574fc2325..da7b630c76 100644
          node: ConditionalTypeNode;
          checkType: Type;
          extendsType: Type;
-@@ -2829,46 +2959,55 @@ declare namespace ts {
+@@ -2832,46 +2962,55 @@ declare namespace ts {
          aliasSymbol?: Symbol;
          aliasTypeArguments?: Type[];
      }
@@ -19294,7 +19333,7 @@ index f574fc2325..da7b630c76 100644
          NakedTypeVariable = 1,
          SpeculativeTuple = 2,
          SubstituteSource = 4,
-@@ -2885,13 +3024,13 @@ declare namespace ts {
+@@ -2888,13 +3027,13 @@ declare namespace ts {
          Circularity = -1
      }
      /** @deprecated Use FileExtensionInfo instead. */
@@ -19311,7 +19350,7 @@ index f574fc2325..da7b630c76 100644
          key: string;
          category: DiagnosticCategory;
          code: number;
-@@ -2905,20 +3044,20 @@ declare namespace ts {
+@@ -2908,20 +3047,20 @@ declare namespace ts {
       * While it seems that DiagnosticMessageChain is structurally similar to DiagnosticMessage,
       * the difference is that messages are all preformatted in DMC.
       */
@@ -19335,7 +19374,7 @@ index f574fc2325..da7b630c76 100644
          category: DiagnosticCategory;
          code: number;
          file: SourceFile | undefined;
-@@ -2926,24 +3065,24 @@ declare namespace ts {
+@@ -2929,24 +3068,24 @@ declare namespace ts {
          length: number | undefined;
          messageText: string | DiagnosticMessageChain;
      }
@@ -19364,7 +19403,7 @@ index f574fc2325..da7b630c76 100644
          /**
           * Files with imports, exports and/or import.meta are considered modules
           */
-@@ -2957,10 +3096,10 @@ declare namespace ts {
+@@ -2960,10 +3099,10 @@ declare namespace ts {
           */
          Force = 3
      }
@@ -19377,7 +19416,7 @@ index f574fc2325..da7b630c76 100644
          /** A normalized path on disk */
          path: string;
          /** The path as the user originally wrote it */
-@@ -2970,7 +3109,7 @@ declare namespace ts {
+@@ -2973,7 +3112,7 @@ declare namespace ts {
          /** True if it is intended that this reference form a circularity */
          circular?: boolean;
      }
@@ -19386,7 +19425,7 @@ index f574fc2325..da7b630c76 100644
          FixedPollingInterval = 0,
          PriorityPollingInterval = 1,
          DynamicPriorityPolling = 2,
-@@ -2978,20 +3117,20 @@ declare namespace ts {
+@@ -2981,20 +3120,20 @@ declare namespace ts {
          UseFsEvents = 4,
          UseFsEventsOnParentDirectory = 5
      }
@@ -19411,7 +19450,7 @@ index f574fc2325..da7b630c76 100644
          allowJs?: boolean;
          allowSyntheticDefaultImports?: boolean;
          allowUmdGlobalAccess?: boolean;
-@@ -3090,7 +3229,7 @@ declare namespace ts {
+@@ -3093,7 +3232,7 @@ declare namespace ts {
          useDefineForClassFields?: boolean;
          [option: string]: CompilerOptionsValue | TsConfigSourceFile | undefined;
      }
@@ -19420,7 +19459,7 @@ index f574fc2325..da7b630c76 100644
          watchFile?: WatchFileKind;
          watchDirectory?: WatchDirectoryKind;
          fallbackPolling?: PollingWatchKind;
-@@ -3099,7 +3238,7 @@ declare namespace ts {
+@@ -3102,7 +3241,7 @@ declare namespace ts {
          excludeFiles?: string[];
          [option: string]: CompilerOptionsValue | undefined;
      }
@@ -19429,7 +19468,7 @@ index f574fc2325..da7b630c76 100644
          /**
           * @deprecated typingOptions.enableAutoDiscovery
           * Use typeAcquisition.enable instead.
-@@ -3111,7 +3250,7 @@ declare namespace ts {
+@@ -3114,7 +3253,7 @@ declare namespace ts {
          disableFilenameBasedTypeAcquisition?: boolean;
          [option: string]: CompilerOptionsValue | undefined;
      }
@@ -19438,7 +19477,7 @@ index f574fc2325..da7b630c76 100644
          None = 0,
          CommonJS = 1,
          AMD = 2,
-@@ -3124,7 +3263,7 @@ declare namespace ts {
+@@ -3127,7 +3266,7 @@ declare namespace ts {
          Node16 = 100,
          NodeNext = 199
      }
@@ -19447,7 +19486,7 @@ index f574fc2325..da7b630c76 100644
          None = 0,
          Preserve = 1,
          React = 2,
-@@ -3132,21 +3271,21 @@ declare namespace ts {
+@@ -3135,21 +3274,21 @@ declare namespace ts {
          ReactJSX = 4,
          ReactJSXDev = 5
      }
@@ -19473,7 +19512,7 @@ index f574fc2325..da7b630c76 100644
          Unknown = 0,
          JS = 1,
          JSX = 2,
-@@ -3160,7 +3299,7 @@ declare namespace ts {
+@@ -3163,7 +3302,7 @@ declare namespace ts {
           */
          Deferred = 7
      }
@@ -19482,7 +19521,7 @@ index f574fc2325..da7b630c76 100644
          ES3 = 0,
          ES5 = 1,
          ES2015 = 2,
-@@ -3175,12 +3314,12 @@ declare namespace ts {
+@@ -3178,12 +3317,12 @@ declare namespace ts {
          JSON = 100,
          Latest = 99
      }
@@ -19497,7 +19536,7 @@ index f574fc2325..da7b630c76 100644
          options: CompilerOptions;
          typeAcquisition?: TypeAcquisition;
          fileNames: string[];
-@@ -3191,11 +3330,11 @@ declare namespace ts {
+@@ -3194,11 +3333,11 @@ declare namespace ts {
          wildcardDirectories?: MapLike<WatchDirectoryFlags>;
          compileOnSave?: boolean;
      }
@@ -19511,7 +19550,7 @@ index f574fc2325..da7b630c76 100644
          rootNames: readonly string[];
          options: CompilerOptions;
          projectReferences?: readonly ProjectReference[];
-@@ -3203,7 +3342,7 @@ declare namespace ts {
+@@ -3206,7 +3345,7 @@ declare namespace ts {
          oldProgram?: Program;
          configFileParsingDiagnostics?: readonly Diagnostic[];
      }
@@ -19520,7 +19559,7 @@ index f574fc2325..da7b630c76 100644
          fileExists(fileName: string): boolean;
          readFile(fileName: string): string | undefined;
          trace?(s: string): void;
-@@ -3220,7 +3359,7 @@ declare namespace ts {
+@@ -3223,7 +3362,7 @@ declare namespace ts {
      /**
       * Used by services to specify the minimum host area required to set up source files under any compilation settings
       */
@@ -19529,7 +19568,7 @@ index f574fc2325..da7b630c76 100644
          getCompilationSettings(): CompilerOptions;
          getCompilerHost?(): CompilerHost | undefined;
      }
-@@ -3231,7 +3370,7 @@ declare namespace ts {
+@@ -3234,7 +3373,7 @@ declare namespace ts {
       *
       * Prefer to return a `ResolvedModuleFull` so that the file type does not have to be inferred.
       */
@@ -19538,7 +19577,7 @@ index f574fc2325..da7b630c76 100644
          /** Path of the file the module was resolved to. */
          resolvedFileName: string;
          /** True if `resolvedFileName` comes from `node_modules`. */
-@@ -3242,7 +3381,7 @@ declare namespace ts {
+@@ -3245,7 +3384,7 @@ declare namespace ts {
       * Prefer this over `ResolvedModule`.
       * If changing this, remember to change `moduleResolutionIsEqualTo`.
       */
@@ -19547,7 +19586,7 @@ index f574fc2325..da7b630c76 100644
          /**
           * Extension of resolvedFileName. This must match what's at the end of resolvedFileName.
           * This is optional for backwards-compatibility, but will be added if not provided.
-@@ -3254,7 +3393,7 @@ declare namespace ts {
+@@ -3257,7 +3396,7 @@ declare namespace ts {
       * Unique identifier with a package name and version.
       * If changing this, remember to change `packageIdIsEqual`.
       */
@@ -19556,7 +19595,7 @@ index f574fc2325..da7b630c76 100644
          /**
           * Name of the package.
           * Should not include `@types`.
-@@ -3269,7 +3408,7 @@ declare namespace ts {
+@@ -3272,7 +3411,7 @@ declare namespace ts {
          /** Version of the package, e.g. "1.2.3" */
          version: string;
      }
@@ -19565,7 +19604,7 @@ index f574fc2325..da7b630c76 100644
          Ts = ".ts",
          Tsx = ".tsx",
          Dts = ".d.ts",
-@@ -3284,21 +3423,21 @@ declare namespace ts {
+@@ -3287,21 +3426,21 @@ declare namespace ts {
          Cts = ".cts",
          Dcts = ".d.cts"
      }
@@ -19591,7 +19630,7 @@ index f574fc2325..da7b630c76 100644
          getSourceFile(fileName: string, languageVersionOrOptions: ScriptTarget | CreateSourceFileOptions, onError?: (message: string) => void, shouldCreateNewSourceFile?: boolean): SourceFile | undefined;
          getSourceFileByPath?(fileName: string, path: Path, languageVersionOrOptions: ScriptTarget | CreateSourceFileOptions, onError?: (message: string) => void, shouldCreateNewSourceFile?: boolean): SourceFile | undefined;
          getCancellationToken?(): CancellationToken;
-@@ -3325,15 +3464,18 @@ declare namespace ts {
+@@ -3328,15 +3467,18 @@ declare namespace ts {
          createHash?(data: string): string;
          getParsedCommandLine?(fileName: string): ParsedCommandLine | undefined;
      }
@@ -19613,7 +19652,7 @@ index f574fc2325..da7b630c76 100644
          None = 0,
          SingleLine = 1,
          AdviseOnEmitNode = 2,
-@@ -3362,25 +3504,25 @@ declare namespace ts {
+@@ -3365,25 +3507,25 @@ declare namespace ts {
          NoHoisting = 2097152,
          HasEndOfDeclarationMarker = 4194304,
          Iterator = 8388608,
@@ -19646,7 +19685,7 @@ index f574fc2325..da7b630c76 100644
          SourceFile = 0,
          Expression = 1,
          IdentifierName = 2,
-@@ -3389,7 +3531,7 @@ declare namespace ts {
+@@ -3392,7 +3534,7 @@ declare namespace ts {
          EmbeddedStatement = 5,
          JsxAttributeValue = 6
      }
@@ -19655,7 +19694,7 @@ index f574fc2325..da7b630c76 100644
          Parentheses = 1,
          TypeAssertions = 2,
          NonNullAssertions = 4,
-@@ -3398,8 +3540,8 @@ declare namespace ts {
+@@ -3401,8 +3543,8 @@ declare namespace ts {
          All = 15,
          ExcludeJSDocTypeAssertion = 16
      }
@@ -19666,7 +19705,7 @@ index f574fc2325..da7b630c76 100644
          createNodeArray<T extends Node>(elements?: readonly T[], hasTrailingComma?: boolean): NodeArray<T>;
          createNumericLiteral(value: string | number, numericLiteralFlags?: TokenFlags): NumericLiteral;
          createBigIntLiteral(value: string | PseudoBigInt): BigIntLiteral;
-@@ -3864,113 +4006,286 @@ declare namespace ts {
+@@ -3867,113 +4009,286 @@ declare namespace ts {
          createExternalModuleExport(exportName: Identifier): ExportDeclaration;
          restoreOuterExpressions(outerExpression: Expression | undefined, innerExpression: Expression, kinds?: OuterExpressionKinds): Expression;
      }
@@ -20039,7 +20078,7 @@ index f574fc2325..da7b630c76 100644
          /**
           * Print a node and its subtree as-is, without any emit transformations.
           * @param hint A value indicating the purpose of a node. This is primarily used to
-@@ -3998,7 +4313,7 @@ declare namespace ts {
+@@ -4001,7 +4316,7 @@ declare namespace ts {
           */
          printBundle(bundle: Bundle): string;
      }
@@ -20048,7 +20087,7 @@ index f574fc2325..da7b630c76 100644
          /**
           * A hook used by the Printer when generating unique names to avoid collisions with
           * globally defined names that exist outside of the current source file.
-@@ -4046,29 +4361,29 @@ declare namespace ts {
+@@ -4049,29 +4364,29 @@ declare namespace ts {
           */
          substituteNode?(hint: EmitHint, node: Node): Node;
      }
@@ -20084,7 +20123,7 @@ index f574fc2325..da7b630c76 100644
          None = 0,
          SingleLine = 0,
          MultiLine = 1,
-@@ -4138,7 +4453,7 @@ declare namespace ts {
+@@ -4141,7 +4456,7 @@ declare namespace ts {
          IndexSignatureParameters = 8848,
          JSDocComment = 33
      }
@@ -20093,7 +20132,7 @@ index f574fc2325..da7b630c76 100644
          readonly disableSuggestions?: boolean;
          readonly quotePreference?: "auto" | "double" | "single";
          readonly includeCompletionsForModuleExports?: boolean;
-@@ -4170,23 +4485,19 @@ declare namespace ts {
+@@ -4173,23 +4488,19 @@ declare namespace ts {
          readonly autoImportFileExcludePatterns?: string[];
      }
      /** Represents a bigint literal value without requiring bigint support */
@@ -20123,7 +20162,7 @@ index f574fc2325..da7b630c76 100644
          args: string[];
          newLine: string;
          useCaseSensitiveFileNames: boolean;
-@@ -4228,14 +4539,31 @@ declare namespace ts {
+@@ -4231,14 +4542,31 @@ declare namespace ts {
          base64decode?(input: string): string;
          base64encode?(input: string): string;
      }
@@ -20161,7 +20200,7 @@ index f574fc2325..da7b630c76 100644
      type ErrorCallback = (message: DiagnosticMessage, length: number) => void;
      interface Scanner {
          getStartPos(): number;
-@@ -4276,29 +4604,6 @@ declare namespace ts {
+@@ -4279,29 +4607,6 @@ declare namespace ts {
          scanRange<T>(start: number, length: number, callback: () => T): T;
          tryScan<T>(callback: () => T): T;
      }
@@ -20191,7 +20230,7 @@ index f574fc2325..da7b630c76 100644
      function isExternalModuleNameRelative(moduleName: string): boolean;
      function sortAndDeduplicateDiagnostics<T extends Diagnostic>(diagnostics: readonly T[]): SortedReadonlyArray<T>;
      function getDefaultLibFileName(options: CompilerOptions): string;
-@@ -4318,7 +4623,6 @@ declare namespace ts {
+@@ -4321,7 +4626,6 @@ declare namespace ts {
      function textChangeRangeNewSpan(range: TextChangeRange): TextSpan;
      function textChangeRangeIsUnchanged(range: TextChangeRange): boolean;
      function createTextChangeRange(span: TextSpan, newLength: number): TextChangeRange;
@@ -20199,7 +20238,7 @@ index f574fc2325..da7b630c76 100644
      /**
       * Called to merge all the changes that occurred across several versions of a script snapshot
       * into a single change.  i.e. if a user keeps making successive edits to a script we will
-@@ -4329,10 +4633,6 @@ declare namespace ts {
+@@ -4332,10 +4636,6 @@ declare namespace ts {
       */
      function collapseTextChangeRangesAcrossMultipleVersions(changes: readonly TextChangeRange[]): TextChangeRange;
      function getTypeParameterOwner(d: Declaration): Declaration | undefined;
@@ -20210,7 +20249,7 @@ index f574fc2325..da7b630c76 100644
      function isParameterPropertyDeclaration(node: Node, parent: Node): node is ParameterPropertyDeclaration;
      function isEmptyBindingPattern(node: BindingName): node is BindingPattern;
      function isEmptyBindingElement(node: BindingElement): boolean;
-@@ -4568,9 +4868,11 @@ declare namespace ts {
+@@ -4571,9 +4871,11 @@ declare namespace ts {
      function isJSDocLinkLike(node: Node): node is JSDocLink | JSDocLinkCode | JSDocLinkPlain;
      function hasRestParameter(s: SignatureDeclaration | JSDocSignature): boolean;
      function isRestParameter(node: ParameterDeclaration | JSDocParameterTag): boolean;
@@ -20225,7 +20264,7 @@ index f574fc2325..da7b630c76 100644
      function createUnparsedSourceFile(text: string): UnparsedSource;
      function createUnparsedSourceFile(inputFile: InputFiles, type: "js" | "dts", stripInternal?: boolean): UnparsedSource;
      function createUnparsedSourceFile(text: string, mapPath: string | undefined, map: string | undefined): UnparsedSource;
-@@ -4582,8 +4884,7 @@ declare namespace ts {
+@@ -4585,8 +4887,7 @@ declare namespace ts {
       */
      function createSourceMapSource(fileName: string, text: string, skipTrivia?: (pos: number) => number): SourceMapSource;
      function setOriginalNode<T extends Node>(node: T, original: Node | undefined): T;
@@ -20235,7 +20274,7 @@ index f574fc2325..da7b630c76 100644
      /**
       * Clears any `EmitNode` entries from parse-tree nodes.
       * @param sourceFile A source file.
-@@ -4652,8 +4953,6 @@ declare namespace ts {
+@@ -4655,8 +4956,6 @@ declare namespace ts {
       * Moves matching emit helpers from a source node to a target node.
       */
      function moveEmitHelpers(source: Node, target: Node, predicate: (helper: EmitHelper) => boolean): void;
@@ -20244,7 +20283,7 @@ index f574fc2325..da7b630c76 100644
      function isNumericLiteral(node: Node): node is NumericLiteral;
      function isBigIntLiteral(node: Node): node is BigIntLiteral;
      function isStringLiteral(node: Node): node is StringLiteral;
-@@ -4854,13 +5153,9 @@ declare namespace ts {
+@@ -4857,13 +5156,9 @@ declare namespace ts {
      function isJSDocUnknownTag(node: Node): node is JSDocUnknownTag;
      function isJSDocPropertyTag(node: Node): node is JSDocPropertyTag;
      function isJSDocImplementsTag(node: Node): node is JSDocImplementsTag;
@@ -20258,7 +20297,7 @@ index f574fc2325..da7b630c76 100644
      /**
       * Invokes a callback for each child of the given node. The 'cbNode' callback is invoked for all child nodes
       * stored in properties. If a 'cbNodes' callback is specified, it is invoked for embedded arrays; otherwise,
-@@ -4874,8 +5169,18 @@ declare namespace ts {
+@@ -4877,8 +5172,18 @@ declare namespace ts {
       * @remarks `forEachChild` must visit the children of a node in the order
       * that they appear in the source code. The language service depends on this property to locate nodes by position.
       */
@@ -20279,7 +20318,7 @@ index f574fc2325..da7b630c76 100644
          languageVersion: ScriptTarget;
          /**
           * Controls the format the file is detected as - this can be derived from only the path
-@@ -4890,45 +5195,16 @@ declare namespace ts {
+@@ -4893,45 +5198,16 @@ declare namespace ts {
           */
          setExternalModuleIndicator?: (file: SourceFile) => void;
      }
@@ -20328,7 +20367,7 @@ index f574fc2325..da7b630c76 100644
          config?: any;
          error?: Diagnostic;
      };
-@@ -4937,7 +5213,7 @@ declare namespace ts {
+@@ -4940,7 +5216,7 @@ declare namespace ts {
       * @param fileName The path to the config file
       * @param jsonText The text of the config file
       */
@@ -20337,7 +20376,7 @@ index f574fc2325..da7b630c76 100644
          config?: any;
          error?: Diagnostic;
      };
-@@ -4945,11 +5221,11 @@ declare namespace ts {
+@@ -4948,11 +5224,11 @@ declare namespace ts {
       * Read tsconfig.json file
       * @param fileName The path to the config file
       */
@@ -20351,7 +20390,7 @@ index f574fc2325..da7b630c76 100644
      /**
       * Parse the contents of a config file (tsconfig.json).
       * @param json The contents of the config file to parse
-@@ -4957,7 +5233,7 @@ declare namespace ts {
+@@ -4960,7 +5236,7 @@ declare namespace ts {
       * @param basePath A root directory to resolve relative path entries in the config
       *    file to. e.g. outDir
       */
@@ -20360,7 +20399,7 @@ index f574fc2325..da7b630c76 100644
      /**
       * Parse the contents of a config file (tsconfig.json).
       * @param jsonNode The contents of the config file to parse
-@@ -4965,8 +5241,32 @@ declare namespace ts {
+@@ -4968,8 +5244,32 @@ declare namespace ts {
       * @param basePath A root directory to resolve relative path entries in the config
       *    file to. e.g. outDir
       */
@@ -20395,7 +20434,7 @@ index f574fc2325..da7b630c76 100644
          raw: any;
          options?: CompilerOptions;
          watchOptions?: WatchOptions;
-@@ -4976,28 +5276,17 @@ declare namespace ts {
+@@ -4979,28 +5279,17 @@ declare namespace ts {
           */
          extendedConfigPath?: string;
      }
@@ -20427,7 +20466,7 @@ index f574fc2325..da7b630c76 100644
      /**
       * Given a set of options, returns the set of type directive names
       *   that should be included for this program automatically.
-@@ -5006,10 +5295,16 @@ declare namespace ts {
+@@ -5009,10 +5298,16 @@ declare namespace ts {
       * More type directives might appear in the program later as a result of loading actual source files;
       *   this list is only the set of defaults that are implicitly included.
       */
@@ -20448,7 +20487,7 @@ index f574fc2325..da7b630c76 100644
          get(key: string, mode: ModuleKind.CommonJS | ModuleKind.ESNext | undefined): T | undefined;
          set(key: string, mode: ModuleKind.CommonJS | ModuleKind.ESNext | undefined, value: T): this;
          delete(key: string, mode: ModuleKind.CommonJS | ModuleKind.ESNext | undefined): this;
-@@ -5021,7 +5316,7 @@ declare namespace ts {
+@@ -5024,7 +5319,7 @@ declare namespace ts {
       * Cached resolutions per containing directory.
       * This assumes that any module id will have the same resolution for sibling files located in the same folder.
       */
@@ -20457,7 +20496,7 @@ index f574fc2325..da7b630c76 100644
          getOrCreateCacheForDirectory(directoryName: string, redirectedReference?: ResolvedProjectReference): ModeAwareCache<T>;
          clear(): void;
          /**
-@@ -5030,32 +5325,23 @@ declare namespace ts {
+@@ -5033,32 +5328,23 @@ declare namespace ts {
           */
          update(options: CompilerOptions): void;
      }
@@ -20494,7 +20533,7 @@ index f574fc2325..da7b630c76 100644
      /**
       * Visits a Node using the supplied visitor, possibly returning a new Node in its place.
       *
-@@ -5140,31 +5426,22 @@ declare namespace ts {
+@@ -5143,31 +5429,22 @@ declare namespace ts {
       * @param context A lexical environment context for the visitor.
       */
      function visitEachChild<T extends Node>(node: T | undefined, visitor: Visitor, context: TransformationContext, nodesVisitor?: typeof visitNodes, tokenVisitor?: Visitor): T | undefined;
@@ -20535,7 +20574,7 @@ index f574fc2325..da7b630c76 100644
      /**
       * Calculates the final resolution mode for an import at some index within a file's imports list. This is generally the explicitly
       * defined mode of the import if provided, or, if not, the mode of the containing file (with some exceptions: import=require is always commonjs, dynamic import is always esm).
-@@ -5172,7 +5449,7 @@ declare namespace ts {
+@@ -5175,7 +5452,7 @@ declare namespace ts {
       * @param file File to fetch the resolution mode within
       * @param index Index into the file's complete resolution list to get the resolution of - this is a concatenation of the file's imports and module augmentations
       */
@@ -20544,7 +20583,7 @@ index f574fc2325..da7b630c76 100644
      /**
       * Calculates the final resolution mode for a given module reference node. This is generally the explicitly provided resolution mode, if
       * one exists, or the mode of the containing source file. (Excepting import=require, which is always commonjs, and dynamic import, which is always esm).
-@@ -5182,10 +5459,10 @@ declare namespace ts {
+@@ -5185,10 +5462,10 @@ declare namespace ts {
       * @param usage The module reference string
       * @returns The final resolution mode of the import
       */
@@ -20558,7 +20597,7 @@ index f574fc2325..da7b630c76 100644
      /**
       * A function for determining if a given file is esm or cjs format, assuming modern node module resolution rules, as configured by the
       * `options` parameter.
-@@ -5196,7 +5473,7 @@ declare namespace ts {
+@@ -5199,7 +5476,7 @@ declare namespace ts {
       * @param options The compiler options to perform the analysis under - relevant options are `moduleResolution` and `traceResolution`
       * @returns `undefined` if the path has no relevant implied format, `ModuleKind.ESNext` for esm format, and `ModuleKind.CommonJS` for cjs format
       */
@@ -20567,7 +20606,7 @@ index f574fc2325..da7b630c76 100644
      /**
       * Create a new 'Program' instance. A Program is an immutable collection of 'SourceFile's and a 'CompilerOptions'
       * that represent a compilation unit.
-@@ -5207,7 +5484,7 @@ declare namespace ts {
+@@ -5210,7 +5487,7 @@ declare namespace ts {
       * @param createProgramOptions - The options for creating a program.
       * @returns A 'Program' object.
       */
@@ -20576,7 +20615,7 @@ index f574fc2325..da7b630c76 100644
      /**
       * Create a new 'Program' instance. A Program is an immutable collection of 'SourceFile's and a 'CompilerOptions'
       * that represent a compilation unit.
-@@ -5222,19 +5499,21 @@ declare namespace ts {
+@@ -5225,19 +5502,21 @@ declare namespace ts {
       * @param configFileParsingDiagnostics - error during config file parsing
       * @returns A 'Program' object.
       */
@@ -20607,7 +20646,7 @@ index f574fc2325..da7b630c76 100644
      interface EmitOutput {
          outputFiles: OutputFile[];
          emitSkipped: boolean;
-@@ -5244,8 +5523,22 @@ declare namespace ts {
+@@ -5247,8 +5526,22 @@ declare namespace ts {
          writeByteOrderMark: boolean;
          text: string;
      }
@@ -20632,7 +20671,7 @@ index f574fc2325..da7b630c76 100644
      type AffectedFileResult<T> = {
          result: T;
          affected: SourceFile | Program;
-@@ -5357,31 +5650,27 @@ declare namespace ts {
+@@ -5360,31 +5653,27 @@ declare namespace ts {
           */
          emitNextAffectedFile(writeFile?: WriteFileCallback, cancellationToken?: CancellationToken, emitOnlyDtsFiles?: boolean, customTransformers?: CustomTransformers): AffectedFileResult<EmitResult>;
      }
@@ -20674,7 +20713,7 @@ index f574fc2325..da7b630c76 100644
      interface IncrementalProgramOptions<T extends BuilderProgram> {
          rootNames: readonly string[];
          options: CompilerOptions;
-@@ -5390,7 +5679,6 @@ declare namespace ts {
+@@ -5393,7 +5682,6 @@ declare namespace ts {
          host?: CompilerHost;
          createProgram?: CreateProgram<T>;
      }
@@ -20682,7 +20721,7 @@ index f574fc2325..da7b630c76 100644
      type WatchStatusReporter = (diagnostic: Diagnostic, newLine: string, options: CompilerOptions, errorCount?: number) => void;
      /** Create the program with rootNames and options, if they are undefined, oldProgram and new configFile diagnostics create new program */
      type CreateProgram<T extends BuilderProgram> = (rootNames: readonly string[] | undefined, options: CompilerOptions | undefined, host?: CompilerHost, oldProgram?: T, configFileParsingDiagnostics?: readonly Diagnostic[], projectReferences?: readonly ProjectReference[] | undefined) => T;
-@@ -5506,20 +5794,13 @@ declare namespace ts {
+@@ -5509,20 +5797,13 @@ declare namespace ts {
          updateRootFileNames(fileNames: string[]): void;
      }
      /**
@@ -20709,7 +20748,7 @@ index f574fc2325..da7b630c76 100644
      interface BuildOptions {
          dry?: boolean;
          force?: boolean;
-@@ -5562,14 +5843,6 @@ declare namespace ts {
+@@ -5565,14 +5846,6 @@ declare namespace ts {
          cleanReferences(project?: string): ExitStatus;
          getNextInvalidatedProject(cancellationToken?: CancellationToken): InvalidatedProject<T> | undefined;
      }
@@ -20724,7 +20763,7 @@ index f574fc2325..da7b630c76 100644
      enum InvalidatedProjectKind {
          Build = 0,
          UpdateBundle = 1,
-@@ -5609,165 +5882,80 @@ declare namespace ts {
+@@ -5612,165 +5885,80 @@ declare namespace ts {
          emit(writeFile?: WriteFileCallback, customTransformers?: CustomTransformers): EmitResult | BuildInvalidedProject<T> | undefined;
      }
      type InvalidatedProject<T extends BuilderProgram> = UpdateOutputFileStampsProject | BuildInvalidedProject<T> | UpdateBundleProject<T>;
@@ -20963,7 +21002,7 @@ index f574fc2325..da7b630c76 100644
      /**
       * Represents an immutable snapshot of a script at a specified time.Once acquired, the
       * snapshot is observably immutable. i.e. the same calls with the same parameters will return
-@@ -6410,7 +6598,6 @@ declare namespace ts {
+@@ -6413,7 +6601,6 @@ declare namespace ts {
          readonly indentMultiLineObjectLiteralBeginningOnBlankLine?: boolean;
          readonly semicolons?: SemicolonPreference;
      }
@@ -20971,7 +21010,7 @@ index f574fc2325..da7b630c76 100644
      interface DefinitionInfo extends DocumentSpan {
          kind: ScriptElementKind;
          name: string;
-@@ -6893,18 +7080,13 @@ declare namespace ts {
+@@ -6896,18 +7083,13 @@ declare namespace ts {
          span: TextSpan;
          preferences: UserPreferences;
      }
@@ -20991,7 +21030,7 @@ index f574fc2325..da7b630c76 100644
      /**
       * The document registry represents a store of SourceFile objects that can be shared between
       * multiple LanguageService instances. A LanguageService instance holds on the SourceFile (AST)
-@@ -6967,8 +7149,9 @@ declare namespace ts {
+@@ -6970,8 +7152,9 @@ declare namespace ts {
           * @param fileName The name of the file to be released
           * @param compilationSettings The compilation settings used to acquire the file
           * @param scriptKind The script kind of the file to be released
@@ -21002,7 +21041,7 @@ index f574fc2325..da7b630c76 100644
          releaseDocument(fileName: string, compilationSettings: CompilerOptions, scriptKind?: ScriptKind): void;
          /**
           * Informs the DocumentRegistry that a file is not needed any longer.
-@@ -6991,12 +7174,9 @@ declare namespace ts {
+@@ -6994,12 +7177,9 @@ declare namespace ts {
      type DocumentRegistryBucketKey = string & {
          __bucketKey: any;
      };
@@ -21017,7 +21056,7 @@ index f574fc2325..da7b630c76 100644
      interface TranspileOptions {
          compilerOptions?: CompilerOptions;
          fileName?: string;
-@@ -7010,12 +7190,6 @@ declare namespace ts {
+@@ -7013,12 +7193,6 @@ declare namespace ts {
          diagnostics?: Diagnostic[];
          sourceMapText?: string;
      }
@@ -21030,7 +21069,7 @@ index f574fc2325..da7b630c76 100644
      function toEditorSettings(options: EditorOptions | EditorSettings): EditorSettings;
      function displayPartsToString(displayParts: SymbolDisplayPart[] | undefined): string;
      function getDefaultCompilerOptions(): CompilerOptions;
-@@ -7029,8 +7203,8 @@ declare namespace ts {
+@@ -7032,8 +7206,8 @@ declare namespace ts {
       * The functionality is not supported if the ts module is consumed outside of a node module.
       */
      function getDefaultLibFilePath(options: CompilerOptions): string;
@@ -21041,7 +21080,7 @@ index f574fc2325..da7b630c76 100644
      /**
       * Transform one or more nodes using the supplied transformers.
       * @param source A single `Node` or an array of `Node` objects.
-@@ -7038,735 +7212,602 @@ declare namespace ts {
+@@ -7041,735 +7215,602 @@ declare namespace ts {
       * @param compilerOptions Optional compiler options.
       */
      function transform<T extends Node>(source: T | T[], transformers: TransformerFactory<T>[], compilerOptions?: CompilerOptions): TransformationResult<T>;
@@ -22073,7 +22112,7 @@ index f574fc2325..da7b630c76 100644
      /** @deprecated Use `factory.createToken` or the factory supplied by your transformation context instead. */
      const createToken: <TKind extends SyntaxKind>(kind: TKind) => Token<TKind>;
      /** @deprecated Use `factory.createIdentifier` or the factory supplied by your transformation context instead. */
-@@ -7898,255 +7939,11 @@ declare namespace ts {
+@@ -7901,255 +7942,11 @@ declare namespace ts {
       * @deprecated Use an appropriate `factory.update...` method instead, use `setCommentRange` or `setSourceMapRange`, and avoid setting `parent`.
       */
      const getMutableClone: <T extends Node>(node: T) => T;
