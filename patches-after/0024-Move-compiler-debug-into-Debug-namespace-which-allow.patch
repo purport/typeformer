@@ -16,11 +16,11 @@ the size of our output by _5.7 MB_ (a ridiculous improvement for
 _adding_ code).
 ---
  Herebyfile.mjs             |  19 +-
- src/compiler/debug.ts      | 428 +++++++++++++++++++++++++++----
+ src/compiler/debug.ts      | 429 +++++++++++++++++++++++++++----
  src/debug/compilerDebug.ts | 508 -------------------------------------
  src/debug/tsconfig.json    |   8 -
  src/tsconfig.json          |   1 -
- 5 files changed, 390 insertions(+), 574 deletions(-)
+ 5 files changed, 391 insertions(+), 574 deletions(-)
  delete mode 100644 src/debug/compilerDebug.ts
  delete mode 100644 src/debug/tsconfig.json
 
@@ -90,7 +90,7 @@ index 5a1caf6216..66ad09387d 100644
          // Ensure we never drop any dead code, which might be helpful while debugging.
          treeShaking: false,
 diff --git a/src/compiler/debug.ts b/src/compiler/debug.ts
-index 591cd8945d..3daeedcc07 100644
+index 591cd8945d..adb2d539c8 100644
 --- a/src/compiler/debug.ts
 +++ b/src/compiler/debug.ts
 @@ -1,18 +1,18 @@
@@ -169,7 +169,7 @@ index 591cd8945d..3daeedcc07 100644
          isDebugInfoEnabled = true;
      }
  
-@@ -834,4 +796,384 @@ m2: ${(this.mapper2 as unknown as DebugTypeMapper).__debugToString().split("\n")
+@@ -834,4 +796,385 @@ m2: ${(this.mapper2 as unknown as DebugTypeMapper).__debugToString().split("\n")
          }
          return mapper;
      }
@@ -204,6 +204,7 @@ index 591cd8945d..3daeedcc07 100644
 +        }
 +
 +        const enum Connection {
++            None = 0,
 +            Up = 1 << 0,
 +            Down = 1 << 1,
 +            Left = 1 << 2,
