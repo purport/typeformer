@@ -17,7 +17,7 @@ script unconditionally in a later commit.
  3 files changed, 100 insertions(+), 157 deletions(-)
 
 diff --git a/package-lock.json b/package-lock.json
-index 50f2fe3270..c868d920d5 100644
+index 5353d8976f..bb232dab2a 100644
 --- a/package-lock.json
 +++ b/package-lock.json
 @@ -25,7 +25,6 @@

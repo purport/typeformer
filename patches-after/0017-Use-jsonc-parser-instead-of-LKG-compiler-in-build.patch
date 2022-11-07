@@ -16,7 +16,7 @@ than importing the entire LKG typescript.js library.
  3 files changed, 16 insertions(+), 37 deletions(-)
 
 diff --git a/package-lock.json b/package-lock.json
-index b08964e17c..50f2fe3270 100644
+index 9a68eae34d..5353d8976f 100644
 --- a/package-lock.json
 +++ b/package-lock.json
 @@ -44,6 +44,7 @@

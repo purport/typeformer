@@ -728,7 +728,7 @@ index 7a257b2fd4..1b178f2496 100644
  task("LKG").flags = {
      "   --built": "Compile using the built version of the compiler.",
 diff --git a/package-lock.json b/package-lock.json
-index 7303594b8c..d1bdc8ffe1 100644
+index a4bd454347..52590f8578 100644
 --- a/package-lock.json
 +++ b/package-lock.json
 @@ -41,6 +41,7 @@

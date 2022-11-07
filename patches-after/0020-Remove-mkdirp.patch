@@ -12,7 +12,7 @@ function in recursive mode instead.
  3 files changed, 2 insertions(+), 43 deletions(-)
 
 diff --git a/package-lock.json b/package-lock.json
-index c868d920d5..cc60f4e153 100644
+index bb232dab2a..8fde39bac7 100644
 --- a/package-lock.json
 +++ b/package-lock.json
 @@ -19,7 +19,6 @@
