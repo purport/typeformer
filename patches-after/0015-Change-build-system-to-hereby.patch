@@ -532,7 +532,7 @@ index 5606df9611..d72ffc513f 100644
 \ No newline at end of file
 +RUN npx hereby configure-insiders && npx hereby LKG && npx hereby clean && npm pack .
 diff --git a/Herebyfile.mjs b/Herebyfile.mjs
-index e5c78c78cd..400403b354 100644
+index b8af4059f8..5260a813a6 100644
 --- a/Herebyfile.mjs
 +++ b/Herebyfile.mjs
 @@ -1,29 +1,32 @@
@@ -589,7 +589,7 @@ index e5c78c78cd..400403b354 100644
 +
      if (currentlyBuilding === 0) {
          oldTsconfigBase = fs.readFileSync(tsconfigBasePath, "utf-8");
-         fs.writeFileSync(tsconfigBasePath, oldTsconfigBase.replace(`"emitDeclarationOnly": true`, `"emitDeclarationOnly": false`));
+         fs.writeFileSync(tsconfigBasePath, oldTsconfigBase.replace(`"emitDeclarationOnly": true,`, `"emitDeclarationOnly": false, // DO NOT COMMIT`));
 @@ -51,50 +56,73 @@ const buildProjectWithEmit = async (...args) => {
  const buildProject = cmdLineOptions.bundle ? realBuildProject : buildProjectWithEmit;
  
@@ -1173,7 +1173,7 @@ index e5c78c78cd..400403b354 100644
 +    // this is used in the browser too. Do the same thing that we do for our
 +    // libraries and generate an IIFE with name `ts`, as to not pollute the global
 +    // scope.
-+    bundlerOptions: { exportIsTsObject: true },
++    bundlerOptions: { exportIsTsObject: true, setDynamicImport: true },
 +});
 +export { tsserver, watchTsserver };
  

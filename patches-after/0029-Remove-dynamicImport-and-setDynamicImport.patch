@@ -1,0 +1,97 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Jake Bailey <5341706+jakebailey@users.noreply.github.com>
+Date: Sun, 6 Nov 2022 18:43:25 -0800
+Subject: [PATCH] Remove dynamicImport and setDynamicImport
+
+It turns out that the import expression won't actally be rewritten by
+esbuild, so we can just write it directly.
+
+While this won't help CJS emit, that already didn't work anyway, and
+it's likely that this code is going to be moved outside of the codebase
+into VS Code or a shared package elsewhere anyway.
+---
+ Herebyfile.mjs             | 23 ++++++-----------------
+ src/webServer/webServer.ts | 11 +----------
+ 2 files changed, 7 insertions(+), 27 deletions(-)
+
+diff --git a/Herebyfile.mjs b/Herebyfile.mjs
+index 4e39cf9a41..26ad0998e7 100644
+--- a/Herebyfile.mjs
++++ b/Herebyfile.mjs
+@@ -190,7 +190,6 @@ async function runDtsBundler(entrypoint, output) {
+  * @typedef BundlerTaskOptions
+  * @property {string[]} [external]
+  * @property {boolean} [exportIsTsObject]
+- * @property {boolean} [setDynamicImport]
+  * @property {boolean} [treeShaking]
+  */
+ function createBundler(entrypoint, outfile, taskOptions = {}) {
+@@ -257,22 +256,12 @@ function createBundler(entrypoint, outfile, taskOptions = {}) {
+         };
+ 
+         if (taskOptions.exportIsTsObject) {
+-            // These snippets cannot appear in the actual source files, otherwise they will be rewritten
+-            // to things like exports or requires.
+-
++            // We use an IIFE so we can inject the footer, and so that "ts" is global if not loaded as a module.
++            options.format = "iife";
++            // Name the variable ts, matching our old big bundle and so we can use the code below.
++            options.globalName = "ts";
+             // If we are in a CJS context, export the ts namespace.
+-            let footer = `\nif (typeof module !== "undefined" && module.exports) { module.exports = ts; }`;
+-
+-            if (taskOptions.setDynamicImport) {
+-                // If we are in a server bundle, inject the dynamicImport function.
+-                // This only works because the web server's "start" function returns;
+-                // the node server does not, but we don't use this there.
+-                footer += `\nif (ts.server && ts.server.setDynamicImport) { ts.server.setDynamicImport(id => import(id)); }`;
+-            }
+-
+-            options.format = "iife"; // We use an IIFE so we can inject the footer, and so that "ts" is global if not loaded as a module.
+-            options.globalName = "ts"; // Name the variable ts, matching our old big bundle and so we can use the code below.
+-            options.footer = { js: footer };
++            options.footer = { js: `\nif (typeof module !== "undefined" && module.exports) { module.exports = ts; }` };
+         }
+ 
+         return options;
+@@ -416,7 +405,7 @@ const { main: tsserver, watch: watchTsserver } = entrypointBuildTask({
+     // this is used in the browser too. Do the same thing that we do for our
+     // libraries and generate an IIFE with name `ts`, as to not pollute the global
+     // scope.
+-    bundlerOptions: { exportIsTsObject: true, setDynamicImport: true },
++    bundlerOptions: { exportIsTsObject: true },
+ });
+ export { tsserver, watchTsserver };
+ 
+diff --git a/src/webServer/webServer.ts b/src/webServer/webServer.ts
+index 9e3f6a45df..0728025980 100644
+--- a/src/webServer/webServer.ts
++++ b/src/webServer/webServer.ts
+@@ -125,15 +125,6 @@ export class MainProcessLogger extends BaseLogger {
+     }
+ }
+ 
+-let dynamicImport = async (_id: string): Promise<any> => {
+-    throw new Error("Dynamic import not implemented");
+-};
+-
+-/** @internal */
+-export function setDynamicImport(fn: (id: string) => Promise<any>) {
+-    dynamicImport = fn;
+-}
+-
+ /** @internal */
+ export function createWebSystem(host: WebHost, args: string[], getExecutingFilePath: () => string): ServerHost {
+     const returnEmptyString = () => "";
+@@ -182,7 +173,7 @@ export function createWebSystem(host: WebHost, args: string[], getExecutingFileP
+ 
+             const scriptPath = combinePaths(packageRoot, browser);
+             try {
+-                const { default: module } = await dynamicImport(scriptPath);
++                const { default: module } = await import(scriptPath);
+                 return { module, error: undefined };
+             }
+             catch (e) {
+-- 
+2.38.1
+
