@@ -557,7 +557,7 @@ index 591cd8945d..adb2d539c8 100644
  }
 diff --git a/src/debug/compilerDebug.ts b/src/debug/compilerDebug.ts
 deleted file mode 100644
-index 5eca399b05..0000000000
+index 906a166332..0000000000
 --- a/src/debug/compilerDebug.ts
 +++ /dev/null
 @@ -1,508 +0,0 @@
@@ -993,7 +993,7 @@ index 5eca399b05..0000000000
 -                const above = lane > 0 ? connectors[column][lane - 1] : 0;
 -                let connector = connectors[column][lane];
 -                if (!connector) {
--                    if (left & Connection.Right) connector |= Connection.LeftRight;
+-                    if (left & Connection.Right) connector = Connection.LeftRight;
 -                    if (above & Connection.Down) connector |= Connection.UpDown;
 -                    connectors[column][lane] = connector;
 -                }

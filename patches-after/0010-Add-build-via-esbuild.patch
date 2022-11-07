@@ -1726,7 +1726,7 @@ diff --git a/src/debug/dbg.ts b/src/debug/compilerDebug.ts
 similarity index 95%
 rename from src/debug/dbg.ts
 rename to src/debug/compilerDebug.ts
-index 3b531914d5..5eca399b05 100644
+index 202681c34a..906a166332 100644
 --- a/src/debug/dbg.ts
 +++ b/src/debug/compilerDebug.ts
 @@ -1,7 +1,3 @@

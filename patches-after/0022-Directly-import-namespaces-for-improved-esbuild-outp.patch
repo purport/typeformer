@@ -115,7 +115,7 @@ index 1f758b6787..ca6d9526fd 100644
  
  function createBinder(): (file: SourceFile, options: CompilerOptions) => void {
 diff --git a/src/compiler/checker.ts b/src/compiler/checker.ts
-index 790081808d..62fa4b1c6d 100644
+index a9b8df8625..b293a00102 100644
 --- a/src/compiler/checker.ts
 +++ b/src/compiler/checker.ts
 @@ -155,7 +155,7 @@ import {
@@ -136,7 +136,7 @@ index 790081808d..62fa4b1c6d 100644
  
  const ambientModuleSymbolRegex = /^".+"$/;
  const anon = "(anonymous)" as __String & string;
-@@ -42559,10 +42561,10 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
+@@ -42552,10 +42554,10 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
  
      function checkSourceFile(node: SourceFile) {
          tracing?.push(tracing.Phase.Check, "checkSourceFile", { path: node.path }, /*separateBeginAndEnd*/ true);
@@ -213,7 +213,7 @@ index 6dafc0ab0b..b161549e0f 100644
      return result;
  }
 diff --git a/src/compiler/program.ts b/src/compiler/program.ts
-index b932c5602a..1baa5b706f 100644
+index 3170ac0844..7a6d8d8b09 100644
 --- a/src/compiler/program.ts
 +++ b/src/compiler/program.ts
 @@ -60,6 +60,7 @@ import {
@@ -258,7 +258,7 @@ index b932c5602a..1baa5b706f 100644
          }
          catch (e) {
              if (onError) {
-@@ -1142,7 +1143,7 @@ export function createProgram(rootNamesOrOptions: readonly string[] | CreateProg
+@@ -1145,7 +1146,7 @@ export function createProgram(rootNamesOrOptions: readonly string[] | CreateProg
      const sourceFilesFoundSearchingNodeModules = new Map<string, boolean>();
  
      tracing?.push(tracing.Phase.Program, "createProgram", { configFilePath: options.configFilePath, rootDir: options.rootDir }, /*separateBeginAndEnd*/ true);
@@ -267,7 +267,7 @@ index b932c5602a..1baa5b706f 100644
  
      const host = createProgramOptions.host || createCompilerHost(options);
      const configParsingHost = parseConfigHostFromCompilerHostLike(host);
-@@ -1448,8 +1449,8 @@ export function createProgram(rootNamesOrOptions: readonly string[] | CreateProg
+@@ -1468,8 +1469,8 @@ export function createProgram(rootNamesOrOptions: readonly string[] | CreateProg
      });
  
      verifyCompilerOptions();
@@ -278,13 +278,13 @@ index b932c5602a..1baa5b706f 100644
      tracing?.pop();
  
      return program;
-@@ -1489,10 +1490,10 @@ export function createProgram(rootNamesOrOptions: readonly string[] | CreateProg
+@@ -1506,10 +1507,10 @@ export function createProgram(rootNamesOrOptions: readonly string[] | CreateProg
          const containingFileName = getNormalizedAbsolutePath(containingFile.originalFileName, currentDirectory);
          const redirectedReference = getRedirectReferenceForResolution(containingFile);
          tracing?.push(tracing.Phase.Program, "resolveModuleNamesWorker", { containingFileName });
 -        ts.performance.mark("beforeResolveModule");
 +        performance.mark("beforeResolveModule");
-         const result = actualResolveModuleNamesWorker(moduleNames, containingFile, containingFileName, reusedNames, redirectedReference);
+         const result = actualResolveModuleNamesWorker(moduleNames, containingFile, containingFileName, redirectedReference, resolutionInfo);
 -        ts.performance.mark("afterResolveModule");
 -        ts.performance.measure("ResolveModule", "beforeResolveModule", "afterResolveModule");
 +        performance.mark("afterResolveModule");
@@ -292,7 +292,7 @@ index b932c5602a..1baa5b706f 100644
          tracing?.pop();
          pullDiagnosticsFromCache(moduleNames, containingFile);
          return result;
-@@ -1504,10 +1505,10 @@ export function createProgram(rootNamesOrOptions: readonly string[] | CreateProg
+@@ -1521,10 +1522,10 @@ export function createProgram(rootNamesOrOptions: readonly string[] | CreateProg
          const redirectedReference = !isString(containingFile) ? getRedirectReferenceForResolution(containingFile) : undefined;
          const containingFileMode = !isString(containingFile) ? containingFile.impliedNodeFormat : undefined;
          tracing?.push(tracing.Phase.Program, "resolveTypeReferenceDirectiveNamesWorker", { containingFileName });
@@ -306,7 +306,7 @@ index b932c5602a..1baa5b706f 100644
          tracing?.pop();
          return result;
      }
-@@ -2052,7 +2053,7 @@ export function createProgram(rootNamesOrOptions: readonly string[] | CreateProg
+@@ -2067,7 +2068,7 @@ export function createProgram(rootNamesOrOptions: readonly string[] | CreateProg
      function emitBuildInfo(writeFileCallback?: WriteFileCallback): EmitResult {
          Debug.assert(!outFile(options));
          tracing?.push(tracing.Phase.Emit, "emitBuildInfo", {}, /*separateBeginAndEnd*/ true);
@@ -315,7 +315,7 @@ index b932c5602a..1baa5b706f 100644
          const emitResult = emitFiles(
              notImplementedResolver,
              getEmitHost(writeFileCallback),
-@@ -2062,8 +2063,8 @@ export function createProgram(rootNamesOrOptions: readonly string[] | CreateProg
+@@ -2077,8 +2078,8 @@ export function createProgram(rootNamesOrOptions: readonly string[] | CreateProg
              /*onlyBuildInfo*/ true
          );
  
@@ -326,7 +326,7 @@ index b932c5602a..1baa5b706f 100644
          tracing?.pop();
          return emitResult;
      }
-@@ -2148,7 +2149,7 @@ export function createProgram(rootNamesOrOptions: readonly string[] | CreateProg
+@@ -2163,7 +2164,7 @@ export function createProgram(rootNamesOrOptions: readonly string[] | CreateProg
          // checked is to not pass the file to getEmitResolver.
          const emitResolver = getTypeChecker().getEmitResolver(outFile(options) ? undefined : sourceFile, cancellationToken);
  
@@ -335,7 +335,7 @@ index b932c5602a..1baa5b706f 100644
  
          const emitResult = emitFiles(
              emitResolver,
-@@ -2160,8 +2161,8 @@ export function createProgram(rootNamesOrOptions: readonly string[] | CreateProg
+@@ -2175,8 +2176,8 @@ export function createProgram(rootNamesOrOptions: readonly string[] | CreateProg
              forceDtsEmit
          );
  
@@ -485,12 +485,12 @@ index 095d395c5b..3e0eaed09c 100644
  /** @internal */
  export function getDeclarationDiagnostics(host: EmitHost, resolver: EmitResolver, file: SourceFile | undefined): DiagnosticWithLocation[] | undefined {
 diff --git a/src/compiler/tsbuildPublic.ts b/src/compiler/tsbuildPublic.ts
-index 0171777acd..e9c80a2c0b 100644
+index 6ec55766ba..cba4341ce4 100644
 --- a/src/compiler/tsbuildPublic.ts
 +++ b/src/compiler/tsbuildPublic.ts
-@@ -28,6 +28,7 @@ import {
-     version, WatchFactory, WatchHost, WatchOptions, WatchStatusReporter, WatchType, WildcardDirectoryWatcher, writeFile,
-     WriteFileCallback,
+@@ -27,6 +27,7 @@ import {
+     UpToDateStatus, UpToDateStatusType, version, WatchFactory, WatchHost, WatchOptions, WatchStatusReporter, WatchType,
+     WildcardDirectoryWatcher, writeFile, WriteFileCallback,
  } from "./_namespaces/ts";
 +import * as performance from "./_namespaces/ts.performance";
  
