@@ -2,7 +2,7 @@ import { FileUtils, StandardizedFilePath } from "@ts-morph/common";
 import { formatSourceWithoutFile } from "format-imports";
 import { Project, SourceFile } from "ts-morph";
 
-const sourceFileGlobs = ["src/**/*.ts", "!**/*.d.ts"];
+const sourceFileGlobs = ["**/*.ts", "!**/*.d.ts"];
 const tsconfigGlob = "src/**/tsconfig*.json";
 
 export function addTsSourceFiles(project: Project) {
@@ -70,7 +70,7 @@ export function formatImports(sourceFile: SourceFile) {
             quoteMark: "double",
             eol: "CRLF",
         },
-        { skipEslintConfig: true, skipTsConfig: true }
+        { skipEslintConfig: true, skipTsConfig: true },
     );
     if (newText !== undefined) {
         sourceFile.replaceWithText(newText);
