@@ -19,6 +19,7 @@ function isSomeDeclarationInLexicalScope(sym: ts.Symbol, location: ts.Node) {
 
 export function explicitify(project: Project): void {
     for (const sourceFile of getTsSourceFiles(project)) {
+        console.log(sourceFile.getFilePath());
         if (sourceFile.isDeclarationFile()) {
             continue;
         }
@@ -51,7 +52,7 @@ export function explicitify(project: Project): void {
                         sym,
                         ts.SymbolFlags.Namespace,
                         sourceFile.compilerNode,
-                        ts.NodeBuilderFlags.UseOnlyExternalAliasing
+                        ts.NodeBuilderFlags.UseOnlyExternalAliasing,
                     );
                     if (newName && !ts.isIdentifier(newName)) {
                         if (
@@ -66,7 +67,7 @@ export function explicitify(project: Project): void {
                             sym,
                             ts.SymbolFlags.Namespace,
                             sourceFile.compilerNode,
-                            ts.NodeBuilderFlags.UseOnlyExternalAliasing
+                            ts.NodeBuilderFlags.UseOnlyExternalAliasing,
                         );
                         if (exp) {
                             return exp;
