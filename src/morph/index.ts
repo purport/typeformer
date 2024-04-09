@@ -3,7 +3,8 @@ import { Project, ts } from "ts-morph";
 import { explicitify } from "./explicitify.js";
 import { formatImports } from "./formatImports.js";
 import { inlineImports } from "./inlineImports.js";
-import { stripNamespaces } from "./stripNamespaces.js";
+import { stripModules } from "./stripModules.js";
+// import { stripNamespaces } from "./stripNamespaces.js";
 import { unindent } from "./unindent.js";
 import { addTsSourceFiles, indentLog, log } from "./utilities.js";
 
@@ -13,7 +14,8 @@ const steps = new Map<string, Step>([
     ["noop", () => {}], // To check diagnostics
     ["unindent", unindent],
     ["explicitify", explicitify],
-    ["stripNamespaces", stripNamespaces],
+    //    ["stripNamespaces", stripNamespaces],
+    ["stripModules", stripModules],
     ["inlineImports", inlineImports],
     ["formatImports", formatImports],
 ]);
@@ -28,7 +30,7 @@ export function runStep(stepName: string, check: boolean): number {
     log("loading project");
     const project = new Project({
         // Just for settings; we load the files below.
-        tsConfigFilePath: "src/tsconfig-base.json",
+        tsConfigFilePath: "tsconfig.json",
         skipAddingFilesFromTsConfig: true,
         manipulationSettings: {
             newLineKind: ts.NewLineKind.CarriageReturnLineFeed,

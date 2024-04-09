@@ -17,6 +17,7 @@ export function inlineImports(project: Project): void {
 
     log("removing namespace uses");
     for (const sourceFile of getTsSourceFiles(project)) {
+        console.log(sourceFile.getBaseNameWithoutExtension());
         if (isNamespaceBarrel(sourceFile)) {
             continue;
         }
@@ -33,7 +34,7 @@ export function inlineImports(project: Project): void {
         function filenameToSpecifier(filename: string): string {
             return getTsStyleRelativePath(
                 sourceFile.getFilePath(),
-                FileUtils.getStandardizedAbsolutePath(fs, filename)
+                FileUtils.getStandardizedAbsolutePath(fs, filename),
             ).replace(/(\.d)?\.ts$/, "");
         }
 
@@ -85,7 +86,7 @@ export function inlineImports(project: Project): void {
 
         function tryReplace(
             node: ts.Node,
-            factory: ts.NodeFactory
+            factory: ts.NodeFactory,
         ): { node: ts.Node; nodeToRemove?: ts.Statement } | undefined {
             if (ts.isImportDeclaration(node)) {
                 // Stop recursing by "replacing" this node with itself.
@@ -123,7 +124,7 @@ export function inlineImports(project: Project): void {
                         undefined,
                         undefined,
                         false,
-                        factory.createNamedExports([factory.createExportSpecifier(false, undefined, localName)])
+                        factory.createNamedExports([factory.createExportSpecifier(false, undefined, localName)]),
                     );
                 } else {
                     // import name = ts.foo.bar;
@@ -232,7 +233,7 @@ export function inlineImports(project: Project): void {
                 !replacement.foreignName &&
                 !shouldKeepExplicit(
                     sourceFile.getFilePath(),
-                    FileUtils.getStandardizedAbsolutePath(fs, rhsDecl.fileName)
+                    FileUtils.getStandardizedAbsolutePath(fs, rhsDecl.fileName),
                 )
             ) {
                 // TODO: we need to special case all of the things that were already explicit
@@ -252,7 +253,7 @@ export function inlineImports(project: Project): void {
                 filenameIsNamespaceBarrel(lhsDecl.fileName) &&
                 !shouldKeepExplicit(
                     sourceFile.getFilePath(),
-                    FileUtils.getStandardizedAbsolutePath(fs, lhsDecl.fileName)
+                    FileUtils.getStandardizedAbsolutePath(fs, lhsDecl.fileName),
                 )
             ) {
                 // TODO: we need to special case all of the things that were already explicit
@@ -261,7 +262,7 @@ export function inlineImports(project: Project): void {
                     tryAddNamedImport(
                         lhsDecl.fileName,
                         replacement.localName,
-                        replacement.foreignName ?? replacement.localName
+                        replacement.foreignName ?? replacement.localName,
                     )
                 ) {
                     return replacement;
@@ -357,7 +358,7 @@ function findSymbolInScope(
     checker: ts.TypeChecker,
     name: string,
     s: ts.Symbol,
-    location: ts.Node
+    location: ts.Node,
 ): ts.Symbol | undefined {
     // s = ts.skipAlias(s, checker);
 
@@ -412,7 +413,7 @@ function or(...ts: Testable[]): Testable {
 type ExplicitRules = [
     currentSourceFileTest: Testable | true,
     namespaceFileTest: Testable | true,
-    keepExplicit: boolean
+    keepExplicit: boolean,
 ];
 
 // This is a best-effort set of rules to replicate which files explicitly
@@ -491,8 +492,8 @@ const explicitRules: ExplicitRules[] = [
                 /compilerImpl/,
                 /harnessUtils/,
                 /vfsUtil/,
-                /virtualFileSystemWithWatch/
-            )
+                /virtualFileSystemWithWatch/,
+            ),
         ),
         /Harness/,
         true,

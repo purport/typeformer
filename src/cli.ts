@@ -8,8 +8,8 @@ import { RunTransformCommand } from "./runTransform.js";
 import { SavePatchesCommand } from "./savePatches.js";
 
 // Ensure we're in the typescript repo.
-const packageJson = readFileSync("package.json", { encoding: "utf-8" });
-assert(JSON.parse(packageJson).name === "typescript");
+// const packageJson = readFileSync("package.json", { encoding: "utf-8" });
+// assert(JSON.parse(packageJson).name === "typescript");
 
 const cli = new Cli({
     binaryName: "typeformer",
